@@ -9,59 +9,20 @@ from pypdf import PdfReader
 from llama_index.llms.groq import Groq
 
 # --------------------------------------------------------------
-# Configuration
+# Configuration & Lifespan
 # --------------------------------------------------------------
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Loading document...")
-    load_document_text()
-    print("Ready.")
-    yield
-    print("Shutting down.")
-
-app = FastAPI(lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# --------------------------------------------------------------
-# Helper: Load the Full Document from the legal_docs Folder
-# --------------------------------------------------------------
-def split_text(text: str, chunk_size: int = 6000):
-    """Splits text into chunks of roughly 'chunk_size' characters."""
-    words = text.split()
-    chunks = []
-    current_chunk = []
-    current_len = 0
-    for word in words:
-        if current_len + len(word) + 1 <= chunk_size:
-            current_chunk.append(word)
-            current_len += len(word) + 1
-        else:
-            chunks.append(" ".join(current_chunk))
-            current_chunk = [word]
-            current_len = len(word) + 1
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
-    return chunks
-
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY environment variable not set")
 
-llm = Groq(
-    model="llama-3.1-70b-versatile",  # Updated to the recommended model
-    api_key=GROQ_API_KEY,
-    temperature=0.1,
-)
+# Using a known active model
+ACTIVE_GROQ_MODEL = "llama-3.3-70b-versatile"
 
-# Store the full document text
+try:
+    llm = Groq(model=ACTIVE_GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.1)
+except Exception as e:
+    raise RuntimeError(f"Failed to initialize Groq model '{ACTIVE_GROQ_MODEL}': {e}")
+
 full_text = ""
 
 def load_document_text():
@@ -89,12 +50,44 @@ def load_document_text():
 
     raise RuntimeError("No readable document found in 'legal_docs/'")
 
-# Load the document when the application starts
-load_document_text()
+def split_text(text: str, chunk_size: int = 6000):
+    """Splits text into chunks of roughly 'chunk_size' characters."""
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_len = 0
+    for word in words:
+        if current_len + len(word) + 1 <= chunk_size:
+            current_chunk.append(word)
+            current_len += len(word) + 1
+        else:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+            current_len = len(word) + 1
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    return chunks
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Loading document...")
+    load_document_text()
+    print("Ready.")
+    yield
+    print("Shutting down.")
+
+app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --------------------------------------------------------------
-# Endpoints
+# API Endpoints
 # --------------------------------------------------------------
 @app.get("/query")
 async def query_endpoint(q: str = Query(...)):
