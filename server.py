@@ -1,35 +1,28 @@
-    import os
+   import os
 import tempfile
 from pathlib import Path
 from contextlib import asynccontextmanager
+from typing import List
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
-
-from llama_index.core import (
-    Document,
-    VectorStoreIndex,
-    Settings,
-)
+from rank_bm25 import BM25Okapi
 from llama_index.llms.groq import Groq
-from llama_index.embeddings.groq import GroqEmbedding
-from llama_index.core.node_parser import SimpleNodeParser
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY environment variable not set")
 
-Settings.llm = Groq(
+llm = Groq(
     model="mixtral-8x7b-32768",
     api_key=GROQ_API_KEY,
     temperature=0.1,
 )
 
-Settings.embed_model = GroqEmbedding(
-    model="nomic-embed-text-v1.5",   # free embedding model on Groq
-    api_key=GROQ_API_KEY,
-)
+# Global BM25 index
+bm25 = None
+doc_texts = []  # list of (text, metadata)
 
 def load_pdfs_from_dir(directory: str):
     docs = []
@@ -42,27 +35,34 @@ def load_pdfs_from_dir(directory: str):
         for page in reader.pages:
             text += page.extract_text() or ""
         if text.strip():
-            docs.append(Document(text=text, metadata={"filename": pdf_file.name}))
-        else:
-            print(f"Warning: No text extracted from {pdf_file.name}")
+            docs.append((text, {"filename": pdf_file.name}))
     return docs
 
-index = None
-
-def build_index_from_directory():
-    global index
-    docs = load_pdfs_from_dir("legal_docs")
-    if not docs:
+def build_bm25_index():
+    global bm25, doc_texts
+    doc_texts = load_pdfs_from_dir("legal_docs")
+    if not doc_texts:
         raise RuntimeError("No PDF documents found in 'legal_docs/'")
-    parser = SimpleNodeParser.from_defaults()
-    nodes = parser.get_nodes_from_documents(docs)
-    index = VectorStoreIndex(nodes)
-    print(f"Indexed {len(nodes)} nodes from {len(docs)} documents")
+    # Tokenize each document (simple whitespace split)
+    tokenized_docs = [text.lower().split() for text, _ in doc_texts]
+    bm25 = BM25Okapi(tokenized_docs)
+    print(f"Indexed {len(doc_texts)} documents")
+
+def retrieve(query: str, top_k=3):
+    tokenized_query = query.lower().split()
+    scores = bm25.get_scores(tokenized_query)
+    # Get top_k indices
+    indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+    results = []
+    for i in indices:
+        if scores[i] > 0:
+            results.append(doc_texts[i][0])
+    return results
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Loading and indexing legal documents...")
-    build_index_from_directory()
+    print("Loading and indexing legal documents (BM25)...")
+    build_bm25_index()
     print("Ready.")
     yield
     print("Shutting down.")
@@ -79,12 +79,22 @@ app.add_middleware(
 
 @app.get("/query")
 async def query_endpoint(q: str = Query(..., description="Question about legal documents")):
-    if index is None:
+    if bm25 is None:
         raise HTTPException(status_code=503, detail="Index not ready")
     try:
-        query_engine = index.as_query_engine()
-        response = query_engine.query(q)
-        return {"question": q, "answer": str(response)}
+        retrieved_chunks = retrieve(q)
+        if not retrieved_chunks:
+            return {"question": q, "answer": "No relevant documents found."}
+        context = "\n\n---\n\n".join(retrieved_chunks)
+        prompt = f"""You are a legal assistant. Use the following context from Indian legal documents to answer the question. If the answer is not in the context, say so.
+
+Context:
+{context}
+
+Question: {q}
+Answer:"""
+        response = llm.complete(prompt)
+        return {"question": q, "answer": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
 
@@ -106,23 +116,16 @@ async def analyze_contract(file: UploadFile = File(...)):
         if not text.strip():
             raise HTTPException(status_code=422, detail="No text extracted from PDF")
 
-        doc = Document(text=text, metadata={"filename": file.filename})
-        parser = SimpleNodeParser.from_defaults()
-        nodes = parser.get_nodes_from_documents([doc])
-        temp_index = VectorStoreIndex(nodes)
+        risk_prompt = f"""You are a legal risk analyst. Analyse the provided contract document.
 
-        risk_prompt = (
-            "You are a legal risk analyst. Analyse the provided contract document. "
-            "List all potential risks, unclear clauses, missing protections, and unusual obligations. "
-            "Format the output as a bullet list with headings for each risk category. "
-            "If there are no significant risks, state that clearly."
-        )
-        query_engine = temp_index.as_query_engine()
-        response = query_engine.query(risk_prompt)
+Contract text (excerpt):
+{text[:3000]}
 
+List all potential risks, unclear clauses, missing protections, and unusual obligations. Format as bullet points. If no significant risks, state that clearly."""
+        response = llm.complete(risk_prompt)
         return {
             "filename": file.filename,
-            "analysis": str(response),
+            "analysis": response.text,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
