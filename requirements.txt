@@ -3,5 +3,7 @@ uvicorn
 python-multipart
 llama-index-core
 llama-index-llms-openai-like
-llama-index-embeddings-openai
+llama-index-embeddings-huggingface
 pypdf
+sentence-transformers
+torch
