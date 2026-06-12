@@ -22,7 +22,7 @@ Settings.llm = OpenAILike(
 )
 
 # ---------- Embeddings (local HuggingFace) ----------
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en")
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
 
 # ---------- Load legal documents ----------
 index = None
