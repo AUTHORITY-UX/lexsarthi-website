@@ -14,15 +14,15 @@ api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise RuntimeError("OPENAI_API_KEY not set")
 Settings.llm = OpenAILike(
-    model="llama3-70b-8192",
+    model="llama-3.3-70b-versatile",   # updated to current model
     api_key=api_key,
     api_base="https://api.groq.com/openai/v1",
     is_chat_model=True,
     temperature=0.1,
 )
 
-# ---------- Embeddings (local HuggingFace) ----------
-Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+# ---------- Tiny, fast embedding model (no heavy torch deps) ----------
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 # ---------- Load legal documents ----------
 index = None
@@ -31,7 +31,7 @@ if os.path.exists("legal_docs") and any(os.scandir("legal_docs")):
     index = VectorStoreIndex.from_documents(documents)
     print(f"Loaded {len(documents)} document chunks")
 else:
-    print("No PDFs found in legal_docs/")
+    print("No PDFs found")
 
 # ---------- Endpoints ----------
 @app.get("/health")
@@ -41,7 +41,7 @@ async def health():
 @app.get("/query")
 async def query(q: str = Query(...)):
     if index is None:
-        return {"query": q, "response": "No legal documents loaded. Please upload a PDF to legal_docs/."}
+        return {"query": q, "response": "No legal documents loaded."}
     response = index.as_query_engine().query(q)
     return {"query": q, "response": str(response)}
 
