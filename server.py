@@ -8,40 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
 from llama_index.llms.groq import Groq
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise RuntimeError("GROQ_API_KEY environment variable not set")
-
-llm = Groq(
-    model="mixtral-8x7b-32768",
-    api_key=GROQ_API_KEY,
-    temperature=0.1,
-)
-
-# Store full document text
-full_text = ""
-
-def load_document_text():
-    global full_text
-    path = Path("legal_docs")
-    if not path.exists():
-        raise RuntimeError("'legal_docs' folder not found")
-    for file_path in path.glob("*"):
-        if file_path.suffix.lower() == ".pdf":
-            reader = PdfReader(file_path)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() or ""
-            if text.strip():
-                full_text = text
-                print(f"Loaded PDF {file_path.name}: {len(full_text)} chars")
-                return
-        elif file_path.suffix.lower() == ".txt":
-            full_text = file_path.read_text(encoding="utf-8")
-            if full_text.strip():
-                print(f"Loaded TXT {file_path.name}: {len(full_text)} chars")
-                return
-    raise RuntimeError("No readable document found in 'legal_docs/'")
+# --------------------------------------------------------------
+# Configuration
+# --------------------------------------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -61,24 +30,112 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --------------------------------------------------------------
+# Helper: Load the Full Document from the legal_docs Folder
+# --------------------------------------------------------------
+def split_text(text: str, chunk_size: int = 6000):
+    """Splits text into chunks of roughly 'chunk_size' characters."""
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_len = 0
+    for word in words:
+        if current_len + len(word) + 1 <= chunk_size:
+            current_chunk.append(word)
+            current_len += len(word) + 1
+        else:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+            current_len = len(word) + 1
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    return chunks
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY environment variable not set")
+
+llm = Groq(
+    model="llama-3.1-70b-versatile",  # Updated to the recommended model
+    api_key=GROQ_API_KEY,
+    temperature=0.1,
+)
+
+# Store the full document text
+full_text = ""
+
+def load_document_text():
+    global full_text
+    legal_docs_path = Path("legal_docs")
+    if not legal_docs_path.exists():
+        raise RuntimeError("'legal_docs' folder not found")
+
+    for file_path in legal_docs_path.glob("*"):
+        if file_path.suffix.lower() == ".pdf":
+            reader = PdfReader(file_path)
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() or ""
+            if text.strip():
+                full_text = text
+                print(f"Loaded PDF {file_path.name}: {len(full_text)} chars")
+                return
+        elif file_path.suffix.lower() == ".txt":
+            with open(file_path, 'r', encoding='utf-8') as f:
+                full_text = f.read()
+            if full_text.strip():
+                print(f"Loaded TXT {file_path.name}: {len(full_text)} chars")
+                return
+
+    raise RuntimeError("No readable document found in 'legal_docs/'")
+
+# Load the document when the application starts
+load_document_text()
+
+
+# --------------------------------------------------------------
+# Endpoints
+# --------------------------------------------------------------
 @app.get("/query")
 async def query_endpoint(q: str = Query(...)):
     if not full_text:
         raise HTTPException(status_code=503, detail="Document not loaded")
-    prompt = f"""You are a legal assistant. Use the following document to answer the question. If the answer is not in the document, say so.
 
-Document:
-{full_text}
+    # Split the document into chunks
+    chunks = split_text(full_text)
+    best_answer = None
+    best_score = -1
+
+    # Iterate through chunks and query the model for each
+    for idx, chunk in enumerate(chunks):
+        prompt = f"""
+You are a legal assistant. Based **only** on the following context, answer the question.
+If the answer cannot be found in the context, state "I cannot find the answer in the provided document."
+
+Context:
+{chunk}
 
 Question: {q}
-Answer:"""
-    response = llm.complete(prompt)
-    return {"question": q, "answer": response.text}
+Answer:
+"""
+        try:
+            response = llm.complete(prompt)
+            # Check if the model found an answer (simple heuristic)
+            if "cannot find the answer" not in response.text.lower():
+                # Return the first chunk that provides a meaningful answer
+                return {"question": q, "answer": response.text}
+        except Exception as e:
+            print(f"Error processing chunk {idx}: {e}")
+
+    # If no answer found in any chunk
+    return {"question": q, "answer": "No relevant answer could be found in the document."}
+
 
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
     if not (file.filename.endswith(".pdf") or file.filename.endswith(".txt")):
         raise HTTPException(status_code=400, detail="Only PDF or TXT files accepted")
+
     content = await file.read()
     text = ""
     if file.filename.endswith(".pdf"):
@@ -101,4 +158,7 @@ async def analyze_contract(file: UploadFile = File(...)):
 
 List risks, unclear clauses, missing protections, unusual obligations as bullet points."""
     response = llm.complete(risk_prompt)
-    return {"filename": file.filename, "analysis": response.text}
+    return {
+        "filename": file.filename,
+        "analysis": response.text,
+    }
