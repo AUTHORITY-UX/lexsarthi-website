@@ -43,7 +43,6 @@ def build_bm25_index():
     doc_texts = load_pdfs_from_dir("legal_docs")
     if not doc_texts:
         raise RuntimeError("No PDF documents found in 'legal_docs/'")
-    # Tokenize each document (simple whitespace split)
     tokenized_docs = [text.lower().split() for text, _ in doc_texts]
     bm25 = BM25Okapi(tokenized_docs)
     print(f"Indexed {len(doc_texts)} documents")
@@ -51,7 +50,6 @@ def build_bm25_index():
 def retrieve(query: str, top_k=3):
     tokenized_query = query.lower().split()
     scores = bm25.get_scores(tokenized_query)
-    # Get top_k indices
     indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
     results = []
     for i in indices:
