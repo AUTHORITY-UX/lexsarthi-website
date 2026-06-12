@@ -13,19 +13,12 @@ from llama_index.core import (
     Settings,
 )
 from llama_index.llms.groq import Groq
-from llama_index.embeddings.huggingface_api import HuggingFaceInferenceAPIEmbedding
+from llama_index.embeddings.groq import GroqEmbedding
 from llama_index.core.node_parser import SimpleNodeParser
 
-# ----------------------------------------------------------------------
-# Configuration
-# ----------------------------------------------------------------------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-HF_API_TOKEN = os.environ.get("HF_API_TOKEN")   # Get free token from huggingface.co/settings/tokens
-
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY environment variable not set")
-if not HF_API_TOKEN:
-    raise RuntimeError("HF_API_TOKEN environment variable not set")
 
 Settings.llm = Groq(
     model="mixtral-8x7b-32768",
@@ -33,15 +26,11 @@ Settings.llm = Groq(
     temperature=0.1,
 )
 
-# Free Hugging Face embedding model
-Settings.embed_model = HuggingFaceInferenceAPIEmbedding(
-    model_name="BAAI/bge-small-en-v1.5",
-    api_key=HF_API_TOKEN,
+Settings.embed_model = GroqEmbedding(
+    model="nomic-embed-text-v1.5",   # free embedding model on Groq
+    api_key=GROQ_API_KEY,
 )
 
-# ----------------------------------------------------------------------
-# Helper: load PDFs from directory
-# ----------------------------------------------------------------------
 def load_pdfs_from_dir(directory: str):
     docs = []
     path = Path(directory)
@@ -58,9 +47,6 @@ def load_pdfs_from_dir(directory: str):
             print(f"Warning: No text extracted from {pdf_file.name}")
     return docs
 
-# ----------------------------------------------------------------------
-# Global index
-# ----------------------------------------------------------------------
 index = None
 
 def build_index_from_directory():
@@ -73,9 +59,6 @@ def build_index_from_directory():
     index = VectorStoreIndex(nodes)
     print(f"Indexed {len(nodes)} nodes from {len(docs)} documents")
 
-# ----------------------------------------------------------------------
-# Lifespan
-# ----------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Loading and indexing legal documents...")
@@ -94,9 +77,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------------------------------------------------------------------
-# Endpoints
-# ----------------------------------------------------------------------
 @app.get("/query")
 async def query_endpoint(q: str = Query(..., description="Question about legal documents")):
     if index is None:
