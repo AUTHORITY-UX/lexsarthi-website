@@ -4,5 +4,6 @@ python-multipart
 llama-index-core
 llama-index-llms-openai-like
 llama-index-embeddings-huggingface
+llama-parse
 pypdf
 sentence-transformers
