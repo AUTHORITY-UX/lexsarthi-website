@@ -11,4 +11,4 @@ COPY . .
 EXPOSE 7860
 
 # Run uvicorn using python module
-CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["python", "run.py"]
