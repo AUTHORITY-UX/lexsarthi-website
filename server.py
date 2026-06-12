@@ -13,19 +13,15 @@ from llama_index.core import (
     Settings,
 )
 from llama_index.llms.groq import Groq
-from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.node_parser import SimpleNodeParser
 
 # ----------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY environment variable not set")
-if not OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
 Settings.llm = Groq(
     model="mixtral-8x7b-32768",
@@ -33,13 +29,11 @@ Settings.llm = Groq(
     temperature=0.1,
 )
 
-Settings.embed_model = OpenAIEmbedding(
-    model="text-embedding-ada-002",
-    api_key=OPENAI_API_KEY,
-)
+# Free local embedding model (no API key required)
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 # ----------------------------------------------------------------------
-# Helper: load all PDFs from a directory into Documents
+# Helper: load PDFs from directory
 # ----------------------------------------------------------------------
 def load_pdfs_from_dir(directory: str):
     docs = []
@@ -85,7 +79,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
