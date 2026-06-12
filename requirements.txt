@@ -6,4 +6,3 @@ llama-index-llms-openai-like
 llama-index-embeddings-huggingface
 pypdf
 sentence-transformers
-torch
