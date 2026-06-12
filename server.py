@@ -1,4 +1,4 @@
-import os
+    import os
 import tempfile
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -13,15 +13,19 @@ from llama_index.core import (
     Settings,
 )
 from llama_index.llms.groq import Groq
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.huggingface_api import HuggingFaceInferenceAPIEmbedding
 from llama_index.core.node_parser import SimpleNodeParser
 
 # ----------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+HF_API_TOKEN = os.environ.get("HF_API_TOKEN")   # Get free token from huggingface.co/settings/tokens
+
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY environment variable not set")
+if not HF_API_TOKEN:
+    raise RuntimeError("HF_API_TOKEN environment variable not set")
 
 Settings.llm = Groq(
     model="mixtral-8x7b-32768",
@@ -29,8 +33,11 @@ Settings.llm = Groq(
     temperature=0.1,
 )
 
-# Free local embedding model (no API key required)
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+# Free Hugging Face embedding model
+Settings.embed_model = HuggingFaceInferenceAPIEmbedding(
+    model_name="BAAI/bge-small-en-v1.5",
+    api_key=HF_API_TOKEN,
+)
 
 # ----------------------------------------------------------------------
 # Helper: load PDFs from directory
