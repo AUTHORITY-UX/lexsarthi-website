@@ -14,22 +14,22 @@ api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise RuntimeError("OPENAI_API_KEY not set")
 Settings.llm = OpenAILike(
-    model="llama-3.3-70b-versatile",   # updated to current model
+    model="llama-3.3-70b-versatile",  # current model
     api_key=api_key,
     api_base="https://api.groq.com/openai/v1",
     is_chat_model=True,
     temperature=0.1,
 )
 
-# ---------- Tiny, fast embedding model (no heavy torch deps) ----------
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+# ---------- Embeddings ----------
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
 
 # ---------- Load legal documents ----------
 index = None
 if os.path.exists("legal_docs") and any(os.scandir("legal_docs")):
     documents = SimpleDirectoryReader("legal_docs").load_data()
     index = VectorStoreIndex.from_documents(documents)
-    print(f"Loaded {len(documents)} document chunks")
+    print(f"Loaded {len(documents)} chunks")
 else:
     print("No PDFs found")
 
@@ -41,9 +41,17 @@ async def health():
 @app.get("/query")
 async def query(q: str = Query(...)):
     if index is None:
-        return {"query": q, "response": "No legal documents loaded."}
-    response = index.as_query_engine().query(q)
-    return {"query": q, "response": str(response)}
+        return {"query": q, "response": "No legal documents loaded. Please upload a PDF to legal_docs/."}
+    try:
+        response = index.as_query_engine().query(q)
+        # Extract the response text correctly
+        if hasattr(response, 'response'):
+            answer = response.response
+        else:
+            answer = str(response)
+        return {"query": q, "response": answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
