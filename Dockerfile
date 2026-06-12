@@ -5,10 +5,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Debug: verify uvicorn is installed
+RUN python -c "import uvicorn; print('uvicorn version:', uvicorn.__version__)"
+
 COPY . .
 
-# Expose the port Hugging Face expects
 EXPOSE 7860
 
-# Run uvicorn using python module
 CMD ["python", "run.py"]
