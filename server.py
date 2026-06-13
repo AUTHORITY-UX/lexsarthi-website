@@ -101,7 +101,7 @@ async def analyze_contract(file: UploadFile = File(...)):
             os.remove(temp_path)
 
 @app.post("/create-order")
-async def create_order(amount: int = 500):
+async def create_order(amount: int = 2):
     if not razorpay_key_id or not razorpay_key_secret:
         raise HTTPException(500, detail="Razorpay not configured")
     try:
