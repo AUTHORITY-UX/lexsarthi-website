@@ -145,7 +145,7 @@ import hashlib
 razorpay_client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
 
 @app.post("/api/create-order")
-async def create_order(amount: int = 500):
+async def create_order(amount: int = 2):
     """
     Endpoint to create a Razorpay order.
     Minimum amount is 100 paise (₹1) for testing.
