@@ -90,3 +90,11 @@ async def analyze_contract(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
+    mport os
+import razorpay
+
+razorpay_key_id = os.getenv("RAZORPAY_KEY_ID")
+razorpay_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
+razorpay_webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET")
+
+client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
