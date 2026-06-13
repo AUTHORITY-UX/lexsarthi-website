@@ -1,11 +1,15 @@
 import os
 import shutil
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+import time
+import hmac
+import hashlib
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_parse import LlamaParse
+import razorpay
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
@@ -32,6 +36,16 @@ parser = LlamaParse(
     verbose=True,
 )
 
+# ---------- Razorpay client ----------
+razorpay_key_id = os.getenv("RAZORPAY_KEY_ID")
+razorpay_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
+razorpay_webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET")
+
+if not razorpay_key_id or not razorpay_key_secret:
+    print("Warning: Razorpay keys not set – /create-order will not work")
+else:
+    razorpay_client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
+
 # ---------- Load legal documents using LlamaParse ----------
 index = None
 if os.path.exists("legal_docs") and any(os.scandir("legal_docs")):
@@ -39,7 +53,6 @@ if os.path.exists("legal_docs") and any(os.scandir("legal_docs")):
     for file in os.listdir("legal_docs"):
         if file.lower().endswith(".pdf"):
             file_path = os.path.join("legal_docs", file)
-            # LlamaParse returns a list of Document objects
             docs = parser.load_data(file_path)
             documents.extend(docs)
     if documents:
@@ -87,14 +100,38 @@ async def analyze_contract(file: UploadFile = File(...)):
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
+@app.post("/create-order")
+async def create_order(amount: int = 500):
+    if not razorpay_key_id or not razorpay_key_secret:
+        raise HTTPException(500, detail="Razorpay not configured")
+    try:
+        order_data = {
+            "amount": amount * 100,
+            "currency": "INR",
+            "payment_capture": 1,
+            "receipt": f"order_rcpt_{int(time.time())}"
+        }
+        order = razorpay_client.order.create(data=order_data)
+        return {"order_id": order["id"], "amount": amount, "currency": "INR"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/razorpay-webhook")
+async def razorpay_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature")
+    if not razorpay_webhook_secret:
+        raise HTTPException(500, detail="Webhook secret not set")
+    expected = hmac.new(
+        razorpay_webhook_secret.encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    # Payment verified – you can log or store transaction
+    return {"status": "success"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
-    import os
-import razorpay
-
-razorpay_key_id = os.getenv("RAZORPAY_KEY_ID")
-razorpay_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
-razorpay_webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET")
-
-client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
