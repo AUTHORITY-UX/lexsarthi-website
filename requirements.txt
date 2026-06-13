@@ -6,3 +6,4 @@ llama-index-llms-openai-like
 llama-index-embeddings-huggingface
 llama-parse
 sentence-transformers
+razorpay
