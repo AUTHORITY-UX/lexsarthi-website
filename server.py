@@ -135,3 +135,80 @@ async def razorpay_webhook(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
+    # Add these imports at the top of your server.py file
+import razorpay
+import hmac
+import hashlib
+
+# Add this code before your existing endpoints (@app.get...)
+# Initialize the Razorpay client with your test keys from the environment
+razorpay_client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
+
+@app.post("/api/create-order")
+async def create_order(amount: int = 500):
+    """
+    Endpoint to create a Razorpay order.
+    Minimum amount is 100 paise (₹1) for testing.
+    """
+    # Validate amount
+    if amount < 1:
+        raise HTTPException(status_code=400, detail="Minimum amount is 100 paise (₹1)")
+
+    try:
+        # Prepare order data. Amount is in paise.
+        order_data = {
+            "amount": amount * 100,
+            "currency": "INR",
+            "receipt": f"order_rcpt_{int(time.time())}",
+            "payment_capture": 1
+        }
+        # Create order on Razorpay
+        order = razorpay_client.order.create(data=order_data)
+        # Return the order details to the frontend
+        return {"order_id": order["id"], "amount": amount, "currency": "INR"}
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Order creation failed: {e}")
+        # Raise an HTTP 500 error
+        raise HTTPException(status_code=500, detail="Failed to create payment order")
+
+@app.post("/api/verify-payment")
+async def verify_payment(request: Request):
+    """
+    Endpoint to verify the payment signature after a transaction.
+    """
+    try:
+        # Get the JSON body from the request
+        body = await request.json()
+        
+        # Extract the required fields
+        razorpay_order_id = body.get('razorpay_order_id')
+        razorpay_payment_id = body.get('razorpay_payment_id')
+        razorpay_signature = body.get('razorpay_signature')
+
+        # Validate that all fields are present
+        if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+            raise HTTPException(status_code=400, detail="Missing payment verification fields")
+
+        # Create the signature string in the order expected by Razorpay
+        message = f"{razorpay_order_id}|{razorpay_payment_id}"
+        
+        # Generate the expected signature using HMAC-SHA256
+        secret = os.getenv("RAZORPAY_KEY_SECRET")
+        expected_signature = hmac.new(
+            key=secret.encode('utf-8'),
+            msg=message.encode('utf-8'),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+        
+        # Compare the signatures
+        if not hmac.compare_digest(expected_signature, razorpay_signature):
+            print(f"Signature mismatch. Expected: {expected_signature}, Received: {razorpay_signature}")
+            raise HTTPException(status_code=400, detail="Invalid payment signature")
+        
+        # If valid, you can mark the order as paid in your database here
+        return {"status": "success", "message": "Payment verified successfully"}
+        
+    except Exception as e:
+        print(f"Payment verification failed: {e}")
+        raise HTTPException(status_code=500, detail="Payment verification failed")
