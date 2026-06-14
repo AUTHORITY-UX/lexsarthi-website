@@ -4,6 +4,8 @@ import time
 import hmac
 import hashlib
 import asyncio
+import zipfile
+import io
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, Settings, Document
@@ -167,6 +169,10 @@ async def verify_payment(request: Request):
     if not hmac.compare_digest(expected, signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
     return {"status": "success"}
+
+# ========== AGENTS ==========
+
+# Agent 1: DPDP Act Compliance Checker
 @app.post("/dpdp-check")
 async def dpdp_check(file: UploadFile = File(...)):
     if not file.filename.lower().endswith('.pdf'):
@@ -176,7 +182,6 @@ async def dpdp_check(file: UploadFile = File(...)):
     try:
         with open(temp_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
-        # Parse PDF (async safe)
         docs = await asyncio.to_thread(parser.load_data, temp_path)
         if not docs:
             reader = PdfReader(temp_path)
@@ -198,6 +203,9 @@ async def dpdp_check(file: UploadFile = File(...)):
         raise HTTPException(500, detail=str(e))
     finally:
         if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+# Agent 2: Legal Notice Drafter
 @app.post("/legal-notice")
 async def legal_notice(request: Request):
     data = await request.json()
@@ -215,40 +223,53 @@ async def legal_notice(request: Request):
     - Deadline for compliance
     - Signature block (placeholder)
     Do not include advice or commentary."""
-    # Direct LLM call (no RAG needed, but can use index for templates)
     response = Settings.llm.complete(prompt)
     return {"notice": response.text}
-import zipfile
-import io
+
+# Agent 3: Due Diligence (Multi-PDF)
 @app.post("/due-diligence")
 async def due_diligence(zip_file: UploadFile = File(...)):
     contents = await zip_file.read()
+    results = []
     with zipfile.ZipFile(io.BytesIO(contents)) as z:
-        results = []
         for name in z.namelist():
             if name.lower().endswith('.pdf'):
-                with z.open(name) as pdf_file:
-                    # Save temporarily and analyze (reuse /analyze logic but aggregate)
-                    # For brevity, just call a helper that returns risk level
-                    results.append({"file": name, "risk": "pending"})  # implement actual analysis
-        return {"results": results} 
+                # For simplicity, just return the file name and a placeholder risk
+                results.append({"file": name, "risk": "pending review"})
+    return {"results": results}
+
+# Agent 4: NDA Triage
 @app.post("/nda-triage")
 async def nda_triage(file: UploadFile = File(...)):
-    # Same as /analyze but with a prompt focused on NDAs only
-    # Return risk level: green (low), amber (medium), red (high)
-    prompt = "Classify this NDA as green (low risk), amber (medium risk), or red (high risk) based on Indian contract law. Return only the word."
-    # ... (similar parsing and query) 
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Only PDF files allowed")
+    os.makedirs("temp_uploads", exist_ok=True)
+    temp_path = f"temp_uploads/{file.filename}"
+    try:
+        with open(temp_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        docs = await asyncio.to_thread(parser.load_data, temp_path)
+        if not docs:
+            reader = PdfReader(temp_path)
+            text = "".join(page.extract_text() or "" for page in reader.pages)
+            docs = [Document(text=text)]
+        temp_index = VectorStoreIndex.from_documents(docs)
+        engine = temp_index.as_query_engine()
+        prompt = "Classify this NDA as green (low risk), amber (medium risk), or red (high risk) based on Indian contract law. Return only the word."
+        response = engine.query(prompt)
+        answer = response.response if hasattr(response, 'response') else str(response)
+        return {"filename": file.filename, "risk_level": answer.strip()}
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+# Agent 5: Weekly Regulatory Digest
 @app.get("/weekly-digest")
 async def weekly_digest():
-    """
-    Generates a regulatory digest by querying the permanent legal index
-    for recent changes in Indian laws (DPDP Act, Companies Act, IBC, etc.)
-    Returns a formatted summary.
-    """
     if index is None:
         raise HTTPException(503, detail="Legal index not loaded. Please add PDFs to legal_docs/.")
-    
-    # Define key regulatory areas to query
     queries = [
         "What are the latest amendments to the DPDP Act in the past month?",
         "Recent changes in the Indian Contract Act, 1872",
@@ -256,7 +277,6 @@ async def weekly_digest():
         "New rules or notifications under the Companies Act, 2013",
         "Recent judgments or regulatory changes affecting contract law in India"
     ]
-    
     digest = []
     for q in queries:
         try:
@@ -265,8 +285,6 @@ async def weekly_digest():
             digest.append({"topic": q, "summary": answer})
         except Exception as e:
             digest.append({"topic": q, "error": str(e)})
-    
-    # Format as readable digest
     formatted = "# Weekly Regulatory Digest\n\n"
     for item in digest:
         formatted += f"## {item['topic']}\n"
@@ -274,8 +292,8 @@ async def weekly_digest():
             formatted += f"{item['summary']}\n\n"
         else:
             formatted += f"Error: {item['error']}\n\n"
-    
-    return {"digest": formatted}    
+    return {"digest": formatted}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
