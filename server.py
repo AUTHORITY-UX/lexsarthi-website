@@ -218,6 +218,20 @@ async def legal_notice(request: Request):
     # Direct LLM call (no RAG needed, but can use index for templates)
     response = Settings.llm.complete(prompt)
     return {"notice": response.text}
+import zipfile
+import io
+@app.post("/due-diligence")
+async def due_diligence(zip_file: UploadFile = File(...)):
+    contents = await zip_file.read()
+    with zipfile.ZipFile(io.BytesIO(contents)) as z:
+        results = []
+        for name in z.namelist():
+            if name.lower().endswith('.pdf'):
+                with z.open(name) as pdf_file:
+                    # Save temporarily and analyze (reuse /analyze logic but aggregate)
+                    # For brevity, just call a helper that returns risk level
+                    results.append({"file": name, "risk": "pending"})  # implement actual analysis
+        return {"results": results}    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
