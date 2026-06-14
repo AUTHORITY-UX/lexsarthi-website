@@ -237,7 +237,45 @@ async def nda_triage(file: UploadFile = File(...)):
     # Same as /analyze but with a prompt focused on NDAs only
     # Return risk level: green (low), amber (medium), red (high)
     prompt = "Classify this NDA as green (low risk), amber (medium risk), or red (high risk) based on Indian contract law. Return only the word."
-    # ... (similar parsing and query)        
+    # ... (similar parsing and query) 
+@app.get("/weekly-digest")
+async def weekly_digest():
+    """
+    Generates a regulatory digest by querying the permanent legal index
+    for recent changes in Indian laws (DPDP Act, Companies Act, IBC, etc.)
+    Returns a formatted summary.
+    """
+    if index is None:
+        raise HTTPException(503, detail="Legal index not loaded. Please add PDFs to legal_docs/.")
+    
+    # Define key regulatory areas to query
+    queries = [
+        "What are the latest amendments to the DPDP Act in the past month?",
+        "Recent changes in the Indian Contract Act, 1872",
+        "Updates to the Insolvency and Bankruptcy Code (IBC)",
+        "New rules or notifications under the Companies Act, 2013",
+        "Recent judgments or regulatory changes affecting contract law in India"
+    ]
+    
+    digest = []
+    for q in queries:
+        try:
+            response = index.as_query_engine().query(q)
+            answer = response.response if hasattr(response, 'response') else str(response)
+            digest.append({"topic": q, "summary": answer})
+        except Exception as e:
+            digest.append({"topic": q, "error": str(e)})
+    
+    # Format as readable digest
+    formatted = "# Weekly Regulatory Digest\n\n"
+    for item in digest:
+        formatted += f"## {item['topic']}\n"
+        if "summary" in item:
+            formatted += f"{item['summary']}\n\n"
+        else:
+            formatted += f"Error: {item['error']}\n\n"
+    
+    return {"digest": formatted}    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
