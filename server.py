@@ -136,70 +136,79 @@ async def analyze_contract(file: UploadFile = File(...)):
                 if page_text:
                     text += page_text
             if not text.strip():
-                return {"filename": file.filename, "risk_report": "Could not extract text from PDF. Please ensure it is a text‑based PDF."}
+                return {"filename": file.filename, "risk_report": {"error": "Could not extract text from PDF. Ensure it is text‑based."}}
             docs = [Document(text=text)]
             print("✅ Extracted text via PyPDF2 fallback")
 
-        # Build temporary index (using increased chunk size if configured globally)
+        # Build temporary index with increased chunk size (if not set globally)
         temp_index = VectorStoreIndex.from_documents(docs)
         engine = temp_index.as_query_engine()
 
-        # Structured prompt for contract analysis (MSA, Share Subscription, etc.)
+        # Prompt for structured JSON output (clause‑wise analysis)
         prompt = """
-You are a legal risk analyst for LexSarthi, an AI‑native law firm. Analyze the given contract and produce a structured risk report in JSON format. Follow this schema exactly:
+You are a legal risk analyst for LexSarthi, an AI‑native law firm. Analyze the given contract and return a **valid JSON object** with exactly the following schema:
 
 {
-  "contract_type": "MSA / Share Subscription / NDA / etc. (infer from content)",
+  "contract_type": "string (infer from content: e.g., Master Service Agreement, Share Subscription Agreement, NDA, etc.)",
   "overall_risk": "High / Medium / Low",
   "clause_analysis": [
     {
-      "clause_name": "e.g., Indemnity, Limitation of Liability, Termination, Confidentiality, Governing Law, etc.",
+      "clause_name": "string (e.g., Indemnity, Limitation of Liability, Termination, Confidentiality, Governing Law, etc.)",
       "risk_level": "High / Medium / Low",
-      "reason": "Why this clause is risky (reference specific wording from the contract).",
-      "suggested_change": "Concrete, legally valid alternative wording under Indian law."
+      "reason": "string (explain why this clause is risky, referencing specific wording from the contract)",
+      "suggested_change": "string (concrete alternative wording under Indian law, or a model clause)"
     }
   ],
-  "summary": "Brief overall assessment and recommended next steps."
+  "summary": "string (brief overall assessment and recommended next steps)"
 }
 
 Instructions:
-- Extract only clauses that are present and material.
-- For MSAs: focus on indemnity, limitation of liability, termination, service levels (SLA), data protection (DPDP Act), dispute resolution (arbitration).
+- Only include clauses that are material and actually present in the contract.
+- For MSAs: focus on indemnity, liability cap, termination, service levels, data protection (DPDP Act), dispute resolution (arbitration).
 - For share subscription agreements: focus on representations & warranties, indemnity, closing conditions, drag‑along/tag‑along, anti‑dilution, governing law.
-- Use the actual contract text to justify each risk.
-- Provide actionable, precise suggested changes (model clauses) suitable for Indian law.
-- If a standard clause is missing (e.g., no arbitration clause), flag as high risk and suggest addition.
+- For NDAs: focus on definition of confidential information, exclusions, term, remedies, jurisdiction.
+- Use the exact contract text to justify each risk.
+- Provide actionable, legally valid suggested changes suitable for Indian law.
+- If a standard clause is missing (e.g., no arbitration clause), flag it as high risk and suggest adding it.
+- Output **only** the JSON, no extra text.
 
 Contract text:
 {context}
 """
-        # Retrieve the most relevant chunks (use same retriever as /query)
+        # Retrieve most relevant chunks
         retriever = temp_index.as_retriever(similarity_top_k=10)
         nodes = retriever.retrieve(prompt)
         context = "\n\n---\n\n".join([n.node.text for n in nodes]) if nodes else ""
         if not context:
-            return {"filename": file.filename, "risk_report": "Unable to extract sufficient content from the PDF. Please ensure it is text‑based."}
-        
-        # Replace placeholder with actual context
+            return {"filename": file.filename, "risk_report": {"error": "Insufficient content extracted from PDF."}}
+
         final_prompt = prompt.replace("{context}", context)
 
-        # Call LLM (ensure you have Groq or other provider)
+        # Call LLM
         response = Settings.llm.complete(final_prompt)
         raw = response.text if hasattr(response, 'text') else str(response)
-        
-        # Attempt to parse the JSON; if fails, return raw but indicate error
+
+        # Clean and parse JSON
+        import json
+        # Remove markdown code fences if present
+        if raw.startswith("```json"):
+            raw = raw[7:]
+        if raw.startswith("```"):
+            raw = raw[3:]
+        if raw.endswith("```"):
+            raw = raw[:-3]
+        raw = raw.strip()
+
         try:
-            import json
-            # Clean potential markdown code fences
-            if raw.startswith("```json"):
-                raw = raw[7:-3]
-            if raw.startswith("```"):
-                raw = raw[3:-3]
-            report_json = json.loads(raw.strip())
-            # Ensure all expected keys exist
-            if not all(k in report_json for k in ["contract_type", "overall_risk", "clause_analysis", "summary"]):
-                raise ValueError("Missing required keys")
-            return {"filename": file.filename, "risk_report": report_json}
+            report = json.loads(raw)
+            # Validate required keys
+            required = ["contract_type", "overall_risk", "clause_analysis", "summary"]
+            if not all(k in report for k in required):
+                raise ValueError("Missing required keys in JSON")
+            # Ensure clause_analysis is a list
+            if not isinstance(report["clause_analysis"], list):
+                report["clause_analysis"] = []
+            return {"filename": file.filename, "risk_report": report}
         except Exception as e:
             # Fallback: return raw text with error note
             return {"filename": file.filename, "risk_report": {"error": "Could not parse structured output", "raw": raw, "parse_error": str(e)}}
