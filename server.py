@@ -76,11 +76,41 @@ async def health():
 @app.get("/query")
 async def query(q: str = Query(...)):
     if index is None:
-        return {"query": q, "response": "No legal documents loaded."}
+        return {"query": q, "response": "No legal documents loaded. Please upload PDFs to legal_docs/."}
     try:
-        response = index.as_query_engine().query(q)
-        answer = response.response if hasattr(response, 'response') else str(response)
-        return {"query": q, "response": answer}
+        # Retrieve the most relevant chunks (top‑k = 5)
+        retriever = index.as_retriever(similarity_top_k=5)
+        nodes = retriever.retrieve(q)
+        if not nodes:
+            return {"query": q, "response": "No relevant information found in the indexed documents."}
+        
+        # Extract text from retrieved nodes and cite sources
+        context = "\n\n---\n\n".join([n.node.text for n in nodes])
+        sources = [f"Section from {n.node.metadata.get('source', 'unknown')}" for n in nodes]
+        
+        # Strong, explicit prompt for precise legal answers
+        prompt = f"""You are a legal AI assistant for LexSarthi, an AI‑native law firm. 
+Answer the user's query based **only** on the provided legal documents. 
+If the answer is not in the documents, say "The documents do not contain this information."
+Do not add general knowledge or assumptions.
+
+### Retrieved legal text:
+{context}
+
+### User query:
+{q}
+
+### Instructions:
+- Be precise, cite specific sections or clauses when possible.
+- If the query asks for a definition, give the exact legal definition from the text.
+- If the query asks for a section number, return the section number and its content.
+- Keep the answer concise but legally accurate.
+
+Answer:"""
+        
+        response = Settings.llm.complete(prompt)
+        answer = response.text if hasattr(response, 'text') else str(response)
+        return {"query": q, "response": answer, "sources": sources}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
