@@ -78,42 +78,36 @@ async def query(q: str = Query(...)):
     if index is None:
         return {"query": q, "response": "No legal documents loaded. Please upload PDFs to legal_docs/."}
     try:
-        retriever = index.as_retriever(similarity_top_k=5)
+        # Create a retriever with higher top_k
+        retriever = index.as_retriever(similarity_top_k=10)
         nodes = retriever.retrieve(q)
-        context = "\n\n---\n\n".join([n.node.text for n in nodes]) if nodes else ""
-        sources = [f"Section from {n.node.metadata.get('source', 'unknown')}" for n in nodes] if nodes else []
+        if not nodes:
+            return {"query": q, "response": "No relevant information found in the indexed documents."}
+        
+        context = "\n\n---\n\n".join([n.node.text for n in nodes])
+        sources = [f"Section from {n.node.metadata.get('source', 'unknown')}" for n in nodes]
+        
+        prompt = f"""You are a legal AI assistant for LexSarthi. Answer the user's query based **only** on the provided legal documents. 
+If the answer is not in the documents, say "The documents do not contain this information."
+Do not use general knowledge.
 
-        # Flexible prompt: prefer documents, but allow general knowledge
-        if context:
-            prompt = f"""You are a legal AI assistant for LexSarthi. Answer the user's query based **primarily** on the provided legal documents. 
-If the answer is not fully contained in the documents, you may supplement with your general legal knowledge, but clearly indicate that the additional information is not from the firm's document repository.
-
-### Retrieved legal documents:
+### Retrieved legal text:
 {context}
 
 ### User query:
 {q}
 
 ### Instructions:
-- If the documents contain the answer, give a precise, section‑cited response.
-- If the documents are insufficient, answer using your general legal knowledge and add: "(Note: This information is based on general legal knowledge and not directly from our indexed documents.)"
-- Keep the answer concise and legally accurate.
+- Be precise, cite specific sections or clauses when possible.
+- If the query asks for a section number, return the exact wording from the documents.
 
 Answer:"""
-        else:
-            prompt = f"""You are a legal AI assistant for LexSarthi. The user query did not retrieve any relevant documents from our legal repository. 
-Please answer using your general legal knowledge, and add a disclaimer.
-
-User query: {q}
-
-Answer (with general knowledge):"""
-
+        
         response = Settings.llm.complete(prompt)
         answer = response.text if hasattr(response, 'text') else str(response)
         return {"query": q, "response": answer, "sources": sources}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 # ---------- Contract risk analysis (payment protected) ----------
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
