@@ -231,7 +231,13 @@ async def due_diligence(zip_file: UploadFile = File(...)):
                     # Save temporarily and analyze (reuse /analyze logic but aggregate)
                     # For brevity, just call a helper that returns risk level
                     results.append({"file": name, "risk": "pending"})  # implement actual analysis
-        return {"results": results}    
+        return {"results": results} 
+@app.post("/nda-triage")
+async def nda_triage(file: UploadFile = File(...)):
+    # Same as /analyze but with a prompt focused on NDAs only
+    # Return risk level: green (low), amber (medium), red (high)
+    prompt = "Classify this NDA as green (low risk), amber (medium risk), or red (high risk) based on Indian contract law. Return only the word."
+    # ... (similar parsing and query)        
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
