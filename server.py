@@ -129,11 +129,21 @@ async def analyze_contract(file: UploadFile = File(...)):
         engine = temp_index.as_query_engine()
 
         # Improved prompt to encourage non‑empty answer
-        prompt = (
-            "Analyze this contract under Indian law. "
-            "Identify high‑risk clauses such as indemnity, liability, termination, DPDP Act compliance, arbitration, and stamp duty. "
-            "If you cannot find any such clauses, state that clearly and provide a summary of the document. "
-            "Return a structured report with risk level (High/Medium/Low) and suggested changes."
+     prompt = (
+    "You are a legal AI assistant. Analyze the following contract and produce a **client‑friendly risk report**.\n\n"
+    "Use the following structure:\n"
+    "### Risk Level\n"
+    "(High / Medium / Low)\n\n"
+    "### High‑Risk Clauses Identified\n"
+    "- List each high‑risk clause (indemnity, liability, termination, DPDP Act, arbitration, stamp duty) and explain why it is a risk.\n"
+    "If a clause is not present, state: 'Not present'.\n\n"
+    "### Other Observations\n"
+    "- Any other notable provisions or missing protections.\n\n"
+    "### Overall Assessment\n"
+    "A brief summary of the contract's risk profile.\n\n"
+    "**Do not include any 'Suggested changes' or 'Recommendations'.**\n\n"
+    "Contract text:\n"
+
         )
         response = engine.query(prompt)
         answer = response.response if hasattr(response, 'response') else str(response)
