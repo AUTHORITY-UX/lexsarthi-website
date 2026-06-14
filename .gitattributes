@@ -38,3 +38,8 @@ legal_docs/companies_act_2013.pdf filter=lfs diff=lfs merge=lfs -text
 legal_docs/indian_contract_act.pdf filter=lfs diff=lfs merge=lfs -text
 legal_docs/the_arbitration_and_conciliation_act,_1996_act_no._26_of_1996.pdf filter=lfs diff=lfs merge=lfs -text
 legal_docs/the_insolvency_and_bankruptcy_code,_2016.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/Constitution_act.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/Evidence_act.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/it_act_2000.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/the_advocate_act_1961.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/the_indian_stamp_act,_1899.pdf filter=lfs diff=lfs merge=lfs -text
