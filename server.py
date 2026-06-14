@@ -198,7 +198,26 @@ async def dpdp_check(file: UploadFile = File(...)):
         raise HTTPException(500, detail=str(e))
     finally:
         if os.path.exists(temp_path):
-            os.remove(temp_path)
+@app.post("/legal-notice")
+async def legal_notice(request: Request):
+    data = await request.json()
+    parties = data.get("parties", [])
+    facts = data.get("facts", "")
+    law = data.get("applicable_law", "Indian Contract Act, 1872")
+    prompt = f"""Generate a formal legal notice under {law}.
+    Parties: {', '.join(parties) if parties else 'Not specified'}.
+    Facts: {facts}
+    Format as a legal notice with:
+    - Subject line
+    - Date
+    - Recipient details (placeholders)
+    - Body explaining breach/demand
+    - Deadline for compliance
+    - Signature block (placeholder)
+    Do not include advice or commentary."""
+    # Direct LLM call (no RAG needed, but can use index for templates)
+    response = Settings.llm.complete(prompt)
+    return {"notice": response.text}            os.remove(temp_path)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
