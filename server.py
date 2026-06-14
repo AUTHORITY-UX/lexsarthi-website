@@ -1,5 +1,3 @@
-from llama_index.core.node_parser import SentenceSplitter
-Settings.node_parser = SentenceSplitter(chunk_size=2048, chunk_overlap=256)
 import os
 import shutil
 import time
@@ -140,57 +138,52 @@ async def analyze_contract(file: UploadFile = File(...)):
             docs = [Document(text=text)]
             print("✅ Extracted text via PyPDF2 fallback")
 
-        # Build temporary index with increased chunk size (if not set globally)
-        temp_index = VectorStoreIndex.from_documents(docs)
+        # Build temporary index with larger chunk size (2048) to capture whole clauses
+        from llama_index.core.node_parser import SentenceSplitter
+        splitter = SentenceSplitter(chunk_size=2048, chunk_overlap=256)
+        temp_index = VectorStoreIndex.from_documents(docs, transformations=[splitter])
         engine = temp_index.as_query_engine()
 
-        # Prompt for structured JSON output (clause‑wise analysis)
+        # Structured prompt (as before)
         prompt = """
-You are a legal risk analyst for LexSarthi, an AI‑native law firm. Analyze the given contract and return a **valid JSON object** with exactly the following schema:
+You are a legal risk analyst for LexSarthi. Analyze the given contract and return a **valid JSON object** with exactly the following schema:
 
 {
-  "contract_type": "string (infer from content: e.g., Master Service Agreement, Share Subscription Agreement, NDA, etc.)",
+  "contract_type": "string (infer from content)",
   "overall_risk": "High / Medium / Low",
   "clause_analysis": [
     {
-      "clause_name": "string (e.g., Indemnity, Limitation of Liability, Termination, Confidentiality, Governing Law, etc.)",
+      "clause_name": "string",
       "risk_level": "High / Medium / Low",
-      "reason": "string (explain why this clause is risky, referencing specific wording from the contract)",
-      "suggested_change": "string (concrete alternative wording under Indian law, or a model clause)"
+      "reason": "string",
+      "suggested_change": "string"
     }
   ],
-  "summary": "string (brief overall assessment and recommended next steps)"
+  "summary": "string"
 }
 
 Instructions:
-- Only include clauses that are material and actually present in the contract.
-- For MSAs: focus on indemnity, liability cap, termination, service levels, data protection (DPDP Act), dispute resolution (arbitration).
-- For share subscription agreements: focus on representations & warranties, indemnity, closing conditions, drag‑along/tag‑along, anti‑dilution, governing law.
-- For NDAs: focus on definition of confidential information, exclusions, term, remedies, jurisdiction.
-- Use the exact contract text to justify each risk.
-- Provide actionable, legally valid suggested changes suitable for Indian law.
-- If a standard clause is missing (e.g., no arbitration clause), flag it as high risk and suggest adding it.
-- Output **only** the JSON, no extra text.
+- Only include material clauses that are present.
+- Use actual contract text to justify risks.
+- Provide actionable suggested changes under Indian law.
+- Output **only** JSON, no extra text.
 
 Contract text:
 {context}
 """
-        # Retrieve most relevant chunks
+        # Retrieve top chunks
         retriever = temp_index.as_retriever(similarity_top_k=10)
         nodes = retriever.retrieve(prompt)
         context = "\n\n---\n\n".join([n.node.text for n in nodes]) if nodes else ""
         if not context:
-            return {"filename": file.filename, "risk_report": {"error": "Insufficient content extracted from PDF."}}
+            return {"filename": file.filename, "risk_report": {"error": "Insufficient content extracted."}}
 
         final_prompt = prompt.replace("{context}", context)
-
-        # Call LLM
         response = Settings.llm.complete(final_prompt)
         raw = response.text if hasattr(response, 'text') else str(response)
 
         # Clean and parse JSON
         import json
-        # Remove markdown code fences if present
         if raw.startswith("```json"):
             raw = raw[7:]
         if raw.startswith("```"):
@@ -198,20 +191,11 @@ Contract text:
         if raw.endswith("```"):
             raw = raw[:-3]
         raw = raw.strip()
-
         try:
             report = json.loads(raw)
-            # Validate required keys
-            required = ["contract_type", "overall_risk", "clause_analysis", "summary"]
-            if not all(k in report for k in required):
-                raise ValueError("Missing required keys in JSON")
-            # Ensure clause_analysis is a list
-            if not isinstance(report["clause_analysis"], list):
-                report["clause_analysis"] = []
             return {"filename": file.filename, "risk_report": report}
         except Exception as e:
-            # Fallback: return raw text with error note
-            return {"filename": file.filename, "risk_report": {"error": "Could not parse structured output", "raw": raw, "parse_error": str(e)}}
+            return {"filename": file.filename, "risk_report": {"error": "JSON parse failed", "raw": raw, "parse_error": str(e)}}
 
     except Exception as e:
         print(f"❌ Analysis error: {str(e)}")
