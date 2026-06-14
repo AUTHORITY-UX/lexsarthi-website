@@ -1,3 +1,5 @@
+from llama_index.core.node_parser import SentenceSplitter
+Settings.node_parser = SentenceSplitter(chunk_size=2048, chunk_overlap=256)
 import os
 import shutil
 import time
