@@ -3,6 +3,22 @@ import shutil
 import time
 import hmac
 import hashlib
+import asyncio
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, Settings, Document
+from llama_index.llms.openai_like import OpenAILike
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_parse import LlamaParse
+from pypdf import PdfReader
+import razorpay
+import asyncio
+from pypdf import PdfReader
+import os
+import shutil
+import time
+import hmac
+import hashlib
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from llama_index.core import VectorStoreIndex, Settings
@@ -80,6 +96,58 @@ async def query(q: str = Query(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze")
+async def analyze_contract(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Only PDF files allowed")
+    os.makedirs("temp_uploads", exist_ok=True)
+    temp_path = f"temp_uploads/{file.filename}"
+    try:
+        with open(temp_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        # Parse PDF – run synchronous LlamaParse in a thread to avoid event loop issues
+        try:
+            docs = await asyncio.to_thread(parser.load_data, temp_path)
+            if not docs:
+                raise ValueError("LlamaParse returned empty documents")
+            print(f"✅ Parsed {len(docs)} chunks via LlamaParse")
+        except Exception as parse_err:
+            print(f"⚠️ LlamaParse failed: {parse_err}. Falling back to PyPDF2.")
+            reader = PdfReader(temp_path)
+            text = ""
+            for page in reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text
+            if not text.strip():
+                return {"filename": file.filename, "risk_report": "Could not extract text from PDF. Please ensure it is a text‑based PDF."}
+            docs = [Document(text=text)]
+            print("✅ Extracted text via PyPDF2 fallback")
+
+        # Build temporary index and query engine
+        temp_index = VectorStoreIndex.from_documents(docs)
+        engine = temp_index.as_query_engine()
+
+        # Improved prompt to encourage non‑empty answer
+        prompt = (
+            "Analyze this contract under Indian law. "
+            "Identify high‑risk clauses such as indemnity, liability, termination, DPDP Act compliance, arbitration, and stamp duty. "
+            "If you cannot find any such clauses, state that clearly and provide a summary of the document. "
+            "Return a structured report with risk level (High/Medium/Low) and suggested changes."
+        )
+        response = engine.query(prompt)
+        answer = response.response if hasattr(response, 'response') else str(response)
+        if not answer or answer.strip() == "":
+            answer = "The AI could not generate a risk report. Please try a different PDF or contact support."
+
+        return {"filename": file.filename, "risk_report": answer}
+
+    except Exception as e:
+        print(f"❌ Analysis error: {str(e)}")
+        raise HTTPException(500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 async def analyze_contract(file: UploadFile = File(...)):
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(400, "Only PDF files allowed")
