@@ -167,7 +167,38 @@ async def verify_payment(request: Request):
     if not hmac.compare_digest(expected, signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
     return {"status": "success"}
-
+@app.post("/dpdp-check")
+async def dpdp_check(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Only PDF files allowed")
+    os.makedirs("temp_uploads", exist_ok=True)
+    temp_path = f"temp_uploads/{file.filename}"
+    try:
+        with open(temp_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        # Parse PDF (async safe)
+        docs = await asyncio.to_thread(parser.load_data, temp_path)
+        if not docs:
+            reader = PdfReader(temp_path)
+            text = "".join(page.extract_text() or "" for page in reader.pages)
+            docs = [Document(text=text)]
+        temp_index = VectorStoreIndex.from_documents(docs)
+        engine = temp_index.as_query_engine()
+        prompt = (
+            "You are a DPDP Act compliance auditor. Analyze the given document against the Digital Personal Data Protection Act 2023. "
+            "Return a JSON with:\n"
+            "- compliance_score: 0-100\n"
+            "- missing_clauses: list of DPDP requirements not met (e.g., consent, data breach notification, data principal rights)\n"
+            "- observations: brief remarks\n"
+            "Do not include recommendations or suggested changes."
+        )
+        response = engine.query(prompt)
+        return {"filename": file.filename, "report": response.response}
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
