@@ -217,7 +217,7 @@ async def legal_notice(request: Request):
     Do not include advice or commentary."""
     # Direct LLM call (no RAG needed, but can use index for templates)
     response = Settings.llm.complete(prompt)
-    return {"notice": response.text}            os.remove(temp_path)
+    return {"notice": response.text}
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=7860)
