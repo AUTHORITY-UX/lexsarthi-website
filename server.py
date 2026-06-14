@@ -105,7 +105,7 @@ async def analyze_contract(file: UploadFile = File(...)):
         with open(temp_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        # Parse PDF – run synchronous LlamaParse in a thread to avoid event loop issues
+        # Parse PDF using LlamaParse (async safe)
         try:
             docs = await asyncio.to_thread(parser.load_data, temp_path)
             if not docs:
@@ -124,26 +124,14 @@ async def analyze_contract(file: UploadFile = File(...)):
             docs = [Document(text=text)]
             print("✅ Extracted text via PyPDF2 fallback")
 
-        # Build temporary index and query engine
         temp_index = VectorStoreIndex.from_documents(docs)
         engine = temp_index.as_query_engine()
 
-        # Improved prompt to encourage non‑empty answer
-     prompt = (
-    "You are a legal AI assistant. Analyze the following contract and produce a **client‑friendly risk report**.\n\n"
-    "Use the following structure:\n"
-    "### Risk Level\n"
-    "(High / Medium / Low)\n\n"
-    "### High‑Risk Clauses Identified\n"
-    "- List each high‑risk clause (indemnity, liability, termination, DPDP Act, arbitration, stamp duty) and explain why it is a risk.\n"
-    "If a clause is not present, state: 'Not present'.\n\n"
-    "### Other Observations\n"
-    "- Any other notable provisions or missing protections.\n\n"
-    "### Overall Assessment\n"
-    "A brief summary of the contract's risk profile.\n\n"
-    "**Do not include any 'Suggested changes' or 'Recommendations'.**\n\n"
-    "Contract text:\n"
-
+        prompt = (
+            "Analyze this contract under Indian law. "
+            "Identify high‑risk clauses such as indemnity, liability, termination, DPDP Act compliance, arbitration, and stamp duty. "
+            "If you cannot find any such clauses, state that clearly and provide a summary of the document. "
+            "Return a structured report with risk level (High/Medium/Low) and suggested changes."
         )
         response = engine.query(prompt)
         answer = response.response if hasattr(response, 'response') else str(response)
@@ -158,26 +146,6 @@ async def analyze_contract(file: UploadFile = File(...)):
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
-async def analyze_contract(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith('.pdf'):
-        raise HTTPException(400, "Only PDF files allowed")
-    os.makedirs("temp_uploads", exist_ok=True)
-    temp_path = f"temp_uploads/{file.filename}"
-    try:
-        with open(temp_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-        docs = parser.load_data(temp_path)
-        temp_index = VectorStoreIndex.from_documents(docs)
-        engine = temp_index.as_query_engine()
-        prompt = "Analyze this contract under Indian law. Identify high-risk clauses (indemnity, liability, termination, DPDP Act, arbitration, stamp duty). Provide a structured report with risk level and suggested changes."
-        report = engine.query(prompt)
-        return {"filename": file.filename, "risk_report": str(report)}
-    except Exception as e:
-        raise HTTPException(500, detail=str(e))
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-
 @app.post("/create-order")
 async def create_order(amount: int = 2):
     if not razorpay_key_id or not razorpay_key_secret:
