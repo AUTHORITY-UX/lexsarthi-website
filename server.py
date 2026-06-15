@@ -130,18 +130,42 @@ async def analyze_contract(
 
         # Polished corporate lawyer prompt
         prompt = """
-You are a senior corporate lawyer with 40 years of experience in Indian contract law, M&A, and dispute resolution. Your task is to produce a **court‑ready, client‑facing risk report** that would be delivered by a top‑tier law firm.
+        prompt = """
+You are a senior corporate lawyer with 40 years of experience. Analyse the attached contract **clause by clause** and produce a **risk register** in JSON format.
 
-### Instructions (strict):
-1. Identify the contract type and governing law.
-2. Assign overall risk (High/Medium/Low) with a one‑sentence justification.
-3. For each problematic clause (or missing essential clause):
-   - **Clause name** (exact reference)
-   - **Risk level** (High/Medium/Low)
-   - **Legal reasoning** – cite specific sections of the **Indian Contract Act, 1872**, **DPDP Act, 2023**, **IBC**, **Arbitration Act**, etc. Use exact wording like “Section 27 of the Indian Contract Act, 1872 voids any agreement in restraint of trade unless it falls within a statutory exception.”
-   - **Suggested change** – provide the **exact redlined wording** (e.g., “Delete the words ‘any customer’ and replace with ‘customers with whom the party has had a material relationship in the preceding 12 months’”).
-4. **Missing critical clauses** – flag them as high risk and propose the exact clause text (e.g., an entire limitation of liability clause).
-5. **Executive summary** – no more than 3‑4 lines.
+### Required output schema:
+{
+  "contract_type": "string",
+  "overall_risk": "High/Medium/Low",
+  "clause_analysis": [
+    {
+      "clause_number": "string (e.g., 'Clause 11')",
+      "clause_title": "string (if any)",
+      "risk_level": "High/Medium/Low",
+      "legal_basis": "cite exact section of Indian statute (e.g., 'Section 27, Indian Contract Act, 1872')",
+      "reason": "detailed explanation",
+      "suggested_redline": "exact wording to replace the clause"
+    }
+  ],
+  "missing_clauses": [
+    {
+      "clause_name": "string (e.g., 'Limitation of Liability')",
+      "risk_level": "High",
+      "proposed_text": "full clause text to insert"
+    }
+  ],
+  "summary": "executive summary (max 3 lines)"
+}
+
+### Instructions:
+- Analyse **every** clause that has legal significance (indemnity, liability, termination, non‑compete, non‑solicit, data protection, arbitration, governing law, force majeure, notice, etc.).
+- For missing essential clauses, add them to `missing_clauses` with a **draft clause**.
+- For the `suggested_redline`, provide **exact wording** as you would in a tracked‑changes document.
+- Be brutal – flag even moderate risks.
+
+### Contract text:
+{context}
+"""
 
 ### Output format (JSON):
 {
