@@ -184,63 +184,38 @@ async def health():
 # -------------------------------
 # /analyze endpoint
 # -------------------------------
-@app.post("/analyze")
-async def analyze_contract(file: UploadFile = File(...)):
-    # Parse PDF (same as before)
-    file_bytes = await file.read()
-    contract_text = ""
-    filename = file.filename
+# Add to imports
+from openai import AsyncOpenAI
 
-    if os.getenv("LLAMA_CLOUD_API_KEY"):
-        try:
-            parser = LlamaParse(api_key=os.getenv("LLAMA_CLOUD_API_KEY"), result_type="text")
-            documents = await asyncio.to_thread(
-                parser.load_data,
-                file_bytes,
-                extra_info={"file_name": filename}
-            )
-            contract_text = "\n".join([doc.text for doc in documents])
-        except Exception as e:
-            print(f"LlamaParse failed: {e}")
+# Initialize OpenRouter client (OpenAI-compatible)
+openrouter_client = AsyncOpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+)
 
-    if not contract_text.strip():
-        try:
-            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-                for page in pdf.pages:
-                    text = page.extract_text()
-                    if text:
-                        contract_text += text + "\n"
-        except Exception as e:
-            print(f"pdfplumber failed: {e}")
+# Choose a model with large context – Gemini 1.5 Pro (2M) or Claude 3.5 Sonnet (200k)
+PRIMARY_MODEL = "google/gemini-1.5-pro"  # 2M context – no chunking needed for 99% of contracts
 
-    if not contract_text.strip():
-        try:
-            reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
-            for page in reader.pages:
-                text = page.extract_text()
-                if text:
-                    contract_text += text + "\n"
-        except Exception as e:
-            print(f"PyPDF2 failed: {e}")
-
-    if not contract_text.strip():
-        raise HTTPException(status_code=400, detail="No text extracted from PDF.")
-
-    # Split into chunks (Gemini can handle large, but we keep for safety)
-    chunks = split_text_with_overlap(contract_text, MAX_TOKENS_PER_CHUNK, OVERLAP_TOKENS)
-    logger.info(f"Split into {len(chunks)} chunks")
-
-    # Analyze chunks concurrently (semaphore to avoid flooding Gemini)
-    semaphore = asyncio.Semaphore(5)
-    async def analyze_with_semaphore(chunk, idx):
-        async with semaphore:
-            return await analyze_chunk(chunk, idx, len(chunks))
-
-    tasks = [analyze_with_semaphore(chunk, i) for i, chunk in enumerate(chunks)]
-    chunk_results = await asyncio.gather(*tasks)
-    final_report = merge_results(chunk_results)
-    return final_report
-
+async def analyze_contract_full(file: UploadFile = File(...)):
+    # 1. Parse PDF (same as before – LlamaParse etc.)
+    # ...
+    # 2. Instead of chunking, send the whole text (or split into < 1M tokens)
+    # Gemini 1.5 Pro can handle the entire contract at once.
+    
+    prompt = build_full_analysis_prompt(contract_text)  # single prompt, no chunk index
+    response = await openrouter_client.chat.completions.create(
+        model=PRIMARY_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.0,
+        response_format={"type": "json_object"},
+        extra_headers={
+            "HTTP-Referer": "https://advocacyalawfrim.in",
+            "X-Title": "LexSarthi",
+        }
+    )
+    result_json = response.choices[0].message.content
+    # Clean and parse JSON
+    return json.loads(result_json)               
 # -------------------------------
 # Weekly digest (placeholder – can be implemented later)
 # -------------------------------
