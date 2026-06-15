@@ -61,17 +61,48 @@ def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> 
 # -------------------------------
 # Strict legal prompt (same as before)
 # -------------------------------
-def build_analysis_prompt(chunk_text: str, chunk_index: int, total_chunks: int) -> str:
-    return f"""Analyze contract chunk {chunk_index+1}/{total_chunks} for Indian law. Return ONLY JSON:
-{{
-  "clause_analysis": [{{"clause_number":"","title":"","risk_level":"Low/Medium/High","legal_basis":"Indian law section","reason":"2 sentences","redline":"exact change or 'No change'"}}],
-  "missing_clauses": [{{"title":"","risk_level":"High","legal_basis":"","reason":"","proposed_clause_text":""}}],
-  "overall_risk":"Low/Medium/High",
-  "executive_summary":"1 paragraph"
-}}
-Essential clauses: limitation of liability, indemnity, termination, DPDP Act, non‑compete, non‑solicit, arbitration (India seat), governing law India, force majeure, entire agreement, amendment, severability, waiver, assignment.
+def build_full_analysis_prompt(contract_text: str) -> str:
+    return f"""You are a corporate lawyer with 40 years of experience in Indian and international contract law, having advised top law firms and multinational corporations. Analyze the full contract below with the depth and precision expected from a senior partner.
 
-Chunk: {chunk_text}"""
+Return ONLY valid JSON with this exact structure (no markdown, no extra text):
+{{
+  "clause_analysis": [
+    {{
+      "clause_number": "string (e.g., '4.2', 'Indemnity')",
+      "title": "short clause name",
+      "risk_level": "Low/Medium/High",
+      "legal_basis": "specific Indian law section (e.g., 'Section 124 of Indian Contract Act, 1872')",
+      "reason": "detailed explanation (2-3 sentences)",
+      "redline": "exact suggested wording change or 'No change'"
+    }}
+  ],
+  "missing_clauses": [
+    {{
+      "title": "clause name (e.g., 'Data Protection under DPDP Act')",
+      "risk_level": "High",
+      "legal_basis": "relevant Indian law section",
+      "reason": "why it is required",
+      "proposed_clause_text": "draft wording"
+    }}
+  ],
+  "overall_risk": "Low/Medium/High",
+  "executive_summary": "one paragraph highlighting most critical risks, written in the style of a senior lawyer's memo"
+}}
+
+Essential clauses to check (include if missing in missing_clauses):
+- Limitation of liability (caps, exceptions)
+- Indemnity (scope, caps, survival)
+- Termination for convenience and cause
+- Data protection (DPDP Act, 2025 compliance)
+- Non-compete, non-solicit, non-disclosure
+- Arbitration (Indian seat, e.g., New Delhi; institutional rules like MCIA or LCIA India)
+- Governing law (India)
+- Force majeure (with COVID/epidemic clause)
+- Notice, entire agreement, amendment, severability, waiver, assignment
+
+Contract text:
+{contract_text}
+"""
 
 # -------------------------------
 # Primary: Gemini call (with retry)
