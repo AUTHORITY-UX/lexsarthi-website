@@ -2,12 +2,98 @@ import os
 import json
 import asyncio
 import io
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from datetime import datetime, timedelta
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from openai import AsyncOpenAI
 import pdfplumber
 import PyPDF2
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
+# -------------------------------
+# Database setup
+# -------------------------------
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./lexsarthi.db")
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Models
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class ContractAnalysis(Base):
+    __tablename__ = "contract_analyses"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    filename = Column(String)
+    analysis_json = Column(Text)  # store JSON string
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+Base.metadata.create_all(bind=engine)
+
+# -------------------------------
+# Security
+# -------------------------------
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def authenticate_user(db, email: str, password: str):
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(lambda: SessionLocal())):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+# -------------------------------
+# FastAPI app
+# -------------------------------
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -29,15 +115,10 @@ client = AsyncOpenAI(
     api_key=OPENROUTER_API_KEY,
 )
 
-# Model names (working on OpenRouter free tier)
-MODEL_SMALL = "openai/gpt-3.5-turbo"           # 16k context, fast, free
-MODEL_LARGE = "google/gemini-2.0-flash-exp:free"  # 1M context, free, works with long documents
-
-# Threshold: switch to large model if estimated tokens > 120k (approx 480k chars)
-TOKEN_THRESHOLD = 120000
+MODEL = "google/gemini-2.0-flash-exp:free"   # 1M context, free
 
 # -------------------------------
-# 40‑year corporate lawyer prompt (full text, no truncation)
+# Prompt (unchanged)
 # -------------------------------
 def build_prompt(contract_text: str) -> str:
     return f"""You are a corporate lawyer with 40 years of experience in Indian and international contract law. Analyze the full contract below.
@@ -83,10 +164,10 @@ Contract:
 """
 
 # -------------------------------
-# PDF text extraction (full document)
+# PDF text extraction
 # -------------------------------
 async def extract_text(file_bytes: bytes, filename: str) -> str:
-    # Try pdfplumber first (fast, handles large PDFs)
+    # Try pdfplumber first
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
@@ -95,7 +176,7 @@ async def extract_text(file_bytes: bytes, filename: str) -> str:
     except Exception as e:
         print(f"pdfplumber failed: {e}")
 
-    # Fallback to PyPDF2
+    # PyPDF2 fallback
     try:
         reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
         text = "\n".join(page.extract_text() or "" for page in reader.pages)
@@ -104,7 +185,7 @@ async def extract_text(file_bytes: bytes, filename: str) -> str:
     except Exception as e:
         print(f"PyPDF2 failed: {e}")
 
-    # Optional: LlamaParse if key exists (for scanned PDFs)
+    # LlamaParse if key exists (for scanned PDFs)
     if os.getenv("LLAMA_CLOUD_API_KEY"):
         try:
             from llama_parse import LlamaParse
@@ -115,57 +196,56 @@ async def extract_text(file_bytes: bytes, filename: str) -> str:
                 return text
         except Exception as e:
             print(f"LlamaParse failed: {e}")
-
     return ""
 
 # -------------------------------
-# Health check
+# Authentication endpoints
 # -------------------------------
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+@app.post("/register")
+async def register(email: str, password: str, db: Session = Depends(lambda: SessionLocal())):
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    hashed = get_password_hash(password)
+    user = User(email=email, hashed_password=hashed)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"message": "User created successfully"}
+
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(lambda: SessionLocal())):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # -------------------------------
-# /analyze endpoint
+# Contract analysis endpoint (protected, saves history)
 # -------------------------------
 @app.post("/analyze")
-async def analyze_contract(file: UploadFile = File(...)):
-    # 1. Extract full text
+async def analyze_contract(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(lambda: SessionLocal())
+):
     file_bytes = await file.read()
     contract_text = await extract_text(file_bytes, file.filename)
 
     if not contract_text.strip():
-        raise HTTPException(status_code=400, detail="No text extracted from PDF. Ensure the PDF contains selectable text (not scanned).")
+        raise HTTPException(status_code=400, detail="No text extracted from PDF.")
 
-    # 2. Estimate token count (rough: 4 chars per token)
-    token_estimate = len(contract_text) // 4
-
-    # 3. Choose model based on size
-    if token_estimate > TOKEN_THRESHOLD:
-        model = MODEL_LARGE
-        print(f"Using large model {model} (estimated {token_estimate} tokens)")
-    else:
-        model = MODEL_SMALL
-        print(f"Using small model {model} (estimated {token_estimate} tokens)")
-
-    # 4. Build prompt (full text, no truncation)
     prompt = build_prompt(contract_text)
-
-    # 5. Call OpenRouter
     try:
         response = await client.chat.completions.create(
-            model=model,
+            model=MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             response_format={"type": "json_object"},
-            extra_headers={
-                "HTTP-Referer": "https://advocacyalawfrim.in",
-                "X-Title": "LexSarthi",
-            }
+            extra_headers={"HTTP-Referer": "https://advocacyalawfrim.in", "X-Title": "LexSarthi"}
         )
         result_text = response.choices[0].message.content
-
-        # Clean markdown if any
         cleaned = result_text.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
@@ -174,41 +254,63 @@ async def analyze_contract(file: UploadFile = File(...)):
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3]
         cleaned = cleaned.strip()
-
         data = json.loads(cleaned)
-        return data
 
+        # Save to history
+        analysis = ContractAnalysis(
+            user_id=current_user.id,
+            filename=file.filename,
+            analysis_json=json.dumps(data)
+        )
+        db.add(analysis)
+        db.commit()
+        db.refresh(analysis)
+
+        return data
     except Exception as e:
-        print(f"OpenRouter error with model {model}: {e}")
-        # Fallback: try the other model if the first fails (e.g., rate limit)
-        fallback_model = MODEL_LARGE if model == MODEL_SMALL else MODEL_SMALL
-        try:
-            print(f"Falling back to {fallback_model}")
-            response = await client.chat.completions.create(
-                model=fallback_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                response_format={"type": "json_object"},
-                extra_headers={
-                    "HTTP-Referer": "https://advocacyalawfrim.in",
-                    "X-Title": "LexSarthi",
-                }
-            )
-            result_text = response.choices[0].message.content
-            # Clean markdown
-            cleaned = result_text.strip()
-            if cleaned.startswith("```json"):
-                cleaned = cleaned[7:]
-            if cleaned.startswith("```"):
-                cleaned = cleaned[3:]
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
-            return json.loads(cleaned)
-        except Exception as e2:
-            print(f"Fallback also failed: {e2}")
-            return {
-                "clause_analysis": [],
-                "missing_clauses": [],
-                "overall_risk": "Error",
-                "executive_summary": f"Analysis failed: {str(e)}. Please try again later."
-            }
+        print(f"OpenRouter error: {e}")
+        return {
+            "clause_analysis": [],
+            "missing_clauses": [],
+            "overall_risk": "Error",
+            "executive_summary": f"Analysis failed: {str(e)}"
+        }
+
+# -------------------------------
+# History endpoints
+# -------------------------------
+@app.get("/history")
+async def get_history(current_user: User = Depends(get_current_user), db: Session = Depends(lambda: SessionLocal())):
+    analyses = db.query(ContractAnalysis).filter(ContractAnalysis.user_id == current_user.id).order_by(ContractAnalysis.created_at.desc()).all()
+    return [
+        {
+            "id": a.id,
+            "filename": a.filename,
+            "created_at": a.created_at.isoformat(),
+            "summary": json.loads(a.analysis_json).get("executive_summary", "")[:200]
+        }
+        for a in analyses
+    ]
+
+@app.get("/history/{analysis_id}")
+async def get_analysis(analysis_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(lambda: SessionLocal())):
+    analysis = db.query(ContractAnalysis).filter(ContractAnalysis.id == analysis_id, ContractAnalysis.user_id == current_user.id).first()
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    return json.loads(analysis.analysis_json)
+
+@app.delete("/history/{analysis_id}")
+async def delete_analysis(analysis_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(lambda: SessionLocal())):
+    analysis = db.query(ContractAnalysis).filter(ContractAnalysis.id == analysis_id, ContractAnalysis.user_id == current_user.id).first()
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    db.delete(analysis)
+    db.commit()
+    return {"message": "Deleted"}
+
+# -------------------------------
+# Health check (public)
+# -------------------------------
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
