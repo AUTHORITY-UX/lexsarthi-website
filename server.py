@@ -33,7 +33,7 @@ client = AsyncOpenAI(
 )
 
 # Use a free model with 1M context (no truncation)
-MODEL = "google/gemini-2.0-flash-exp:free"
+MODEL = "openrouter/free"
 
 # -------------------------------
 # 40‑year corporate lawyer prompt (JSON first)
