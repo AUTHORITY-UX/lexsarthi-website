@@ -3,8 +3,8 @@ import asyncio
 import json
 import logging
 import io
-from typing import List, Dict, Any
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from typing import List, Dict, Any, Optional
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from llama_parse import LlamaParse
 from groq import AsyncGroq, RateLimitError
@@ -13,14 +13,19 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 import pdfplumber
 import PyPDF2
 
+# LlamaIndex for vector search (weekly digest)
+from llama_index.core import VectorStoreIndex, StorageContext, load_index_from_storage, SimpleDirectoryReader
+from llama_index.core.schema import Document
+from llama_index.core.retrievers import VectorIndexRetriever
+
 # -------------------------------
 # Configuration
 # -------------------------------
-GROQ_MODEL_PRIMARY = "llama-3.3-70b-versatile"   # 8k context
-GROQ_MODEL_FALLBACK = "llama-3.1-8b-instant"     # 8k context
-MAX_TOKENS_PER_CHUNK = 6000   # leaves 2000 tokens for prompt + response
+GROQ_MODEL_PRIMARY = "llama-3.3-70b-versatile"
+GROQ_MODEL_FALLBACK = "llama-3.1-8b-instant"
+MAX_TOKENS_PER_CHUNK = 6000
 OVERLAP_TOKENS = 500
-TOKEN_ENCODER = tiktoken.encoding_for_model("gpt-4")  # close enough for Llama
+TOKEN_ENCODER = tiktoken.encoding_for_model("gpt-4")
 
 app = FastAPI()
 app.add_middleware(
@@ -30,11 +35,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 logger = logging.getLogger(__name__)
 
 # -------------------------------
-# Helper: split text with overlap
+# Contract Analysis Helpers (same as before)
 # -------------------------------
 def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> List[str]:
     tokens = TOKEN_ENCODER.encode(text)
@@ -52,9 +56,6 @@ def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> 
         start = end - overlap_tokens
     return chunks
 
-# -------------------------------
-# Strict clause‑focused prompt
-# -------------------------------
 def build_analysis_prompt(chunk_text: str, chunk_index: int, total_chunks: int) -> str:
     return f"""
 You are an expert Indian contract analyst. Analyze the following **part of a contract** (chunk {chunk_index+1} of {total_chunks}).
@@ -115,9 +116,6 @@ Essential clauses to check: limitation of liability, indemnity, termination for 
 ## CONTRACT CHUNK (END)
 """
 
-# -------------------------------
-# Retry + fallback for Groq
-# -------------------------------
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=4, max=30),
@@ -138,7 +136,7 @@ async def analyze_chunk(client: AsyncGroq, chunk_text: str, chunk_index: int, to
     try:
         result_json = await call_groq_with_backoff(client, GROQ_MODEL_PRIMARY, prompt)
     except RateLimitError:
-        logger.warning(f"Rate limit on primary model, switching to fallback for chunk {chunk_index}")
+        logger.warning(f"Rate limit on primary, fallback for chunk {chunk_index}")
         result_json = await call_groq_with_backoff(client, GROQ_MODEL_FALLBACK, prompt)
     except Exception as e:
         logger.error(f"Chunk {chunk_index} failed: {e}")
@@ -149,16 +147,12 @@ async def analyze_chunk(client: AsyncGroq, chunk_text: str, chunk_index: int, to
         logger.error(f"Invalid JSON from chunk {chunk_index}: {result_json[:200]}")
         return {"clause_analysis": [], "missing_clauses": [], "overall_risk": "High", "executive_summary": f"JSON parse error in chunk {chunk_index}"}
 
-# -------------------------------
-# Merge results from multiple chunks
-# -------------------------------
 def merge_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     merged_clauses = {}
     merged_missing = {}
     overall_risk_levels = {"Low": 0, "Medium": 1, "High": 2}
     max_risk_score = 0
     summaries = []
-
     for res in results:
         for clause in res.get("clause_analysis", []):
             key = clause.get("clause_number") or clause.get("title")
@@ -169,23 +163,18 @@ def merge_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
                 merged_clauses[key] = clause
             elif len(clause.get("reason", "")) > len(existing.get("reason", "")):
                 merged_clauses[key] = clause
-
         for missing in res.get("missing_clauses", []):
             title = missing.get("title")
             if title and title not in merged_missing:
                 merged_missing[title] = missing
-
         risk = res.get("overall_risk", "Low")
         risk_score = overall_risk_levels.get(risk, 0)
         if risk_score > max_risk_score:
             max_risk_score = risk_score
-
         if res.get("executive_summary"):
             summaries.append(res["executive_summary"])
-
     final_risk = {0: "Low", 1: "Medium", 2: "High"}[max_risk_score]
     final_summary = " ".join(summaries) if summaries else "No executive summary available."
-
     return {
         "clause_analysis": list(merged_clauses.values()),
         "missing_clauses": list(merged_missing.values()),
@@ -205,12 +194,10 @@ async def health():
 # -------------------------------
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
-    # 1. Parse PDF with multiple fallbacks
     file_bytes = await file.read()
     contract_text = ""
     filename = file.filename
 
-    # Try LlamaParse first (requires API key)
     if os.getenv("LLAMA_CLOUD_API_KEY"):
         try:
             parser = LlamaParse(api_key=os.getenv("LLAMA_CLOUD_API_KEY"), result_type="text")
@@ -224,7 +211,6 @@ async def analyze_contract(file: UploadFile = File(...)):
         except Exception as e:
             print(f"LlamaParse failed: {e}")
 
-    # Fallback to pdfplumber
     if not contract_text.strip():
         try:
             with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
@@ -236,7 +222,6 @@ async def analyze_contract(file: UploadFile = File(...)):
         except Exception as e:
             print(f"pdfplumber failed: {e}")
 
-    # Final fallback: PyPDF2
     if not contract_text.strip():
         try:
             reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
@@ -251,14 +236,10 @@ async def analyze_contract(file: UploadFile = File(...)):
     if not contract_text.strip():
         raise HTTPException(status_code=400, detail="No text extracted from PDF. Ensure the PDF contains selectable text (not scanned).")
 
-    # 2. Split into overlapping chunks
     chunks = split_text_with_overlap(contract_text, MAX_TOKENS_PER_CHUNK, OVERLAP_TOKENS)
     logger.info(f"Split contract into {len(chunks)} chunks")
 
-    # 3. Initialize Groq client
     groq_client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
-
-    # 4. Analyze chunks concurrently (with semaphore to avoid rate limits)
     semaphore = asyncio.Semaphore(3)
     async def analyze_with_semaphore(chunk, idx):
         async with semaphore:
@@ -266,29 +247,54 @@ async def analyze_contract(file: UploadFile = File(...)):
 
     tasks = [analyze_with_semaphore(chunk, i) for i, chunk in enumerate(chunks)]
     chunk_results = await asyncio.gather(*tasks)
-
-    # 5. Merge and return
     final_report = merge_results(chunk_results)
     return final_report
 
 # -------------------------------
-# (Optional) weekly digest endpoint – requires vector index built by index_builder.py
+# Weekly Digest – Legal Index (National + International)
 # -------------------------------
-from llama_index.core import StorageContext, load_index_from_storage
-
-storage_context = StorageContext.from_defaults(persist_dir="./storage")
+LEGAL_INDEX_PATH = "./legal_index"
 index = None
-try:
-    index = load_index_from_storage(storage_context)
-    logger.info("Loaded vector index for weekly digest")
-except:
-    logger.warning("No vector index found – weekly digest disabled")
+retriever = None
+
+def load_legal_index():
+    global index, retriever
+    if not os.path.exists(LEGAL_INDEX_PATH):
+        logger.warning("Legal index not found. Run index_builder.py first.")
+        return
+    try:
+        storage_context = StorageContext.from_defaults(persist_dir=LEGAL_INDEX_PATH)
+        index = load_index_from_storage(storage_context)
+        retriever = VectorIndexRetriever(index, similarity_top_k=5)
+        logger.info("Legal index loaded for weekly digest")
+    except Exception as e:
+        logger.error(f"Failed to load legal index: {e}")
+
+# Try to load index on startup
+load_legal_index()
 
 @app.get("/weekly-digest")
-async def weekly_digest():
-    if not index:
-        raise HTTPException(status_code=501, detail="Weekly digest not available (no index found)")
-    retriever = index.as_retriever(similarity_top_k=5)
-    # Example query; you can modify as needed
-    nodes = retriever.retrieve("common legal risks in recent contracts")
-    return {"digest": [{"text": node.text, "score": node.score} for node in nodes]}
+async def weekly_digest(q: Optional[str] = Query(None, description="Query for legal updates (e.g., 'data protection amendments', 'CISG updates')")):
+    if not index or not retriever:
+        raise HTTPException(status_code=501, detail="Legal index not built. Run index_builder.py first.")
+    
+    if not q:
+        q = "recent developments in Indian and international laws relevant to contracts"
+
+    # Retrieve relevant legal documents (text chunks)
+    nodes = retriever.retrieve(q)
+    if not nodes:
+        return {"digest": [], "message": "No relevant legal provisions found for your query."}
+
+    # Format the retrieved legal texts
+    digest = []
+    for node in nodes:
+        digest.append({
+            "text": node.text[:1000],  # limit length
+            "score": node.score,
+            "metadata": node.metadata
+        })
+    
+    # Optional: Use LLM to summarise the retrieved laws into a weekly update
+    # (For simplicity, return raw chunks; you can add a summarisation step later)
+    return {"query": q, "digest": digest}
