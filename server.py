@@ -21,12 +21,12 @@ import razorpay
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
-# ---------- LLM (Groq – use Mixtral to avoid rate limit) ----------
+# ---------- LLM (Groq) – using supported model ----------
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise RuntimeError("OPENAI_API_KEY not set")
 Settings.llm = OpenAILike(
-    model="mixtral-8x7b-32768",          # changed from llama-3.3-70b-versatile
+    model="llama-3.3-70b-versatile",   # changed from mixtral
     api_key=api_key,
     api_base="https://api.groq.com/openai/v1",
     is_chat_model=True,
@@ -75,7 +75,7 @@ else:
 async def health():
     return {"status": "ok", "docs_loaded": index is not None}
 
-# ---------- Query ----------
+# ---------- Query permanent index ----------
 @app.get("/query")
 async def query(q: str = Query(...)):
     if index is None:
@@ -87,7 +87,7 @@ async def query(q: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ---------- Contract Risk Analysis (Fixed) ----------
+# ---------- Contract risk analysis (polished corporate lawyer) ----------
 @app.post("/analyze")
 async def analyze_contract(
     file: UploadFile = File(...),
@@ -101,20 +101,16 @@ async def analyze_contract(
         with open(temp_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        # Parse PDF in a separate thread to avoid event loop issues
-        def parse_pdf_sync(path):
-            try:
-                return parser.load_data(path)
-            except Exception as e:
-                raise e
+        # Parse PDF in thread to avoid event loop issues
+        def parse_sync(path):
+            return parser.load_data(path)
         try:
-            docs = await asyncio.to_thread(parse_pdf_sync, temp_path)
+            docs = await asyncio.to_thread(parse_sync, temp_path)
             if not docs:
                 raise ValueError("LlamaParse returned empty documents")
             print(f"✅ Parsed {len(docs)} chunks via LlamaParse")
         except Exception as parse_err:
             print(f"⚠️ LlamaParse failed: {parse_err}. Falling back to PyPDF2.")
-            # PyPDF2 is synchronous – run in thread
             def extract_pdf_sync(path):
                 reader = PdfReader(path)
                 text = ""
@@ -127,7 +123,6 @@ async def analyze_contract(
             docs = [Document(text=text)]
             print("✅ Extracted text via PyPDF2 fallback")
 
-        # Build index with larger chunk size
         from llama_index.core.node_parser import SentenceSplitter
         splitter = SentenceSplitter(chunk_size=2048, chunk_overlap=256)
         temp_index = VectorStoreIndex.from_documents(docs, transformations=[splitter])
@@ -177,6 +172,7 @@ You are a senior corporate lawyer with 40 years of experience in Indian contract
         raw = response.text if hasattr(response, 'text') else str(response)
 
         # Clean JSON
+        raw = raw.strip()
         if raw.startswith("```json"):
             raw = raw[7:]
         if raw.startswith("```"):
@@ -196,7 +192,7 @@ You are a senior corporate lawyer with 40 years of experience in Indian contract
 
         if lawyer_review:
             print(f"📞 LAWYER REVIEW REQUESTED for contract: {file.filename}")
-            # Optional: add email code here
+            # Optional: add email code here (use your SMTP settings)
 
         return {"filename": file.filename, "risk_report": report}
 
@@ -240,8 +236,147 @@ async def verify_payment(request: Request):
         raise HTTPException(status_code=400, detail="Invalid signature")
     return {"status": "success"}
 
-# ---------- Other agents (DPDP check, legal notice, etc.) ----------
-# ... (keep your existing agent endpoints here – they are unchanged)
+# ========== Additional Agents ==========
+@app.post("/dpdp-check")
+async def dpdp_check(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Only PDF files allowed")
+    os.makedirs("temp_uploads", exist_ok=True)
+    temp_path = f"temp_uploads/{file.filename}"
+    try:
+        with open(temp_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        docs = await asyncio.to_thread(parser.load_data, temp_path)
+        if not docs:
+            reader = PdfReader(temp_path)
+            text = "".join(page.extract_text() or "" for page in reader.pages)
+            docs = [Document(text=text)]
+        temp_index = VectorStoreIndex.from_documents(docs)
+        engine = temp_index.as_query_engine()
+        prompt = (
+            "You are a DPDP Act compliance auditor. Analyze the given document against the Digital Personal Data Protection Act 2023. "
+            "Return a JSON with:\n"
+            "- compliance_score: 0-100\n"
+            "- missing_clauses: list of DPDP requirements not met\n"
+            "- observations: brief remarks"
+        )
+        response = engine.query(prompt)
+        return {"filename": file.filename, "report": str(response)}
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@app.post("/legal-notice")
+async def legal_notice(request: Request):
+    data = await request.json()
+    parties = data.get("parties", [])
+    facts = data.get("facts", "")
+    law = data.get("applicable_law", "Indian Contract Act, 1872")
+    prompt = f"""Generate a formal legal notice under {law}.
+    Parties: {', '.join(parties) if parties else 'Not specified'}.
+    Facts: {facts}
+    Format as a legal notice with:
+    - Subject line
+    - Date
+    - Recipient details (placeholders)
+    - Body explaining breach/demand
+    - Deadline for compliance
+    - Signature block (placeholder)
+    Do not include advice or commentary."""
+    response = Settings.llm.complete(prompt)
+    return {"notice": response.text}
+
+@app.post("/due-diligence")
+async def due_diligence(zip_file: UploadFile = File(...)):
+    contents = await zip_file.read()
+    results = []
+    with zipfile.ZipFile(io.BytesIO(contents)) as z:
+        for name in z.namelist():
+            if name.lower().endswith('.pdf'):
+                results.append({"file": name, "risk": "pending review"})
+    return {"results": results}
+
+@app.post("/nda-triage")
+async def nda_triage(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Only PDF files allowed")
+    os.makedirs("temp_uploads", exist_ok=True)
+    temp_path = f"temp_uploads/{file.filename}"
+    try:
+        with open(temp_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        docs = await asyncio.to_thread(parser.load_data, temp_path)
+        if not docs:
+            reader = PdfReader(temp_path)
+            text = "".join(page.extract_text() or "" for page in reader.pages)
+            docs = [Document(text=text)]
+        temp_index = VectorStoreIndex.from_documents(docs)
+        engine = temp_index.as_query_engine()
+        prompt = "Classify this NDA as green (low risk), amber (medium risk), or red (high risk) based on Indian contract law. Return only the word."
+        response = engine.query(prompt)
+        answer = response.response if hasattr(response, 'response') else str(response)
+        return {"filename": file.filename, "risk_level": answer.strip()}
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@app.get("/weekly-digest")
+async def weekly_digest():
+    if index is None:
+        raise HTTPException(503, detail="Legal index not loaded. Please add PDFs to legal_docs/.")
+    queries = [
+        "What are the latest amendments to the DPDP Act in the past month?",
+        "Recent changes in the Indian Contract Act, 1872",
+        "Updates to the Insolvency and Bankruptcy Code (IBC)",
+        "New rules or notifications under the Companies Act, 2013",
+        "Recent judgments or regulatory changes affecting contract law in India"
+    ]
+    digest = []
+    for q in queries:
+        try:
+            response = index.as_query_engine().query(q)
+            answer = response.response if hasattr(response, 'response') else str(response)
+            digest.append({"topic": q, "summary": answer})
+        except Exception as e:
+            digest.append({"topic": q, "error": str(e)})
+    formatted = "# Weekly Regulatory Digest\n\n"
+    for item in digest:
+        formatted += f"## {item['topic']}\n"
+        if "summary" in item:
+            formatted += f"{item['summary']}\n\n"
+        else:
+            formatted += f"Error: {item['error']}\n\n"
+    return {"digest": formatted}
+
+@app.post("/consent-form")
+async def consent_form(request: Request):
+    data = await request.json()
+    business_name = data.get("business_name", "Your Organization")
+    purpose = data.get("purpose", "Service provision")
+    data_types = data.get("data_types", ["name", "email", "phone"])
+    retention_days = data.get("retention_days", 180)
+    prompt = f"""
+You are a legal document drafter. Generate a **Consent Form** under the Digital Personal Data Protection Act (DPDP Act), 2023 (India).  
+The form must include:
+- Header: "Consent Form – DPDP Act, 2023"
+- Business name: {business_name}
+- Purpose of data collection: {purpose}
+- Types of personal data collected: {', '.join(data_types)}
+- Retention period: {retention_days} days
+- Data principal rights (access, correction, erasure, grievance)
+- Withdrawal of consent notice
+- Grievance redressal contact (placeholder)
+- Signature line (date and name)
+
+Format the output as clean HTML or plain text with clear headings.
+"""
+    response = Settings.llm.complete(prompt)
+    form_html = response.text if hasattr(response, 'text') else str(response)
+    return {"consent_form": form_html}
 
 if __name__ == "__main__":
     import uvicorn
