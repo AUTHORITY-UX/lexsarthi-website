@@ -1,0 +1,14 @@
+LexSarthi/
+├── backend/
+│   ├── server.py
+│   ├── index_builder.py
+│   ├── requirements.txt
+│   └── .env.example
+├── legal_docs/           # ← Create this folder. Add your legal texts here.
+│   ├── indian_contract_act.pdf
+│   ├── dpdp_act_2025.pdf
+│   ├── ibc_2016.pdf
+│   ├── arbitration_act.pdf
+│   ├── cisd_ treaty.txt
+│   └── unidroit_principles.pdf
+└── frontend/ (unchanged)
