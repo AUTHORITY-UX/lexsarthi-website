@@ -21,23 +21,25 @@ app.add_middleware(
 )
 
 # -------------------------------
-# OpenRouter client (Gemini 1.5 Pro)
+# OpenRouter client (free, large context)
 # -------------------------------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     raise RuntimeError("OPENROUTER_API_KEY environment variable not set")
 
-openrouter_client = AsyncOpenAI(
+client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
-PRIMARY_MODEL = "google/gemini-1.5-pro"   # 2M context, free tier
+
+# Use a free model with 1M context (no truncation)
+MODEL = "google/gemini-2.0-flash-exp:free"
 
 # -------------------------------
-# 40‑year corporate lawyer prompt
+# 40‑year corporate lawyer prompt (JSON first)
 # -------------------------------
-def build_full_analysis_prompt(contract_text: str) -> str:
-    return f"""You are a corporate lawyer with 40 years of experience in Indian and international contract law, having advised top law firms and multinational corporations. Analyze the full contract below with the depth and precision expected from a senior partner.
+def build_json_prompt(contract_text: str) -> str:
+    return f"""You are a corporate lawyer with 40 years of experience in Indian and international contract law. Analyze the full contract below.
 
 Return ONLY valid JSON with this exact structure (no markdown, no extra text):
 {{
@@ -61,22 +63,35 @@ Return ONLY valid JSON with this exact structure (no markdown, no extra text):
     }}
   ],
   "overall_risk": "Low/Medium/High",
-  "executive_summary": "one paragraph highlighting most critical risks, written in the style of a senior lawyer's memo"
+  "executive_summary": "one paragraph highlighting most critical risks"
 }}
 
-Essential clauses to check (include if missing in missing_clauses):
+Essential clauses to check (add to missing_clauses if absent):
 - Limitation of liability (caps, exceptions)
 - Indemnity (scope, caps, survival)
 - Termination for convenience and cause
 - Data protection (DPDP Act, 2025 compliance)
 - Non-compete, non-solicit, non-disclosure
-- Arbitration (Indian seat, e.g., New Delhi; institutional rules like MCIA or LCIA India)
+- Arbitration (Indian seat, e.g., New Delhi)
 - Governing law (India)
-- Force majeure (with COVID/epidemic clause)
+- Force majeure (including epidemics)
 - Notice, entire agreement, amendment, severability, waiver, assignment
 
-Contract text:
+Contract:
 {contract_text}
+"""
+
+def build_summary_prompt(contract_text: str) -> str:
+    return f"""You are a 40‑year corporate lawyer. The contract below could not be analysed in strict JSON. Please provide a concise legal risk summary in the following format:
+
+OVERALL RISK: [Low/Medium/High]
+EXECUTIVE SUMMARY: (one paragraph)
+KEY CLAUSES WITH RISKS:
+- Clause name/number: risk level, reason, suggested change (if any)
+MISSING ESSENTIAL CLAUSES: (list clauses like indemnity, DPDP, force majeure, etc.)
+
+Contract (excerpt, first 15000 chars):
+{contract_text[:15000]}
 """
 
 # -------------------------------
@@ -85,7 +100,7 @@ Contract text:
 async def extract_text_from_pdf(file_bytes: bytes, filename: str) -> str:
     contract_text = ""
 
-    # Try LlamaParse if API key exists
+    # 1. LlamaParse if key present
     if os.getenv("LLAMA_CLOUD_API_KEY"):
         try:
             from llama_parse import LlamaParse
@@ -101,25 +116,29 @@ async def extract_text_from_pdf(file_bytes: bytes, filename: str) -> str:
         except Exception as e:
             print(f"LlamaParse failed: {e}")
 
-    # Fallback to pdfplumber
+    # 2. pdfplumber
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            text_parts = []
             for page in pdf.pages:
                 text = page.extract_text()
                 if text:
-                    contract_text += text + "\n"
+                    text_parts.append(text)
+            contract_text = "\n".join(text_parts)
         if contract_text.strip():
             return contract_text
     except Exception as e:
         print(f"pdfplumber failed: {e}")
 
-    # Final fallback: PyPDF2
+    # 3. PyPDF2
     try:
         reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
+        text_parts = []
         for page in reader.pages:
             text = page.extract_text()
             if text:
-                contract_text += text + "\n"
+                text_parts.append(text)
+        contract_text = "\n".join(text_parts)
         return contract_text
     except Exception as e:
         print(f"PyPDF2 failed: {e}")
@@ -138,21 +157,19 @@ async def health():
 # -------------------------------
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
-    # 1. Read file and extract text
+    # 1. Read and extract text
     file_bytes = await file.read()
     contract_text = await extract_text_from_pdf(file_bytes, file.filename)
 
     if not contract_text.strip():
         raise HTTPException(status_code=400, detail="No text extracted from PDF. Ensure the PDF contains selectable text (not scanned).")
 
-    # 2. Build prompt
-    prompt = build_full_analysis_prompt(contract_text)
-
-    # 3. Call OpenRouter (Gemini 1.5 Pro)
+    # 2. Try JSON analysis first
+    json_prompt = build_json_prompt(contract_text)
     try:
-        response = await openrouter_client.chat.completions.create(
-            model=PRIMARY_MODEL,
-            messages=[{"role": "user", "content": prompt}],
+        response = await client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": json_prompt}],
             temperature=0.0,
             response_format={"type": "json_object"},
             extra_headers={
@@ -160,31 +177,43 @@ async def analyze_contract(file: UploadFile = File(...)):
                 "X-Title": "LexSarthi",
             }
         )
-        result_json = response.choices[0].message.content
+        result_text = response.choices[0].message.content
 
-        # Clean markdown if any
-        if result_json.startswith("```json"):
-            result_json = result_json[7:-3]
-        elif result_json.startswith("```"):
-            result_json = result_json[3:-3]
+        # Clean markdown fences
+        cleaned = result_text.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        cleaned = cleaned.strip()
 
-        return json.loads(result_json)
+        data = json.loads(cleaned)
 
-    except Exception as e:
-        print(f"OpenRouter call failed: {e}")
-        # Optional fallback to Claude
-        try:
-            fallback_response = await openrouter_client.chat.completions.create(
-                model="anthropic/claude-3.5-sonnet",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                response_format={"type": "json_object"},
-            )
-            result_json = fallback_response.choices[0].message.content
-            if result_json.startswith("```json"):
-                result_json = result_json[7:-3]
-            elif result_json.startswith("```"):
-                result_json = result_json[3:-3]
-            return json.loads(result_json)
-        except Exception as e2:
-            raise HTTPException(status_code=500, detail=f"LLM analysis failed: {str(e2)}")
+        # Validate required keys
+        if "clause_analysis" in data and "missing_clauses" in data and "overall_risk" in data:
+            return data
+        else:
+            raise ValueError("JSON missing required keys")
+
+    except (json.JSONDecodeError, ValueError, Exception) as e:
+        print(f"JSON analysis failed, falling back to summary: {e}")
+
+        # 3. Fallback to plain‑text summary
+        summary_prompt = build_summary_prompt(contract_text)
+        summary_response = await client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": summary_prompt}],
+            temperature=0.2,
+        )
+        summary_text = summary_response.choices[0].message.content
+
+        # Return a structure the frontend can still display
+        return {
+            "clause_analysis": [],
+            "missing_clauses": [],
+            "overall_risk": "Review Required",
+            "executive_summary": summary_text,
+            "note": "Structured JSON could not be generated; a textual risk summary is provided above."
+        }
