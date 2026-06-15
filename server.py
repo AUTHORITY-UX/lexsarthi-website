@@ -22,10 +22,9 @@ if not OPENROUTER_API_KEY:
     raise RuntimeError("OPENROUTER_API_KEY not set")
 
 client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=OPENROUTER_API_KEY)
-MODEL = "openai/gpt-3.5-turbo"  # confirmed working
 
 def build_prompt(text: str) -> str:
-    return f"""You are a 40-year corporate lawyer. Analyze this contract and return ONLY JSON:
+    return f"""You are a 40-year corporate lawyer. Analyze this contract/judgment and return ONLY JSON:
 {{
   "clause_analysis": [
     {{"clause_number": "", "title": "", "risk_level": "Low/Medium/High", "legal_basis": "Indian law", "reason": "...", "redline": "..."}}
@@ -36,10 +35,10 @@ def build_prompt(text: str) -> str:
   "overall_risk": "Low/Medium/High",
   "executive_summary": "..."
 }}
-Contract: {text[:15000]}"""
+Document: {text}"""
 
 async def extract_text(file_bytes: bytes, filename: str) -> str:
-    # Try pdfplumber (fast, no key)
+    # Use pdfplumber (handles large PDFs well)
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
@@ -66,10 +65,19 @@ async def analyze_contract(file: UploadFile = File(...)):
     contract_text = await extract_text(file_bytes, file.filename)
     if not contract_text.strip():
         raise HTTPException(status_code=400, detail="No text extracted. Ensure PDF contains selectable text.")
-    prompt = build_prompt(contract_text)
+    
+    # Estimate tokens (rough)
+    token_estimate = len(contract_text) // 4
+    # Choose model based on size
+    if token_estimate > 120000:  # >120k tokens -> use Gemini 1.5 Pro (2M context)
+        model = "google/gemini-1.5-pro"
+    else:
+        model = "openai/gpt-3.5-turbo"   # 16k context, fast and free
+    
+    prompt = build_prompt(contract_text)  # full text, no truncation
     try:
         response = await client.chat.completions.create(
-            model=MODEL,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             response_format={"type": "json_object"},
@@ -84,13 +92,11 @@ async def analyze_contract(file: UploadFile = File(...)):
             result = result[3:]
         if result.endswith("```"):
             result = result[:-3]
-        result = result.strip()
         return json.loads(result)
     except Exception as e:
-        # Return the error as a JSON that the frontend will display
         return {
             "clause_analysis": [],
             "missing_clauses": [],
             "overall_risk": "Error",
-            "executive_summary": f"OpenRouter call failed: {str(e)}. Check logs for details."
+            "executive_summary": f"LLM call failed: {str(e)}. Check OpenRouter key and model availability."
         }
