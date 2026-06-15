@@ -6,7 +6,10 @@ import hashlib
 import asyncio
 import zipfile
 import io
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Request
+import json
+import smtplib
+from email.message import EmailMessage
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, Settings, Document
 from llama_index.llms.openai_like import OpenAILike
@@ -50,7 +53,7 @@ if not razorpay_key_id or not razorpay_key_secret:
 else:
     razorpay_client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
 
-# ---------- Load legal documents (DPDP Act, etc.) ----------
+# ---------- Load permanent index from legal_docs/ ----------
 index = None
 if os.path.exists("legal_docs") and any(os.scandir("legal_docs")):
     documents = []
@@ -76,41 +79,20 @@ async def health():
 @app.get("/query")
 async def query(q: str = Query(...)):
     if index is None:
-        return {"query": q, "response": "No legal documents loaded. Please upload PDFs to legal_docs/."}
+        return {"query": q, "response": "No legal documents loaded."}
     try:
-        # Create a retriever with higher top_k
-        retriever = index.as_retriever(similarity_top_k=10)
-        nodes = retriever.retrieve(q)
-        if not nodes:
-            return {"query": q, "response": "No relevant information found in the indexed documents."}
-        
-        context = "\n\n---\n\n".join([n.node.text for n in nodes])
-        sources = [f"Section from {n.node.metadata.get('source', 'unknown')}" for n in nodes]
-        
-        prompt = f"""You are a legal AI assistant for LexSarthi. Answer the user's query based **only** on the provided legal documents. 
-If the answer is not in the documents, say "The documents do not contain this information."
-Do not use general knowledge.
-
-### Retrieved legal text:
-{context}
-
-### User query:
-{q}
-
-### Instructions:
-- Be precise, cite specific sections or clauses when possible.
-- If the query asks for a section number, return the exact wording from the documents.
-
-Answer:"""
-        
-        response = Settings.llm.complete(prompt)
-        answer = response.text if hasattr(response, 'text') else str(response)
-        return {"query": q, "response": answer, "sources": sources}
+        response = index.as_query_engine().query(q)
+        answer = response.response if hasattr(response, 'response') else str(response)
+        return {"query": q, "response": answer}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-# ---------- Contract risk analysis (payment protected) ----------
+
+# ---------- Contract risk analysis (with lawyer review) ----------
 @app.post("/analyze")
-async def analyze_contract(file: UploadFile = File(...)):
+async def analyze_contract(
+    file: UploadFile = File(...),
+    lawyer_review: bool = Form(False)
+):
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(400, "Only PDF files allowed")
     os.makedirs("temp_uploads", exist_ok=True)
@@ -119,7 +101,7 @@ async def analyze_contract(file: UploadFile = File(...)):
         with open(temp_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        # Parse PDF (async safe)
+        # Parse PDF
         try:
             docs = await asyncio.to_thread(parser.load_data, temp_path)
             if not docs:
@@ -130,48 +112,53 @@ async def analyze_contract(file: UploadFile = File(...)):
             reader = PdfReader(temp_path)
             text = ""
             for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text
+                text += page.extract_text() or ""
             if not text.strip():
-                return {"filename": file.filename, "risk_report": {"error": "Could not extract text from PDF. Ensure it is text‑based."}}
+                return {"filename": file.filename, "risk_report": {"error": "Could not extract text. Ensure it is text‑based."}}
             docs = [Document(text=text)]
             print("✅ Extracted text via PyPDF2 fallback")
 
-        # Build temporary index with larger chunk size (2048) to capture whole clauses
+        # Build temporary index with larger chunk size
         from llama_index.core.node_parser import SentenceSplitter
         splitter = SentenceSplitter(chunk_size=2048, chunk_overlap=256)
         temp_index = VectorStoreIndex.from_documents(docs, transformations=[splitter])
         engine = temp_index.as_query_engine()
 
-        # Structured prompt (as before)
+        # Polished corporate‑lawyer prompt
         prompt = """
-You are a legal risk analyst for LexSarthi. Analyze the given contract and return a **valid JSON object** with exactly the following schema:
+You are a senior corporate lawyer with 40 years of experience in Indian contract law, corporate transactions, and dispute resolution. Your task is to analyse the given contract and produce a **highly polished, authoritative risk report** that would be expected from a top‑tier law firm.
+
+### Instructions:
+1. Identify the contract type accurately.
+2. Overall risk level – assign High, Medium, or Low, with brief justification.
+3. For each material clause that poses a risk (or is missing a standard provision), provide:
+   - Clause name
+   - Risk level
+   - Reason (cite relevant Indian statutes, e.g., Indian Contract Act, 1872, DPDP Act, 2023, IBC, etc., with section numbers)
+   - Suggested change (exact wording of proposed revision)
+4. Flag missing critical clauses (e.g., arbitration, limitation of liability, data protection) as high risk and propose the exact clause text.
+5. Summary – executive summary of key risks and recommended next steps.
+
+### Output format:
+Return a valid JSON object with exactly the following schema:
 
 {
-  "contract_type": "string (infer from content)",
+  "contract_type": "string",
   "overall_risk": "High / Medium / Low",
   "clause_analysis": [
     {
       "clause_name": "string",
       "risk_level": "High / Medium / Low",
-      "reason": "string",
-      "suggested_change": "string"
+      "reason": "string (detailed, with legal citations)",
+      "suggested_change": "string (exact wording)"
     }
   ],
   "summary": "string"
 }
 
-Instructions:
-- Only include material clauses that are present.
-- Use actual contract text to justify risks.
-- Provide actionable suggested changes under Indian law.
-- Output **only** JSON, no extra text.
-
-Contract text:
+### Contract text:
 {context}
 """
-        # Retrieve top chunks
         retriever = temp_index.as_retriever(similarity_top_k=10)
         nodes = retriever.retrieve(prompt)
         context = "\n\n---\n\n".join([n.node.text for n in nodes]) if nodes else ""
@@ -182,8 +169,7 @@ Contract text:
         response = Settings.llm.complete(final_prompt)
         raw = response.text if hasattr(response, 'text') else str(response)
 
-        # Clean and parse JSON
-        import json
+        # Clean JSON
         if raw.startswith("```json"):
             raw = raw[7:]
         if raw.startswith("```"):
@@ -193,9 +179,52 @@ Contract text:
         raw = raw.strip()
         try:
             report = json.loads(raw)
-            return {"filename": file.filename, "risk_report": report}
+            required = ["contract_type", "overall_risk", "clause_analysis", "summary"]
+            if not all(k in report for k in required):
+                raise ValueError("Missing required keys")
+            if not isinstance(report["clause_analysis"], list):
+                report["clause_analysis"] = []
         except Exception as e:
             return {"filename": file.filename, "risk_report": {"error": "JSON parse failed", "raw": raw, "parse_error": str(e)}}
+
+        # ---- Lawyer review handling ----
+        if lawyer_review:
+            print(f"📞 LAWYER REVIEW REQUESTED for contract: {file.filename}")
+            print(f"   Summary: {report.get('summary', 'No summary')}")
+            # Send email (optional – configure SMTP below)
+            try:
+                # === CONFIGURE YOUR SMTP SETTINGS HERE ===
+                SMTP_SERVER = "smtp.gmail.com"
+                SMTP_PORT = 465
+                SENDER_EMAIL = "your_email@gmail.com"
+                SENDER_PASSWORD = "your_app_password"
+                RECIPIENT_EMAIL = "lawyer@advocacyalawfrim.in"
+                # === END CONFIGURATION ===
+
+                msg = EmailMessage()
+                msg.set_content(f"""
+Contract file: {file.filename}
+
+AI Risk Summary:
+{report.get('summary', 'No summary')}
+
+Full AI report (JSON):
+{json.dumps(report, indent=2)}
+
+Please review and provide a final lawyer‑certified report within 3 days.
+                """)
+                msg["Subject"] = f"Lawyer Review Request: {file.filename}"
+                msg["From"] = SENDER_EMAIL
+                msg["To"] = RECIPIENT_EMAIL
+
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as smtp:
+                    smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    smtp.send_message(msg)
+                print("   ✅ Email notification sent to lawyer.")
+            except Exception as email_err:
+                print(f"   ⚠️ Failed to send email: {email_err}")
+
+        return {"filename": file.filename, "risk_report": report}
 
     except Exception as e:
         print(f"❌ Analysis error: {str(e)}")
@@ -203,9 +232,10 @@ Contract text:
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
 # ---------- Razorpay order creation ----------
 @app.post("/api/create-order")
-async def create_order(amount: int = 2):
+async def create_order(amount: int = 500):
     if not razorpay_key_id or not razorpay_key_secret:
         raise HTTPException(500, detail="Razorpay not configured")
     try:
@@ -238,7 +268,6 @@ async def verify_payment(request: Request):
 
 # ========== AGENTS ==========
 
-# Agent 1: DPDP Act Compliance Checker
 @app.post("/dpdp-check")
 async def dpdp_check(file: UploadFile = File(...)):
     if not file.filename.lower().endswith('.pdf'):
@@ -259,19 +288,17 @@ async def dpdp_check(file: UploadFile = File(...)):
             "You are a DPDP Act compliance auditor. Analyze the given document against the Digital Personal Data Protection Act 2023. "
             "Return a JSON with:\n"
             "- compliance_score: 0-100\n"
-            "- missing_clauses: list of DPDP requirements not met (e.g., consent, data breach notification, data principal rights)\n"
-            "- observations: brief remarks\n"
-            "Do not include recommendations or suggested changes."
+            "- missing_clauses: list of DPDP requirements not met\n"
+            "- observations: brief remarks"
         )
         response = engine.query(prompt)
-        return {"filename": file.filename, "report": response.response}
+        return {"filename": file.filename, "report": str(response)}
     except Exception as e:
         raise HTTPException(500, detail=str(e))
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-# Agent 2: Legal Notice Drafter
 @app.post("/legal-notice")
 async def legal_notice(request: Request):
     data = await request.json()
@@ -292,7 +319,6 @@ async def legal_notice(request: Request):
     response = Settings.llm.complete(prompt)
     return {"notice": response.text}
 
-# Agent 3: Due Diligence (Multi-PDF)
 @app.post("/due-diligence")
 async def due_diligence(zip_file: UploadFile = File(...)):
     contents = await zip_file.read()
@@ -300,11 +326,9 @@ async def due_diligence(zip_file: UploadFile = File(...)):
     with zipfile.ZipFile(io.BytesIO(contents)) as z:
         for name in z.namelist():
             if name.lower().endswith('.pdf'):
-                # For simplicity, just return the file name and a placeholder risk
                 results.append({"file": name, "risk": "pending review"})
     return {"results": results}
 
-# Agent 4: NDA Triage
 @app.post("/nda-triage")
 async def nda_triage(file: UploadFile = File(...)):
     if not file.filename.lower().endswith('.pdf'):
@@ -331,7 +355,6 @@ async def nda_triage(file: UploadFile = File(...)):
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-# Agent 5: Weekly Regulatory Digest
 @app.get("/weekly-digest")
 async def weekly_digest():
     if index is None:
