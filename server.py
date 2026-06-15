@@ -8,9 +8,6 @@ from openai import AsyncOpenAI
 import pdfplumber
 import PyPDF2
 
-# -------------------------------
-# FastAPI app
-# -------------------------------
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -21,125 +18,96 @@ app.add_middleware(
 )
 
 # -------------------------------
-# OpenRouter client (free, large context)
+# OpenRouter client
 # -------------------------------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
-    raise RuntimeError("OPENROUTER_API_KEY environment variable not set")
+    raise RuntimeError("OPENROUTER_API_KEY not set")
 
 client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
 
-# Use a free model with 1M context (no truncation)
+# Use the reliable free router (picks best available free model)
 MODEL = "openrouter/free"
 
 # -------------------------------
-# 40‑year corporate lawyer prompt (JSON first)
+# 40‑year corporate lawyer prompt
 # -------------------------------
-def build_json_prompt(contract_text: str) -> str:
+def build_prompt(contract_text: str) -> str:
     return f"""You are a corporate lawyer with 40 years of experience in Indian and international contract law. Analyze the full contract below.
 
 Return ONLY valid JSON with this exact structure (no markdown, no extra text):
 {{
   "clause_analysis": [
     {{
-      "clause_number": "string (e.g., '4.2', 'Indemnity')",
+      "clause_number": "string",
       "title": "short clause name",
       "risk_level": "Low/Medium/High",
-      "legal_basis": "specific Indian law section (e.g., 'Section 124 of Indian Contract Act, 1872')",
+      "legal_basis": "Indian law section",
       "reason": "detailed explanation (2-3 sentences)",
       "redline": "exact suggested wording change or 'No change'"
     }}
   ],
   "missing_clauses": [
     {{
-      "title": "clause name (e.g., 'Data Protection under DPDP Act')",
+      "title": "clause name",
       "risk_level": "High",
-      "legal_basis": "relevant Indian law section",
-      "reason": "why it is required",
+      "legal_basis": "relevant law",
+      "reason": "why required",
       "proposed_clause_text": "draft wording"
     }}
   ],
   "overall_risk": "Low/Medium/High",
-  "executive_summary": "one paragraph highlighting most critical risks"
+  "executive_summary": "one paragraph"
 }}
 
 Essential clauses to check (add to missing_clauses if absent):
-- Limitation of liability (caps, exceptions)
-- Indemnity (scope, caps, survival)
-- Termination for convenience and cause
-- Data protection (DPDP Act, 2025 compliance)
-- Non-compete, non-solicit, non-disclosure
-- Arbitration (Indian seat, e.g., New Delhi)
+- Limitation of liability
+- Indemnity
+- Termination
+- Data protection (DPDP Act 2025)
+- Non-compete, non-solicit
+- Arbitration (Indian seat)
 - Governing law (India)
-- Force majeure (including epidemics)
+- Force majeure
 - Notice, entire agreement, amendment, severability, waiver, assignment
 
 Contract:
 {contract_text}
 """
 
-def build_summary_prompt(contract_text: str) -> str:
-    return f"""You are a 40‑year corporate lawyer. The contract below could not be analysed in strict JSON. Please provide a concise legal risk summary in the following format:
-
-OVERALL RISK: [Low/Medium/High]
-EXECUTIVE SUMMARY: (one paragraph)
-KEY CLAUSES WITH RISKS:
-- Clause name/number: risk level, reason, suggested change (if any)
-MISSING ESSENTIAL CLAUSES: (list clauses like indemnity, DPDP, force majeure, etc.)
-
-Contract (excerpt, first 15000 chars):
-{contract_text[:15000]}
-"""
-
 # -------------------------------
-# PDF text extraction (fallback chain)
+# PDF text extraction
 # -------------------------------
-async def extract_text_from_pdf(file_bytes: bytes, filename: str) -> str:
-    contract_text = ""
-
-    # 1. LlamaParse if key present
+async def extract_text(file_bytes: bytes, filename: str) -> str:
+    # Try LlamaParse if key exists
     if os.getenv("LLAMA_CLOUD_API_KEY"):
         try:
             from llama_parse import LlamaParse
             parser = LlamaParse(api_key=os.getenv("LLAMA_CLOUD_API_KEY"), result_type="text")
-            documents = await asyncio.to_thread(
-                parser.load_data,
-                file_bytes,
-                extra_info={"file_name": filename}
-            )
-            contract_text = "\n".join([doc.text for doc in documents])
-            if contract_text.strip():
-                return contract_text
+            docs = await asyncio.to_thread(parser.load_data, file_bytes, extra_info={"file_name": filename})
+            text = "\n".join(d.text for d in docs)
+            if text.strip():
+                return text
         except Exception as e:
             print(f"LlamaParse failed: {e}")
 
-    # 2. pdfplumber
+    # pdfplumber fallback
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-            text_parts = []
-            for page in pdf.pages:
-                text = page.extract_text()
-                if text:
-                    text_parts.append(text)
-            contract_text = "\n".join(text_parts)
-        if contract_text.strip():
-            return contract_text
+            text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+        if text.strip():
+            return text
     except Exception as e:
         print(f"pdfplumber failed: {e}")
 
-    # 3. PyPDF2
+    # PyPDF2 fallback
     try:
         reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
-        text_parts = []
-        for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                text_parts.append(text)
-        contract_text = "\n".join(text_parts)
-        return contract_text
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        return text
     except Exception as e:
         print(f"PyPDF2 failed: {e}")
 
@@ -150,26 +118,26 @@ async def extract_text_from_pdf(file_bytes: bytes, filename: str) -> str:
 # -------------------------------
 @app.get("/health")
 async def health():
-    return {"status": "ok", "docs_loaded": True}
+    return {"status": "ok"}
 
 # -------------------------------
-# Main /analyze endpoint
+# /analyze endpoint
 # -------------------------------
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
-    # 1. Read and extract text
     file_bytes = await file.read()
-    contract_text = await extract_text_from_pdf(file_bytes, file.filename)
+    contract_text = await extract_text(file_bytes, file.filename)
 
     if not contract_text.strip():
-        raise HTTPException(status_code=400, detail="No text extracted from PDF. Ensure the PDF contains selectable text (not scanned).")
+        raise HTTPException(status_code=400, detail="No text extracted from PDF.")
 
-    # 2. Try JSON analysis first
-    json_prompt = build_json_prompt(contract_text)
+    prompt = build_prompt(contract_text)
+
+    # Try primary model (openrouter/free)
     try:
         response = await client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "user", "content": json_prompt}],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             response_format={"type": "json_object"},
             extra_headers={
@@ -179,7 +147,7 @@ async def analyze_contract(file: UploadFile = File(...)):
         )
         result_text = response.choices[0].message.content
 
-        # Clean markdown fences
+        # Clean markdown
         cleaned = result_text.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
@@ -189,31 +157,33 @@ async def analyze_contract(file: UploadFile = File(...)):
             cleaned = cleaned[:-3]
         cleaned = cleaned.strip()
 
-        data = json.loads(cleaned)
+        return json.loads(cleaned)
 
-        # Validate required keys
-        if "clause_analysis" in data and "missing_clauses" in data and "overall_risk" in data:
-            return data
-        else:
-            raise ValueError("JSON missing required keys")
-
-    except (json.JSONDecodeError, ValueError, Exception) as e:
-        print(f"JSON analysis failed, falling back to summary: {e}")
-
-        # 3. Fallback to plain‑text summary
-        summary_prompt = build_summary_prompt(contract_text)
-        summary_response = await client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": summary_prompt}],
-            temperature=0.2,
-        )
-        summary_text = summary_response.choices[0].message.content
-
-        # Return a structure the frontend can still display
-        return {
-            "clause_analysis": [],
-            "missing_clauses": [],
-            "overall_risk": "Review Required",
-            "executive_summary": summary_text,
-            "note": "Structured JSON could not be generated; a textual risk summary is provided above."
-        }
+    except Exception as e:
+        print(f"OpenRouter error with {MODEL}: {e}")
+        # Fallback: try a specific free model
+        try:
+            fallback_model = "google/gemini-2.0-flash-lite-preview-02-05:free"
+            response = await client.chat.completions.create(
+                model=fallback_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                response_format={"type": "json_object"},
+            )
+            result_text = response.choices[0].message.content
+            cleaned = result_text.strip()
+            if cleaned.startswith("```json"):
+                cleaned = cleaned[7:]
+            if cleaned.startswith("```"):
+                cleaned = cleaned[3:]
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3]
+            return json.loads(cleaned)
+        except Exception as e2:
+            print(f"Fallback also failed: {e2}")
+            return {
+                "clause_analysis": [],
+                "missing_clauses": [],
+                "overall_risk": "Unknown",
+                "executive_summary": f"Analysis failed: {str(e)}. Please try again later."
+            }
