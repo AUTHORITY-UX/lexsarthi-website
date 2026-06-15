@@ -8,3 +8,5 @@ llama-parse
 sentence-transformers
 razorpay
 pypdf
+tiktoken
+tenacity
