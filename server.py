@@ -34,7 +34,7 @@ client = AsyncOpenAI(
     api_key=OPENROUTER_API_KEY,
 )
 
-MODEL = "google/gemini-1.5-pro"
+MODEL = "openrouter/free"   # auto‑selects best free model (Gemini 2.0 Flash, Llama 3, etc.)
 FALLBACK_MODEL = "openai/gpt-3.5-turbo"
 MAX_TOKENS_PER_CHUNK = 120000
 OVERLAP_TOKENS = 500
