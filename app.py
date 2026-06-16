@@ -1,175 +1,151 @@
-# Copyright (c) 2025 THE ADVOCACY A LAW FIRM. All rights reserved.
-# Confidential and proprietary. Do not distribute without a license.
-# THE ADVOCACY A LAW FIRM is the sole owner and title holder of this software.
+import os
+import json
+import io
+from typing import List, Optional, Literal
+from enum import Enum
 
-import os, json, logging
-from pathlib import Path
-from typing import Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel
-from llama_index.llms.groq import Groq
+from pydantic import BaseModel, Field
+import PyPDF2
+import groq
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise RuntimeError("GROQ_API_KEY not set")
+# ------------------- Pydantic Schemas -------------------
+class AgreementType(str, Enum):
+    REGISTRATION = "Domain Registration Agreement"
+    TRANSFER = "Domain Transfer Agreement"
+    RENEWAL = "Domain Renewal Agreement"
+    RESELLER = "Domain Reseller Agreement"
+    PARKING = "Domain Parking Agreement"
+    SUNRISE = "Sunrise Registration Agreement"
+    LRO = "Legal Rights Objection Agreement"
+    OTHER = "Other"
 
-llm = Groq(model="llama-3.3-70b-versatile", api_key=GROQ_API_KEY, temperature=0.1)
+class CriticalClause(BaseModel):
+    clause_reference: str
+    title: str
+    risk: Literal["Low", "Medium", "High", "Critical"]
+    explanation: str
+    suggested_amendment: Optional[str] = None
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("lexsarthi")
+class DomainAgreementAnalysis(BaseModel):
+    agreement_type: AgreementType
+    confidence: float = Field(ge=0.0, le=1.0)
+    registrar: Optional[str] = None
+    registrant: Optional[str] = None
+    domain_name: Optional[str] = None
+    term_years: Optional[int] = None
+    governing_law: Optional[str] = None
+    key_obligations: List[str] = []
+    critical_clauses: List[CriticalClause] = []
+    overall_risk: Literal["Low", "Medium", "High"] = "Low"
+    summary: str
+    recommended_action: str
+    disclaimer: str = "This analysis is AI-generated and does not constitute legal advice. Always consult a qualified attorney."
 
-app = FastAPI(title="LexSarthi AI Law Firm OS", version="2.0")
-app.add_middleware(CORSMiddleware, allow_origins=["https://advocacyalawfrim.in", "http://localhost:3000"],
-                   allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+# ------------------- FastAPI App -------------------
+app = FastAPI(title="LexSarthi API", version="1.0")
 
-# ---------- Custom validation error handler (fixes UnicodeDecodeError) ----------
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.warning(f"Validation error: {exc.errors()}")
-    return JSONResponse(
-        status_code=400,
-        content={
-            "detail": "Invalid request data. Ensure you are sending valid UTF-8 JSON and correct field types.",
-            "hint": "Check your payload for non‑text bytes or incorrect field names."
-        }
-    )
-# --------------------------------------------------------------------------------
+# CORS – allow your frontend domains
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://dbeba57b.lexsarthi-website.pages.dev",
+        "https://advocacyalawfrim.in",
+        "https://www.advocacyalawfrim.in",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class ContractAnalysisRequest(BaseModel):
-    text: Optional[str] = None
-    file_url: Optional[str] = None
-    lawyer_review: bool = False
+# ------------------- Groq Client -------------------
+client = groq.Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-class AgentRequest(BaseModel):
-    input_text: str
-    metadata: Optional[Dict[str, Any]] = {}
+# ------------------- Agent Function -------------------
+async def analyze_domain_agreement(text: str) -> dict:
+    taxonomy = """
+    The recognized types of domain name agreements are:
+    1. Domain Registration Agreement: contract between registrant and registrar for initial registration.
+    2. Domain Transfer Agreement: agreement to transfer ownership from one party to another.
+    3. Domain Renewal Agreement: extends the registration period.
+    4. Domain Reseller Agreement: allows a reseller to offer domain registrations.
+    5. Domain Parking Agreement: for monetizing unused domains.
+    6. Sunrise Registration Agreement: for trademark holders during new TLD launches.
+    7. Legal Rights Objection Agreement: dispute resolution over domain names.
+    """
 
-def generate(prompt: str) -> str:
-    return llm.complete(prompt).text.strip()
+    system_prompt = f"""
+    You are LexSarthi's Domain Agreement Classifier. 
+    Your task is to analyze the provided agreement text and classify it according to the taxonomy below.
+    Output **only** a JSON object that exactly matches the Pydantic schema provided in the user's request.
 
-def safe_json_parse(raw: str) -> dict:
-    try: return json.loads(raw)
-    except json.JSONDecodeError:
-        s, e = raw.find("{"), raw.rfind("}")+1
-        if s!=-1 and e>s: return json.loads(raw[s:e])
-        raise
+    Taxonomy:
+    {taxonomy}
 
-def extract_text_from_pdf(file_url: str) -> str:
-    import requests, io
-    from PyPDF2 import PdfReader
-    resp = requests.get(file_url, timeout=15)
-    resp.raise_for_status()
-    reader = PdfReader(io.BytesIO(resp.content))
-    return "".join(page.extract_text() or "" for page in reader.pages)
+    STRICT RULES:
+    - Only output valid JSON.
+    - Do not include markdown, comments, or extra text.
+    - Use the exact field names and types as in the schema.
+    - If unsure about a field, use null (or a sensible default).
+    """
 
-@app.get("/")
-async def root():
-    return {"status": "LexSarthi API running", "docs": "/docs"}
+    user_prompt = f"""
+    Analyze the following domain agreement text and return JSON matching this schema:
+    {DomainAgreementAnalysis.schema_json(indent=2)}
 
-@app.get("/analyze")
-async def analyze_get():
-    return JSONResponse({"message": "Please use POST /analyze with JSON body (text or file_url).",
-                         "example": {"text": "...", "lawyer_review": False},
-                         "live_demo": "https://advocacyalawfrim.in"})
+    Agreement Text:
+    {text[:12000]}
+    """
 
-@app.post("/analyze")
-async def analyze_contract(payload: ContractAnalysisRequest):
-    text = payload.text
-    if not text and payload.file_url: text = extract_text_from_pdf(payload.file_url)
-    if not text: raise HTTPException(400, "No text provided")
-    prompt = f"""You are an Indian contract law expert. Analyze the contract clause-by-clause. Return JSON:
-{{"summary": "...", "clauses": [{{"clause_name": "...", "risk": "High/Medium/Low", "legal_basis": "...", "suggestion": "..."}}],
-  "missing_clauses": ["..."], "lawyer_review": null}}
-Lawyer review requested: {payload.lawyer_review}
-Contract:
-{text[:6000]}
-JSON:"""
-    raw = generate(prompt)
-    try: result = safe_json_parse(raw)
-    except: result = {"summary": "Parsing error", "clauses": [], "missing_clauses": [], "lawyer_review": None}
-    if payload.lawyer_review:
-        result["lawyer_review"] = "Simulated review: This contract appears balanced. I recommend clarifying the indemnity clause. – Advocate [Founder]"
-    return result
+    try:
+        response = client.chat.completions.create(
+            model="mixtral-8x7b-32768",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.1,
+            response_format={"type": "json_object"},
+            max_tokens=4096
+        )
+        raw = response.choices[0].message.content
+        data = json.loads(raw)
+        validated = DomainAgreementAnalysis(**data)
+        return validated.dict()
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"LLM returned invalid JSON: {str(e)}")
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Schema validation error: {str(e)}")
 
-@app.post("/dpdp-check")
-async def dpdp_check(payload: AgentRequest):
-    prompt = f"""Review this document for DPDP Act compliance. Return JSON: is_compliant (bool), issues (list), recommendations (list).
-Document:
-{payload.input_text[:5000]}
-JSON:"""
-    return safe_json_parse(generate(prompt))
-
-@app.post("/legal-notice")
-async def legal_notice(payload: AgentRequest):
-    prompt = f"""Draft a formal legal notice (India). Return JSON: notice_title, body, statutory_references (list).
-Facts:
-{payload.input_text[:4000]}
-JSON:"""
-    return safe_json_parse(generate(prompt))
-
-@app.post("/due-diligence")
-async def due_diligence(payload: AgentRequest):
-    prompt = f"""Perform legal due diligence. Return JSON: summary, risks (list), compliance_gaps (list), recommendations (list).
-Info:
-{payload.input_text[:5000]}
-JSON:"""
-    return safe_json_parse(generate(prompt))
-
-@app.post("/nda-triage")
-async def nda_triage(payload: AgentRequest):
-    prompt = f"""Triage this NDA. Return JSON: overall_risk (High/Medium/Low), dangerous_clauses (list with explanations), negotiation_tips (list).
-NDA Text:
-{payload.input_text[:5000]}
-JSON:"""
-    return safe_json_parse(generate(prompt))
-
-@app.post("/weekly-digest")
-async def weekly_digest(payload: AgentRequest):
-    prompt = f"""Summarize Indian legal updates. Return JSON: title, highlights (list), impact (string).
-Context:
-{payload.input_text[:3000]}
-JSON:"""
-    return safe_json_parse(generate(prompt))
-
-@app.post("/consent-form")
-async def consent_form(payload: AgentRequest):
-    prompt = f"""Create a DPDP-compliant consent form. Return JSON: form_title, consent_text, mandatory_clauses (list).
-Details:
-{payload.input_text[:3000]}
-JSON:"""
-    return safe_json_parse(generate(prompt))
-
-@app.post("/razorpay-webhook")
-async def razorpay_webhook(request: Request):
-    data = await request.json()
-    logger.info(f"Razorpay event: {data.get('event')}")
+# ------------------- Endpoints -------------------
+@app.get("/health")
+async def health():
     return {"status": "ok"}
 
-def load_document():
-    legal_docs = Path("legal_docs")
-    for file in legal_docs.glob("*"):
-        if file.suffix.lower() == ".pdf":
-            from PyPDF2 import PdfReader
-            reader = PdfReader(file)
-            return "".join(page.extract_text() or "" for page in reader.pages)
-        elif file.suffix.lower() == ".txt":
-            return file.read_text(encoding="utf-8")
-    return None
-
-DOCUMENT = load_document()
-if DOCUMENT:
-    print(f"Legal doc loaded for chat: {len(DOCUMENT)} chars")
-    import gradio as gr
-    def gradio_chat_fn(message, history):
-        ctx = DOCUMENT[:6000]
-        prompt = f"""You are a legal assistant. Use the document below to answer.
-Document:
-{ctx}
-Question: {message}
-Answer:"""
-        return generate(prompt)
-    chat_ui = gr.ChatInterface(fn=gradio_chat_fn, title="LexSarthi Legal Chat", description="Ask about the uploaded document.")
-    app = gr.mount_gradio_app(app, chat_ui, path="/chat")
+@app.post("/analyze-domain-agreement", response_model=DomainAgreementAnalysis)
+async def classify_domain_agreement(
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None)
+):
+    if not file and not text:
+        raise HTTPException(400, "Either upload a file or provide raw text.")
+    
+    content = ""
+    if file:
+        contents = await file.read()
+        if file.filename.lower().endswith(".pdf"):
+            try:
+                pdf_reader = PyPDF2.PdfReader(io.BytesIO(contents))
+                content = " ".join(page.extract_text() for page in pdf_reader.pages)
+            except Exception as e:
+                raise HTTPException(400, f"PDF parsing failed: {str(e)}")
+        else:
+            content = contents.decode("utf-8", errors="ignore")
+    else:
+        content = text
+    
+    if len(content.strip()) < 50:
+        raise HTTPException(400, "Text is too short to analyze meaningfully.")
+    
+    return await analyze_domain_agreement(content)
