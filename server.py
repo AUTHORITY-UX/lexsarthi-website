@@ -34,9 +34,8 @@ client = AsyncOpenAI(
     api_key=OPENROUTER_API_KEY,
 )
 
-MODEL = "google/gemini-1.5-pro"          # 2M context, free tier
+MODEL = "google/gemini-1.5-pro"
 FALLBACK_MODEL = "openai/gpt-3.5-turbo"
-
 MAX_TOKENS_PER_CHUNK = 120000
 OVERLAP_TOKENS = 500
 TOKEN_ENCODER = tiktoken.encoding_for_model("gpt-4")
@@ -61,7 +60,7 @@ def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> 
     return chunks
 
 # -------------------------------
-# Robust JSON extraction from LLM output
+# Robust JSON extraction
 # -------------------------------
 def extract_json_from_text(text: str) -> dict:
     cleaned = text.strip()
@@ -73,7 +72,6 @@ def extract_json_from_text(text: str) -> dict:
         cleaned = cleaned[:-3]
     cleaned = cleaned.strip()
 
-    # Fix unterminated strings (heuristic)
     lines = cleaned.split('\n')
     fixed_lines = []
     in_string = False
@@ -94,14 +92,13 @@ def extract_json_from_text(text: str) -> dict:
     try:
         return json.loads(fixed)
     except json.JSONDecodeError:
-        # Fallback: extract first complete JSON object
         match = re.search(r'\{.*\}(?=\s*$|\s*\{)', fixed, re.DOTALL)
         if match:
             try:
                 return json.loads(match.group(0))
             except:
                 pass
-        return {"clause_analysis": [], "missing_clauses": [], "overall_risk": "Unknown", "executive_summary": "Could not parse analysis."}
+        return {"error": "Could not parse JSON", "raw": text[:200]}
 
 # -------------------------------
 # Generic LLM call with retry & fallback
@@ -123,8 +120,7 @@ async def call_llm(prompt: str, temperature: float = 0.0) -> str:
             "X-Title": "LexSarthi",
         }
     )
-    result = response.choices[0].message.content
-    return result.strip()
+    return response.choices[0].message.content.strip()
 
 async def call_llm_fallback(prompt: str, temperature: float = 0.0) -> str:
     try:
@@ -158,9 +154,9 @@ async def extract_text(file_bytes: bytes, filename: str) -> str:
         print(f"PyPDF2 failed: {e}")
     return ""
 
-# -------------------------------
-# Prompt for contract analysis
-# -------------------------------
+# ========================
+# 1. CONTRACT RISK ANALYSIS
+# ========================
 CONTRACT_PROMPT = """You are a corporate lawyer with 40 years of experience. Analyze the contract below.
 
 IMPORTANT: You MUST provide a specific redline for EVERY clause. "No change" is NOT allowed. If the clause is already perfect, suggest a minor improvement (e.g., additional clarification, modern phrasing, or a more protective term). For each clause, output JSON with fields: clause_number, title, risk_level (Low/Medium/High), legal_basis (specific Indian law section), reason (2-3 sentences), redline (exact suggested replacement text, never "No change").
@@ -176,9 +172,6 @@ Return ONLY JSON:
 }
 Contract: """
 
-# -------------------------------
-# Main contract analysis endpoint
-# -------------------------------
 @app.post("/analyze")
 async def analyze_contract(
     file: UploadFile = File(...),
@@ -197,7 +190,6 @@ async def analyze_contract(
         parsed = extract_json_from_text(raw)
         results.append(parsed)
 
-    # Merge results
     merged_clauses = {}
     merged_missing = {}
     overall_risk_score = 0
@@ -226,7 +218,6 @@ async def analyze_contract(
         "executive_summary": final_summary
     }
 
-    # Add lawyer review section if requested
     if lawyer_review:
         response["lawyer_review"] = {
             "reviewed_by": "Adv. Pankaj Rustagi (based on CV)",
@@ -238,40 +229,153 @@ async def analyze_contract(
         }
     return response
 
-# -------------------------------
-# Other agents (DPDP check, legal notice, due diligence, NDA triage, weekly digest, consent form)
-# -------------------------------
-# (Keep them as in your previous version – unchanged for brevity)
-# For completeness, include stubs or full endpoints as before.
-# We assume you already have them; if not, add them from earlier messages.
+# ========================
+# 2. DPDP CHECK
+# ========================
+DPDP_PROMPT = """You are a DPDP Act compliance expert. Analyze this privacy policy or data processing clause. Provide a JSON report with:
+- compliance_score: "High"/"Medium"/"Low"
+- violations: list of missing/incorrect provisions (each with "provision", "risk", "redline")
+- executive_summary: one paragraph
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+Return ONLY JSON:
+{
+  "compliance_score": "...",
+  "violations": [{"provision": "...", "risk": "...", "redline": "..."}],
+  "executive_summary": "..."
+}
+Text: """
 
-# -------------------------------
-# Stubs for other endpoints (add as needed)
-# -------------------------------
 @app.post("/dpdp-check")
 async def dpdp_check(request: dict):
-    return {"compliance_score": "High", "violations": [], "executive_summary": "DPDP check stub"}
+    text = request.get("text", "")
+    if not text.strip():
+        raise HTTPException(400, "No text provided")
+    prompt = DPDP_PROMPT + text
+    raw = await call_llm_fallback(prompt)
+    return extract_json_from_text(raw)
+
+# ========================
+# 3. LEGAL NOTICE DRAFTING
+# ========================
+NOTICE_PROMPT = """You are a legal drafting expert. Draft a formal legal notice based on the following information. Return JSON with:
+- notice_text: full notice (to, from, subject, body, deadline)
+- key_legal_basis: relevant Indian laws (e.g., Contract Act, IBC)
+- suggested_action: what the sender should do next
+
+Return ONLY JSON:
+{
+  "notice_text": "...",
+  "key_legal_basis": "...",
+  "suggested_action": "..."
+}
+Details: """
 
 @app.post("/legal-notice")
 async def legal_notice(request: dict):
-    return {"notice_text": "Stub legal notice", "key_legal_basis": "Indian Contract Act", "suggested_action": "Consult advocate"}
+    sender = request.get("sender", "")
+    recipient = request.get("recipient", "")
+    details = request.get("details", "")
+    prompt = NOTICE_PROMPT + f"Sender: {sender}\nRecipient: {recipient}\nDispute: {details}"
+    raw = await call_llm_fallback(prompt, temperature=0.3)
+    return extract_json_from_text(raw)
+
+# ========================
+# 4. DUE DILIGENCE (batch)
+# ========================
+DD_PROMPT = """You are a due diligence expert. Analyze the uploaded documents and return JSON with:
+- red_flags: list of high-risk findings (each with "document", "clause", "risk", "action")
+- overall_risk: "Low"/"Medium"/"High"
+- summary: one paragraph
+
+Return ONLY JSON:
+{
+  "red_flags": [{"document": "...", "clause": "...", "risk": "...", "action": "..."}],
+  "overall_risk": "...",
+  "summary": "..."
+}
+Documents summary: """
 
 @app.post("/due-diligence")
 async def due_diligence(files: List[UploadFile] = File(...)):
-    return {"red_flags": [], "overall_risk": "Low", "summary": "Stub due diligence"}
+    combined = ""
+    for f in files:
+        content = await f.read()
+        txt = await extract_text(content, f.filename)
+        combined += f"\n===== {f.filename} =====\n{txt[:2000]}\n"
+    prompt = DD_PROMPT + combined[:15000]
+    raw = await call_llm_fallback(prompt)
+    return extract_json_from_text(raw)
+
+# ========================
+# 5. NDA TRIAGE
+# ========================
+NDA_PROMPT = """You are an NDA expert. Classify the NDA below. Return JSON:
+- risk_level: "Low/Medium/High"
+- problematic_clauses: list of clauses that need revision (each with "clause", "reason", "redline")
+- executive_summary: one paragraph
+
+Return ONLY JSON:
+{
+  "risk_level": "...",
+  "problematic_clauses": [{"clause": "...", "reason": "...", "redline": "..."}],
+  "executive_summary": "..."
+}
+NDA text: """
 
 @app.post("/nda-triage")
 async def nda_triage(file: UploadFile = File(...)):
-    return {"risk_level": "Medium", "problematic_clauses": [], "executive_summary": "Stub NDA triage"}
+    content = await file.read()
+    text = await extract_text(content, file.filename)
+    if not text.strip():
+        raise HTTPException(400, "No text extracted")
+    prompt = NDA_PROMPT + text[:15000]
+    raw = await call_llm_fallback(prompt)
+    return extract_json_from_text(raw)
+
+# ========================
+# 6. WEEKLY DIGEST
+# ========================
+WEEKLY_PROMPT = """Summarise key legal developments in India and globally related to '{topic}'. Return JSON:
+{
+  "digest": ["point1", "point2", "point3"],
+  "sources": ["law", "judgment", "article"],
+  "executive_summary": "..."
+}
+"""
 
 @app.get("/weekly-digest")
 async def weekly_digest(q: Optional[str] = None):
-    return {"digest": ["Stub item"], "executive_summary": "Weekly digest stub"}
+    topic = q or "recent legal developments in India"
+    prompt = WEEKLY_PROMPT.format(topic=topic)
+    raw = await call_llm_fallback(prompt, temperature=0.5)
+    return extract_json_from_text(raw)
+
+# ========================
+# 7. CONSENT FORM GENERATOR
+# ========================
+CONSENT_PROMPT = """You are a data privacy lawyer. Generate a DPDP/GDPR‑compliant consent form based on:
+- Purpose: {purpose}
+- Data collected: {data}
+
+Return JSON:
+{
+  "form_title": "...",
+  "consent_text": "...",
+  "required_disclosures": ["..."]
+}
+"""
 
 @app.post("/consent-form")
 async def consent_form(request: dict):
-    return {"form_title": "Stub Consent Form", "consent_text": "Stub text", "required_disclosures": []}
+    purpose = request.get("purpose", "")
+    data_collected = request.get("data_collected", "")
+    prompt = CONSENT_PROMPT.format(purpose=purpose, data=data_collected)
+    raw = await call_llm_fallback(prompt, temperature=0.3)
+    return extract_json_from_text(raw)
+
+# ========================
+# Health check
+# ========================
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
