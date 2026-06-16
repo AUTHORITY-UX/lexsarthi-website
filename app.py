@@ -424,10 +424,19 @@ Output JSON matching the DomainReviewResponse schema.
     user = f"Domain Agreement:\n{text[:12000]}"
     raw = await call_llm(system, user)
     data = extract_json_from_text(raw)
-    # Enforce non‑empty suggested_change
+    
+    # --- FIX: Ensure clause_number is always a string ---
     for c in data.get("clauses", []):
+        # Convert clause_number to string if it's an integer
+        if "clause_number" in c:
+            c["clause_number"] = str(c["clause_number"])
+        # Also ensure suggested_change is never empty
         if not c.get("suggested_change") or c["suggested_change"].strip().lower() in ["no change", "none", "n/a"]:
             c["suggested_change"] = f"Review this clause to address {c.get('risk', 'Medium')} risk."
+        # Ensure actionable is a boolean (in case LLM returns string)
+        if "actionable" in c and isinstance(c["actionable"], str):
+            c["actionable"] = c["actionable"].lower() in ["true", "1", "yes"]
+    
     return data
 
 # ========================
