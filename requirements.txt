@@ -1,25 +1,3 @@
-fastapi
-uvicorn
-python-multipart
-openai>=1.54.0
-pdfplumber
-PyPDF2
-tiktoken
-tenacity
-sqlalchemy>=2.0.0
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
-llama-index-llms-groq
-requests
-gradio
-groq
-openai
-fastapi==0.111.0
-uvicorn==0.30.1
-python-multipart==0.0.9
-pydantic==2.7.1
-openai>=1.0.0
-PyPDF2==3.0.1
 fastapi==0.111.0
 uvicorn==0.30.1
 python-multipart==0.0.9
@@ -29,4 +7,8 @@ PyPDF2==3.0.1
 pdfplumber==0.11.2
 tiktoken==0.7.0
 tenacity==8.5.0
-razorpay          # optional, for payment verification
+sqlalchemy>=2.0.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.0
+razorpay          # optional – keep if you use server‑side payment verification
