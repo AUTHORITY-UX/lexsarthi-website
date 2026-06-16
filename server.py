@@ -251,8 +251,9 @@ Return ONLY JSON:
 Text: """
 
 @app.post("/dpdp-check")
-async def dpdp_check(request: dict, lawyer_review: bool = Form(False)):
+async def dpdp_check(request: dict):
     text = request.get("text", "")
+    lawyer_review = request.get("lawyer_review", False)
     if not text.strip():
         raise HTTPException(400, "No text provided")
     prompt = DPDP_PROMPT + text
@@ -279,10 +280,11 @@ Return ONLY JSON:
 Details: """
 
 @app.post("/legal-notice")
-async def legal_notice(request: dict, lawyer_review: bool = Form(False)):
+async def legal_notice(request: dict):
     sender = request.get("sender", "")
     recipient = request.get("recipient", "")
     details = request.get("details", "")
+    lawyer_review = request.get("lawyer_review", False)
     prompt = NOTICE_PROMPT + f"Sender: {sender}\nRecipient: {recipient}\nDispute: {details}"
     raw = await call_llm_fallback(prompt, temperature=0.3)
     response = extract_json_from_text(raw)
@@ -397,9 +399,10 @@ Data collected: {data}
 """
 
 @app.post("/consent-form")
-async def consent_form(request: dict, lawyer_review: bool = Form(False)):
+async def consent_form(request: dict):
     purpose = request.get("purpose", "")
     data_collected = request.get("data_collected", "")
+    lawyer_review = request.get("lawyer_review", False)
     prompt = CONSENT_PROMPT.format(purpose=purpose, data=data_collected)
     raw = await call_llm_fallback(prompt, temperature=0.3)
     response = extract_json_from_text(raw)
