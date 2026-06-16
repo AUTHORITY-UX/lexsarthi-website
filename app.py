@@ -204,4 +204,4 @@ Answer:"""
         title="LexSarthi Legal Chat",
         description="Ask about the uploaded document."
     )
-    app = gr.mount_gradio_app(app, chat_ui, path="/chat")
+    app = gr.mount_gradio_app(app, chat_ui, path="/chat"
