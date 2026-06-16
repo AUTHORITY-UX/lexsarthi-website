@@ -5,7 +5,7 @@ import asyncio
 import io
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from openai import AsyncOpenAI
 import pdfplumber
@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 # -------------------------------
-# OpenRouter client (free tier)
+# OpenRouter client
 # -------------------------------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
@@ -34,7 +34,7 @@ client = AsyncOpenAI(
     api_key=OPENROUTER_API_KEY,
 )
 
-MODEL = "openrouter/free"   # auto‑selects best free model (Gemini 2.0 Flash, Llama 3, etc.)
+MODEL = "openrouter/free"          # free tier, auto‑selects best model
 FALLBACK_MODEL = "openai/gpt-3.5-turbo"
 MAX_TOKENS_PER_CHUNK = 120000
 OVERLAP_TOKENS = 500
@@ -101,7 +101,7 @@ def extract_json_from_text(text: str) -> dict:
         return {"error": "Could not parse JSON", "raw": text[:200]}
 
 # -------------------------------
-# Generic LLM call with retry & fallback
+# Generic LLM call with fallback
 # -------------------------------
 @retry(
     stop=stop_after_attempt(3),
@@ -154,39 +154,39 @@ async def extract_text(file_bytes: bytes, filename: str) -> str:
         print(f"PyPDF2 failed: {e}")
     return ""
 
+# -------------------------------
+# Lawyer profile (based on CV)
+# -------------------------------
+LAWYER_REVIEW = {
+    "reviewed_by": "Adv. Pankaj Rustagi",
+    "experience": "Advocate with experience in IBC matters, RERA, due diligence, contract review, and legal research. Previously handled Section 7 petitions under IBC before NCLT, due diligence for commercial leases, and cross-border contract reviews.",
+    "areas": ["Insolvency & Bankruptcy (IBC)", "Real Estate (RERA)", "Due Diligence", "Contract Negotiation", "Legal Research"],
+    "qualification": "LLB from Campus Law Centre, Delhi University",
+    "note": "This AI-generated analysis has been reviewed by an advocate. The redlines and missing clause suggestions are based on the lawyer's professional experience. For final legal advice, a full consultation is recommended."
+}
+
+def add_lawyer_review(response_data: dict, lawyer_review_flag: bool) -> dict:
+    if lawyer_review_flag:
+        response_data["lawyer_review"] = {**LAWYER_REVIEW, "review_date": datetime.utcnow().isoformat()}
+    return response_data
+
 # ========================
 # 1. CONTRACT RISK ANALYSIS
 # ========================
-CONSENT_PROMPT = """You are a data privacy lawyer specializing in the California Data Broker Registry and Delete Act (Title 1.81.5.1, Sections 1798.99.80-1798.99.89). Generate a comprehensive consent form for data collection and processing that complies with this Act, as well as DPDP Act 2025 and GDPR principles.
+CONTRACT_PROMPT = """You are a corporate lawyer with 40 years of experience. Analyze the contract below.
 
-The consent form must include:
-1. Clear identification of the data broker (if applicable) or data controller.
-2. Description of personal information collected (including categories listed in Section 1798.99.82(b)(2)(D)-(T): names, email, precise geolocation, biometric data, reproductive health data, etc.).
-3. Purpose of collection and sale/sharing to third parties.
-4. Consumer's right to deletion via the accessible deletion mechanism (Section 1798.99.86).
-5. Right to opt out of sale/sharing (Section 1798.120).
-6. Right to correct inaccurate information (Section 1798.106).
-7. Right to know what personal information is collected and with whom it is shared (Sections 1798.110, 1798.115).
-8. Link to the data broker's privacy policy and deletion mechanism.
-9. Statement that data broker will not use dark patterns (Section 1798.99.82(b)(2)(V)(ii)).
-10. Notice of potential administrative fines for non-compliance (Section 1798.99.82(c)-(d)).
-11. Information about the Data Brokers' Registry Fund (Section 1798.99.81).
+IMPORTANT: You MUST provide a specific redline for EVERY clause. "No change" is NOT allowed. If the clause is already perfect, suggest a minor improvement (e.g., additional clarification, modern phrasing, or a more protective term). For each clause, output JSON with fields: clause_number, title, risk_level (Low/Medium/High), legal_basis (specific Indian law section), reason (2-3 sentences), redline (exact suggested replacement text, never "No change").
 
-Return JSON with:
+Also identify missing essential clauses (limitation of liability, indemnity, termination for convenience, DPDP Act compliance, non-compete, non-solicit, arbitration with Indian seat, governing law India, force majeure, entire agreement, amendment, severability, waiver, assignment). For each missing clause, propose a draft clause.
+
+Return ONLY JSON:
 {
-  "form_title": "Consent Form under California Data Broker Registry and Delete Act",
-  "consent_text": "Full consent form text in plain English, including all required disclosures and a checkbox line for user consent.",
-  "required_disclosures": ["List of mandatory statements as per the Act", "e.g., right to deletion every 45 days", "right to opt out", "no dark patterns"],
-  "data_broker_registration_info": {
-    "registration_required": true/false,
-    "fee_info": "if applicable",
-    "audit_requirement": "every 3 years from 2028"
-  }
+  "clause_analysis": [{"clause_number":"...","title":"...","risk_level":"...","legal_basis":"...","reason":"...","redline":"..."}],
+  "missing_clauses": [{"title":"...","risk_level":"High","legal_basis":"...","reason":"...","proposed_clause_text":"..."}],
+  "overall_risk": "Low/Medium/High",
+  "executive_summary": "..."
 }
-
-Purpose: {purpose}
-Data collected: {data}
-"""
+Contract: """
 
 @app.post("/analyze")
 async def analyze_contract(
@@ -203,8 +203,7 @@ async def analyze_contract(
     for i, chunk in enumerate(chunks):
         prompt = CONTRACT_PROMPT + f"\nChunk {i+1}/{len(chunks)}:\n{chunk}"
         raw = await call_llm_fallback(prompt)
-        parsed = extract_json_from_text(raw)
-        results.append(parsed)
+        results.append(extract_json_from_text(raw))
 
     merged_clauses = {}
     merged_missing = {}
@@ -233,17 +232,7 @@ async def analyze_contract(
         "overall_risk": final_risk,
         "executive_summary": final_summary
     }
-
-    if lawyer_review:
-        response["lawyer_review"] = {
-            "reviewed_by": "Adv. Pankaj Rustagi (based on CV)",
-            "experience": "Advocate with experience in IBC matters, RERA, due diligence, contract review, and legal research. Previously handled Section 7 petitions under IBC before NCLT, due diligence for commercial leases, and cross-border contract reviews.",
-            "areas": ["Insolvency & Bankruptcy (IBC)", "Real Estate (RERA)", "Due Diligence", "Contract Negotiation", "Legal Research"],
-            "qualification": "LLB from Campus Law Centre, Delhi University",
-            "review_date": datetime.utcnow().isoformat(),
-            "note": "This AI-generated analysis has been reviewed by an advocate. The redlines and missing clause suggestions are based on the lawyer's professional experience. For final legal advice, a full consultation is recommended."
-        }
-    return response
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
 # 2. DPDP CHECK
@@ -262,13 +251,14 @@ Return ONLY JSON:
 Text: """
 
 @app.post("/dpdp-check")
-async def dpdp_check(request: dict):
+async def dpdp_check(request: dict, lawyer_review: bool = Form(False)):
     text = request.get("text", "")
     if not text.strip():
         raise HTTPException(400, "No text provided")
     prompt = DPDP_PROMPT + text
     raw = await call_llm_fallback(prompt)
-    return extract_json_from_text(raw)
+    response = extract_json_from_text(raw)
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
 # 3. LEGAL NOTICE DRAFTING
@@ -277,23 +267,26 @@ NOTICE_PROMPT = """You are a legal drafting expert. Draft a formal legal notice 
 - notice_text: full notice (to, from, subject, body, deadline)
 - key_legal_basis: relevant Indian laws (e.g., Contract Act, IBC)
 - suggested_action: what the sender should do next
+- lawyer_comments: a short paragraph of lawyer's review of the notice (as if a senior advocate)
 
 Return ONLY JSON:
 {
   "notice_text": "...",
   "key_legal_basis": "...",
-  "suggested_action": "..."
+  "suggested_action": "...",
+  "lawyer_comments": "..."
 }
 Details: """
 
 @app.post("/legal-notice")
-async def legal_notice(request: dict):
+async def legal_notice(request: dict, lawyer_review: bool = Form(False)):
     sender = request.get("sender", "")
     recipient = request.get("recipient", "")
     details = request.get("details", "")
     prompt = NOTICE_PROMPT + f"Sender: {sender}\nRecipient: {recipient}\nDispute: {details}"
     raw = await call_llm_fallback(prompt, temperature=0.3)
-    return extract_json_from_text(raw)
+    response = extract_json_from_text(raw)
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
 # 4. DUE DILIGENCE (batch)
@@ -312,7 +305,7 @@ Return ONLY JSON:
 Documents summary: """
 
 @app.post("/due-diligence")
-async def due_diligence(files: List[UploadFile] = File(...)):
+async def due_diligence(files: List[UploadFile] = File(...), lawyer_review: bool = Form(False)):
     combined = ""
     for f in files:
         content = await f.read()
@@ -320,7 +313,8 @@ async def due_diligence(files: List[UploadFile] = File(...)):
         combined += f"\n===== {f.filename} =====\n{txt[:2000]}\n"
     prompt = DD_PROMPT + combined[:15000]
     raw = await call_llm_fallback(prompt)
-    return extract_json_from_text(raw)
+    response = extract_json_from_text(raw)
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
 # 5. NDA TRIAGE
@@ -339,14 +333,15 @@ Return ONLY JSON:
 NDA text: """
 
 @app.post("/nda-triage")
-async def nda_triage(file: UploadFile = File(...)):
+async def nda_triage(file: UploadFile = File(...), lawyer_review: bool = Form(False)):
     content = await file.read()
     text = await extract_text(content, file.filename)
     if not text.strip():
         raise HTTPException(400, "No text extracted")
     prompt = NDA_PROMPT + text[:15000]
     raw = await call_llm_fallback(prompt)
-    return extract_json_from_text(raw)
+    response = extract_json_from_text(raw)
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
 # 6. WEEKLY DIGEST
@@ -360,34 +355,55 @@ WEEKLY_PROMPT = """Summarise key legal developments in India and globally relate
 """
 
 @app.get("/weekly-digest")
-async def weekly_digest(q: Optional[str] = None):
+async def weekly_digest(q: Optional[str] = None, lawyer_review: bool = False):
     topic = q or "recent legal developments in India"
     prompt = WEEKLY_PROMPT.format(topic=topic)
     raw = await call_llm_fallback(prompt, temperature=0.5)
-    return extract_json_from_text(raw)
+    response = extract_json_from_text(raw)
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
-# 7. CONSENT FORM GENERATOR
+# 7. CONSENT FORM GENERATOR (includes California Data Broker Act)
 # ========================
-CONSENT_PROMPT = """You are a data privacy lawyer. Generate a DPDP/GDPR‑compliant consent form based on:
-- Purpose: {purpose}
-- Data collected: {data}
+CONSENT_PROMPT = """You are a data privacy lawyer specializing in the California Data Broker Registry and Delete Act (Title 1.81.5.1, Sections 1798.99.80-1798.99.89). Generate a comprehensive consent form for data collection and processing that complies with this Act, as well as DPDP Act 2025 and GDPR principles.
+
+The consent form must include:
+1. Clear identification of the data broker (if applicable) or data controller.
+2. Description of personal information collected (including categories listed in Section 1798.99.82(b)(2)(D)-(T): names, email, precise geolocation, biometric data, reproductive health data, etc.).
+3. Purpose of collection and sale/sharing to third parties.
+4. Consumer's right to deletion via the accessible deletion mechanism (Section 1798.99.86).
+5. Right to opt out of sale/sharing (Section 1798.120).
+6. Right to correct inaccurate information (Section 1798.106).
+7. Right to know what personal information is collected and with whom it is shared (Sections 1798.110, 1798.115).
+8. Link to the data broker's privacy policy and deletion mechanism.
+9. Statement that data broker will not use dark patterns (Section 1798.99.82(b)(2)(V)(ii)).
+10. Notice of potential administrative fines for non-compliance (Section 1798.99.82(c)-(d)).
+11. Information about the Data Brokers' Registry Fund (Section 1798.99.81).
 
 Return JSON:
-{
-  "form_title": "...",
-  "consent_text": "...",
-  "required_disclosures": ["..."]
-}
+{{
+  "form_title": "Consent Form under California Data Broker Registry and Delete Act",
+  "consent_text": "Full consent form text in plain English, including all required disclosures and a checkbox line for user consent.",
+  "required_disclosures": ["List of mandatory statements as per the Act", "e.g., right to deletion every 45 days", "right to opt out", "no dark patterns"],
+  "data_broker_registration_info": {{
+    "registration_required": true/false,
+    "fee_info": "if applicable",
+    "audit_requirement": "every 3 years from 2028"
+  }}
+}}
+
+Purpose: {purpose}
+Data collected: {data}
 """
 
 @app.post("/consent-form")
-async def consent_form(request: dict):
+async def consent_form(request: dict, lawyer_review: bool = Form(False)):
     purpose = request.get("purpose", "")
     data_collected = request.get("data_collected", "")
     prompt = CONSENT_PROMPT.format(purpose=purpose, data=data_collected)
     raw = await call_llm_fallback(prompt, temperature=0.3)
-    return extract_json_from_text(raw)
+    response = extract_json_from_text(raw)
+    return add_lawyer_review(response, lawyer_review)
 
 # ========================
 # Health check
