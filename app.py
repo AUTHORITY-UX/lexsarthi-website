@@ -8,7 +8,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import PyPDF2
-import groq
+from openai import OpenAI
 
 # ------------------- Pydantic Schemas -------------------
 class AgreementType(str, Enum):
@@ -59,8 +59,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ------------------- Groq Client -------------------
-client = groq.Groq(api_key=os.getenv("GROQ_API_KEY"))
+# ------------------- OpenRouter Client (via OpenAI SDK) -------------------
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),  # or use OPENAI_API_KEY if you set that
+)
+
+# Choose a fast model – change if you prefer
+MODEL = "meta-llama/llama-3.1-8b-instruct"  # cheap & fast, good for classification
 
 # ------------------- Agent Function -------------------
 async def analyze_domain_agreement(text: str) -> dict:
@@ -100,13 +106,13 @@ async def analyze_domain_agreement(text: str) -> dict:
 
     try:
         response = client.chat.completions.create(
-            model="mixtral-8x7b-32768",
+            model=MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.1,
-            response_format={"type": "json_object"},
+            response_format={"type": "json_object"},  # works with OpenRouter too
             max_tokens=4096
         )
         raw = response.choices[0].message.content
