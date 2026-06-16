@@ -157,20 +157,36 @@ async def extract_text(file_bytes: bytes, filename: str) -> str:
 # ========================
 # 1. CONTRACT RISK ANALYSIS
 # ========================
-CONTRACT_PROMPT = """You are a corporate lawyer with 40 years of experience. Analyze the contract below.
+CONSENT_PROMPT = """You are a data privacy lawyer specializing in the California Data Broker Registry and Delete Act (Title 1.81.5.1, Sections 1798.99.80-1798.99.89). Generate a comprehensive consent form for data collection and processing that complies with this Act, as well as DPDP Act 2025 and GDPR principles.
 
-IMPORTANT: You MUST provide a specific redline for EVERY clause. "No change" is NOT allowed. If the clause is already perfect, suggest a minor improvement (e.g., additional clarification, modern phrasing, or a more protective term). For each clause, output JSON with fields: clause_number, title, risk_level (Low/Medium/High), legal_basis (specific Indian law section), reason (2-3 sentences), redline (exact suggested replacement text, never "No change").
+The consent form must include:
+1. Clear identification of the data broker (if applicable) or data controller.
+2. Description of personal information collected (including categories listed in Section 1798.99.82(b)(2)(D)-(T): names, email, precise geolocation, biometric data, reproductive health data, etc.).
+3. Purpose of collection and sale/sharing to third parties.
+4. Consumer's right to deletion via the accessible deletion mechanism (Section 1798.99.86).
+5. Right to opt out of sale/sharing (Section 1798.120).
+6. Right to correct inaccurate information (Section 1798.106).
+7. Right to know what personal information is collected and with whom it is shared (Sections 1798.110, 1798.115).
+8. Link to the data broker's privacy policy and deletion mechanism.
+9. Statement that data broker will not use dark patterns (Section 1798.99.82(b)(2)(V)(ii)).
+10. Notice of potential administrative fines for non-compliance (Section 1798.99.82(c)-(d)).
+11. Information about the Data Brokers' Registry Fund (Section 1798.99.81).
 
-Also identify missing essential clauses (limitation of liability, indemnity, termination for convenience, DPDP Act compliance, non-compete, non-solicit, arbitration with Indian seat, governing law India, force majeure, entire agreement, amendment, severability, waiver, assignment). For each missing clause, propose a draft clause.
-
-Return ONLY JSON:
+Return JSON with:
 {
-  "clause_analysis": [{"clause_number":"...","title":"...","risk_level":"...","legal_basis":"...","reason":"...","redline":"..."}],
-  "missing_clauses": [{"title":"...","risk_level":"High","legal_basis":"...","reason":"...","proposed_clause_text":"..."}],
-  "overall_risk": "Low/Medium/High",
-  "executive_summary": "..."
+  "form_title": "Consent Form under California Data Broker Registry and Delete Act",
+  "consent_text": "Full consent form text in plain English, including all required disclosures and a checkbox line for user consent.",
+  "required_disclosures": ["List of mandatory statements as per the Act", "e.g., right to deletion every 45 days", "right to opt out", "no dark patterns"],
+  "data_broker_registration_info": {
+    "registration_required": true/false,
+    "fee_info": "if applicable",
+    "audit_requirement": "every 3 years from 2028"
+  }
 }
-Contract: """
+
+Purpose: {purpose}
+Data collected: {data}
+"""
 
 @app.post("/analyze")
 async def analyze_contract(
