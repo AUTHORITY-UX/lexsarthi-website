@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,7 +55,6 @@ def safe_json_parse(raw: str) -> dict:
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        # try to extract JSON block
         s = raw.find("{")
         e = raw.rfind("}") + 1
         if s != -1 and e > s:
@@ -76,7 +74,7 @@ def extract_text_from_pdf(file_url: str) -> str:
 async def root():
     return {"status": "LexSarthi API running", "docs": "/docs"}
 
-# ---------- FIX: GET /analyze ----------
+# ---------- FIX: GET /analyze (no more 405 errors) ----------
 @app.get("/analyze")
 async def analyze_get():
     return JSONResponse({
@@ -85,7 +83,7 @@ async def analyze_get():
         "live_demo": "https://advocacyalawfrim.in"
     })
 
-# ---------- 1. POST /analyze ----------
+# ---------- 1. POST /analyze (Contract Risk) ----------
 @app.post("/analyze")
 async def analyze_contract(payload: ContractAnalysisRequest):
     text = payload.text
@@ -117,7 +115,7 @@ JSON:"""
 # ---------- 2. DPDP Check ----------
 @app.post("/dpdp-check")
 async def dpdp_check(payload: AgentRequest):
-    prompt = f"""Review this document for DPDP Act compliance. Return JSON with: is_compliant (bool), issues (list), recommendations (list).
+    prompt = f"""Review this document for DPDP Act compliance. Return JSON: is_compliant (bool), issues (list), recommendations (list).
 Document:
 {payload.input_text[:5000]}
 JSON:"""
@@ -175,7 +173,7 @@ async def razorpay_webhook(request: Request):
     logger.info(f"Razorpay event: {data.get('event')}")
     return {"status": "ok"}
 
-# ---------- Gradio Chat (mounted) ----------
+# ---------- Gradio Chat (mounted on /chat) ----------
 def load_document():
     legal_docs = Path("legal_docs")
     for file in legal_docs.glob("*"):
@@ -207,7 +205,3 @@ Answer:"""
         description="Ask about the uploaded document."
     )
     app = gr.mount_gradio_app(app, chat_ui, path="/chat")
-
-# ---------- Run (local) ----------
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=7860)
