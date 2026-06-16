@@ -45,7 +45,7 @@ def safe_json_parse(raw: str) -> dict:
 
 def extract_text_from_pdf(file_url: str) -> str:
     import requests, io
-    from pypdf import PdfReader
+    from PyPDF2 import PdfReader           # <-- changed from pypdf
     resp = requests.get(file_url, timeout=15)
     resp.raise_for_status()
     reader = PdfReader(io.BytesIO(resp.content))
@@ -138,7 +138,7 @@ def load_document():
     legal_docs = Path("legal_docs")
     for file in legal_docs.glob("*"):
         if file.suffix.lower() == ".pdf":
-            from pypdf import PdfReader
+            from PyPDF2 import PdfReader          # <-- changed from pypdf
             reader = PdfReader(file)
             return "".join(page.extract_text() or "" for page in reader.pages)
         elif file.suffix.lower() == ".txt":
