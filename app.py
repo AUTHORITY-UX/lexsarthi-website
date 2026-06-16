@@ -18,7 +18,7 @@ import pdfplumber
 import tiktoken
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-# ---------- Authentication & DB ----------
+# ---------- Authentication & DB (optional) ----------
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -43,7 +43,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- Database Setup ----------
+# ---------- Database Setup (optional) ----------
 SQLALCHEMY_DATABASE_URL = "sqlite:///./lexsarthi.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -63,8 +63,8 @@ class History(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     agent = Column(String)
-    input_summary = Column(String, nullable=True)  # first 100 chars
-    result_json = Column(Text)  # full JSON result
+    input_summary = Column(String, nullable=True)
+    result_json = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="history")
 
@@ -72,7 +72,7 @@ Base.metadata.create_all(bind=engine)
 
 # ---------- Password & JWT ----------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)  # auto_error=False makes it optional
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
 ALGORITHM = "HS256"
@@ -94,26 +94,19 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# ---------- Dependency to get current user ----------
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+# ---------- Optional dependency: get current user (returns None if not authenticated) ----------
+async def get_current_user_optional(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    db = SessionLocal()
-    user = db.query(User).filter(User.email == email).first()
-    db.close()
-    if user is None:
-        raise credentials_exception
-    return user
+            return None
+        db = SessionLocal()
+        user = db.query(User).filter(User.email == email).first()
+        db.close()
+        return user
+    except:
+        return None
 
 # ---------- OpenRouter Client ----------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -242,21 +235,22 @@ def add_lawyer_review(response: dict, flag: bool) -> dict:
         response["lawyer_review"] = {**LAWYER_REVIEW, "review_date": datetime.utcnow().isoformat()}
     return response
 
-# ---------- Save History Helper ----------
-async def save_history(user_id: int, agent: str, input_text: str, result: dict):
-    db = SessionLocal()
-    history = History(
-        user_id=user_id,
-        agent=agent,
-        input_summary=input_text[:100] + ("..." if len(input_text)>100 else ""),
-        result_json=json.dumps(result)
-    )
-    db.add(history)
-    db.commit()
-    db.close()
+# ---------- Save History Helper (only if user logged in) ----------
+async def save_history_if_user(user: Optional[User], agent: str, input_text: str, result: dict):
+    if user:
+        db = SessionLocal()
+        history = History(
+            user_id=user.id,
+            agent=agent,
+            input_summary=input_text[:100] + ("..." if len(input_text)>100 else ""),
+            result_json=json.dumps(result)
+        )
+        db.add(history)
+        db.commit()
+        db.close()
 
 # ========================
-# AUTH ENDPOINTS
+# AUTH ENDPOINTS (still functional)
 # ========================
 
 @app.post("/signup", response_model=Token)
@@ -286,7 +280,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/history", response_model=List[HistoryItem])
-async def get_history(current_user: User = Depends(get_current_user)):
+async def get_history(current_user: User = Depends(get_current_user_optional)):
+    if not current_user:
+        raise HTTPException(401, "Authentication required")
     db = SessionLocal()
     history = db.query(History).filter(History.user_id == current_user.id).order_by(History.created_at.desc()).all()
     db.close()
@@ -299,10 +295,8 @@ async def get_history(current_user: User = Depends(get_current_user)):
     ) for h in history]
 
 # ========================
-# AGENT HANDLERS (with optional save)
+# AGENT HANDLERS (unchanged)
 # ========================
-
-# ---- Contract Risk ----
 async def analyze_contract_risk(text: str) -> dict:
     system = """
 You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions.
@@ -330,7 +324,6 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ---- DPDP ----
 async def check_dpdp(text: str) -> dict:
     system = """
 You are a DPDP Act specialist. Analyse the provided privacy policy/data processing document for compliance with India's Digital Personal Data Protection Act, 2023.
@@ -345,7 +338,6 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ---- Legal Notice ----
 async def draft_legal_notice(text: str) -> dict:
     system = """
 You are a litigation lawyer. Draft a formal legal notice based on the facts. Include:
@@ -365,7 +357,6 @@ Output JSON:
     raw = await call_llm(system, user, json_mode=True)
     return extract_json_from_text(raw)
 
-# ---- Due Diligence ----
 async def perform_due_diligence(text: str) -> dict:
     system = """
 You are a due diligence expert. Analyse the provided documents and produce a report.
@@ -380,7 +371,6 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ---- NDA Triage ----
 async def triage_nda(text: str) -> dict:
     system = """
 You are an NDA expert. Classify the NDA and highlight risks.
@@ -395,7 +385,6 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ---- Weekly Digest ----
 async def generate_digest(topic: str) -> dict:
     system = f"""
 You are a legal assistant. Summarise key legal developments in India and globally related to '{topic}'.
@@ -409,7 +398,6 @@ Output JSON:
     raw = await call_llm(system, user="Generate digest", json_mode=True)
     return extract_json_from_text(raw)
 
-# ---- Consent Form ----
 async def generate_consent(purpose: str, data_collected: str) -> dict:
     system = f"""
 You are a privacy lawyer. Generate a comprehensive consent form under the DPDP Act and GDPR principles.
@@ -426,7 +414,6 @@ Output JSON:
     raw = await call_llm(system, user="Generate consent form", json_mode=True)
     return extract_json_from_text(raw)
 
-# ---- Domain Agreement Review ----
 async def analyze_domain_agreement(text: str) -> dict:
     system = """
 You are a domain agreement expert. Extract every clause and provide clause‑wise analysis.
@@ -444,9 +431,9 @@ Output JSON matching the DomainReviewResponse schema.
     return data
 
 # ========================
-# GENERIC PROCESSOR (used by all endpoints)
+# GENERIC PROCESSOR (with optional auth)
 # ========================
-async def process_analysis(agent_name: str, file: UploadFile = None, text: str = None, user: User = None):
+async def process_analysis(agent_name: str, file: UploadFile = None, text: str = None, user: Optional[User] = None):
     content = ""
     if file:
         file_bytes = await file.read()
@@ -471,12 +458,12 @@ async def process_analysis(agent_name: str, file: UploadFile = None, text: str =
     if agent_name not in handlers:
         raise HTTPException(400, f"Unknown agent: {agent_name}")
     result = await handlers[agent_name](content)
-    if user:
-        await save_history(user.id, agent_name, content, result)
+    # Save history only if user is authenticated
+    await save_history_if_user(user, agent_name, content, result)
     return result
 
 # ========================
-# API ENDPOINTS
+# API ENDPOINTS (all public, auth optional)
 # ========================
 
 @app.get("/health")
@@ -488,7 +475,7 @@ async def run_agent(
     agent_name: str = Form(...),
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     return await process_analysis(agent_name, file, text, current_user)
 
@@ -496,7 +483,7 @@ async def run_agent(
 async def analyze_contract(
     file: UploadFile = File(...),
     lawyer_review: bool = Form(False),
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     result = await process_analysis("contract_risk", file, None, current_user)
     return add_lawyer_review(result, lawyer_review)
@@ -504,7 +491,7 @@ async def analyze_contract(
 @app.post("/dpdp-check")
 async def dpdp_check(
     request: dict,
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     text = request.get("text", "")
     lawyer = request.get("lawyer_review", False)
@@ -514,7 +501,7 @@ async def dpdp_check(
 @app.post("/legal-notice")
 async def legal_notice(
     request: dict,
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     sender = request.get("sender", "")
     recipient = request.get("recipient", "")
@@ -530,7 +517,7 @@ async def legal_notice(
 async def due_diligence(
     files: List[UploadFile] = File(...),
     lawyer_review: bool = Form(False),
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     combined = ""
     for f in files:
@@ -544,7 +531,7 @@ async def due_diligence(
 async def nda_triage(
     file: UploadFile = File(...),
     lawyer_review: bool = Form(False),
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     result = await process_analysis("nda_triage", file, None, current_user)
     return add_lawyer_review(result, lawyer_review)
@@ -553,7 +540,7 @@ async def nda_triage(
 async def weekly_digest(
     q: Optional[str] = None,
     lawyer_review: bool = False,
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     topic = q or "recent legal developments in India"
     result = await process_analysis("weekly_digest", None, topic, current_user)
@@ -562,7 +549,7 @@ async def weekly_digest(
 @app.post("/consent-form")
 async def consent_form(
     request: dict,
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     purpose = request.get("purpose", "")
     data = request.get("data_collected", "")
@@ -578,8 +565,10 @@ async def domain_review(
     text: Optional[str] = Form(None),
     payment_id: str = Form(...),
     plan: Literal["500", "1000"] = Form(...),
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    # You should verify payment with Razorpay here using payment_id
+    # For now, we assume payment is valid.
     result = await process_analysis("domain_review", file, text, current_user)
     is_lawyer = (plan == "1000")
     review_id = f"REV-{payment_id[-8:]}" if is_lawyer else None
