@@ -13,3 +13,4 @@ llama-index-llms-groq
 requests
 gradio
 groq
+openai
