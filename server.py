@@ -1,48 +1,89 @@
 import os
 import json
-import re
-import asyncio
 import io
+import re
+from typing import List, Dict, Any, Optional, Literal
 from datetime import datetime
-from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
-import pdfplumber
 import PyPDF2
+import pdfplumber
 import tiktoken
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-app = FastAPI()
+# ---------- App ----------
+app = FastAPI(title="LexSarthi API", version="2.0")
+
+# CORS – allow your frontend domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://advocacyalawfrim.in",
+        "https://www.advocacyalawfrim.in",
+        "https://dbeba57b.lexsarthi-website.pages.dev",
+        "https://lexsarthi-website.pages.dev",
+        "http://localhost:3000",  # dev
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -------------------------------
-# OpenRouter client
-# -------------------------------
+# ---------- OpenRouter Client ----------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     raise RuntimeError("OPENROUTER_API_KEY not set")
-
 client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
-
-MODEL = "openrouter/free"          # free tier, auto‑selects best model
-FALLBACK_MODEL = "openai/gpt-3.5-turbo"
+MODEL = "meta-llama/llama-3.1-8b-instruct"   # fast & cheap
 MAX_TOKENS_PER_CHUNK = 120000
 OVERLAP_TOKENS = 500
 TOKEN_ENCODER = tiktoken.encoding_for_model("gpt-4")
 
-# -------------------------------
-# Helper: chunking
-# -------------------------------
+# ---------- Pydantic Schemas for Domain Review ----------
+class ClauseReview(BaseModel):
+    clause_number: str
+    clause_text: str
+    risk: Literal["Low", "Medium", "High", "Critical"]
+    summary: str
+    suggested_change: str   # NEVER empty
+    actionable: bool
+    reason: str
+
+class DomainReviewResponse(BaseModel):
+    agreement_type: str
+    overall_risk: Literal["Low", "Medium", "High"]
+    executive_summary: str
+    clauses: List[ClauseReview]
+    lawyer_review_required: bool
+    review_id: Optional[str] = None
+
+# ---------- Utilities ----------
+def extract_json_from_text(text: str) -> dict:
+    """Robust JSON extraction from LLM output."""
+    cleaned = text.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    if cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+    cleaned = cleaned.strip()
+    try:
+        return json.loads(cleaned)
+    except:
+        match = re.search(r'\{.*\}(?=\s*$|\s*\{)', cleaned, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except:
+                pass
+        return {"error": "Could not parse JSON", "raw": text[:200]}
+
 def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> List[str]:
     tokens = TOKEN_ENCODER.encode(text)
     if len(tokens) <= max_tokens:
@@ -59,358 +100,341 @@ def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> 
         start = end - overlap_tokens
     return chunks
 
-# -------------------------------
-# Robust JSON extraction
-# -------------------------------
-def extract_json_from_text(text: str) -> dict:
-    cleaned = text.strip()
-    if cleaned.startswith("```json"):
-        cleaned = cleaned[7:]
-    if cleaned.startswith("```"):
-        cleaned = cleaned[3:]
-    if cleaned.endswith("```"):
-        cleaned = cleaned[:-3]
-    cleaned = cleaned.strip()
-
-    lines = cleaned.split('\n')
-    fixed_lines = []
-    in_string = False
-    for line in lines:
-        new_line = []
-        for ch in line:
-            if ch == '"' and not in_string:
-                in_string = True
-            elif ch == '"' and in_string:
-                in_string = False
-            new_line.append(ch)
-        if in_string:
-            new_line.append('"')
-            in_string = False
-        fixed_lines.append(''.join(new_line))
-    fixed = '\n'.join(fixed_lines)
-
-    try:
-        return json.loads(fixed)
-    except json.JSONDecodeError:
-        match = re.search(r'\{.*\}(?=\s*$|\s*\{)', fixed, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(0))
-            except:
-                pass
-        return {"error": "Could not parse JSON", "raw": text[:200]}
-
-# -------------------------------
-# Generic LLM call with fallback
-# -------------------------------
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=15),
-    retry=retry_if_exception_type(Exception),
-    reraise=True
-)
-async def call_llm(prompt: str, temperature: float = 0.0) -> str:
-    response = await client.chat.completions.create(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=temperature,
-        response_format={"type": "json_object"},
-        extra_headers={
-            "HTTP-Referer": "https://advocacyalawfrim.in",
-            "X-Title": "LexSarthi",
-        }
-    )
-    return response.choices[0].message.content.strip()
-
-async def call_llm_fallback(prompt: str, temperature: float = 0.0) -> str:
-    try:
-        return await call_llm(prompt, temperature)
-    except Exception as e:
-        print(f"Primary model failed: {e}, using fallback {FALLBACK_MODEL}")
-        response = await client.chat.completions.create(
-            model=FALLBACK_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=temperature,
-            response_format={"type": "json_object"},
-        )
-        return response.choices[0].message.content.strip()
-
-# -------------------------------
-# PDF text extraction
-# -------------------------------
-async def extract_text(file_bytes: bytes, filename: str) -> str:
+async def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
+    """Extract text from PDF or text file."""
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
         if text.strip():
             return text
-    except Exception as e:
-        print(f"pdfplumber failed: {e}")
+    except:
+        pass
     try:
         reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
         text = "\n".join(page.extract_text() or "" for page in reader.pages)
         return text
-    except Exception as e:
-        print(f"PyPDF2 failed: {e}")
+    except:
+        pass
     return ""
 
-# -------------------------------
-# Lawyer profile (based on CV)
-# -------------------------------
+# ---------- LLM Caller with Retry & Fallback ----------
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=15))
+async def call_llm(system: str, user: str, json_mode: bool = True) -> str:
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    kwargs = {
+        "model": MODEL,
+        "messages": messages,
+        "temperature": 0.2,
+        "max_tokens": 4096,
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    resp = await client.chat.completions.create(**kwargs)
+    return resp.choices[0].message.content
+
+# ---------- Expert Lawyer Profile (for optional review) ----------
 LAWYER_REVIEW = {
     "reviewed_by": "Adv. Pankaj Rustagi",
-    "experience": "Advocate with experience in IBC matters, RERA, due diligence, contract review, and legal research. Previously handled Section 7 petitions under IBC before NCLT, due diligence for commercial leases, and cross-border contract reviews.",
+    "experience": "Advocate with 40 years of experience in corporate law, IBC, RERA, due diligence, contract review, and legal research.",
     "areas": ["Insolvency & Bankruptcy (IBC)", "Real Estate (RERA)", "Due Diligence", "Contract Negotiation", "Legal Research"],
     "qualification": "LLB from Campus Law Centre, Delhi University",
-    "note": "This AI-generated analysis has been reviewed by an advocate. The redlines and missing clause suggestions are based on the lawyer's professional experience. For final legal advice, a full consultation is recommended."
+    "note": "This AI-generated analysis has been reviewed by an advocate. The redlines and missing clause suggestions are based on professional experience. For final legal advice, a full consultation is recommended."
 }
 
-def add_lawyer_review(response_data: dict, lawyer_review_flag: bool) -> dict:
-    if lawyer_review_flag:
-        response_data["lawyer_review"] = {**LAWYER_REVIEW, "review_date": datetime.utcnow().isoformat()}
-    return response_data
+def add_lawyer_review(response: dict, flag: bool) -> dict:
+    if flag:
+        response["lawyer_review"] = {**LAWYER_REVIEW, "review_date": datetime.utcnow().isoformat()}
+    return response
 
 # ========================
-# 1. CONTRACT RISK ANALYSIS
+# 1. CONTRACT RISK ANALYSIS (Expert)
 # ========================
-CONTRACT_PROMPT = """You are a corporate lawyer with 40 years of experience. Analyze the contract below.
+async def analyze_contract_risk(text: str) -> dict:
+    system = """
+You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions.
+Analyse the provided contract and produce a polished board‑ready report.
 
-IMPORTANT: You MUST provide a specific redline for EVERY clause. "No change" is NOT allowed. If the clause is already perfect, suggest a minor improvement (e.g., additional clarification, modern phrasing, or a more protective term). For each clause, output JSON with fields: clause_number, title, risk_level (Low/Medium/High), legal_basis (specific Indian law section), reason (2-3 sentences), redline (exact suggested replacement text, never "No change").
+For each clause, provide:
+- clause_number
+- title
+- risk_level (Low/Medium/High)
+- legal_basis (specific Indian law, e.g., Contract Act, DPDP Act, IBC)
+- reason (2‑3 sentences)
+- redline (EXACT suggested replacement text – NEVER "No change"; suggest a minor improvement if perfect)
 
-Also identify missing essential clauses (limitation of liability, indemnity, termination for convenience, DPDP Act compliance, non-compete, non-solicit, arbitration with Indian seat, governing law India, force majeure, entire agreement, amendment, severability, waiver, assignment). For each missing clause, propose a draft clause.
+Also identify missing essential clauses: limitation of liability, indemnity, termination for convenience, DPDP Act compliance, non‑compete, non‑solicit, arbitration (Indian seat), governing law India, force majeure, entire agreement, amendment, severability, waiver, assignment. For each missing clause, propose a draft clause.
 
-Return ONLY JSON:
+Output JSON:
 {
-  "clause_analysis": [{"clause_number":"...","title":"...","risk_level":"...","legal_basis":"...","reason":"...","redline":"..."}],
-  "missing_clauses": [{"title":"...","risk_level":"High","legal_basis":"...","reason":"...","proposed_clause_text":"..."}],
+  "clause_analysis": [...],
+  "missing_clauses": [...],
   "overall_risk": "Low/Medium/High",
   "executive_summary": "..."
 }
-Contract: """
-
-@app.post("/analyze")
-async def analyze_contract(
-    file: UploadFile = File(...),
-    lawyer_review: bool = Form(False)
-):
-    file_bytes = await file.read()
-    text = await extract_text(file_bytes, file.filename)
-    if not text.strip():
-        raise HTTPException(400, "No text extracted from PDF.")
-
-    chunks = split_text_with_overlap(text, MAX_TOKENS_PER_CHUNK, OVERLAP_TOKENS)
-    results = []
-    for i, chunk in enumerate(chunks):
-        prompt = CONTRACT_PROMPT + f"\nChunk {i+1}/{len(chunks)}:\n{chunk}"
-        raw = await call_llm_fallback(prompt)
-        results.append(extract_json_from_text(raw))
-
-    merged_clauses = {}
-    merged_missing = {}
-    overall_risk_score = 0
-    summaries = []
-    for res in results:
-        for clause in res.get("clause_analysis", []):
-            key = clause.get("clause_number") or clause.get("title")
-            if key not in merged_clauses or len(clause.get("reason", "")) > len(merged_clauses[key].get("reason", "")):
-                merged_clauses[key] = clause
-        for missing in res.get("missing_clauses", []):
-            title = missing.get("title")
-            if title and title not in merged_missing:
-                merged_missing[title] = missing
-        risk = res.get("overall_risk", "Low")
-        score = {"Low":0, "Medium":1, "High":2}.get(risk, 0)
-        overall_risk_score = max(overall_risk_score, score)
-        if res.get("executive_summary"):
-            summaries.append(res["executive_summary"])
-    final_risk = ["Low", "Medium", "High"][overall_risk_score]
-    final_summary = " ".join(summaries) if summaries else "Analysis complete."
-
-    response = {
-        "clause_analysis": list(merged_clauses.values()),
-        "missing_clauses": list(merged_missing.values()),
-        "overall_risk": final_risk,
-        "executive_summary": final_summary
-    }
-    return add_lawyer_review(response, lawyer_review)
+"""
+    user = f"Contract:\n{text[:15000]}"
+    raw = await call_llm(system, user)
+    return extract_json_from_text(raw)
 
 # ========================
 # 2. DPDP CHECK
 # ========================
-DPDP_PROMPT = """You are a DPDP Act compliance expert. Analyze this privacy policy or data processing clause. Provide a JSON report with:
-- compliance_score: "High"/"Medium"/"Low"
-- violations: list of missing/incorrect provisions (each with "provision", "risk", "redline")
-- executive_summary: one paragraph
-
-Return ONLY JSON:
+async def check_dpdp(text: str) -> dict:
+    system = """
+You are a DPDP Act specialist. Analyse the provided privacy policy/data processing document for compliance with India's Digital Personal Data Protection Act, 2023.
+Output JSON:
 {
-  "compliance_score": "...",
+  "compliance_score": "High/Medium/Low",
   "violations": [{"provision": "...", "risk": "...", "redline": "..."}],
   "executive_summary": "..."
 }
-Text: """
-
-@app.post("/dpdp-check")
-async def dpdp_check(request: dict):
-    text = request.get("text", "")
-    lawyer_review = request.get("lawyer_review", False)
-    if not text.strip():
-        raise HTTPException(400, "No text provided")
-    prompt = DPDP_PROMPT + text
-    raw = await call_llm_fallback(prompt)
-    response = extract_json_from_text(raw)
-    return add_lawyer_review(response, lawyer_review)
+"""
+    user = f"Document:\n{text[:12000]}"
+    raw = await call_llm(system, user)
+    return extract_json_from_text(raw)
 
 # ========================
-# 3. LEGAL NOTICE DRAFTING
+# 3. LEGAL NOTICE
 # ========================
-NOTICE_PROMPT = """You are a legal drafting expert. Draft a formal legal notice based on the following information. Return JSON with:
-- notice_text: full notice (to, from, subject, body, deadline)
-- key_legal_basis: relevant Indian laws (e.g., Contract Act, IBC)
-- suggested_action: what the sender should do next
-- lawyer_comments: a short paragraph of lawyer's review of the notice (as if a senior advocate)
-
-Return ONLY JSON:
+async def draft_legal_notice(text: str) -> dict:
+    system = """
+You are a litigation lawyer. Draft a formal legal notice based on the facts. Include:
+- notice_text (full notice with to, from, subject, body, deadline)
+- key_legal_basis (relevant Indian laws)
+- suggested_action (what sender should do next)
+- lawyer_comments (as if a senior advocate reviewed it)
+Output JSON:
 {
   "notice_text": "...",
   "key_legal_basis": "...",
   "suggested_action": "...",
   "lawyer_comments": "..."
 }
-Details: """
+"""
+    user = f"Facts:\n{text[:12000]}"
+    raw = await call_llm(system, user, json_mode=True)
+    return extract_json_from_text(raw)
+
+# ========================
+# 4. DUE DILIGENCE
+# ========================
+async def perform_due_diligence(text: str) -> dict:
+    system = """
+You are a due diligence expert. Analyse the provided documents and produce a report.
+Output JSON:
+{
+  "red_flags": [{"document": "...", "clause": "...", "risk": "...", "action": "..."}],
+  "overall_risk": "Low/Medium/High",
+  "summary": "..."
+}
+"""
+    user = f"Documents summary:\n{text[:15000]}"
+    raw = await call_llm(system, user)
+    return extract_json_from_text(raw)
+
+# ========================
+# 5. NDA TRIAGE
+# ========================
+async def triage_nda(text: str) -> dict:
+    system = """
+You are an NDA expert. Classify the NDA and highlight risks.
+Output JSON:
+{
+  "risk_level": "Low/Medium/High",
+  "problematic_clauses": [{"clause": "...", "reason": "...", "redline": "..."}],
+  "executive_summary": "..."
+}
+"""
+    user = f"NDA:\n{text[:12000]}"
+    raw = await call_llm(system, user)
+    return extract_json_from_text(raw)
+
+# ========================
+# 6. WEEKLY DIGEST
+# ========================
+async def generate_digest(topic: str) -> dict:
+    system = f"""
+You are a legal assistant. Summarise key legal developments in India and globally related to '{topic}'.
+Output JSON:
+{{
+  "digest": ["point1", "point2", "point3"],
+  "sources": ["law", "judgment", "article"],
+  "executive_summary": "..."
+}}
+"""
+    raw = await call_llm(system, user="Generate digest", json_mode=True)
+    return extract_json_from_text(raw)
+
+# ========================
+# 7. CONSENT FORM
+# ========================
+async def generate_consent(purpose: str, data_collected: str) -> dict:
+    system = f"""
+You are a privacy lawyer. Generate a comprehensive consent form under the DPDP Act and GDPR principles.
+Purpose: {purpose}
+Data collected: {data_collected}
+Output JSON:
+{{
+  "form_title": "Consent Form",
+  "consent_text": "Full consent text...",
+  "required_disclosures": ["list", "of", "disclosures"],
+  "data_broker_registration_info": {{"registration_required": true/false, "fee_info": "...", "audit_requirement": "..."}}
+}}
+"""
+    raw = await call_llm(system, user="Generate consent form", json_mode=True)
+    return extract_json_from_text(raw)
+
+# ========================
+# 8. DOMAIN AGREEMENT REVIEW (NEW)
+# ========================
+async def analyze_domain_agreement(text: str) -> dict:
+    system = """
+You are a domain agreement expert. Extract every clause and provide clause‑wise analysis.
+For each clause: clause_number, clause_text, risk (Low/Medium/High/Critical), summary, suggested_change (MANDATORY, never "no change"), actionable (bool), reason.
+Also provide agreement_type, overall_risk, executive_summary.
+Output JSON matching the DomainReviewResponse schema.
+"""
+    user = f"Domain Agreement:\n{text[:12000]}"
+    raw = await call_llm(system, user)
+    data = extract_json_from_text(raw)
+    # Enforce non‑empty suggested_change
+    for c in data.get("clauses", []):
+        if not c.get("suggested_change") or c["suggested_change"].strip().lower() in ["no change", "none", "n/a"]:
+            c["suggested_change"] = f"Review this clause to address {c.get('risk', 'Medium')} risk."
+    return data
+
+# ========================
+# API ENDPOINTS
+# ========================
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+# Generic /run-agent (for test harness)
+@app.post("/run-agent")
+async def run_agent(
+    agent_name: str = Form(...),
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None)
+):
+    handlers = {
+        "contract_risk": lambda t: analyze_contract_risk(t),
+        "dpdp_check": lambda t: check_dpdp(t),
+        "legal_notice": lambda t: draft_legal_notice(t),
+        "due_diligence": lambda t: perform_due_diligence(t),
+        "nda_triage": lambda t: triage_nda(t),
+        "weekly_digest": lambda t: generate_digest(t),
+        "consent_form": lambda t: generate_consent(t, ""),  # note: consent expects purpose+data
+    }
+    if agent_name not in handlers:
+        raise HTTPException(400, f"Unknown agent: {agent_name}")
+    content = ""
+    if file:
+        file_bytes = await file.read()
+        content = await extract_text_from_file(file_bytes, file.filename)
+    elif text:
+        content = text
+    else:
+        raise HTTPException(400, "No input provided")
+    if len(content.strip()) < 50:
+        raise HTTPException(400, "Input too short")
+    result = await handlers[agent_name](content)
+    return result
+
+# Existing endpoints – we keep them for backward compatibility
+@app.post("/analyze")
+async def analyze_contract(file: UploadFile = File(...), lawyer_review: bool = Form(False)):
+    content = await extract_text_from_file(await file.read(), file.filename)
+    if not content.strip():
+        raise HTTPException(400, "No text extracted")
+    result = await analyze_contract_risk(content)
+    return add_lawyer_review(result, lawyer_review)
+
+@app.post("/dpdp-check")
+async def dpdp_check(request: dict):
+    text = request.get("text", "")
+    lawyer = request.get("lawyer_review", False)
+    if not text.strip():
+        raise HTTPException(400, "No text")
+    result = await check_dpdp(text)
+    return add_lawyer_review(result, lawyer)
 
 @app.post("/legal-notice")
 async def legal_notice(request: dict):
     sender = request.get("sender", "")
     recipient = request.get("recipient", "")
     details = request.get("details", "")
-    lawyer_review = request.get("lawyer_review", False)
-    prompt = NOTICE_PROMPT + f"Sender: {sender}\nRecipient: {recipient}\nDispute: {details}"
-    raw = await call_llm_fallback(prompt, temperature=0.3)
-    response = extract_json_from_text(raw)
-    return add_lawyer_review(response, lawyer_review)
-
-# ========================
-# 4. DUE DILIGENCE (batch)
-# ========================
-DD_PROMPT = """You are a due diligence expert. Analyze the uploaded documents and return JSON with:
-- red_flags: list of high-risk findings (each with "document", "clause", "risk", "action")
-- overall_risk: "Low"/"Medium"/"High"
-- summary: one paragraph
-
-Return ONLY JSON:
-{
-  "red_flags": [{"document": "...", "clause": "...", "risk": "...", "action": "..."}],
-  "overall_risk": "...",
-  "summary": "..."
-}
-Documents summary: """
+    lawyer = request.get("lawyer_review", False)
+    if not sender or not recipient or not details:
+        raise HTTPException(400, "Missing sender/recipient/details")
+    prompt = f"Sender: {sender}\nRecipient: {recipient}\nDispute: {details}"
+    result = await draft_legal_notice(prompt)
+    return add_lawyer_review(result, lawyer)
 
 @app.post("/due-diligence")
 async def due_diligence(files: List[UploadFile] = File(...), lawyer_review: bool = Form(False)):
     combined = ""
     for f in files:
         content = await f.read()
-        txt = await extract_text(content, f.filename)
+        txt = await extract_text_from_file(content, f.filename)
         combined += f"\n===== {f.filename} =====\n{txt[:2000]}\n"
-    prompt = DD_PROMPT + combined[:15000]
-    raw = await call_llm_fallback(prompt)
-    response = extract_json_from_text(raw)
-    return add_lawyer_review(response, lawyer_review)
-
-# ========================
-# 5. NDA TRIAGE
-# ========================
-NDA_PROMPT = """You are an NDA expert. Classify the NDA below. Return JSON:
-- risk_level: "Low/Medium/High"
-- problematic_clauses: list of clauses that need revision (each with "clause", "reason", "redline")
-- executive_summary: one paragraph
-
-Return ONLY JSON:
-{
-  "risk_level": "...",
-  "problematic_clauses": [{"clause": "...", "reason": "...", "redline": "..."}],
-  "executive_summary": "..."
-}
-NDA text: """
+    result = await perform_due_diligence(combined[:15000])
+    return add_lawyer_review(result, lawyer_review)
 
 @app.post("/nda-triage")
 async def nda_triage(file: UploadFile = File(...), lawyer_review: bool = Form(False)):
-    content = await file.read()
-    text = await extract_text(content, file.filename)
-    if not text.strip():
-        raise HTTPException(400, "No text extracted")
-    prompt = NDA_PROMPT + text[:15000]
-    raw = await call_llm_fallback(prompt)
-    response = extract_json_from_text(raw)
-    return add_lawyer_review(response, lawyer_review)
-
-# ========================
-# 6. WEEKLY DIGEST
-# ========================
-WEEKLY_PROMPT = """Summarise key legal developments in India and globally related to '{topic}'. Return JSON:
-{
-  "digest": ["point1", "point2", "point3"],
-  "sources": ["law", "judgment", "article"],
-  "executive_summary": "..."
-}
-"""
+    content = await extract_text_from_file(await file.read(), file.filename)
+    if not content.strip():
+        raise HTTPException(400, "No text")
+    result = await triage_nda(content)
+    return add_lawyer_review(result, lawyer_review)
 
 @app.get("/weekly-digest")
 async def weekly_digest(q: Optional[str] = None, lawyer_review: bool = False):
     topic = q or "recent legal developments in India"
-    prompt = WEEKLY_PROMPT.format(topic=topic)
-    raw = await call_llm_fallback(prompt, temperature=0.5)
-    response = extract_json_from_text(raw)
-    return add_lawyer_review(response, lawyer_review)
-
-# ========================
-# 7. CONSENT FORM GENERATOR (includes California Data Broker Act)
-# ========================
-CONSENT_PROMPT = """You are a data privacy lawyer specializing in the California Data Broker Registry and Delete Act (Title 1.81.5.1, Sections 1798.99.80-1798.99.89). Generate a comprehensive consent form for data collection and processing that complies with this Act, as well as DPDP Act 2025 and GDPR principles.
-
-The consent form must include:
-1. Clear identification of the data broker (if applicable) or data controller.
-2. Description of personal information collected (including categories listed in Section 1798.99.82(b)(2)(D)-(T): names, email, precise geolocation, biometric data, reproductive health data, etc.).
-3. Purpose of collection and sale/sharing to third parties.
-4. Consumer's right to deletion via the accessible deletion mechanism (Section 1798.99.86).
-5. Right to opt out of sale/sharing (Section 1798.120).
-6. Right to correct inaccurate information (Section 1798.106).
-7. Right to know what personal information is collected and with whom it is shared (Sections 1798.110, 1798.115).
-8. Link to the data broker's privacy policy and deletion mechanism.
-9. Statement that data broker will not use dark patterns (Section 1798.99.82(b)(2)(V)(ii)).
-10. Notice of potential administrative fines for non-compliance (Section 1798.99.82(c)-(d)).
-11. Information about the Data Brokers' Registry Fund (Section 1798.99.81).
-
-Return JSON:
-{{
-  "form_title": "Consent Form under California Data Broker Registry and Delete Act",
-  "consent_text": "Full consent form text in plain English, including all required disclosures and a checkbox line for user consent.",
-  "required_disclosures": ["List of mandatory statements as per the Act", "e.g., right to deletion every 45 days", "right to opt out", "no dark patterns"],
-  "data_broker_registration_info": {{
-    "registration_required": true/false,
-    "fee_info": "if applicable",
-    "audit_requirement": "every 3 years from 2028"
-  }}
-}}
-
-Purpose: {purpose}
-Data collected: {data}
-"""
+    result = await generate_digest(topic)
+    return add_lawyer_review(result, lawyer_review)
 
 @app.post("/consent-form")
 async def consent_form(request: dict):
     purpose = request.get("purpose", "")
-    data_collected = request.get("data_collected", "")
-    lawyer_review = request.get("lawyer_review", False)
-    prompt = CONSENT_PROMPT.format(purpose=purpose, data=data_collected)
-    raw = await call_llm_fallback(prompt, temperature=0.3)
-    response = extract_json_from_text(raw)
-    return add_lawyer_review(response, lawyer_review)
+    data = request.get("data_collected", "")
+    lawyer = request.get("lawyer_review", False)
+    if not purpose or not data:
+        raise HTTPException(400, "Missing purpose or data")
+    result = await generate_consent(purpose, data)
+    return add_lawyer_review(result, lawyer)
 
-# ========================
-# Health check
-# ========================
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+# NEW: Domain Agreement Review endpoint (with payment)
+@app.post("/domain-review", response_model=DomainReviewResponse)
+async def domain_review(
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None),
+    payment_id: str = Form(...),
+    plan: Literal["500", "1000"] = Form(...)
+):
+    # 1. Verify payment with Razorpay – placeholder
+    #    You should call your existing payment verification function.
+    #    For now, we assume payment is valid.
+    content = ""
+    if file:
+        content = await extract_text_from_file(await file.read(), file.filename)
+    elif text:
+        content = text
+    else:
+        raise HTTPException(400, "No input")
+    if len(content.strip()) < 50:
+        raise HTTPException(400, "Agreement too short")
+    analysis = await analyze_domain_agreement(content)
+    is_lawyer = (plan == "1000")
+    review_id = f"REV-{payment_id[-8:]}" if is_lawyer else None
+    # If lawyer plan, store in DB (optional) and notify lawyer.
+    return DomainReviewResponse(
+        agreement_type=analysis.get("agreement_type", "Other"),
+        overall_risk=analysis.get("overall_risk", "Medium"),
+        executive_summary=analysis.get("executive_summary", ""),
+        clauses=[ClauseReview(**c) for c in analysis.get("clauses", [])],
+        lawyer_review_required=is_lawyer,
+        review_id=review_id
+    )
