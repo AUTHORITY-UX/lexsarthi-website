@@ -6,16 +6,24 @@ import os
 import json
 import io
 import re
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Literal
-from datetime import datetime
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
 import PyPDF2
 import pdfplumber
 import tiktoken
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+# ---------- Authentication & DB ----------
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 # ---------- App ----------
 app = FastAPI(title="LexSarthi API", version="2.0")
@@ -28,12 +36,84 @@ app.add_middleware(
         "https://www.advocacyalawfrim.in",
         "https://dbeba57b.lexsarthi-website.pages.dev",
         "https://lexsarthi-website.pages.dev",
-        "http://localhost:3000",   # for local dev
+        "http://localhost:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------- Database Setup ----------
+SQLALCHEMY_DATABASE_URL = "sqlite:///./lexsarthi.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# ---------- Models ----------
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    history = relationship("History", back_populates="user")
+
+class History(Base):
+    __tablename__ = "history"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    agent = Column(String)
+    input_summary = Column(String, nullable=True)  # first 100 chars
+    result_json = Column(Text)  # full JSON result
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="history")
+
+Base.metadata.create_all(bind=engine)
+
+# ---------- Password & JWT ----------
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# ---------- Dependency to get current user ----------
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    db = SessionLocal()
+    user = db.query(User).filter(User.email == email).first()
+    db.close()
+    if user is None:
+        raise credentials_exception
+    return user
 
 # ---------- OpenRouter Client ----------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -43,18 +123,18 @@ client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
-MODEL = "meta-llama/llama-3.1-8b-instruct"   # fast & cheap
+MODEL = "meta-llama/llama-3.1-8b-instruct"
 MAX_TOKENS_PER_CHUNK = 120000
 OVERLAP_TOKENS = 500
 TOKEN_ENCODER = tiktoken.encoding_for_model("gpt-4")
 
-# ---------- Pydantic Schemas for Domain Review ----------
+# ---------- Pydantic Schemas ----------
 class ClauseReview(BaseModel):
     clause_number: str
     clause_text: str
     risk: Literal["Low", "Medium", "High", "Critical"]
     summary: str
-    suggested_change: str   # NEVER empty
+    suggested_change: str
     actionable: bool
     reason: str
 
@@ -66,9 +146,23 @@ class DomainReviewResponse(BaseModel):
     lawyer_review_required: bool
     review_id: Optional[str] = None
 
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class HistoryItem(BaseModel):
+    id: int
+    agent: str
+    input_summary: Optional[str]
+    result_json: dict
+    created_at: datetime
+
 # ---------- Utilities ----------
 def extract_json_from_text(text: str) -> dict:
-    """Robust JSON extraction from LLM output."""
     cleaned = text.strip()
     if cleaned.startswith("```json"):
         cleaned = cleaned[7:]
@@ -105,7 +199,6 @@ def split_text_with_overlap(text: str, max_tokens: int, overlap_tokens: int) -> 
     return chunks
 
 async def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
-    """Extract text from PDF or text file."""
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
@@ -121,7 +214,7 @@ async def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
         pass
     return ""
 
-# ---------- LLM Caller with Retry ----------
+# ---------- LLM Caller ----------
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=15))
 async def call_llm(system: str, user: str, json_mode: bool = True) -> str:
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
@@ -136,23 +229,80 @@ async def call_llm(system: str, user: str, json_mode: bool = True) -> str:
     resp = await client.chat.completions.create(**kwargs)
     return resp.choices[0].message.content
 
-# ---------- Expert Lawyer Profile (for optional review) ----------
+# ---------- Lawyer Review Profile ----------
 LAWYER_REVIEW = {
     "reviewed_by": "Adv. Pankaj Rustagi",
-    "experience": "Advocate with 40 years of experience in corporate law, IBC, RERA, due diligence, contract review, and legal research.",
-    "areas": ["Insolvency & Bankruptcy (IBC)", "Real Estate (RERA)", "Due Diligence", "Contract Negotiation", "Legal Research"],
-    "qualification": "LLB from Campus Law Centre, Delhi University",
-    "note": "This AI-generated analysis has been reviewed by an advocate. The redlines and missing clause suggestions are based on professional experience. For final legal advice, a full consultation is recommended."
+    "experience": "40 years in corporate law, IBC, RERA, due diligence.",
+    "areas": ["IBC", "RERA", "Due Diligence", "Contract Negotiation", "Legal Research"],
+    "qualification": "LLB, Campus Law Centre, Delhi University",
+    "note": "AI-generated analysis reviewed by an advocate. For final legal advice, consult."
 }
-
 def add_lawyer_review(response: dict, flag: bool) -> dict:
     if flag:
         response["lawyer_review"] = {**LAWYER_REVIEW, "review_date": datetime.utcnow().isoformat()}
     return response
 
+# ---------- Save History Helper ----------
+async def save_history(user_id: int, agent: str, input_text: str, result: dict):
+    db = SessionLocal()
+    history = History(
+        user_id=user_id,
+        agent=agent,
+        input_summary=input_text[:100] + ("..." if len(input_text)>100 else ""),
+        result_json=json.dumps(result)
+    )
+    db.add(history)
+    db.commit()
+    db.close()
+
 # ========================
-# 1. CONTRACT RISK ANALYSIS (Expert)
+# AUTH ENDPOINTS
 # ========================
+
+@app.post("/signup", response_model=Token)
+async def signup(user: UserCreate):
+    db = SessionLocal()
+    existing = db.query(User).filter(User.email == user.email).first()
+    if existing:
+        db.close()
+        raise HTTPException(400, "Email already registered")
+    hashed = get_password_hash(user.password)
+    new_user = User(email=user.email, hashed_password=hashed)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    db.close()
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    db = SessionLocal()
+    user = db.query(User).filter(User.email == form_data.username).first()
+    db.close()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(401, "Incorrect email or password")
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/history", response_model=List[HistoryItem])
+async def get_history(current_user: User = Depends(get_current_user)):
+    db = SessionLocal()
+    history = db.query(History).filter(History.user_id == current_user.id).order_by(History.created_at.desc()).all()
+    db.close()
+    return [HistoryItem(
+        id=h.id,
+        agent=h.agent,
+        input_summary=h.input_summary,
+        result_json=json.loads(h.result_json),
+        created_at=h.created_at
+    ) for h in history]
+
+# ========================
+# AGENT HANDLERS (with optional save)
+# ========================
+
+# ---- Contract Risk ----
 async def analyze_contract_risk(text: str) -> dict:
     system = """
 You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions.
@@ -180,9 +330,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ========================
-# 2. DPDP CHECK
-# ========================
+# ---- DPDP ----
 async def check_dpdp(text: str) -> dict:
     system = """
 You are a DPDP Act specialist. Analyse the provided privacy policy/data processing document for compliance with India's Digital Personal Data Protection Act, 2023.
@@ -197,9 +345,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ========================
-# 3. LEGAL NOTICE
-# ========================
+# ---- Legal Notice ----
 async def draft_legal_notice(text: str) -> dict:
     system = """
 You are a litigation lawyer. Draft a formal legal notice based on the facts. Include:
@@ -219,9 +365,7 @@ Output JSON:
     raw = await call_llm(system, user, json_mode=True)
     return extract_json_from_text(raw)
 
-# ========================
-# 4. DUE DILIGENCE
-# ========================
+# ---- Due Diligence ----
 async def perform_due_diligence(text: str) -> dict:
     system = """
 You are a due diligence expert. Analyse the provided documents and produce a report.
@@ -236,9 +380,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ========================
-# 5. NDA TRIAGE
-# ========================
+# ---- NDA Triage ----
 async def triage_nda(text: str) -> dict:
     system = """
 You are an NDA expert. Classify the NDA and highlight risks.
@@ -253,9 +395,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
-# ========================
-# 6. WEEKLY DIGEST
-# ========================
+# ---- Weekly Digest ----
 async def generate_digest(topic: str) -> dict:
     system = f"""
 You are a legal assistant. Summarise key legal developments in India and globally related to '{topic}'.
@@ -269,9 +409,7 @@ Output JSON:
     raw = await call_llm(system, user="Generate digest", json_mode=True)
     return extract_json_from_text(raw)
 
-# ========================
-# 7. CONSENT FORM
-# ========================
+# ---- Consent Form ----
 async def generate_consent(purpose: str, data_collected: str) -> dict:
     system = f"""
 You are a privacy lawyer. Generate a comprehensive consent form under the DPDP Act and GDPR principles.
@@ -288,9 +426,7 @@ Output JSON:
     raw = await call_llm(system, user="Generate consent form", json_mode=True)
     return extract_json_from_text(raw)
 
-# ========================
-# 8. DOMAIN AGREEMENT REVIEW (NEW)
-# ========================
+# ---- Domain Agreement Review ----
 async def analyze_domain_agreement(text: str) -> dict:
     system = """
 You are a domain agreement expert. Extract every clause and provide clause‑wise analysis.
@@ -308,31 +444,9 @@ Output JSON matching the DomainReviewResponse schema.
     return data
 
 # ========================
-# API ENDPOINTS
+# GENERIC PROCESSOR (used by all endpoints)
 # ========================
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-# Generic /run-agent (for test harness)
-@app.post("/run-agent")
-async def run_agent(
-    agent_name: str = Form(...),
-    file: Optional[UploadFile] = File(None),
-    text: Optional[str] = Form(None)
-):
-    handlers = {
-        "contract_risk": lambda t: analyze_contract_risk(t),
-        "dpdp_check": lambda t: check_dpdp(t),
-        "legal_notice": lambda t: draft_legal_notice(t),
-        "due_diligence": lambda t: perform_due_diligence(t),
-        "nda_triage": lambda t: triage_nda(t),
-        "weekly_digest": lambda t: generate_digest(t),
-        "consent_form": lambda t: generate_consent(t, ""),  # note: consent expects purpose+data
-    }
-    if agent_name not in handlers:
-        raise HTTPException(400, f"Unknown agent: {agent_name}")
+async def process_analysis(agent_name: str, file: UploadFile = None, text: str = None, user: User = None):
     content = ""
     if file:
         file_bytes = await file.read()
@@ -340,105 +454,140 @@ async def run_agent(
     elif text:
         content = text
     else:
-        raise HTTPException(400, "No input provided")
+        raise HTTPException(400, "No input")
     if len(content.strip()) < 50:
         raise HTTPException(400, "Input too short")
+
+    handlers = {
+        "contract_risk": analyze_contract_risk,
+        "dpdp_check": check_dpdp,
+        "legal_notice": draft_legal_notice,
+        "due_diligence": perform_due_diligence,
+        "nda_triage": triage_nda,
+        "weekly_digest": lambda t: generate_digest(t),
+        "consent_form": lambda t: generate_consent(t, ""),
+        "domain_review": analyze_domain_agreement,
+    }
+    if agent_name not in handlers:
+        raise HTTPException(400, f"Unknown agent: {agent_name}")
     result = await handlers[agent_name](content)
+    if user:
+        await save_history(user.id, agent_name, content, result)
     return result
 
-# Existing endpoints – we keep them for backward compatibility
+# ========================
+# API ENDPOINTS
+# ========================
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.post("/run-agent")
+async def run_agent(
+    agent_name: str = Form(...),
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    return await process_analysis(agent_name, file, text, current_user)
+
 @app.post("/analyze")
-async def analyze_contract(file: UploadFile = File(...), lawyer_review: bool = Form(False)):
-    content = await extract_text_from_file(await file.read(), file.filename)
-    if not content.strip():
-        raise HTTPException(400, "No text extracted")
-    result = await analyze_contract_risk(content)
+async def analyze_contract(
+    file: UploadFile = File(...),
+    lawyer_review: bool = Form(False),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    result = await process_analysis("contract_risk", file, None, current_user)
     return add_lawyer_review(result, lawyer_review)
 
 @app.post("/dpdp-check")
-async def dpdp_check(request: dict):
+async def dpdp_check(
+    request: dict,
+    current_user: Optional[User] = Depends(get_current_user)
+):
     text = request.get("text", "")
     lawyer = request.get("lawyer_review", False)
-    if not text.strip():
-        raise HTTPException(400, "No text")
-    result = await check_dpdp(text)
+    result = await process_analysis("dpdp_check", None, text, current_user)
     return add_lawyer_review(result, lawyer)
 
 @app.post("/legal-notice")
-async def legal_notice(request: dict):
+async def legal_notice(
+    request: dict,
+    current_user: Optional[User] = Depends(get_current_user)
+):
     sender = request.get("sender", "")
     recipient = request.get("recipient", "")
     details = request.get("details", "")
     lawyer = request.get("lawyer_review", False)
     if not sender or not recipient or not details:
-        raise HTTPException(400, "Missing sender/recipient/details")
+        raise HTTPException(400, "Missing fields")
     prompt = f"Sender: {sender}\nRecipient: {recipient}\nDispute: {details}"
-    result = await draft_legal_notice(prompt)
+    result = await process_analysis("legal_notice", None, prompt, current_user)
     return add_lawyer_review(result, lawyer)
 
 @app.post("/due-diligence")
-async def due_diligence(files: List[UploadFile] = File(...), lawyer_review: bool = Form(False)):
+async def due_diligence(
+    files: List[UploadFile] = File(...),
+    lawyer_review: bool = Form(False),
+    current_user: Optional[User] = Depends(get_current_user)
+):
     combined = ""
     for f in files:
         content = await f.read()
         txt = await extract_text_from_file(content, f.filename)
         combined += f"\n===== {f.filename} =====\n{txt[:2000]}\n"
-    result = await perform_due_diligence(combined[:15000])
+    result = await process_analysis("due_diligence", None, combined[:15000], current_user)
     return add_lawyer_review(result, lawyer_review)
 
 @app.post("/nda-triage")
-async def nda_triage(file: UploadFile = File(...), lawyer_review: bool = Form(False)):
-    content = await extract_text_from_file(await file.read(), file.filename)
-    if not content.strip():
-        raise HTTPException(400, "No text")
-    result = await triage_nda(content)
+async def nda_triage(
+    file: UploadFile = File(...),
+    lawyer_review: bool = Form(False),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    result = await process_analysis("nda_triage", file, None, current_user)
     return add_lawyer_review(result, lawyer_review)
 
 @app.get("/weekly-digest")
-async def weekly_digest(q: Optional[str] = None, lawyer_review: bool = False):
+async def weekly_digest(
+    q: Optional[str] = None,
+    lawyer_review: bool = False,
+    current_user: Optional[User] = Depends(get_current_user)
+):
     topic = q or "recent legal developments in India"
-    result = await generate_digest(topic)
+    result = await process_analysis("weekly_digest", None, topic, current_user)
     return add_lawyer_review(result, lawyer_review)
 
 @app.post("/consent-form")
-async def consent_form(request: dict):
+async def consent_form(
+    request: dict,
+    current_user: Optional[User] = Depends(get_current_user)
+):
     purpose = request.get("purpose", "")
     data = request.get("data_collected", "")
     lawyer = request.get("lawyer_review", False)
     if not purpose or not data:
         raise HTTPException(400, "Missing purpose or data")
-    result = await generate_consent(purpose, data)
+    result = await process_analysis("consent_form", None, f"Purpose: {purpose}\nData: {data}", current_user)
     return add_lawyer_review(result, lawyer)
 
-# NEW: Domain Agreement Review endpoint (with payment)
 @app.post("/domain-review", response_model=DomainReviewResponse)
 async def domain_review(
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
     payment_id: str = Form(...),
-    plan: Literal["500", "1000"] = Form(...)
+    plan: Literal["500", "1000"] = Form(...),
+    current_user: Optional[User] = Depends(get_current_user)
 ):
-    # 1. Verify payment with Razorpay – placeholder
-    #    You should call your existing payment verification function.
-    #    For now, we assume payment is valid.
-    content = ""
-    if file:
-        content = await extract_text_from_file(await file.read(), file.filename)
-    elif text:
-        content = text
-    else:
-        raise HTTPException(400, "No input")
-    if len(content.strip()) < 50:
-        raise HTTPException(400, "Agreement too short")
-    analysis = await analyze_domain_agreement(content)
+    result = await process_analysis("domain_review", file, text, current_user)
     is_lawyer = (plan == "1000")
     review_id = f"REV-{payment_id[-8:]}" if is_lawyer else None
-    # If lawyer plan, store in DB (optional) and notify lawyer.
     return DomainReviewResponse(
-        agreement_type=analysis.get("agreement_type", "Other"),
-        overall_risk=analysis.get("overall_risk", "Medium"),
-        executive_summary=analysis.get("executive_summary", ""),
-        clauses=[ClauseReview(**c) for c in analysis.get("clauses", [])],
+        agreement_type=result.get("agreement_type", "Other"),
+        overall_risk=result.get("overall_risk", "Medium"),
+        executive_summary=result.get("executive_summary", ""),
+        clauses=[ClauseReview(**c) for c in result.get("clauses", [])],
         lawyer_review_required=is_lawyer,
         review_id=review_id
     )
