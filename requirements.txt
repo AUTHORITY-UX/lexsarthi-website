@@ -11,4 +11,4 @@ sqlalchemy>=2.0.0
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 bcrypt>=4.0.0
-razorpay          # optional – keep if you use server‑side payment verification
+# razorpay     # optional – uncomment if you need server‑side verification
