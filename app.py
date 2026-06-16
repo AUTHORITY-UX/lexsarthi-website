@@ -6,8 +6,9 @@ import os, json, logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 from llama_index.llms.groq import Groq
 
@@ -23,6 +24,19 @@ logger = logging.getLogger("lexsarthi")
 app = FastAPI(title="LexSarthi AI Law Firm OS", version="2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["https://advocacyalawfrim.in", "http://localhost:3000"],
                    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# ---------- Custom validation error handler (fixes UnicodeDecodeError) ----------
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.warning(f"Validation error: {exc.errors()}")
+    return JSONResponse(
+        status_code=400,
+        content={
+            "detail": "Invalid request data. Ensure you are sending valid UTF-8 JSON and correct field types.",
+            "hint": "Check your payload for non‑text bytes or incorrect field names."
+        }
+    )
+# --------------------------------------------------------------------------------
 
 class ContractAnalysisRequest(BaseModel):
     text: Optional[str] = None
@@ -45,7 +59,7 @@ def safe_json_parse(raw: str) -> dict:
 
 def extract_text_from_pdf(file_url: str) -> str:
     import requests, io
-    from PyPDF2 import PdfReader           # <-- changed from pypdf
+    from PyPDF2 import PdfReader
     resp = requests.get(file_url, timeout=15)
     resp.raise_for_status()
     reader = PdfReader(io.BytesIO(resp.content))
@@ -138,7 +152,7 @@ def load_document():
     legal_docs = Path("legal_docs")
     for file in legal_docs.glob("*"):
         if file.suffix.lower() == ".pdf":
-            from PyPDF2 import PdfReader          # <-- changed from pypdf
+            from PyPDF2 import PdfReader
             reader = PdfReader(file)
             return "".join(page.extract_text() or "" for page in reader.pages)
         elif file.suffix.lower() == ".txt":
