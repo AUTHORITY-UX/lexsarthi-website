@@ -297,8 +297,7 @@ async def get_history(current_user: User = Depends(get_current_user_optional)):
 # ========================
 
 # --- 1. Contract Risk (Enhanced with Fallback) ---
-
-   async def analyze_contract_risk(text: str) -> dict:
+async def analyze_contract_risk(text: str) -> dict:
     system = """
 You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions. Your task is to produce a **complete, board‑ready contract analysis** that includes:
 
@@ -353,7 +352,6 @@ IMPORTANT: Every `redline` and `proposed_clause_text` must be a **full, standalo
         for idx, clause in enumerate(missing):
             # If the item is not a dict, convert it to one
             if not isinstance(clause, dict):
-                # If it's a string, wrap it as a dict with a title
                 if isinstance(clause, str):
                     missing[idx] = {
                         "title": clause,
@@ -375,46 +373,6 @@ IMPORTANT: Every `redline` and `proposed_clause_text` must be a **full, standalo
         data["missing_clauses"] = []
 
     return data
-{
-  "clause_analysis": [
-    {
-      "clause_number": "...",
-      "title": "...",
-      "risk_level": "Low/Medium/High",
-      "legal_basis": "...",
-      "reason": "...",
-      "redline": "COMPLETE REWRITTEN CLAUSE TEXT"
-    }
-  ],
-  "missing_clauses": [
-    {
-      "title": "...",
-      "legal_basis": "...",
-      "reason": "...",
-      "proposed_clause_text": "COMPLETE DRAFT CLAUSE"
-    }
-  ],
-  "overall_risk": "Low/Medium/High",
-  "executive_summary": "..."
-}
-
-IMPORTANT: Every `redline` and `proposed_clause_text` must be a **full, standalone clause** – not a suggestion or a note. They must be ready to copy and paste directly into the contract. Never output "No change" or "N/A". If the clause is adequate, improve it with a minor but specific enhancement.
-"""
-    user = f"Contract:\n{text[:15000]}"
-    raw = await call_llm(system, user, json_mode=True)
-    data = extract_json_from_text(raw)
-
-    # ---------- FALLBACK for missing clauses ----------
-    for clause in data.get("missing_clauses", []):
-        if not clause.get("proposed_clause_text") or len(clause["proposed_clause_text"].strip()) < 10:
-            clause["proposed_clause_text"] = (
-                f"The parties shall include a comprehensive {clause.get('title', 'clause')} clause "
-                f"that addresses {clause.get('legal_basis', 'applicable law')} and protects the interests "
-                f"of both parties. This clause should be drafted in accordance with Indian law and "
-                f"include provisions for remedies, limitations, and dispute resolution."
-            )
-    return data
-
 # --- 2. DPDP Check ---
 async def check_dpdp(text: str) -> dict:
     system = """
