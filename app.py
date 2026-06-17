@@ -327,19 +327,51 @@ Output JSON:
 # 2. DPDP Check
 async def check_dpdp(text: str) -> dict:
     system = """
-You are a DPDP Act specialist. Analyse the provided privacy policy/data processing document for compliance with India's Digital Personal Data Protection Act, 2023.
-Output JSON:
-{
-  "compliance_score": "High/Medium/Low",
-  "violations": [{"provision": "...", "risk": "...", "redline": "..."}],
-  "executive_summary": "..."
-}
-"""
-    user = f"Document:\n{text[:12000]}"
-    raw = await call_llm(system, user)
-    return extract_json_from_text(raw)
+You are a senior data privacy lawyer with 15 years of experience specialising in India's Digital Personal Data Protection Act, 2023 (DPDP Act). You are auditing a privacy policy or data processing document.
 
-# 3. Legal Notice
+Your task is to produce a **detailed, clause‑by‑clause compliance report** that is legally precise, actionable, and suitable for a multinational corporation.
+
+### 1. Structure your output as JSON with these fields:
+- **compliance_score**: A number from 0 to 100, calculated based on:
+  - Weighted assessment of all DPDP Act sections (Consent, Data Principal Rights, Grievance Redressal, Data Protection Officer, Security Safeguards, Data Breach Notification, Cross‑Border Transfer, Data Localisation, Significant Data Fiduciary, Penalties).
+  - Each section is weighted equally (10% each) for a total of 100%.
+- **overall_risk**: "Critical", "High", "Medium", or "Low" – based on the total compliance score.
+- **violations**: An array of objects, one for each missing or non‑compliant clause. Each object must include:
+  - **provision**: The exact section of the DPDP Act (e.g., "Section 6(2) – Consent").
+  - **risk**: "Critical", "High", "Medium", or "Low".
+  - **severity**: A number from 1 to 10 (1 = low, 10 = critical) representing the impact of this violation.
+  - **current_text**: The exact text from the document (if available) or "Not present".
+  - **redline**: **A complete, rewritten clause** that would make the document compliant with the Act. This must be specific, legally sound, and directly address the violation.
+  - **reason**: A 2‑3 sentence explanation of why the current text fails, citing the Act.
+  - **legal_basis**: The specific section of the DPDP Act (e.g., "Section 6(2) requires explicit, free, specific, informed consent").
+- **executive_summary**: A 3‑paragraph summary suitable for a board report, covering:
+  - The overall compliance status.
+  - The top 3 critical gaps.
+  - A recommended timeline for remediation (e.g., "Immediate (within 30 days)", "Short‑term (90 days)", "Long‑term (180 days)").
+- **priority_actions**: An array of 5‑7 bullet‑point actions, sorted by urgency.
+
+### 2. Mandatory requirements:
+- You **MUST** cite specific sections of the DPDP Act (e.g., "Section 6(2)").
+- Every violation **MUST** have a `redline` that is a **complete, rewritten clause** – not just a suggestion.
+- The `compliance_score` must be a **numeric value** (e.g., 67 out of 100).
+- The report must be **self‑contained** – no external references; all reasoning must be within the JSON.
+
+### 3. Example structure for a `violation` entry:
+{
+  "provision": "Section 6(2) – Consent",
+  "risk": "Critical",
+  "severity": 10,
+  "current_text": "By using our services, you agree to our data processing practices.",
+  "redline": "The Data Fiduciary shall obtain explicit, free, specific, and informed consent from the Data Principal for each processing activity. Consent shall be obtained in a clear and plain language, and the Data Principal shall have the right to withdraw consent at any time, as per Section 6(2) and Section 8(1) of the DPDP Act.",
+  "reason": "The current text uses passive consent ('by using you agree'), which does not meet the requirement for explicit, informed consent under Section 6(2).",
+  "legal_basis": "Section 6(2) of the DPDP Act, 2023"
+}
+
+### 4. Output JSON only – no extra text, no markdown.
+"""
+    user = f"Privacy policy / data processing document to audit:\n\n{text[:12000]}"
+    raw = await call_llm(system, user, json_mode=True)
+    return extract_json_from_text(raw)
 async def draft_legal_notice(text: str) -> dict:
     system = """
 You are a litigation lawyer. Draft a formal legal notice based on the facts. Include:
