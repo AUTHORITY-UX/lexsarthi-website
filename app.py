@@ -1,6 +1,5 @@
 # Copyright (c) 2025 THE ADVOCACY A LAW FIRM. All rights reserved.
 # Confidential and proprietary. Do not distribute without a license.
-# THE ADVOCACY A LAW FIRM is the sole owner and title holder of this software.
 
 import os
 import json
@@ -34,8 +33,8 @@ app.add_middleware(
     allow_origins=[
         "https://advocacyalawfrim.in",
         "https://www.advocacyalawfrim.in",
-        "https://dbeba57b.lexsarthi-website.pages.dev",
         "https://lexsarthi-website.pages.dev",
+        "https://dbeba57b.lexsarthi-website.pages.dev",
         "http://localhost:3000",
     ],
     allow_credentials=True,
@@ -70,9 +69,9 @@ class History(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# ---------- Password & JWT ----------
+# ---------- Password & JWT (optional) ----------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)  # auto_error=False makes it optional
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
 ALGORITHM = "HS256"
@@ -94,7 +93,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# ---------- Optional dependency: get current user (returns None if not authenticated) ----------
 async def get_current_user_optional(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -235,7 +233,7 @@ def add_lawyer_review(response: dict, flag: bool) -> dict:
         response["lawyer_review"] = {**LAWYER_REVIEW, "review_date": datetime.utcnow().isoformat()}
     return response
 
-# ---------- Save History Helper (only if user logged in) ----------
+# ---------- Save History Helper ----------
 async def save_history_if_user(user: Optional[User], agent: str, input_text: str, result: dict):
     if user:
         db = SessionLocal()
@@ -295,8 +293,10 @@ async def get_history(current_user: User = Depends(get_current_user_optional)):
     ) for h in history]
 
 # ========================
-# AGENT HANDLERS (unchanged)
+# AGENT HANDLERS – All 9
 # ========================
+
+# 1. Contract Risk
 async def analyze_contract_risk(text: str) -> dict:
     system = """
 You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions.
@@ -324,6 +324,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
+# 2. DPDP Check
 async def check_dpdp(text: str) -> dict:
     system = """
 You are a DPDP Act specialist. Analyse the provided privacy policy/data processing document for compliance with India's Digital Personal Data Protection Act, 2023.
@@ -338,6 +339,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
+# 3. Legal Notice
 async def draft_legal_notice(text: str) -> dict:
     system = """
 You are a litigation lawyer. Draft a formal legal notice based on the facts. Include:
@@ -357,6 +359,7 @@ Output JSON:
     raw = await call_llm(system, user, json_mode=True)
     return extract_json_from_text(raw)
 
+# 4. Due Diligence
 async def perform_due_diligence(text: str) -> dict:
     system = """
 You are a due diligence expert. Analyse the provided documents and produce a report.
@@ -371,6 +374,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
+# 5. NDA Triage
 async def triage_nda(text: str) -> dict:
     system = """
 You are an NDA expert. Classify the NDA and highlight risks.
@@ -385,6 +389,7 @@ Output JSON:
     raw = await call_llm(system, user)
     return extract_json_from_text(raw)
 
+# 6. Weekly Digest
 async def generate_digest(topic: str) -> dict:
     system = f"""
 You are a legal assistant. Summarise key legal developments in India and globally related to '{topic}'.
@@ -398,6 +403,7 @@ Output JSON:
     raw = await call_llm(system, user="Generate digest", json_mode=True)
     return extract_json_from_text(raw)
 
+# 7. Consent Form
 async def generate_consent(purpose: str, data_collected: str) -> dict:
     system = f"""
 You are a privacy lawyer. Generate a comprehensive consent form under the DPDP Act and GDPR principles.
@@ -414,6 +420,7 @@ Output JSON:
     raw = await call_llm(system, user="Generate consent form", json_mode=True)
     return extract_json_from_text(raw)
 
+# 8. Domain Agreement Review
 async def analyze_domain_agreement(text: str) -> dict:
     system = """
 You are a domain agreement expert. Extract every clause and provide clause‑wise analysis.
@@ -424,23 +431,63 @@ Output JSON matching the DomainReviewResponse schema.
     user = f"Domain Agreement:\n{text[:12000]}"
     raw = await call_llm(system, user)
     data = extract_json_from_text(raw)
-    
-    # --- FIX: Ensure clause_number is always a string ---
+    # Enforce non‑empty suggested_change
     for c in data.get("clauses", []):
-        # Convert clause_number to string if it's an integer
         if "clause_number" in c:
             c["clause_number"] = str(c["clause_number"])
-        # Also ensure suggested_change is never empty
         if not c.get("suggested_change") or c["suggested_change"].strip().lower() in ["no change", "none", "n/a"]:
             c["suggested_change"] = f"Review this clause to address {c.get('risk', 'Medium')} risk."
-        # Ensure actionable is a boolean (in case LLM returns string)
         if "actionable" in c and isinstance(c["actionable"], str):
             c["actionable"] = c["actionable"].lower() in ["true", "1", "yes"]
-    
     return data
 
+# 9. Oral Arguments Preparation
+async def prepare_oral_arguments(text: str) -> dict:
+    system = """
+You are a senior advocate with 25 years of experience in Indian courts, including the Supreme Court, High Courts, and NCLAT.
+Your task is to prepare a comprehensive oral argument strategy based on the case details provided.
+
+Given the case facts, legal issues, and applicable laws, produce a structured output that includes:
+- A concise case summary.
+- A list of key legal issues.
+- For each issue:
+  - A clear argument with supporting case law (cite specific judgments and sections).
+  - Possible counterarguments from the opposing side.
+  - Suggested responses to those counterarguments.
+  - Recommended citations and authorities to quote.
+- A list of likely questions from the bench and suggested answers.
+- An opening statement (2-3 sentences) and a closing statement (2-3 sentences).
+- A "red flags" section highlighting weak points in your client's case and mitigation strategies.
+- A "must-cite" list of precedents.
+
+Output JSON with the following structure:
+{
+  "case_summary": "...",
+  "issues": [
+    {
+      "issue": "...",
+      "argument": "...",
+      "supporting_laws": ["section/act", ...],
+      "counterarguments": ["...", "..."],
+      "responses": ["...", "..."],
+      "key_precedents": ["case name, citation", ...]
+    }
+  ],
+  "likely_questions": [
+    {"question": "...", "suggested_answer": "..."}
+  ],
+  "opening_statement": "...",
+  "closing_statement": "...",
+  "red_flags": ["...", "..."],
+  "must_cite": ["case name, citation", ...]
+}
+"""
+    user = f"Case details:\n{text[:15000]}"
+    raw = await call_llm(system, user, json_mode=True)
+    return extract_json_from_text(raw)
+
 # ========================
-# GENERIC PROCESSOR (with optional auth)
+# GENERIC PROCESSOR
 # ========================
 async def process_analysis(agent_name: str, file: UploadFile = None, text: str = None, user: Optional[User] = None):
     content = ""
@@ -463,16 +510,16 @@ async def process_analysis(agent_name: str, file: UploadFile = None, text: str =
         "weekly_digest": lambda t: generate_digest(t),
         "consent_form": lambda t: generate_consent(t, ""),
         "domain_review": analyze_domain_agreement,
+        "oral_arguments": prepare_oral_arguments,
     }
     if agent_name not in handlers:
         raise HTTPException(400, f"Unknown agent: {agent_name}")
     result = await handlers[agent_name](content)
-    # Save history only if user is authenticated
     await save_history_if_user(user, agent_name, content, result)
     return result
 
 # ========================
-# API ENDPOINTS (all public, auth optional)
+# API ENDPOINTS
 # ========================
 
 @app.get("/health")
@@ -576,8 +623,8 @@ async def domain_review(
     plan: Literal["500", "1000"] = Form(...),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    # You should verify payment with Razorpay here using payment_id
-    # For now, we assume payment is valid.
+    # Payment verification is expected to be done via Razorpay webhook or server-side verification.
+    # For now, we accept the payment_id and assume it's valid.
     result = await process_analysis("domain_review", file, text, current_user)
     is_lawyer = (plan == "1000")
     review_id = f"REV-{payment_id[-8:]}" if is_lawyer else None
@@ -589,3 +636,13 @@ async def domain_review(
         lawyer_review_required=is_lawyer,
         review_id=review_id
     )
+
+# ---------- ORAL ARGUMENTS ENDPOINT (NEW) ----------
+@app.post("/oral-arguments")
+async def oral_arguments(
+    text: str = Form(...),
+    lawyer_review: bool = Form(False),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    result = await process_analysis("oral_arguments", None, text, current_user)
+    return add_lawyer_review(result, lawyer_review)
