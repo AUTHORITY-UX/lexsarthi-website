@@ -40,6 +40,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ========================
+# SCHEMAS (moved to top)
+# ========================
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class HistoryItem(BaseModel):
+    id: int
+    agent: str
+    input_summary: Optional[str]
+    result_json: dict
+    created_at: datetime
+
+class ClauseReview(BaseModel):
+    clause_number: str
+    clause_text: str
+    risk: Literal["Low", "Medium", "High", "Critical"]
+    summary: str
+    suggested_change: str
+    actionable: bool
+    reason: str
+
+class DomainReviewResponse(BaseModel):
+    agreement_type: str
+    overall_risk: Literal["Low", "Medium", "High"]
+    executive_summary: str
+    clauses: List[ClauseReview]
+    lawyer_review_required: bool
+    review_id: Optional[str] = None
+
 # ---------- Configuration ----------
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
@@ -593,38 +628,3 @@ async def domain_review(
 async def oral_arguments(text: str = Form(...), lawyer_review: bool = Form(False), current_user: Optional[User] = Depends(get_current_user_optional)):
     result = await run_agent(agent_name="oral_arguments", text=text, current_user=current_user)
     return add_lawyer_review(result, lawyer_review)
-
-# ========================
-# SCHEMAS (for Domain Review)
-# ========================
-class ClauseReview(BaseModel):
-    clause_number: str
-    clause_text: str
-    risk: Literal["Low", "Medium", "High", "Critical"]
-    summary: str
-    suggested_change: str
-    actionable: bool
-    reason: str
-
-class DomainReviewResponse(BaseModel):
-    agreement_type: str
-    overall_risk: Literal["Low", "Medium", "High"]
-    executive_summary: str
-    clauses: List[ClauseReview]
-    lawyer_review_required: bool
-    review_id: Optional[str] = None
-
-class UserCreate(BaseModel):
-    email: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class HistoryItem(BaseModel):
-    id: int
-    agent: str
-    input_summary: Optional[str]
-    result_json: dict
-    created_at: datetime
