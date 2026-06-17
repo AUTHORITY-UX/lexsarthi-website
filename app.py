@@ -21,6 +21,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+import razorpay  # <-- Added for verification
 
 # ---------- App ----------
 app = FastAPI(title="LexSarthi API", version="2.0")
@@ -111,6 +112,13 @@ MODEL = "meta-llama/llama-3.1-8b-instruct"
 MAX_TOKENS_PER_CHUNK = 120000
 OVERLAP_TOKENS = 500
 TOKEN_ENCODER = tiktoken.encoding_for_model("gpt-4")
+
+# ---------- Razorpay ----------
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+    raise RuntimeError("Razorpay keys not set")
+rzp_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ---------- Schemas ----------
 class ClauseReview(BaseModel):
@@ -621,6 +629,7 @@ async def consent_form(request: dict, current_user: Optional[User] = Depends(get
     result = await process_analysis("consent_form", None, f"Purpose: {purpose}\nData: {data}", current_user)
     return add_lawyer_review(result, request.get("lawyer_review", False))
 
+# ---------- UPDATED DOMAIN REVIEW with Razorpay verification ----------
 @app.post("/domain-review", response_model=DomainReviewResponse)
 async def domain_review(
     file: Optional[UploadFile] = File(None),
@@ -629,6 +638,20 @@ async def domain_review(
     plan: Literal["500", "1000"] = Form(...),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    # Verify payment with Razorpay
+    try:
+        payment = rzp_client.payment.fetch(payment_id)
+        if payment['status'] != 'captured':
+            raise HTTPException(400, "Payment not captured")
+        expected_amount = int(plan) * 100  # plan is 500 or 1000, amount in paise
+        if payment['amount'] != expected_amount:
+            raise HTTPException(400, "Payment amount mismatch")
+    except razorpay.errors.BadRequestError as e:
+        raise HTTPException(400, f"Invalid payment ID: {str(e)}")
+    except Exception as e:
+        raise HTTPException(500, f"Payment verification failed: {str(e)}")
+
+    # If payment is valid, process the analysis
     result = await process_analysis("domain_review", file, text, current_user)
     is_lawyer = (plan == "1000")
     review_id = f"REV-{payment_id[-8:]}" if is_lawyer else None
