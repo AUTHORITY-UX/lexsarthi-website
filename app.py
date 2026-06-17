@@ -297,7 +297,8 @@ async def get_history(current_user: User = Depends(get_current_user_optional)):
 # ========================
 
 # --- 1. Contract Risk (Enhanced with Fallback) ---
-async def analyze_contract_risk(text: str) -> dict:
+
+   async def analyze_contract_risk(text: str) -> dict:
     system = """
 You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions. Your task is to produce a **complete, board‑ready contract analysis** that includes:
 
@@ -333,6 +334,47 @@ You are a senior corporate lawyer with 40 years of experience in Indian contract
 3. **Overall Risk Assessment** – assign `overall_risk` (Low/Medium/High) and an `executive_summary` (2‑3 paragraphs suitable for a board report).
 
 **Output JSON** exactly as:
+{
+  "clause_analysis": [...],
+  "missing_clauses": [...],
+  "overall_risk": "...",
+  "executive_summary": "..."
+}
+
+IMPORTANT: Every `redline` and `proposed_clause_text` must be a **full, standalone clause** – not a suggestion or a note. They must be ready to copy and paste directly into the contract. Never output "No change" or "N/A". If the clause is adequate, improve it with a minor but specific enhancement.
+"""
+    user = f"Contract:\n{text[:15000]}"
+    raw = await call_llm(system, user, json_mode=True)
+    data = extract_json_from_text(raw)
+
+    # ---------- FALLBACK for missing clauses (robust) ----------
+    missing = data.get("missing_clauses", [])
+    if isinstance(missing, list):
+        for idx, clause in enumerate(missing):
+            # If the item is not a dict, convert it to one
+            if not isinstance(clause, dict):
+                # If it's a string, wrap it as a dict with a title
+                if isinstance(clause, str):
+                    missing[idx] = {
+                        "title": clause,
+                        "legal_basis": "Indian Contract Act",
+                        "reason": "This essential clause is missing.",
+                        "proposed_clause_text": f"The parties shall include a comprehensive {clause} clause that protects the interests of both parties."
+                    }
+                continue
+            # Now safe to access .get()
+            if not clause.get("proposed_clause_text") or len(clause["proposed_clause_text"].strip()) < 10:
+                clause["proposed_clause_text"] = (
+                    f"The parties shall include a comprehensive {clause.get('title', 'clause')} clause "
+                    f"that addresses {clause.get('legal_basis', 'applicable law')} and protects the interests "
+                    f"of both parties. This clause should be drafted in accordance with Indian law and "
+                    f"include provisions for remedies, limitations, and dispute resolution."
+                )
+    else:
+        # If missing_clauses is not a list, set it to an empty list
+        data["missing_clauses"] = []
+
+    return data
 {
   "clause_analysis": [
     {
