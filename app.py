@@ -17,11 +17,11 @@ import pdfplumber
 import tiktoken
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-# ---------- Authentication & DB (optional) ----------
+# ---------- Authentication & DB (using sha256_crypt, no 72-byte limit) ----------
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from passlib.context import CryptContext
+from passlib.hash import sha256_crypt
 from jose import JWTError, jwt
 
 # ---------- App ----------
@@ -69,26 +69,18 @@ class History(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# ---------- Password & JWT (with bcrypt 72-byte fix) ----------
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ---------- Password & JWT (sha256_crypt, no length limit) ----------
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def _truncate_password(password: str) -> str:
-    """Truncate password to 72 bytes for bcrypt compatibility."""
-    pwd_bytes = password.encode('utf-8')
-    if len(pwd_bytes) > 72:
-        return pwd_bytes[:72].decode('utf-8', errors='ignore')
-    return password
-
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(_truncate_password(plain_password), hashed_password)
+    return sha256_crypt.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(_truncate_password(password))
+    return sha256_crypt.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -653,3 +645,8 @@ async def oral_arguments(
 ):
     result = await process_analysis("oral_arguments", None, text, current_user)
     return add_lawyer_review(result, lawyer_review)
+
+# ---------- Root endpoint (optional) ----------
+@app.get("/")
+async def root():
+    return {"message": "LexSarthi API is running. Visit /docs for API documentation."}
