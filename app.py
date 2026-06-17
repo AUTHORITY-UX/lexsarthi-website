@@ -21,7 +21,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-import razorpay  # <-- Added for verification
+import razorpay
 
 # ---------- App ----------
 app = FastAPI(title="LexSarthi API", version="2.0")
@@ -296,7 +296,7 @@ async def get_history(current_user: User = Depends(get_current_user_optional)):
 # AGENT HANDLERS (All 9)
 # ========================
 
-# --- 1. Contract Risk (Enhanced) ---
+# --- 1. Contract Risk (Enhanced with Fallback) ---
 async def analyze_contract_risk(text: str) -> dict:
     system = """
 You are a senior corporate lawyer with 40 years of experience in Indian contract law, arbitration, and commercial transactions. Your task is to produce a **complete, board‑ready contract analysis** that includes:
@@ -360,7 +360,18 @@ IMPORTANT: Every `redline` and `proposed_clause_text` must be a **full, standalo
 """
     user = f"Contract:\n{text[:15000]}"
     raw = await call_llm(system, user, json_mode=True)
-    return extract_json_from_text(raw)
+    data = extract_json_from_text(raw)
+
+    # ---------- FALLBACK for missing clauses ----------
+    for clause in data.get("missing_clauses", []):
+        if not clause.get("proposed_clause_text") or len(clause["proposed_clause_text"].strip()) < 10:
+            clause["proposed_clause_text"] = (
+                f"The parties shall include a comprehensive {clause.get('title', 'clause')} clause "
+                f"that addresses {clause.get('legal_basis', 'applicable law')} and protects the interests "
+                f"of both parties. This clause should be drafted in accordance with Indian law and "
+                f"include provisions for remedies, limitations, and dispute resolution."
+            )
+    return data
 
 # --- 2. DPDP Check ---
 async def check_dpdp(text: str) -> dict:
@@ -629,7 +640,7 @@ async def consent_form(request: dict, current_user: Optional[User] = Depends(get
     result = await process_analysis("consent_form", None, f"Purpose: {purpose}\nData: {data}", current_user)
     return add_lawyer_review(result, request.get("lawyer_review", False))
 
-# ---------- UPDATED DOMAIN REVIEW with Razorpay verification ----------
+# ---------- Domain Review with Razorpay verification ----------
 @app.post("/domain-review", response_model=DomainReviewResponse)
 async def domain_review(
     file: Optional[UploadFile] = File(None),
