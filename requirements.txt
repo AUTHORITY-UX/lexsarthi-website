@@ -1,3 +1,7 @@
+# Copyright (c) 2025 THE ADVOCACY A LAW FIRM. All rights reserved.
+# Confidential and proprietary. Do not distribute without a license.
+# THE ADVOCACY A LAW FIRM is the sole owner and title holder of this software.
+
 fastapi==0.111.0
 uvicorn==0.30.1
 python-multipart==0.0.9
@@ -13,3 +17,6 @@ passlib[bcrypt]>=1.7.4
 bcrypt>=4.0.0
 razorpay
 reportlab>=4.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+email-validator>=2.0.0
