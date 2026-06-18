@@ -9,14 +9,12 @@ import json
 import sqlite3
 import jwt
 import hashlib
-import hmac
 import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Request, File, Form, UploadFile, HTTPException, Depends, status
+from fastapi import FastAPI, Request, File, Form, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import openai
+from fastapi.security import OAuth2PasswordBearer
 import httpx
 from pydantic import BaseModel
 
@@ -26,7 +24,6 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 DATABASE_URL = "lexsarthi.db"
 
-# OpenRouter configuration
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "your-openrouter-key")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
@@ -57,9 +54,23 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             full_name TEXT,
+            consent_given BOOLEAN DEFAULT 0,
+            consent_timestamp TIMESTAMP,
+            consent_version TEXT DEFAULT 'v1.0',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # Add consent columns if upgrading
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN consent_given BOOLEAN DEFAULT 0")
+    except: pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN consent_timestamp TIMESTAMP")
+    except: pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN consent_version TEXT DEFAULT 'v1.0'")
+    except: pass
+
     conn.execute("""
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,10 +150,13 @@ class ContactForm(BaseModel):
     message: str
     consent: bool = True
 
-class RunAgentRequest(BaseModel):
-    agent_name: str
-    text: Optional[str] = None
-    # file handled via UploadFile separately
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class GrievanceRequest(BaseModel):
+    subject: str
+    message: str
 
 # ---------- Agents List (16 agents) ----------
 AGENTS = [
@@ -166,31 +180,24 @@ AGENTS = [
 
 # ---------- Endpoints ----------
 
-# 1. Health check (replaces the broken / route)
 @app.get("/")
 async def root():
     return {"status": "LexSarthi API is live", "version": "2.0"}
 
-# 2. List agents
 @app.get("/agents")
 async def list_agents():
     return AGENTS
 
-# 3. Run agent (supports file upload and text)
 @app.post("/run-agent")
 async def run_agent(
-    request: Request,
     agent_name: str = Form(...),
     text: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
-    token: str = Depends(oauth2_scheme)  # optional, can be made optional
+    token: str = Depends(oauth2_scheme)
 ):
-    # Validate agent exists
     agent = next((a for a in AGENTS if a["id"] == agent_name), None)
     if not agent:
         raise HTTPException(status_code=404, detail=f"Unknown agent type: {agent_name}")
-
-    # Get input text from file or direct text
     input_text = text
     if file:
         contents = await file.read()
@@ -198,13 +205,10 @@ async def run_agent(
             input_text = contents.decode("utf-8")
         except:
             input_text = contents.decode("latin-1")
-
     if not input_text:
         raise HTTPException(status_code=400, detail="No input text provided")
 
-    # Call OpenRouter AI
     try:
-        # Build prompt based on agent type
         system_prompt = f"""
 You are a senior legal expert specialising in {agent_name}. 
 Analyse the following document and provide a structured output with:
@@ -229,7 +233,7 @@ Output in JSON format only.
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "openai/gpt-4o-mini",  # or any other
+                    "model": "openai/gpt-4o-mini",
                     "messages": messages,
                     "temperature": 0.2,
                     "response_format": {"type": "json_object"}
@@ -238,13 +242,12 @@ Output in JSON format only.
             )
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code, detail=response.text)
-
             data = response.json()
             result = json.loads(data["choices"][0]["message"]["content"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
 
-    # Save history if user is authenticated (token provided)
+    # Save history if user is authenticated
     user = None
     try:
         user = get_current_user(token)
@@ -256,33 +259,28 @@ Output in JSON format only.
         conn.commit()
         conn.close()
     except:
-        # If token invalid, just don't save history
         pass
 
     return result
 
-# 4. Authentication - Register
+# ---------- Authentication ----------
 @app.post("/auth/register")
 async def register(user_data: UserRegister):
     conn = get_db()
-    # Check if user exists
     existing = conn.execute("SELECT * FROM users WHERE username = ?", (user_data.username,)).fetchone()
     if existing:
         conn.close()
         raise HTTPException(status_code=400, detail="Username already exists")
     hashed = hash_password(user_data.password)
     conn.execute(
-        "INSERT INTO users (username, password_hash, full_name) VALUES (?, ?, ?)",
+        "INSERT INTO users (username, password_hash, full_name, consent_given, consent_timestamp, consent_version) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP, 'v1.0')",
         (user_data.username, hashed, user_data.full_name)
     )
     conn.commit()
     conn.close()
-
-    # Create token
     token = create_access_token({"sub": user_data.username})
     return {"access_token": token, "token_type": "bearer"}
 
-# 5. Authentication - Login
 @app.post("/auth/login")
 async def login(user_data: UserLogin):
     conn = get_db()
@@ -293,7 +291,92 @@ async def login(user_data: UserLogin):
     token = create_access_token({"sub": user_data.username})
     return {"access_token": token, "token_type": "bearer"}
 
-# 6. History (requires authentication)
+# ---------- DPDP Compliance Endpoints ----------
+@app.get("/auth/me")
+async def get_my_data(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    hist_count = conn.execute("SELECT COUNT(*) FROM history WHERE user_id = ?", (current_user["id"],)).fetchone()[0]
+    conn.close()
+    return {
+        "username": current_user["username"],
+        "full_name": current_user["full_name"],
+        "created_at": current_user["created_at"],
+        "consent_given": bool(current_user.get("consent_given", 0)),
+        "consent_timestamp": current_user.get("consent_timestamp"),
+        "consent_version": current_user.get("consent_version", "v1.0"),
+        "history_count": hist_count
+    }
+
+@app.post("/auth/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    if not verify_password(request.current_password, current_user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    if len(request.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    new_hash = hash_password(request.new_password)
+    conn = get_db()
+    conn.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (new_hash, current_user["id"])
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Password updated successfully"}
+
+@app.delete("/auth/me")
+async def delete_account(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    conn.execute("DELETE FROM history WHERE user_id = ?", (current_user["id"],))
+    conn.execute("DELETE FROM users WHERE id = ?", (current_user["id"],))
+    conn.commit()
+    conn.close()
+    return {"message": "Account and all associated data have been permanently deleted"}
+
+@app.post("/auth/grievance")
+async def file_grievance(
+    request: GrievanceRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO contacts (name, email, subject, message, consent) VALUES (?, ?, ?, ?, ?)",
+        (current_user["full_name"], current_user["username"], f"GRIEVANCE: {request.subject}", request.message, 1)
+    )
+    conn.commit()
+    conn.close()
+    return {
+        "message": "Your grievance has been submitted. Our Data Protection Officer will respond within 30 days."
+    }
+
+@app.post("/auth/consent")
+async def update_consent(
+    consent_given: bool,
+    current_user: dict = Depends(get_current_user)
+):
+    conn = get_db()
+    conn.execute(
+        "UPDATE users SET consent_given = ?, consent_timestamp = CURRENT_TIMESTAMP, consent_version = 'v1.0' WHERE id = ?",
+        (1 if consent_given else 0, current_user["id"])
+    )
+    conn.commit()
+    conn.close()
+    return {"message": f"Consent successfully {'granted' if consent_given else 'withdrawn'}"}
+
+# ---------- Contact ----------
+@app.post("/contact")
+async def contact(form: ContactForm):
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO contacts (name, email, subject, message, consent) VALUES (?, ?, ?, ?, ?)",
+        (form.name, form.email, form.subject, form.message, form.consent)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Thank you for contacting us. We will respond within 24 hours."}
+
 @app.get("/history")
 async def get_history(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -312,29 +395,22 @@ async def get_history(current_user: dict = Depends(get_current_user)):
         })
     return history
 
-# 7. Contact form
-@app.post("/contact")
-async def contact(form: ContactForm):
-    conn = get_db()
-    conn.execute(
-        "INSERT INTO contacts (name, email, subject, message, consent) VALUES (?, ?, ?, ?, ?)",
-        (form.name, form.email, form.subject, form.message, form.consent)
-    )
-    conn.commit()
-    conn.close()
-    return {"message": "Thank you for contacting us. We will respond within 24 hours."}
-
-# 8. Campaigns stub (to avoid 404)
 @app.get("/campaigns")
 async def campaigns():
-    return {
-        "emails_sent": 247,
-        "opened": 89,
-        "interested": 34,
-        "pilots_signed": 12
-    }
+    return {"emails_sent": 247, "opened": 89, "interested": 34, "pilots_signed": 12}
 
-# ---------- Run with Uvicorn ----------
+# ---------- Data Retention Cleanup ----------
+def cleanup_expired_data():
+    conn = get_db()
+    conn.execute("DELETE FROM contacts WHERE created_at < datetime('now', '-12 months')")
+    conn.commit()
+    conn.close()
+    print("✅ Expired data cleaned up.")
+
+@app.on_event("startup")
+async def startup_event():
+    cleanup_expired_data()
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=7860)
