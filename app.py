@@ -10,7 +10,6 @@ import sqlite3
 import jwt
 import hashlib
 import datetime
-import tiktoken  # <- Accurate token counting
 from typing import Optional, Tuple
 from fastapi import FastAPI, Request, File, Form, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
@@ -42,7 +41,7 @@ app.add_middleware(
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-# Templates for the outreach dashboard
+# Templates for outreach dashboard (optional)
 templates = Jinja2Templates(directory="templates")
 
 # ---------- Database Setup ----------
@@ -65,7 +64,6 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    # Add consent columns if upgrading
     try:
         conn.execute("ALTER TABLE users ADD COLUMN consent_given BOOLEAN DEFAULT 0")
     except: pass
@@ -138,27 +136,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
-# ---------- TOKEN TRUNCATION (Permanent Fix) ----------
-def count_tokens(text: str, model: str = "gpt-4o-mini") -> int:
-    """Accurately count tokens using tiktoken."""
-    try:
-        enc = tiktoken.encoding_for_model(model)
-        return len(enc.encode(text))
-    except:
-        # Fallback: approximate (1 token ≈ 4 chars)
-        return len(text) // 4
-
-def truncate_text(text: str, max_tokens: int = 90000) -> Tuple[str, bool]:
+# ---------- PERMANENT TRUNCATION (NO EXTERNAL DEPS) ----------
+def truncate_text(text: str, max_chars: int = 400000) -> Tuple[str, bool]:
     """
-    Truncate text to at most max_tokens, preserving sentence boundaries.
+    Truncate text to at most max_chars (approx 100k tokens).
     Returns (truncated_text, was_truncated).
     """
-    token_count = count_tokens(text)
-    if token_count <= max_tokens:
+    if len(text) <= max_chars:
         return text, False
 
-    # Estimate characters needed: max_tokens * 4 (rough)
-    max_chars = max_tokens * 4
     truncated = text[:max_chars]
     # Cut at last period or newline for readability
     for sep in ['. ', '! ', '? ', '\n\n', '\n', '.']:
@@ -168,8 +154,7 @@ def truncate_text(text: str, max_tokens: int = 90000) -> Tuple[str, bool]:
             if cut_pos > 0:
                 truncated = truncated[:cut_pos]
                 break
-    # Add clear warning
-    truncated = truncated + "\n\n... [DOCUMENT TRUNCATED DUE TO EXCESSIVE LENGTH. Only the first part was analysed.]"
+    truncated = truncated + "\n\n... [DOCUMENT TRUNCATED DUE TO LENGTH. Only the first part was analysed.]"
     return truncated, True
 
 # ---------- Models ----------
@@ -248,9 +233,8 @@ async def run_agent(
     if not input_text:
         raise HTTPException(status_code=400, detail="No input text provided")
 
-    # ---------- PERMANENT TRUNCATION FIX ----------
-    processed_text, was_truncated = truncate_text(input_text, max_tokens=90000)
-    # ---------------------------------------------
+    # ---------- PERMANENT TRUNCATION ----------
+    processed_text, was_truncated = truncate_text(input_text, max_chars=400000)
 
     try:
         system_prompt = f"""
@@ -292,7 +276,7 @@ Output in JSON format only.
         raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
 
     if was_truncated:
-        result["warning"] = "The input document was very long and was truncated to fit the model's context limit. Only the first portion was analysed. For a complete review, consider breaking the document into smaller sections."
+        result["warning"] = "The input document was very long and was truncated to fit the model's context limit. Only the first portion was analysed."
 
     # Save history
     user = None
@@ -338,7 +322,7 @@ async def login(user_data: UserLogin):
     token = create_access_token({"sub": user_data.username})
     return {"access_token": token, "token_type": "bearer"}
 
-# ---------- DPDP Compliance Endpoints ----------
+# ---------- DPDP Compliance ----------
 @app.get("/auth/me")
 async def get_my_data(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -394,9 +378,7 @@ async def file_grievance(
     )
     conn.commit()
     conn.close()
-    return {
-        "message": "Your grievance has been submitted. Our Data Protection Officer will respond within 30 days."
-    }
+    return {"message": "Grievance submitted. DPO will respond within 30 days."}
 
 @app.post("/auth/consent")
 async def update_consent(
@@ -410,7 +392,7 @@ async def update_consent(
     )
     conn.commit()
     conn.close()
-    return {"message": f"Consent successfully {'granted' if consent_given else 'withdrawn'}"}
+    return {"message": f"Consent {'granted' if consent_given else 'withdrawn'}"}
 
 # ---------- Contact ----------
 @app.post("/contact")
@@ -422,7 +404,7 @@ async def contact(form: ContactForm):
     )
     conn.commit()
     conn.close()
-    return {"message": "Thank you for contacting us. We will respond within 24 hours."}
+    return {"message": "Thank you. We'll respond within 24 hours."}
 
 @app.get("/history")
 async def get_history(current_user: dict = Depends(get_current_user)):
@@ -450,7 +432,7 @@ async def campaigns():
 async def outreach_dashboard(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# ---------- Data Retention Cleanup ----------
+# ---------- Data Retention ----------
 def cleanup_expired_data():
     conn = get_db()
     conn.execute("DELETE FROM contacts WHERE created_at < datetime('now', '-12 months')")
