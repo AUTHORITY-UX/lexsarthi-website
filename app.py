@@ -1,4 +1,4 @@
-# Copyright (c) 2025 THE ADVOCACY A LAW FIRM. All rights reserved.
+# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
 # Confidential and proprietary. Do not distribute without a license.
 # THE ADVOCACY A LAW FIRM is the sole owner and title holder of this software.
 
@@ -9,19 +9,40 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from fastapi import FastAPI, Request, File, UploadFile, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Float
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
+import uuid
 
-from agents import get_agent
-from verifier import VerifierAgent
-from schemas import LegalAgentOutput
+# ---------- Configuration ----------
+class Settings:
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_DEFAULT_MODEL = "openai/gpt-4o"
+    LOCAL_LLM_ENABLED = os.getenv("LOCAL_LLM_ENABLED", "false").lower() == "true"
+    LOCAL_LLM_URL = os.getenv("LOCAL_LLM_URL", "http://localhost:8000/v1")
+    LOCAL_LLM_MODEL = os.getenv("LOCAL_LLM_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+    LOCAL_EMBEDDING_ENABLED = os.getenv("LOCAL_EMBEDDING_ENABLED", "false").lower() == "true"
+    LOCAL_EMBEDDING_MODEL = os.getenv("LOCAL_EMBEDDING_MODEL", "BAAI/bge-m3")
+    USE_LOCAL_PRIMARY = os.getenv("USE_LOCAL_PRIMARY", "false").lower() == "true"
+    FALLBACK_TO_OPENROUTER = os.getenv("FALLBACK_TO_OPENROUTER", "true").lower() == "true"
+    SITE_URL = os.getenv("SITE_URL", "http://localhost:7860")
+    JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-me")
+    SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+    SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+    # Razorpay
+    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+    RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
+
+settings = Settings()
 
 # ---------- Database Setup ----------
 SQLALCHEMY_DATABASE_URL = "sqlite:///./lexsarthi.db"
@@ -64,7 +85,6 @@ class EmailLog(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -73,9 +93,8 @@ def get_db():
         db.close()
 
 # ---------- FastAPI App ----------
-app = FastAPI(title="Lexsarthi Automation OS")
+app = FastAPI(title="LexSarthi OS", version="2.0.0")
 
-# Enable CORS (if not already present)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -87,38 +106,108 @@ app.add_middleware(
 # ---------- Helper: SMTP Email ----------
 def send_smtp_email(to: str, subject: str, html_body: str) -> bool:
     try:
-        sender = os.getenv("SMTP_EMAIL", "test@lexsarthi.com")
-        password = os.getenv("SMTP_PASSWORD", "")
-        server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        port = int(os.getenv("SMTP_PORT", 587))
-        
+        if not settings.SMTP_EMAIL:
+            print("SMTP_EMAIL not set, skipping email send")
+            return False
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
-        msg['From'] = sender
+        msg['From'] = settings.SMTP_EMAIL
         msg['To'] = to
         part = MIMEText(html_body, 'html')
         msg.attach(part)
-        
-        with smtplib.SMTP(server, port) as smtp:
+        with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as smtp:
             smtp.starttls()
-            if password:
-                smtp.login(sender, password)
-            smtp.sendmail(sender, to, msg.as_string())
+            if settings.SMTP_PASSWORD:
+                smtp.login(settings.SMTP_EMAIL, settings.SMTP_PASSWORD)
+            smtp.sendmail(settings.SMTP_EMAIL, to, msg.as_string())
         return True
     except Exception as e:
         print(f"Email error: {e}")
         return False
 
-# ---------- Routes ----------
+# ---------- Agent Imports & Logic ----------
+# We'll use your existing agents.py and verifier.py
+from agents import get_agent
+from verifier import VerifierAgent
+from schemas import LegalAgentOutput
 
-# Serve the new dashboard at the root
+# ---------- Endpoint: Serve Frontend (optional) ----------
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
-    return FileResponse("templates/index.html")
+    try:
+        return FileResponse("templates/index.html")
+    except Exception:
+        return HTMLResponse("<h1>LexSarthi OS is running</h1><p>API is live. Visit /agents to see the agent list.</p>")
 
-# Agent with built-in Verifier
+# ---------- GET /agents ----------
+@app.get("/agents")
+async def get_agents():
+    agents = [
+        {"id": "contract_risk", "name": "CONTRACT RISK", "description": "Analyzes contracts for risk clauses, missing terms, and compliance issues.", "category": "Risk & Compliance"},
+        {"id": "legal_notice", "name": "LEGAL NOTICE", "description": "Drafts and reviews legal notices for various scenarios.", "category": "Drafting"},
+        {"id": "nda_triage", "name": "NDA TRIAGE", "description": "Reviews NDAs, flags unusual clauses, and suggests redlines.", "category": "Contracts"},
+        {"id": "consent_form", "name": "CONSENT FORM", "description": "Analyzes consent forms for regulatory compliance.", "category": "Compliance"},
+        {"id": "oral_arguments", "name": "ORAL ARGUMENTS", "description": "Prepares oral argument outlines based on case law and facts.", "category": "Litigation"},
+        {"id": "employment_law", "name": "EMPLOYMENT LAW", "description": "Reviews employment contracts, policies, and termination clauses.", "category": "Employment"},
+        {"id": "dpdp_check", "name": "DPDP CHECK", "description": "Ensures compliance with India's DPDP Act, 2023.", "category": "Compliance"},
+        {"id": "due_diligence", "name": "DUE DILIGENCE", "description": "Performs legal due diligence for M&A and investments.", "category": "M&A"},
+        {"id": "weekly_digest", "name": "WEEKLY DIGEST", "description": "Summarizes recent legal updates and case law.", "category": "Research"},
+        {"id": "domain_review", "name": "DOMAIN REVIEW", "description": "Reviews intellectual property domains for risks.", "category": "IP"},
+        {"id": "ma_due_diligence", "name": "MA DUE DILIGENCE", "description": "Specialized due diligence for M&A transactions.", "category": "M&A"},
+        {"id": "ip_filing", "name": "IP FILING", "description": "Assists with patent, trademark, and copyright filings.", "category": "IP"},
+        {"id": "tax_compliance", "name": "TAX COMPLIANCE", "description": "Analyzes tax clauses and compliance requirements.", "category": "Tax"},
+        {"id": "real_estate_review", "name": "REAL ESTATE REVIEW", "description": "Reviews property agreements, leases, and title documents.", "category": "Real Estate"},
+        {"id": "competition_law", "name": "COMPETITION LAW", "description": "Identifies anti-competitive clauses and compliance gaps.", "category": "Regulatory"},
+        {"id": "data_privacy", "name": "DATA PRIVACY", "description": "Checks data protection and privacy compliance (GDPR, DPDP).", "category": "Compliance"}
+    ]
+    return JSONResponse(content=agents)
+
+# ---------- POST /run-agent (FIXED) ----------
+@app.post("/run-agent")
+async def run_agent(
+    request: Request,
+    agent_name: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None)
+):
+    """
+    Runs the specified agent. Accepts both JSON (for backward compatibility) and form-data.
+    """
+    # Detect content type
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/json" in content_type:
+        data = await request.json()
+        agent_name = data.get("agent_name")
+        text = data.get("text") or data.get("document")
+        file = None
+    # If form-data, the parameters are already bound
+
+    if not agent_name:
+        raise HTTPException(400, "agent_name is required")
+    
+    content = ""
+    if file:
+        content = (await file.read()).decode("utf-8", errors="ignore")
+    elif text:
+        content = text
+    else:
+        raise HTTPException(400, "No input provided")
+
+    # Call the agent
+    try:
+        agent = get_agent(agent_name)
+        output: LegalAgentOutput = agent.run(content)
+        return JSONResponse(content=output.model_dump())
+    except Exception as e:
+        return JSONResponse(
+            content={"error": f"Agent execution failed: {str(e)}"},
+            status_code=500
+        )
+
+# ---------- POST /run-agent-verified (with Verifier) ----------
 @app.post("/run-agent-verified")
-async def run_agent_verified(request: Request, db: Session = Depends(get_db)):
+async def run_agent_verified(request: Request):
     data = await request.json()
     doc = data.get("document", "").strip()
     agent_type = data.get("agent_type", "contract_review")
@@ -141,7 +230,7 @@ async def run_agent_verified(request: Request, db: Session = Depends(get_db)):
         }
     }
 
-# Outreach: Leads
+# ---------- Outreach API: Leads ----------
 @app.post("/api/leads")
 async def upload_leads(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith('.csv'):
@@ -184,7 +273,7 @@ async def get_leads(db: Session = Depends(get_db)):
         "status": l.status
     } for l in leads]
 
-# Outreach: Campaigns
+# ---------- Outreach API: Campaigns ----------
 class CampaignCreate(BaseModel):
     name: str
     subject: str
@@ -235,96 +324,43 @@ async def send_campaign(campaign_id: int, db: Session = Depends(get_db)):
     for lead in leads:
         subject = campaign.subject.replace("{first_name}", lead.first_name or "").replace("{company}", lead.company or "")
         body = campaign.body_template.replace("{first_name}", lead.first_name or "").replace("{company}", lead.company or "")
-        
         success = send_smtp_email(lead.email, subject, body)
         log = EmailLog(lead_id=lead.id, campaign_id=campaign.id, status="sent" if success else "failed")
         db.add(log)
         if success:
             lead.status = "contacted"
             sent += 1
-    
+
     campaign.sent_count += sent
     db.commit()
     return {"message": f"Sent {sent} emails"}
 
+# ---------- Health and Status ----------
 @app.get("/health")
 async def health():
-    return {"status": "Lexsarthi OS running", "mode": "Production with Verifier"}
+    return {"status": "LexSarthi OS running", "mode": "Production with Verifier"}
 
-# ---------- Your existing routes (like /login, /signup, /contact, /agents, etc.) should be placed here ----------
-# If you already have them, keep them as they are; just ensure they don't conflict with /, /run-agent-verified, /api/...
-# ============================================================
-# ADD THESE ENDPOINTS (paste at the end of app.py)
-# ============================================================
-
-# ---------- Agent List (matches your 16 agents) ----------
-@app.get("/agents")
-async def get_agents():
-    agents = [
-        {"id": "contract_risk", "name": "CONTRACT RISK", "description": "Analyzes contracts for risk clauses, missing terms, and compliance issues.", "category": "Risk & Compliance"},
-        {"id": "legal_notice", "name": "LEGAL NOTICE", "description": "Drafts and reviews legal notices for various scenarios.", "category": "Drafting"},
-        {"id": "nda_triage", "name": "NDA TRIAGE", "description": "Reviews NDAs, flags unusual clauses, and suggests redlines.", "category": "Contracts"},
-        {"id": "consent_form", "name": "CONSENT FORM", "description": "Analyzes consent forms for regulatory compliance.", "category": "Compliance"},
-        {"id": "oral_arguments", "name": "ORAL ARGUMENTS", "description": "Prepares oral argument outlines based on case law and facts.", "category": "Litigation"},
-        {"id": "employment_law", "name": "EMPLOYMENT LAW", "description": "Reviews employment contracts, policies, and termination clauses.", "category": "Employment"},
-        {"id": "dpdp_check", "name": "DPDP CHECK", "description": "Ensures compliance with India's DPDP Act, 2023.", "category": "Compliance"},
-        {"id": "due_diligence", "name": "DUE DILIGENCE", "description": "Performs legal due diligence for M&A and investments.", "category": "M&A"},
-        {"id": "weekly_digest", "name": "WEEKLY DIGEST", "description": "Summarizes recent legal updates and case law.", "category": "Research"},
-        {"id": "domain_review", "name": "DOMAIN REVIEW", "description": "Reviews intellectual property domains for risks.", "category": "IP"},
-        {"id": "ma_due_diligence", "name": "MA DUE DILIGENCE", "description": "Specialized due diligence for M&A transactions.", "category": "M&A"},
-        {"id": "ip_filing", "name": "IP FILING", "description": "Assists with patent, trademark, and copyright filings.", "category": "IP"},
-        {"id": "tax_compliance", "name": "TAX COMPLIANCE", "description": "Analyzes tax clauses and compliance requirements.", "category": "Tax"},
-        {"id": "real_estate_review", "name": "REAL ESTATE REVIEW", "description": "Reviews property agreements, leases, and title documents.", "category": "Real Estate"},
-        {"id": "competition_law", "name": "COMPETITION LAW", "description": "Identifies anti-competitive clauses and compliance gaps.", "category": "Regulatory"},
-        {"id": "data_privacy", "name": "DATA PRIVACY", "description": "Checks data protection and privacy compliance (GDPR, DPDP).", "category": "Compliance"}
-    ]
-    return JSONResponse(content=agents)
-
-# ---------- Agent Runner (called by your frontend) ----------
-@app.post("/run-agent")
-async def run_agent(request: Request, db: Session = Depends(get_db)):
-    data = await request.json()
-    agent_type = data.get("agent_type", "contract_review")
-    doc = data.get("document", "") or data.get("input", "")
-
-    if not doc:
-        return JSONResponse({"error": "No input provided"}, status_code=400)
-
-    # Reuse your existing agent logic from /run-agent-verified
-    try:
-        agent = get_agent(agent_type)
-        output = agent.run(doc)
-        # Return the output directly (no verification) – matches your frontend's expectation
-        return JSONResponse(content=output.model_dump())
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-# ---------- Fix Root Route (avoid 500 if index.html missing) ----------
-@app.get("/", response_class=HTMLResponse)
-async def serve_index():
-    # Check if templates/index.html exists
-    if os.path.exists("templates/index.html"):
-        return FileResponse("templates/index.html")
-    else:
-        # Fallback: show a minimal page that calls the API
-        return HTMLResponse("""
-        <!DOCTYPE html>
-        <html>
-        <head><title>LexSarthi OS</title></head>
-        <body style="font-family: sans-serif; padding: 2rem;">
-            <h1>⚡ LexSarthi OS is running</h1>
-            <p>API is live. Your frontend should be uploaded to <code>templates/index.html</code>.</p>
-            <p><a href="/agents">View Agents</a></p>
-        </body>
-        </html>
-        """)
-
-# ---------- Optional: System Status ----------
 @app.get("/api/status")
 async def api_status():
     return JSONResponse(content={
         "status": "online",
         "agents_count": 16,
         "version": "2.0.0",
+        "local_llm_enabled": settings.LOCAL_LLM_ENABLED,
+        "openrouter_fallback": settings.FALLBACK_TO_OPENROUTER,
         "server": "LexSarthi OS"
     })
+
+# ---------- Razorpay Webhook (optional) ----------
+# Uncomment and configure if you want subscription automation
+# @app.post("/webhook/razorpay")
+# async def razorpay_webhook(request: Request):
+#     body = await request.body()
+#     signature = request.headers.get("X-Razorpay-Signature")
+#     # Verify signature and process event
+#     return {"status": "ok"}
+
+# ---------- Run the App ----------
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
