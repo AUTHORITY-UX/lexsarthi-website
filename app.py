@@ -10,7 +10,8 @@ import sqlite3
 import jwt
 import hashlib
 import datetime
-from typing import Optional, List, Dict, Any
+import tiktoken  # <-- Added for accurate token counting
+from typing import Optional, List, Dict, Any, Tuple
 from fastapi import FastAPI, Request, File, Form, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -133,6 +134,48 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
+# ---------- Text Truncation (Token Limit Fix) ----------
+def count_tokens(text: str, model: str = "gpt-4o-mini") -> int:
+    """Accurately count tokens using tiktoken."""
+    try:
+        enc = tiktoken.encoding_for_model(model)
+        return len(enc.encode(text))
+    except:
+        # Fallback: approximate (1 token ≈ 4 chars)
+        return len(text) // 4
+
+def truncate_text(text: str, max_tokens: int = 100000) -> Tuple[str, bool]:
+    """
+    Truncate text to at most max_tokens, preserving sentence boundaries.
+    Returns (truncated_text, was_truncated).
+    """
+    # Count tokens
+    token_count = count_tokens(text)
+    if token_count <= max_tokens:
+        return text, False
+
+    # Estimate characters needed: max_tokens * 4 (rough)
+    max_chars = max_tokens * 4
+    # Take a bit more and then trim to a sentence boundary
+    truncated = text[:max_chars]
+    # Find the last period or newline to cut cleanly
+    # Try to cut at a sentence boundary (., !, ?) followed by space or newline
+    for sep in ['. ', '! ', '? ', '\n\n', '\n', '.']:
+        last = truncated.rfind(sep)
+        if last != -1:
+            # Include the separator
+            cut_pos = last + len(sep)
+            if cut_pos > 0:
+                truncated = truncated[:cut_pos]
+                break
+    else:
+        # If no good boundary, just cut at the character limit
+        pass
+
+    # Add a clear warning at the end
+    truncated = truncated + "\n\n... [DOCUMENT TRUNCATED DUE TO EXCESSIVE LENGTH. Only the first part was analysed.]"
+    return truncated, True
+
 # ---------- Models ----------
 class UserRegister(BaseModel):
     username: str
@@ -198,6 +241,8 @@ async def run_agent(
     agent = next((a for a in AGENTS if a["id"] == agent_name), None)
     if not agent:
         raise HTTPException(status_code=404, detail=f"Unknown agent type: {agent_name}")
+    
+    # Get input text from file or form
     input_text = text
     if file:
         contents = await file.read()
@@ -207,6 +252,11 @@ async def run_agent(
             input_text = contents.decode("latin-1")
     if not input_text:
         raise HTTPException(status_code=400, detail="No input text provided")
+
+    # ----- TRUNCATION FIX -----
+    # Limit to 100,000 tokens to fit within 128k limit (leaving room for system prompt and response)
+    processed_text, was_truncated = truncate_text(input_text, max_tokens=100000)
+    # --------------------------
 
     try:
         system_prompt = f"""
@@ -222,7 +272,7 @@ Output in JSON format only.
 """
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Document:\n{input_text}"}
+            {"role": "user", "content": f"Document:\n{processed_text}"}
         ]
 
         async with httpx.AsyncClient() as client:
@@ -238,7 +288,7 @@ Output in JSON format only.
                     "temperature": 0.2,
                     "response_format": {"type": "json_object"}
                 },
-                timeout=60.0
+                timeout=120.0  # increased timeout for large documents
             )
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code, detail=response.text)
@@ -246,6 +296,10 @@ Output in JSON format only.
             result = json.loads(data["choices"][0]["message"]["content"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
+
+    # Add a warning if the document was truncated
+    if was_truncated:
+        result["warning"] = "The input document was very long and was truncated to fit the model's context limit. Only the first portion was analysed. For a complete review, consider breaking the document into smaller sections."
 
     # Save history if user is authenticated
     user = None
