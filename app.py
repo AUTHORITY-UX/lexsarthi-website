@@ -12,7 +12,7 @@ import hashlib
 import datetime
 from typing import Optional, Tuple
 from fastapi import FastAPI, Request, File, Form, UploadFile, HTTPException, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
@@ -27,6 +27,9 @@ DATABASE_URL = "lexsarthi.db"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "your-openrouter-key")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+# Admin key – change this to something strong
+ADMIN_KEY = "your-super-secret-admin-key"
 
 app = FastAPI(title="LexSarthi API", version="2.0")
 
@@ -431,6 +434,30 @@ async def campaigns():
 @app.get("/outreach")
 async def outreach_dashboard(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+# ---------- ADMIN ENDPOINTS (for grievances and database access) ----------
+@app.get("/admin/grievances")
+async def get_grievances(admin_key: str):
+    """View all grievances (JSON) – requires admin key."""
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, name, email, subject, message, created_at FROM contacts "
+        "WHERE subject LIKE 'GRIEVANCE:%' ORDER BY created_at DESC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/admin/download-db")
+async def download_db(admin_key: str):
+    """Download the entire SQLite database file – requires admin key."""
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    # Ensure the database file exists
+    if not os.path.exists(DATABASE_URL):
+        raise HTTPException(status_code=404, detail="Database file not found")
+    return FileResponse(DATABASE_URL, filename="lexsarthi.db", media_type="application/octet-stream")
 
 # ---------- Data Retention ----------
 def cleanup_expired_data():
