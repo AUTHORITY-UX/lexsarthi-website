@@ -253,3 +253,78 @@ async def health():
 
 # ---------- Your existing routes (like /login, /signup, /contact, /agents, etc.) should be placed here ----------
 # If you already have them, keep them as they are; just ensure they don't conflict with /, /run-agent-verified, /api/...
+# ============================================================
+# ADD THESE ENDPOINTS (paste at the end of app.py)
+# ============================================================
+
+# ---------- Agent List (matches your 16 agents) ----------
+@app.get("/agents")
+async def get_agents():
+    agents = [
+        {"id": "contract_risk", "name": "CONTRACT RISK", "description": "Analyzes contracts for risk clauses, missing terms, and compliance issues.", "category": "Risk & Compliance"},
+        {"id": "legal_notice", "name": "LEGAL NOTICE", "description": "Drafts and reviews legal notices for various scenarios.", "category": "Drafting"},
+        {"id": "nda_triage", "name": "NDA TRIAGE", "description": "Reviews NDAs, flags unusual clauses, and suggests redlines.", "category": "Contracts"},
+        {"id": "consent_form", "name": "CONSENT FORM", "description": "Analyzes consent forms for regulatory compliance.", "category": "Compliance"},
+        {"id": "oral_arguments", "name": "ORAL ARGUMENTS", "description": "Prepares oral argument outlines based on case law and facts.", "category": "Litigation"},
+        {"id": "employment_law", "name": "EMPLOYMENT LAW", "description": "Reviews employment contracts, policies, and termination clauses.", "category": "Employment"},
+        {"id": "dpdp_check", "name": "DPDP CHECK", "description": "Ensures compliance with India's DPDP Act, 2023.", "category": "Compliance"},
+        {"id": "due_diligence", "name": "DUE DILIGENCE", "description": "Performs legal due diligence for M&A and investments.", "category": "M&A"},
+        {"id": "weekly_digest", "name": "WEEKLY DIGEST", "description": "Summarizes recent legal updates and case law.", "category": "Research"},
+        {"id": "domain_review", "name": "DOMAIN REVIEW", "description": "Reviews intellectual property domains for risks.", "category": "IP"},
+        {"id": "ma_due_diligence", "name": "MA DUE DILIGENCE", "description": "Specialized due diligence for M&A transactions.", "category": "M&A"},
+        {"id": "ip_filing", "name": "IP FILING", "description": "Assists with patent, trademark, and copyright filings.", "category": "IP"},
+        {"id": "tax_compliance", "name": "TAX COMPLIANCE", "description": "Analyzes tax clauses and compliance requirements.", "category": "Tax"},
+        {"id": "real_estate_review", "name": "REAL ESTATE REVIEW", "description": "Reviews property agreements, leases, and title documents.", "category": "Real Estate"},
+        {"id": "competition_law", "name": "COMPETITION LAW", "description": "Identifies anti-competitive clauses and compliance gaps.", "category": "Regulatory"},
+        {"id": "data_privacy", "name": "DATA PRIVACY", "description": "Checks data protection and privacy compliance (GDPR, DPDP).", "category": "Compliance"}
+    ]
+    return JSONResponse(content=agents)
+
+# ---------- Agent Runner (called by your frontend) ----------
+@app.post("/run-agent")
+async def run_agent(request: Request, db: Session = Depends(get_db)):
+    data = await request.json()
+    agent_type = data.get("agent_type", "contract_review")
+    doc = data.get("document", "") or data.get("input", "")
+
+    if not doc:
+        return JSONResponse({"error": "No input provided"}, status_code=400)
+
+    # Reuse your existing agent logic from /run-agent-verified
+    try:
+        agent = get_agent(agent_type)
+        output = agent.run(doc)
+        # Return the output directly (no verification) – matches your frontend's expectation
+        return JSONResponse(content=output.model_dump())
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+# ---------- Fix Root Route (avoid 500 if index.html missing) ----------
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    # Check if templates/index.html exists
+    if os.path.exists("templates/index.html"):
+        return FileResponse("templates/index.html")
+    else:
+        # Fallback: show a minimal page that calls the API
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head><title>LexSarthi OS</title></head>
+        <body style="font-family: sans-serif; padding: 2rem;">
+            <h1>⚡ LexSarthi OS is running</h1>
+            <p>API is live. Your frontend should be uploaded to <code>templates/index.html</code>.</p>
+            <p><a href="/agents">View Agents</a></p>
+        </body>
+        </html>
+        """)
+
+# ---------- Optional: System Status ----------
+@app.get("/api/status")
+async def api_status():
+    return JSONResponse(content={
+        "status": "online",
+        "agents_count": 16,
+        "version": "2.0.0",
+        "server": "LexSarthi OS"
+    })
