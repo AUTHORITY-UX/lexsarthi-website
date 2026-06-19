@@ -23,7 +23,7 @@ from pydantic import BaseModel
 SECRET_KEY = os.getenv("JWT_SECRET", "ae39c3d109e6c270964dc80b868b60e8ce5bf1d9eb4caf710dbc3d478bf92a18")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
-DATABASE_URL = "/datalexsarthi.db"
+DATABASE_URL = "/data/lexsarthi.db"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
