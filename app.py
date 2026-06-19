@@ -866,4 +866,4 @@ async def run_agent(
 # ---------- HEALTH ----------
 @app.get("/health")
 async def health():
-    return {"status": "alive", "version": "2.4"}
+    return {"status": "alive", "version": "2.4"} 
