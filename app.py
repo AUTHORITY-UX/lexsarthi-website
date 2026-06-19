@@ -20,16 +20,16 @@ import httpx
 from pydantic import BaseModel
 
 # ---------- Configuration ----------
-SECRET_KEY = os.getenv("JWT_SECRET", "your-super-secret-key-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET", "ae39c3d109e6c270964dc80b868b60e8ce5bf1d9eb4caf710dbc3d478bf92a18")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
-DATABASE_URL = "lexsarthi.db"
+DATABASE_URL = "/datalexsarthi.db"
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "your-openrouter-key")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # Admin key – change this to something strong
-ADMIN_KEY = "your-super-secret-admin-key"
+ADMIN_KEY = "9e029459d9fb1a0939b422b12a1b3cda"
 
 app = FastAPI(title="LexSarthi API", version="2.0")
 
