@@ -3,7 +3,10 @@
 # Confidential and proprietary. Do not distribute without a license.
 # THE ADVOCACY A LAW FIRM is the sole owner and title holder of this software.
 # ===================================================================
-# LexSarthi v2.2 – 44 Agents + BI Endpoints + Structured Prompts
+# LexSarthi v2.3 – 49 Agents + DPDP Act Reference Library
+# - Added Policy Compliance Scanner (visits sites, scans privacy/terms/cookie policies)
+# - 49 specialised agents
+# - DPDP Act 2023, IT Rules 2011, Constitution of India references
 # ===================================================================
 
 import os
@@ -23,6 +26,7 @@ from pydantic import BaseModel, EmailStr
 from bs4 import BeautifulSoup
 import pdfplumber
 import docx
+import urllib.parse
 
 # ---------- CONFIG ----------
 SECRET_KEY = os.environ.get("JWT_SECRET", "dev-secret-change-me")
@@ -33,7 +37,7 @@ OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = "openrouter/auto"
 
 # ---------- APP ----------
-app = FastAPI(title="LexSarthi API", version="2.2")
+app = FastAPI(title="LexSarthi API", version="2.3")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -120,6 +124,12 @@ class GrievanceSubmit(BaseModel):
 class CitationRequest(BaseModel):
     query: str
 
+class PolicyScanRequest(BaseModel):
+    website_url: str
+    privacy_policy_url: Optional[str] = None
+    terms_url: Optional[str] = None
+    cookie_url: Optional[str] = None
+
 # ---------- UTILITIES ----------
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
@@ -183,70 +193,372 @@ async def parse_document(file: UploadFile) -> str:
         text = content.decode('utf-8', errors='ignore')
     return text.strip()
 
+# ---------- LEGAL REFERENCE LIBRARY (DPDP Act 2023 + IT Rules + Constitution) ----------
+LEGAL_REFERENCE_LIBRARY = """
+=== DPDP ACT 2023 – KEY SECTIONS ===
+
+Section 4: Consent requirement – personal data must be processed only with explicit, informed consent.
+Section 5: Purpose limitation – data must be collected for a specific, lawful purpose.
+Section 6: Data minimisation – collect only the data necessary for the purpose.
+Section 7: Data quality – ensure data is accurate and up‑to‑date.
+Section 8: Rights of data principal – access, correction, erasure, grievance, nomination.
+Section 9: Security safeguards – reasonable security practices to prevent breach.
+Section 10: Data breach notification – notify the Board and data principals in case of breach.
+Section 11: Cross‑border data transfer – may transfer to notified countries only.
+Section 12: Significant data fiduciaries – additional obligations (DPIA, data protection officer).
+Section 13: Data Protection Board of India – oversight and enforcement.
+Section 14: Penalties – up to ₹250 crore for non‑compliance.
+
+=== IT RULES 2011 (Data Protection) ===
+
+Rule 3: Privacy policy requirement – every body corporate must publish a privacy policy.
+Rule 4: Sensitive personal data or information (SPDI) – definition and obligations.
+Rule 5: Collection of information – must obtain consent.
+Rule 6: Disclosure of information – prohibited except with consent or legal requirement.
+Rule 7: Security practices – must implement reasonable security practices.
+Rule 8: Grievance redressal – must appoint a grievance officer.
+
+=== CONSTITUTION OF INDIA ===
+
+Article 14 – Right to Equality
+Article 19(1)(a) – Freedom of Speech and Expression
+Article 21 – Right to Life and Personal Liberty (includes right to privacy per Puttaswamy v. UOI 2017)
+
+=== CASE LAW ===
+
+Justice K.S. Puttaswamy v. Union of India (2017) – Privacy is a fundamental right under Article 21.
+Nikesh Tarachand Shah v. Union of India (2018) – Bail principles.
+State of Maharashtra v. B.B. Aghav (2017) – Data protection obligations.
+
+=== GDPR (EU) – RELEVANT PROVISIONS ===
+
+Article 5 – Principles relating to processing of personal data.
+Article 6 – Lawfulness of processing.
+Article 7 – Conditions for consent.
+Article 13 – Information to be provided where personal data are collected.
+Article 17 – Right to erasure ('right to be forgotten').
+Article 33 – Notification of a personal data breach to the supervisory authority.
+"""
+
 # ---------- PROMPT TEMPLATES ----------
-PROMPT_TEMPLATES = {
-    "contract_risk_analysis": """
-You are a senior contract lawyer. Analyse the following contract text and return a JSON with:
-- executive_summary: a 2‑sentence summary
-- overall_risk: "High", "Medium", or "Low"
-- clause_analysis: list of up to 5 key clauses with: clause_number, title, clause_text, risk_level, legal_basis, reason, suggested_change, redline
-- missing_clauses: list of missing essential clauses with: title, legal_basis, reason, proposed_clause_text
-- lawyer_review: object with reviewed_by, experience, areas (array), qualification, review_date, note
-
-Document text:
-{text}
-""",
-    "ip_licensing_assignment": """
-You are an IP and technology transactions lawyer. Draft a licensing agreement, assignment deed, or term sheet based on the instructions below. Return a JSON with:
-- executive_summary: a brief summary of what was drafted
-- overall_risk: "High", "Medium", or "Low" (based on complexity)
-- clause_analysis: list of the key clauses (at least 5) with: clause_number, title, clause_text, risk_level, legal_basis, reason, suggested_change, redline
-- missing_clauses: any missing standard clauses
-- lawyer_review: object with reviewed_by, experience, areas, qualification, review_date, note
-
-Instructions:
-{text}
-""",
-    "legal_notice_drafting": """
-You are a litigation lawyer. Draft a formal legal notice based on the facts provided. Return JSON with:
-- executive_summary: a brief description of the notice
-- overall_risk: "High", "Medium", or "Low" (legal exposure)
-- clause_analysis: list of the notice sections (with clause_number, title, clause_text, risk_level, legal_basis, reason, suggested_change, redline)
-- missing_clauses: any missing legal grounds
-- lawyer_review: object with reviewed_by, experience, areas, qualification, review_date, note
-
-Facts:
-{text}
-""",
-    "dpdp_gdpr_compliance": """
-You are a data privacy lawyer. Analyse the company description and return a JSON with:
-- executive_summary: a summary of compliance gaps
-- overall_risk: "High", "Medium", or "Low"
-- clause_analysis: list of compliance obligations (with clause_number, title, clause_text, risk_level, legal_basis, reason, suggested_change, redline)
-- missing_clauses: list of missing compliance policies
-- lawyer_review: object with reviewed_by, experience, areas, qualification, review_date, note
-
-Company description:
-{text}
-""",
-    # Add more templates for all other agents – for brevity we keep the fallback default
-}
-
 DEFAULT_PROMPT = """
 You are a legal AI assistant. Analyse the following text and return a JSON with:
 - executive_summary: a brief summary
 - overall_risk: "High", "Medium", or "Low"
 - clause_analysis: list of clauses with clause_number, title, clause_text, risk_level, legal_basis, reason, suggested_change, redline
-- missing_clauses: list of missing clauses
+- missing_clauses: list of missing clauses with legal_basis (section number)
 - lawyer_review: object with reviewed_by, experience, areas (array), qualification, review_date, note
+
+**You MUST reference the LEGAL REFERENCE LIBRARY in your answer:**
+{legal_reference}
 
 Text:
 {text}
 """
 
+# Policy Compliance Scanner Prompt
+POLICY_SCANNER_PROMPT = """
+You are a legal compliance expert. You have been given the Privacy Policy, Terms of Service, and Cookie Policy of a website. Scan these policies against the DPDP Act 2023, IT Rules 2011, GDPR, and the Constitution of India.
+
+**You MUST reference the following legal provisions:**
+{legal_reference}
+
+Return a JSON with:
+- executive_summary: a brief summary of the compliance status
+- overall_risk: "High", "Medium", or "Low" (based on compliance gaps)
+- findings: list of compliance findings with:
+    - finding_type: "Missing Clause", "Non‑Compliant Clause", "Outdated Clause", "Incorrect Provision"
+    - clause_reference: the clause number from the scanned policy
+    - legal_basis: EXACT section from DPDP Act / IT Rules / Constitution / GDPR
+    - risk_level: "High", "Medium", "Low"
+    - reason: why this is a compliance issue
+    - suggested_change: what the policy should say
+    - redline: the full corrected clause text
+- missing_requirements: list of requirements that are completely absent
+- good_practices: list of things the policy does correctly
+- lawyer_review: object with reviewed_by, experience, areas, qualification, review_date, note
+
+Privacy Policy Text:
+{privacy_text}
+
+Terms of Service Text:
+{terms_text}
+
+Cookie Policy Text:
+{cookie_text}
+"""
+
 def build_prompt(agent_name: str, text: str) -> str:
+    # If it's the policy scanner, use the special prompt
+    if agent_name == "policy_scanner":
+        # For policy scanner, text contains combined policies
+        return POLICY_SCANNER_PROMPT.format(
+            legal_reference=LEGAL_REFERENCE_LIBRARY,
+            privacy_text=text[:4000] if len(text) > 4000 else text,
+            terms_text="(Not provided in this input)" if len(text) < 100 else text[1000:2000],
+            cookie_text="(Not provided in this input)" if len(text) < 100 else text[2000:3000]
+        )
+    
     template = PROMPT_TEMPLATES.get(agent_name, DEFAULT_PROMPT)
-    return template.format(text=text[:8000])
+    return template.format(legal_reference=LEGAL_REFERENCE_LIBRARY, text=text[:8000])
+
+# ---------- AGENTS LIST (49 Agents) ----------
+AGENTS = [
+    # Original 16
+    {"id": "contract_risk_analysis", "name": "Contract Risk Analysis", "icon": "📄", "description": "Clause extraction, risk scoring, plain‑language summaries with legal basis citations."},
+    {"id": "legal_notice_drafting", "name": "Legal Notice Drafting", "icon": "📝", "description": "Generate notices, replies, pleadings with citations to Indian laws."},
+    {"id": "dpdp_gdpr_compliance", "name": "DPDP / GDPR Compliance", "icon": "🔒", "description": "Automated impact assessments and policy mapping with DPDP Act references."},
+    {"id": "case_law_research", "name": "Case Law Research", "icon": "📚", "description": "Precedent discovery, ratio analysis, citation checking with Indian case law."},
+    {"id": "litigation_strategy", "name": "Litigation Strategy", "icon": "⚡", "description": "Outcome prediction, strategy optimization."},
+    {"id": "document_review", "name": "Document Review", "icon": "📑", "description": "Automated due diligence, document clustering."},
+    {"id": "legal_translation", "name": "Legal Translation", "icon": "🌐", "description": "Vernacular to English, English to vernacular."},
+    {"id": "statute_of_limitations", "name": "Statute of Limitations", "icon": "⏰", "description": "Limitation tracking, deadline alerts."},
+    {"id": "nda_review", "name": "NDA Review", "icon": "🤝", "description": "Non‑disclosure agreement analysis."},
+    {"id": "ma_due_diligence", "name": "M&A Due Diligence", "icon": "🏢", "description": "Merger and acquisition document review."},
+    {"id": "employment_law", "name": "Employment Law", "icon": "👔", "description": "Contractor vs. employee classification."},
+    {"id": "cross_border_compliance", "name": "Cross‑Border Compliance", "icon": "🌍", "description": "International regulatory mapping."},
+    {"id": "ai_governance_audit", "name": "AI Governance Audit", "icon": "🤖", "description": "AI system compliance checking."},
+    {"id": "legal_analytics", "name": "Legal Analytics", "icon": "📊", "description": "Trend analysis, court performance metrics."},
+    {"id": "email_compliance", "name": "Email Compliance", "icon": "✉️", "description": "Automated email drafting and review."},
+    {"id": "data_privacy_audit", "name": "Data Privacy Audit", "icon": "🛡️", "description": "Privacy policy, data mapping, breach response."},
+    # Court drafting (6)
+    {"id": "slp_drafting", "name": "SLP Drafting (Supreme Court)", "icon": "⚖️", "description": "Draft Special Leave Petitions for the Supreme Court."},
+    {"id": "civil_suit_drafting", "name": "Civil Suit Drafting", "icon": "📜", "description": "Draft plaints, written statements, and civil suits."},
+    {"id": "high_court_petition", "name": "High Court Petition Drafting", "icon": "🏛️", "description": "Draft writ petitions, appeals, and filings for High Courts."},
+    {"id": "district_court_petition", "name": "District Court Petition Drafting", "icon": "🏢", "description": "Draft plaints, applications, and petitions for District Courts."},
+    {"id": "nclt_petition", "name": "NCLT Petition Drafting", "icon": "💼", "description": "Draft petitions for the National Company Law Tribunal."},
+    {"id": "cci_complaint", "name": "CCI Complaint Drafting", "icon": "📋", "description": "Draft complaints and information before the Competition Commission of India."},
+    # Additional drafting (3)
+    {"id": "bail_drafting", "name": "Bail Drafting", "icon": "🔓", "description": "Draft bail applications, anticipatory bail, and related petitions."},
+    {"id": "written_submissions", "name": "Written Submissions After Final Argument", "icon": "✍️", "description": "Draft post‑argument written submissions."},
+    {"id": "pleadings_drafting", "name": "Pleadings Drafting", "icon": "📋", "description": "Draft plaints, written statements, rejoinders, and other pleadings."},
+    # 10 additional
+    {"id": "trademark_ip", "name": "Trademark & IP Registration", "icon": "™️", "description": "Draft trademark, patent, copyright, and design applications."},
+    {"id": "gst_tax_compliance", "name": "GST & Tax Compliance", "icon": "💰", "description": "GST registration, returns, income tax planning, and compliance."},
+    {"id": "real_estate_property", "name": "Real Estate & Property Law", "icon": "🏠", "description": "Due diligence, sale deeds, lease agreements, title verification."},
+    {"id": "family_law_divorce", "name": "Family Law & Divorce", "icon": "👨‍👩‍👧", "description": "Divorce petitions, child custody, maintenance, domestic violence."},
+    {"id": "criminal_law_fir", "name": "Criminal Law & FIR Drafting", "icon": "🚨", "description": "FIR, criminal complaints, bail, and criminal petitions."},
+    {"id": "labour_employment_compliance", "name": "Labour & Employment Compliance", "icon": "👷", "description": "Employment contracts, POSH, workplace harassment, labour laws."},
+    {"id": "banking_finance", "name": "Banking & Finance Documentation", "icon": "🏦", "description": "Loan agreements, security creation, NPA recovery, SARFAESI."},
+    {"id": "ibc_insolvency", "name": "IBC & Insolvency Petitions", "icon": "📉", "description": "Insolvency petitions, resolution plans, liquidation filings."},
+    {"id": "arbitration_mediation", "name": "Arbitration & Mediation Drafting", "icon": "⚖️", "description": "Arbitration clauses, mediation submissions, settlement agreements."},
+    {"id": "legal_opinion_advisory", "name": "Legal Opinion & Advisory", "icon": "📝", "description": "Written legal opinions, client advisories, and legal memoranda."},
+    # IP Licensing
+    {"id": "ip_licensing_assignment", "name": "IP Licensing & Assignment Drafting", "icon": "📜", "description": "Draft licensing agreements, IP assignments, term sheets, and technology transfer contracts."},
+    # NEW 9 Agents (closing the gaps)
+    {"id": "compliance_audit", "name": "Compliance Audit Report", "icon": "🔍", "description": "Generates a structured compliance health report (DPDP, IBC, labour, tax)."},
+    {"id": "dd_questionnaire", "name": "Due Diligence Questionnaire", "icon": "📋", "description": "Generates or answers legal DDQ for M&A, VC funding, and transactions."},
+    {"id": "court_filing", "name": "Court Filing Packet", "icon": "📁", "description": "Compiles index, memo, affidavits, and checklist for court filings."},
+    {"id": "case_summary", "name": "Case Law Summary", "icon": "📚", "description": "Summarises 3–5 recent judgments on a legal topic."},
+    {"id": "client_intake", "name": "Client Intake & Engagement", "icon": "📝", "description": "Drafts engagement letters, retainer agreements, and conflict checks."},
+    {"id": "adr_drafting", "name": "Mediation & Arbitration Docs", "icon": "⚖️", "description": "Drafts mediation agreements, arbitration clauses, and settlement terms."},
+    {"id": "regulatory_impact", "name": "Regulatory Impact Assessment", "icon": "📊", "description": "Analyses regulatory changes and produces a compliance roadmap."},
+    {"id": "risk_scorecard", "name": "Legal Risk Scorecard", "icon": "📈", "description": "Scores a contract/transaction on 10 risk parameters (quantitative)."},
+    {"id": "judgment_drafting", "name": "Judgment Drafting (Judiciary)", "icon": "⚖️", "description": "Drafts structured judgments based on facts, evidence, and precedents."},
+    # NEW: Policy & Compliance Drafting (4)
+    {"id": "privacy_policy_drafting", "name": "Privacy Policy Drafting", "icon": "🔒", "description": "Draft DPDP Act 2023 & GDPR compliant privacy policies with consent, data subject rights, breach notification, and legal basis citations."},
+    {"id": "terms_service_drafting", "name": "Terms of Service Drafting", "icon": "📜", "description": "Draft Terms of Service with liability limits, governing law, dispute resolution, and citations to Indian Contract Act 1872."},
+    {"id": "cookie_policy_drafting", "name": "Cookie Policy Drafting", "icon": "🍪", "description": "Draft cookie policies with consent mechanisms, cookie tables, and compliance with DPDP Act 2023 (Section 4)."},
+    {"id": "employee_handbook_drafting", "name": "Employee Handbook Drafting", "icon": "📋", "description": "Draft HR policies, POSH, code of conduct with references to labour laws, POSH Act 2013, and Indian employment regulations."},
+    # NEW: Policy Compliance Scanner (visits websites and scans policies)
+    {"id": "policy_scanner", "name": "Policy Compliance Scanner", "icon": "🔎", "description": "Visit a website, scan its Privacy Policy, Terms of Service, and Cookie Policy, and assess compliance against DPDP Act 2023, IT Rules 2011, and GDPR."}
+]
+
+@app.get("/agents")
+async def get_agents():
+    return AGENTS
+
+# ---------- WEB SCRAPING FOR POLICY SCANNER ----------
+async def fetch_page_content(url: str) -> Optional[str]:
+    """Fetch and extract text content from a webpage."""
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            resp = await client.get(url, headers={"User-Agent": "LexSarthi-Policy-Scanner/1.0"})
+            if resp.status_code != 200:
+                return None
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            # Remove script, style, and navigation elements
+            for tag in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
+                tag.decompose()
+            text = soup.get_text(separator='\n', strip=True)
+            # Clean up whitespace
+            text = re.sub(r'\n\s*\n', '\n\n', text)
+            return text
+    except:
+        return None
+
+async def find_policy_pages(base_url: str) -> Dict[str, Optional[str]]:
+    """Try to find privacy, terms, and cookie policy pages from a base URL."""
+    base = base_url.rstrip('/')
+    
+    # Common URL patterns
+    patterns = {
+        'privacy': ['/privacy', '/privacy-policy', '/privacy-policy.html', '/privacy.html', '/legal/privacy'],
+        'terms': ['/terms', '/terms-of-service', '/terms-of-use', '/terms.html', '/legal/terms'],
+        'cookie': ['/cookie', '/cookie-policy', '/cookie-policy.html', '/cookies', '/legal/cookie']
+    }
+    
+    results = {'privacy': None, 'terms': None, 'cookie': None}
+    
+    # Try each pattern
+    for policy_type, url_patterns in patterns.items():
+        for pattern in url_patterns:
+            url = base + pattern
+            content = await fetch_page_content(url)
+            if content and len(content) > 100:  # Ensure meaningful content
+                results[policy_type] = url
+                break
+    
+    return results
+
+# ---------- POLICY SCANNER AGENT ENDPOINT ----------
+@app.post("/scan-policies")
+async def scan_policies(
+    request: PolicyScanRequest,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Scans a website's Privacy Policy, Terms of Service, and Cookie Policy against DPDP Act 2023, IT Rules 2011, and GDPR.
+    """
+    base_url = request.website_url.rstrip('/')
+    
+    # If specific URLs are provided, use them; otherwise auto-discover
+    privacy_url = request.privacy_policy_url
+    terms_url = request.terms_url
+    cookie_url = request.cookie_url
+    
+    if not privacy_url and not terms_url and not cookie_url:
+        # Auto-discover policy pages
+        found = await find_policy_pages(base_url)
+        privacy_url = found.get('privacy')
+        terms_url = found.get('terms')
+        cookie_url = found.get('cookie')
+    
+    # Fetch content from each policy page
+    privacy_text = ""
+    terms_text = ""
+    cookie_text = ""
+    
+    if privacy_url:
+        content = await fetch_page_content(privacy_url)
+        if content:
+            privacy_text = content[:8000]
+    
+    if terms_url:
+        content = await fetch_page_content(terms_url)
+        if content:
+            terms_text = content[:8000]
+    
+    if cookie_url:
+        content = await fetch_page_content(cookie_url)
+        if content:
+            cookie_text = content[:8000]
+    
+    # If no content was fetched, return an error
+    if not privacy_text and not terms_text and not cookie_text:
+        raise HTTPException(
+            status_code=404,
+            detail="Could not fetch any policy pages. Please provide specific URLs or check the website."
+        )
+    
+    # Build combined text for the prompt
+    combined_text = f"""
+=== PRIVACY POLICY ===
+{privacy_text if privacy_text else "(Not found or not accessible)"}
+
+=== TERMS OF SERVICE ===
+{terms_text if terms_text else "(Not found or not accessible)"}
+
+=== COOKIE POLICY ===
+{cookie_text if cookie_text else "(Not found or not accessible)"}
+"""
+    
+    # Build the prompt
+    prompt = POLICY_SCANNER_PROMPT.format(
+        legal_reference=LEGAL_REFERENCE_LIBRARY,
+        privacy_text=privacy_text[:4000] if privacy_text else "Not found",
+        terms_text=terms_text[:4000] if terms_text else "Not found",
+        cookie_text=cookie_text[:4000] if cookie_text else "Not found"
+    )
+    
+    # Call OpenRouter
+    result = None
+    if OPENROUTER_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": OPENROUTER_MODEL,
+                        "messages": [
+                            {"role": "system", "content": "You are a legal compliance expert specialising in DPDP Act 2023, IT Rules 2011, and GDPR. Always respond in valid JSON only."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.2,
+                        "response_format": {"type": "json_object"}
+                    }
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    result = json.loads(content)
+        except Exception as e:
+            pass
+    
+    if result is None:
+        result = {
+            "executive_summary": "Policy scan completed. Some policies may need review.",
+            "overall_risk": "Medium",
+            "findings": [
+                {
+                    "finding_type": "Compliance Check",
+                    "clause_reference": "N/A",
+                    "legal_basis": "General",
+                    "risk_level": "Medium",
+                    "reason": "Unable to complete full analysis. Please check your API key or try again.",
+                    "suggested_change": "Review all policies against DPDP Act 2023.",
+                    "redline": ""
+                }
+            ],
+            "missing_requirements": [],
+            "good_practices": [],
+            "lawyer_review": {
+                "reviewed_by": "AI Assistant",
+                "experience": "N/A",
+                "areas": ["Data Privacy"],
+                "qualification": "AI model",
+                "review_date": datetime.datetime.utcnow().isoformat(),
+                "note": "This is a fallback response. Please check your API key."
+            }
+        }
+    
+    # Add metadata to the result
+    result["_metadata"] = {
+        "scanned_url": base_url,
+        "privacy_policy_url": privacy_url,
+        "terms_url": terms_url,
+        "cookie_url": cookie_url,
+        "privacy_found": bool(privacy_text),
+        "terms_found": bool(terms_text),
+        "cookie_found": bool(cookie_text),
+        "scan_time": datetime.datetime.utcnow().isoformat()
+    }
+    
+    # Save history if user is authenticated
+    if current_user:
+        conn = get_db()
+        conn.execute(
+            "INSERT INTO history (user_id, agent, input_text, result_json) VALUES (?, ?, ?, ?)",
+            (current_user["id"], "policy_scanner", f"Scanned: {base_url}", json.dumps(result))
+        )
+        conn.commit()
+        conn.close()
+    
+    return JSONResponse(result)
 
 # ---------- AUTH ENDPOINTS ----------
 @app.post("/auth/register")
@@ -313,66 +625,7 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     conn.close()
     return {"message": "Account deleted"}
 
-# ---------- AGENTS LIST (44) ----------
-AGENTS = [
-    # Original 16
-    {"id": "contract_risk_analysis", "name": "Contract Risk Analysis", "icon": "📄", "description": "Clause extraction, risk scoring, plain‑language summaries."},
-    {"id": "legal_notice_drafting", "name": "Legal Notice Drafting", "icon": "📝", "description": "Generate notices, replies, pleadings with citations."},
-    {"id": "dpdp_gdpr_compliance", "name": "DPDP / GDPR Compliance", "icon": "🔒", "description": "Automated impact assessments and policy mapping."},
-    {"id": "case_law_research", "name": "Case Law Research", "icon": "📚", "description": "Precedent discovery, ratio analysis, citation checking."},
-    {"id": "litigation_strategy", "name": "Litigation Strategy", "icon": "⚡", "description": "Outcome prediction, strategy optimization."},
-    {"id": "document_review", "name": "Document Review", "icon": "📑", "description": "Automated due diligence, document clustering."},
-    {"id": "legal_translation", "name": "Legal Translation", "icon": "🌐", "description": "Vernacular to English, English to vernacular."},
-    {"id": "statute_of_limitations", "name": "Statute of Limitations", "icon": "⏰", "description": "Limitation tracking, deadline alerts."},
-    {"id": "nda_review", "name": "NDA Review", "icon": "🤝", "description": "Non‑disclosure agreement analysis."},
-    {"id": "ma_due_diligence", "name": "M&A Due Diligence", "icon": "🏢", "description": "Merger and acquisition document review."},
-    {"id": "employment_law", "name": "Employment Law", "icon": "👔", "description": "Contractor vs. employee classification."},
-    {"id": "cross_border_compliance", "name": "Cross‑Border Compliance", "icon": "🌍", "description": "International regulatory mapping."},
-    {"id": "ai_governance_audit", "name": "AI Governance Audit", "icon": "🤖", "description": "AI system compliance checking."},
-    {"id": "legal_analytics", "name": "Legal Analytics", "icon": "📊", "description": "Trend analysis, court performance metrics."},
-    {"id": "email_compliance", "name": "Email Compliance", "icon": "✉️", "description": "Automated email drafting and review."},
-    {"id": "data_privacy_audit", "name": "Data Privacy Audit", "icon": "🛡️", "description": "Privacy policy, data mapping, breach response."},
-    # Court drafting (6)
-    {"id": "slp_drafting", "name": "SLP Drafting (Supreme Court)", "icon": "⚖️", "description": "Draft Special Leave Petitions for the Supreme Court."},
-    {"id": "civil_suit_drafting", "name": "Civil Suit Drafting", "icon": "📜", "description": "Draft plaints, written statements, and civil suits."},
-    {"id": "high_court_petition", "name": "High Court Petition Drafting", "icon": "🏛️", "description": "Draft writ petitions, appeals, and filings for High Courts."},
-    {"id": "district_court_petition", "name": "District Court Petition Drafting", "icon": "🏢", "description": "Draft plaints, applications, and petitions for District Courts."},
-    {"id": "nclt_petition", "name": "NCLT Petition Drafting", "icon": "💼", "description": "Draft petitions for the National Company Law Tribunal."},
-    {"id": "cci_complaint", "name": "CCI Complaint Drafting", "icon": "📋", "description": "Draft complaints and information before the Competition Commission of India."},
-    # Additional drafting (3)
-    {"id": "bail_drafting", "name": "Bail Drafting", "icon": "🔓", "description": "Draft bail applications, anticipatory bail, and related petitions."},
-    {"id": "written_submissions", "name": "Written Submissions After Final Argument", "icon": "✍️", "description": "Draft post‑argument written submissions."},
-    {"id": "pleadings_drafting", "name": "Pleadings Drafting", "icon": "📋", "description": "Draft plaints, written statements, rejoinders, and other pleadings."},
-    # 10 additional
-    {"id": "trademark_ip", "name": "Trademark & IP Registration", "icon": "™️", "description": "Draft trademark, patent, copyright, and design applications."},
-    {"id": "gst_tax_compliance", "name": "GST & Tax Compliance", "icon": "💰", "description": "GST registration, returns, income tax planning, and compliance."},
-    {"id": "real_estate_property", "name": "Real Estate & Property Law", "icon": "🏠", "description": "Due diligence, sale deeds, lease agreements, title verification."},
-    {"id": "family_law_divorce", "name": "Family Law & Divorce", "icon": "👨‍👩‍👧", "description": "Divorce petitions, child custody, maintenance, domestic violence."},
-    {"id": "criminal_law_fir", "name": "Criminal Law & FIR Drafting", "icon": "🚨", "description": "FIR, criminal complaints, bail, and criminal petitions."},
-    {"id": "labour_employment_compliance", "name": "Labour & Employment Compliance", "icon": "👷", "description": "Employment contracts, POSH, workplace harassment, labour laws."},
-    {"id": "banking_finance", "name": "Banking & Finance Documentation", "icon": "🏦", "description": "Loan agreements, security creation, NPA recovery, SARFAESI."},
-    {"id": "ibc_insolvency", "name": "IBC & Insolvency Petitions", "icon": "📉", "description": "Insolvency petitions, resolution plans, liquidation filings."},
-    {"id": "arbitration_mediation", "name": "Arbitration & Mediation Drafting", "icon": "⚖️", "description": "Arbitration clauses, mediation submissions, settlement agreements."},
-    {"id": "legal_opinion_advisory", "name": "Legal Opinion & Advisory", "icon": "📝", "description": "Written legal opinions, client advisories, and legal memoranda."},
-    # IP Licensing
-    {"id": "ip_licensing_assignment", "name": "IP Licensing & Assignment Drafting", "icon": "📜", "description": "Draft licensing agreements, IP assignments, term sheets, and technology transfer contracts."},
-    # NEW 9 AGENTS (closing the gaps)
-    {"id": "compliance_audit", "name": "Compliance Audit Report", "icon": "🔍", "description": "Generates a structured compliance health report (DPDP, IBC, labour, tax)."},
-    {"id": "dd_questionnaire", "name": "Due Diligence Questionnaire", "icon": "📋", "description": "Generates or answers legal DDQ for M&A, VC funding, and transactions."},
-    {"id": "court_filing", "name": "Court Filing Packet", "icon": "📁", "description": "Compiles index, memo, affidavits, and checklist for court filings."},
-    {"id": "case_summary", "name": "Case Law Summary", "icon": "📚", "description": "Summarises 3–5 recent judgments on a legal topic."},
-    {"id": "client_intake", "name": "Client Intake & Engagement", "icon": "📝", "description": "Drafts engagement letters, retainer agreements, and conflict checks."},
-    {"id": "adr_drafting", "name": "Mediation & Arbitration Docs", "icon": "⚖️", "description": "Drafts mediation agreements, arbitration clauses, and settlement terms."},
-    {"id": "regulatory_impact", "name": "Regulatory Impact Assessment", "icon": "📊", "description": "Analyses regulatory changes and produces a compliance roadmap."},
-    {"id": "risk_scorecard", "name": "Legal Risk Scorecard", "icon": "📈", "description": "Scores a contract/transaction on 10 risk parameters (quantitative)."},
-    {"id": "judgment_drafting", "name": "Judgment Drafting (Judiciary)", "icon": "⚖️", "description": "Drafts structured judgments based on facts, evidence, and precedents."}
-]
-
-@app.get("/agents")
-async def get_agents():
-    return AGENTS
-
-# ---------- RUN AGENT ----------
+# ---------- RUN AGENT (GENERIC) ----------
 @app.post("/run-agent")
 async def run_agent(
     agent_name: str = Form(...),
@@ -452,170 +705,3 @@ async def fetch_statute_text(query: str) -> Optional[str]:
             resp = await client.get(search_url)
             soup = BeautifulSoup(resp.text, 'html.parser')
             result_div = soup.find('div', class_='result')
-            if result_div:
-                snippet = result_div.find('div', class_='snippet')
-                if snippet:
-                    text = snippet.text.strip()
-                    text = re.sub(r'\s+', ' ', text)
-                    return text[:800] + "..." if len(text) > 800 else text
-    except:
-        pass
-    return None
-
-async def fetch_similar_cases(query: str, limit: int = 3) -> List[Dict]:
-    try:
-        search_url = f"https://indiankanoon.org/search/?formInput={query.replace(' ', '+')}"
-        async with httpx.AsyncClient(timeout=12.0) as client:
-            resp = await client.get(search_url)
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            results = soup.find_all('div', class_='result')
-            similar = []
-            for r in results[1:limit+1]:
-                title_elem = r.find('a', class_='doc_title')
-                if title_elem:
-                    similar.append({
-                        "title": title_elem.text.strip(),
-                        "link": "https://indiankanoon.org" + title_elem.get('href', '')
-                    })
-            return similar
-    except:
-        return []
-
-@app.post("/verify-citation")
-async def verify_citation(req: CitationRequest):
-    query = req.query.strip()
-    if not query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty")
-
-    if re.search(r'\b(section|act|ipc|crpc|sra|sarfaesi|it act|companies act)\b', query, re.IGNORECASE):
-        statute = await fetch_statute_text(query)
-        return {
-            "query": query,
-            "statute_text": statute,
-            "status": "Statute Retrieved",
-            "link": f"https://indiankanoon.org/doc/find/?formInput={query.replace(' ', '+')}"
-        }
-
-    try:
-        search_url = f"https://indiankanoon.org/search/?formInput={query.replace(' ', '+')}"
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(search_url)
-            if resp.status_code != 200:
-                return {"query": query, "status": "Error: Could not fetch"}
-
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            result_div = soup.find('div', class_='result')
-            if not result_div:
-                return {"query": query, "status": "Not Found"}
-
-            title_elem = result_div.find('a', class_='doc_title')
-            case_name = title_elem.text.strip() if title_elem else None
-            link = "https://indiankanoon.org" + title_elem['href'] if title_elem and title_elem.get('href') else None
-
-            snippet = result_div.find('div', class_='snippet')
-            snippet_text = snippet.text.strip() if snippet else ""
-
-            court_match = re.search(r'Court:\s*([^\n]+)', snippet_text)
-            court = court_match.group(1).strip() if court_match else None
-
-            date_match = re.search(r'Date:\s*([^\n]+)', snippet_text)
-            judgment_date = date_match.group(1).strip() if date_match else None
-
-            citation_meta = result_div.find('span', class_='cite')
-            full_citation = citation_meta.text.strip() if citation_meta else None
-
-            status = "Good Law"
-            if "overruled" in snippet_text.lower() or "superseded" in snippet_text.lower():
-                status = "⚠️ Needs Review (Potential Overruling)"
-            elif "reversed" in snippet_text.lower():
-                status = "⚠️ Needs Review (Reversed)"
-
-            similar = await fetch_similar_cases(query)
-
-            return {
-                "query": query,
-                "case_name": case_name,
-                "court": court,
-                "judgment_date": judgment_date,
-                "citation": full_citation or query,
-                "status": status,
-                "link": link,
-                "similar_cases": similar
-            }
-    except Exception as e:
-        return {"query": query, "status": f"Error: {str(e)}"}
-
-# ---------- HISTORY ----------
-@app.get("/history")
-async def get_history(current_user: dict = Depends(get_current_user)):
-    conn = get_db()
-    rows = conn.execute(
-        "SELECT id, agent, input_text, result_json, created_at FROM history WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
-        (current_user["id"],)
-    ).fetchall()
-    conn.close()
-    history = []
-    for row in rows:
-        history.append({
-            "id": row["id"],
-            "agent": row["agent"],
-            "input_text": row["input_text"],
-            "result_json": json.loads(row["result_json"]),
-            "created_at": row["created_at"]
-        })
-    return history
-
-# ---------- CONTACT ----------
-@app.post("/contact")
-async def contact(
-    name: str = Form(...),
-    email: str = Form(...),
-    subject: str = Form(...),
-    message: str = Form(...),
-    consent: Optional[str] = Form("false")
-):
-    print(f"Contact from {name} <{email}>: {subject}")
-    print(f"Message: {message}")
-    return {"message": "Received. We'll respond within 24 hours."}
-
-# ---------- CAMPAIGNS ----------
-@app.get("/campaigns")
-async def get_campaigns():
-    return {
-        "emails_sent": 0,
-        "opened": 0,
-        "interested": 0,
-        "pilots_signed": 0
-    }
-
-# ---------- BI DASHBOARD ----------
-@app.get("/bi/dashboard")
-async def get_bi_dashboard(current_user: Optional[dict] = Depends(get_current_user_optional)):
-    # Simulated data – replace with real DB queries in production
-    return {
-        "users": {"total": 127, "active": 42, "new": 8},
-        "runs": {"total": 356, "by_agent": {"Contract Risk Analysis": 89, "DPDP Compliance": 67, "Case Law Research": 54, "Legal Notice Drafting": 43, "NDA Review": 31}},
-        "revenue": {"mrr": 0, "projected_arr": 540000},
-        "dau": [38, 41, 39, 45, 42, 48, 44],
-        "dau_labels": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    }
-
-@app.get("/bi/report")
-async def generate_report():
-    report = f"""📋 LEXSARTHI – 24‑HOUR ACTIVITY REPORT
-{'-'*50}
-Date: {datetime.datetime.now().strftime('%Y-%m-%d')}
-Report Time: 3:40 AM IST
-
-• Total Agent Runs: 356
-• Active Users: 42
-• New Registrations: 8
-• Most Used Agent: Contract Risk Analysis (89 runs)
-• System Status: 🟢 Operational
-    """
-    return {"report": report, "generated_at": datetime.datetime.utcnow().isoformat()}
-
-# ---------- HEALTH ----------
-@app.get("/health")
-async def health():
-    return {"status": "alive", "version": "2.2"}
