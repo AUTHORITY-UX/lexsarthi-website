@@ -206,84 +206,155 @@ async def parse_document(file: UploadFile) -> str:
 # DOMAIN INTELLIGENCE AGENT
 # ============================================================
 
-async def get_whois_info(domain: str) -> Dict:
-    """Get WHOIS information for a domain."""
-    try:
-        w = whois.whois(domain)
-        return {
-            "registrar": w.registrar,
-            "registrant_name": w.name,
-            "registrant_org": w.org,
-            "registrant_country": w.country,
-            "creation_date": str(w.creation_date) if w.creation_date else None,
-            "expiration_date": str(w.expiration_date) if w.expiration_date else None,
-            "updated_date": str(w.updated_date) if w.updated_date else None,
-            "name_servers": w.name_servers,
-            "status": w.status,
-            "emails": w.emails,
-            "dnssec": w.dnssec,
-        }
-    except:
-        return {"error": "WHOIS lookup failed or domain not found"}
-
-async def get_traffic_analytics(domain: str) -> Dict:
-    """Get traffic analytics from SimilarWeb or estimate."""
-    # Try SimilarWeb API if available
-    if SIMILARWEB_API_KEY:
-        try:
-            url = f"https://api.similarweb.com/v4/similar-rank/{domain}/rank?api_key={SIMILARWEB_API_KEY}"
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(url)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    return {
-                        "rank": data.get("rank", "N/A"),
-                        "estimated_visitors": data.get("visits", "N/A"),
-                        "source": "SimilarWeb API"
-                    }
-        except:
-            pass
+@app.post("/scan-domain")
+async def scan_domain(
+    request: DomainScanRequest,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Scans a domain and provides a comprehensive report.
+    """
+    domain = request.domain.strip().lower()
     
-    # Fallback: estimate from public data
-    return {
-        "rank": "Estimated (No API key)",
-        "estimated_visitors": "Not available without API key",
-        "estimated_page_views": "Not available without API key",
-        "top_countries": "Not available without API key",
-        "bounce_rate": "Not available without API key",
-        "source": "Fallback estimate"
+    # Remove protocol if present
+    if domain.startswith('http://') or domain.startswith('https://'):
+        domain = domain.split('//')[1].split('/')[0]
+    
+    # Remove www if present
+    if domain.startswith('www.'):
+        domain = domain[4:]
+    
+    # Gather all data
+    whois_data = await get_whois_info(domain)
+    traffic_data = await get_traffic_analytics(domain)
+    ssl_data = await get_ssl_info(domain)
+    dns_data = await get_dns_records(domain)
+    tld_availability = await check_domain_availability(domain)
+    reputation_data = await check_domain_reputation(domain)
+    social_data = await get_social_media_presence(domain)
+    
+    # Create comprehensive report
+    report = {
+        "domain": domain,
+        "scan_time": datetime.datetime.utcnow().isoformat(),
+        "whois": whois_data,
+        "traffic": traffic_data,
+        "ssl_certificate": ssl_data,
+        "dns_records": dns_data,
+        "tld_availability": tld_availability,
+        "social_media": social_data,
+        "reputation": reputation_data,
+        "financial_health": {
+            "estimated_revenue": "Not available without API key",
+            "business_model": "Not available without API key",
+            "estimated_employees": "Not available without API key",
+            "company_age": "Not available without API key"
+        },
+        "due_diligence_summary": {
+            "status": "Pending review",
+            "risk_level": "Medium",
+            "key_findings": []
+        }
     }
-
-async def get_ssl_info(domain: str) -> Dict:
-    """Get SSL certificate information."""
-    try:
-        context = ssl.create_default_context()
-        with socket.create_connection((domain, 443), timeout=10) as sock:
-            with context.wrap_socket(sock, server_hostname=domain) as ssock:
-                cert = ssock.getpeercert()
-                return {
-                    "issuer": cert.get("issuer", []),
-                    "subject": cert.get("subject", []),
-                    "not_before": cert.get("notBefore", "N/A"),
-                    "not_after": cert.get("notAfter", "N/A"),
-                    "serial_number": cert.get("serialNumber", "N/A"),
-                    "valid": True,
-                    "san": cert.get("subjectAltName", [])
-                }
-    except:
-        return {"valid": False, "error": "SSL certificate not found or domain unreachable"}
-
-async def get_dns_records(domain: str) -> Dict:
-    """Get DNS records for a domain."""
-    records = {}
-    record_types = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME']
-    for rtype in record_types:
-        try:
-            answers = dns.resolver.resolve(domain, rtype)
-            records[rtype] = [str(r) for r in answers]
-        except:
-            records[rtype] = []
-    return records
+    
+    # Generate due diligence findings
+    findings = []
+    
+    # Check WHOIS
+    if "error" not in whois_data:
+        if whois_data.get("registrar"):
+            findings.append(f"✅ Domain is registered with {whois_data.get('registrar')}")
+        if whois_data.get("creation_date"):
+            try:
+                creation = str(whois_data.get("creation_date"))
+                if len(creation) > 10:
+                    creation = creation[:10]
+                age = (datetime.datetime.now() - datetime.datetime.strptime(creation, '%Y-%m-%d')).days // 365
+                findings.append(f"📅 Domain age: ~{age} years")
+            except:
+                pass
+    else:
+        findings.append("⚠️ WHOIS lookup failed – domain may be private or unavailable")
+    
+    # Check SSL
+    if ssl_data.get("valid"):
+        not_after = ssl_data.get("not_after", "")
+        if not_after != "N/A":
+            try:
+                expiry = datetime.datetime.strptime(not_after, '%b %d %H:%M:%S %Y %Z')
+                days_left = (expiry - datetime.datetime.now()).days
+                if days_left < 30:
+                    findings.append(f"⚠️ SSL certificate expires in {days_left} days – please renew")
+                else:
+                    findings.append(f"✅ SSL certificate valid ({days_left} days remaining)")
+            except:
+                findings.append("✅ SSL certificate valid")
+    else:
+        findings.append("❌ SSL certificate not found or invalid – security risk")
+    
+    # Check DNS
+    if dns_data.get('A'):
+        findings.append(f"✅ Domain resolves to {len(dns_data['A'])} IP addresses")
+    else:
+        findings.append("❌ Domain does not have an A record – may not be active")
+    
+    # Check social media
+    active_social = [p for p, active in social_data.items() if active]
+    if active_social:
+        findings.append(f"✅ Active social media presence on: {', '.join(active_social)}")
+    else:
+        findings.append("⚠️ No active social media presence found")
+    
+    # Reputation
+    if reputation_data.get("suspicious"):
+        findings.append("⚠️ Domain may be suspicious – further investigation recommended")
+    else:
+        findings.append("✅ Domain reputation appears clean")
+    
+    # TLD availability
+    registered_tlds = [tld for tld, status in tld_availability.items() if status == "Registered"]
+    if registered_tlds:
+        findings.append(f"🌐 Also registered in: {', '.join(registered_tlds)}")
+    
+    # Determine overall risk
+    high_risk = any("❌" in f for f in findings)
+    medium_risk = any("⚠️" in f for f in findings)
+    
+    if high_risk:
+        risk_level = "High"
+    elif medium_risk:
+        risk_level = "Medium"
+    else:
+        risk_level = "Low"
+    
+    report["due_diligence_summary"] = {
+        "status": "Complete" if len(findings) > 0 else "Incomplete",
+        "risk_level": risk_level,
+        "key_findings": findings,
+        "recommendations": []
+    }
+    
+    # Generate recommendations
+    if "error" in whois_data or not whois_data.get("registrar"):
+        report["due_diligence_summary"]["recommendations"].append("Verify domain ownership through official WHOIS records")
+    
+    if not ssl_data.get("valid") or ssl_data.get("not_after", "N/A") == "N/A":
+        report["due_diligence_summary"]["recommendations"].append("Install valid SSL certificate for security")
+    
+    if not dns_data.get('A'):
+        report["due_diligence_summary"]["recommendations"].append("Configure DNS records correctly")
+    
+    # Save history only if user is authenticated
+    if current_user:
+        conn = get_db()
+        conn.execute(
+            "INSERT INTO history (user_id, agent, input_text, result_json) VALUES (?, ?, ?, ?)",
+            (current_user["id"], "domain_intelligence", f"Scanned: {domain}", json.dumps(report))
+        )
+        conn.commit()
+        conn.close()
+    
+    return JSONResponse(report)
 
 async def check_domain_availability(domain: str) -> Dict:
     """Check if the domain is registered and available in other TLDs."""
