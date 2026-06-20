@@ -19,4 +19,4 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 *.sh text eol=lf
-*.bat text eol=crlf
+*.bat text eol=crlflegal_docs/draft[[:space:]]AI.pdf filter=lfs diff=lfs merge=lfs -text
