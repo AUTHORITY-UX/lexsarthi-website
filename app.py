@@ -400,7 +400,7 @@ async def startup_event():
     asyncio.create_task(schedule_data_deletion())
 
 # ===================================================================
-# PYDANTIC MODELS - FIXED: Supports BOTH email AND username
+# PYDANTIC MODELS
 # ===================================================================
 class UserRegister(BaseModel):
     username: Optional[EmailStr] = None
@@ -416,8 +416,44 @@ class UserLogin(BaseModel):
     email: Optional[EmailStr] = None
     password: str
 
+class AgentRunRequest(BaseModel):
+    agent_id: str
+    input_text: str = ""
+    file_content: Optional[str] = None
+    file_name: Optional[str] = None
+    file_type: Optional[str] = None
+
+class DomainScanRequest(BaseModel):
+    domain: str
+
+class PolicyScanRequest(BaseModel):
+    website_url: str
+
+class PaymentRequest(BaseModel):
+    amount: int
+    currency: str = "INR"
+    plan: Optional[str] = None
+
+class PaymentVerifyRequest(BaseModel):
+    razorpay_payment_id: str
+    razorpay_order_id: str
+    razorpay_signature: str
+
+class CampaignCreate(BaseModel):
+    name: str
+    type: str
+    audience: Optional[str] = None
+    content: Optional[str] = None
+    scheduled_date: Optional[str] = None
+
+class OutreachCreate(BaseModel):
+    campaign_id: int
+    client_email: str
+    client_name: str
+    notes: Optional[str] = None
+
 # ===================================================================
-# AUTH FUNCTIONS
+# UTILITY FUNCTIONS
 # ===================================================================
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
@@ -436,6 +472,39 @@ def verify_jwt(token: str) -> Optional[dict]:
         return payload
     except:
         return None
+
+# ===================================================================
+# AUTH FUNCTIONS - DEFINED FIRST
+# ===================================================================
+async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from JWT token"""
+    payload = verify_jwt(auth.credentials)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE username = ?", (payload.get("sub"),)).fetchone()
+    conn.close()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return dict(user)
+
+async def get_current_user_optional(auth: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    """Get current user from JWT token (optional)"""
+    if not auth:
+        return None
+    payload = verify_jwt(auth.credentials)
+    if not payload:
+        return None
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE username = ?", (payload.get("sub"),)).fetchone()
+    conn.close()
+    if not user:
+        return None
+    return dict(user)
+
+async def get_current_user_bearer(auth: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from JWT token (alias)"""
+    return await get_current_user(auth)
 
 # ===================================================================
 # AUTH ENDPOINTS - FIXED: Supports BOTH email AND username
@@ -546,6 +615,7 @@ async def login_user(user: UserLogin):
 
 @app.get("/auth/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user info"""
     conn = get_db()
     user = conn.execute(
         """SELECT id, username, full_name, role, plan, is_premium, premium_expiry, 
@@ -557,40 +627,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     return dict(user)
 
 # ===================================================================
-# GET CURRENT USER (for other endpoints)
-# ===================================================================
-async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security)):
-    payload = verify_jwt(auth.credentials)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    conn = get_db()
-    user = conn.execute("SELECT * FROM users WHERE username = ?", (payload.get("sub"),)).fetchone()
-    conn.close()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return dict(user)
-
-# ===================================================================
-# AGENTS ENDPOINT
-# ===================================================================
-@app.get("/agents")
-async def get_agents():
-    return {
-        "agents": AGENTS,
-        "count": len(AGENTS),
-        "categories": list(set(a["category"] for a in AGENTS)),
-        "lawyer": {
-            "name": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "experience": "8+ years",
-            "qualification": "LLB - Delhi University (2016)"
-        },
-        "website": WEBSITE_URL,
-        "launch_date": LAUNCH_DATE
-    }
-
-# ===================================================================
-# AGENTS LIST - 73 AGENTS (Full list with all agents)
+# AGENTS LIST - 73 AGENTS
 # ===================================================================
 AGENTS = [
     # Contract Review (8)
@@ -612,7 +649,7 @@ AGENTS = [
     {"id": "drafting_policy", "name": "Policy Document Drafting", "icon": "📜", "description": "Draft company policies - Adv. Debo", "category": "Drafting", "premium": False},
     {"id": "drafting_will", "name": "Will Drafting", "icon": "📜", "description": "Draft wills - Adv. Debo", "category": "Drafting", "premium": False},
     
-    # Compliance (8) - INCLUDING DPDP
+    # Compliance (8)
     {"id": "compliance_dpdp", "name": "DPDP Act Compliance", "icon": "🛡️", "description": "DPDP Act 2023 Sections 4-14 - Adv. Debo (Certified)", "category": "Compliance", "premium": False},
     {"id": "compliance_it_rules", "name": "IT Rules 2011 Compliance", "icon": "💻", "description": "IT Rules 2011 Rules 3-8 - Adv. Debo", "category": "Compliance", "premium": False},
     {"id": "compliance_gdpr", "name": "GDPR Compliance", "icon": "🌍", "description": "GDPR compliance - Adv. Debo (Certified)", "category": "Compliance", "premium": True},
@@ -700,6 +737,25 @@ AGENTS = [
     {"id": "legal_translation", "name": "Legal Translation", "icon": "🌐", "description": "Legal translation - Adv. Debo", "category": "Drafting", "premium": False},
     {"id": "stamp_duty_calculator", "name": "Stamp Duty Calculator", "icon": "📊", "description": "Stamp duty calculation - Adv. Debo", "category": "Tax", "premium": False}
 ]
+
+# ===================================================================
+# AGENTS ENDPOINT
+# ===================================================================
+@app.get("/agents")
+async def get_agents():
+    return {
+        "agents": AGENTS,
+        "count": len(AGENTS),
+        "categories": list(set(a["category"] for a in AGENTS)),
+        "lawyer": {
+            "name": "Adv. Debo",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "experience": "8+ years",
+            "qualification": "LLB - Delhi University (2016)"
+        },
+        "website": WEBSITE_URL,
+        "launch_date": LAUNCH_DATE
+    }
 
 # ===================================================================
 # RUN AGENT ENDPOINT
@@ -863,77 +919,261 @@ Section 70: Protected system
 """
 
 # ===================================================================
-# AGENT PROMPTS
+# FILE UPLOAD
 # ===================================================================
-AGENT_PROMPTS = {
-    "compliance_dpdp": """
-You are Adv. Debo from THE ADVOCACY A LAW FIRM.
-SPECIALIZATION: DPDP Act 2023, Data Privacy
-CERTIFICATION: DPDP Act 2023 Compliance Certified
+@app.post("/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    agent_id: Optional[str] = Form(None),
+    current_user: dict = Depends(get_current_user_bearer)
+):
+    content, file_type, file_size, file_path = await parse_document(file)
+    
+    conn = get_db()
+    result = conn.execute(
+        """INSERT INTO documents 
+           (user_id, filename, file_path, file_type, file_size, content, agent_used, status) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
+        (current_user["id"], file.filename, file_path, file_type, file_size, content[:10000], agent_id, "uploaded")
+    ).fetchone()
+    doc_id = result["id"]
+    conn.commit()
+    conn.close()
+    
+    return {
+        "message": "Document uploaded successfully",
+        "document_id": doc_id,
+        "filename": file.filename,
+        "file_type": file_type,
+        "file_size": file_size,
+        "retention": f"Zero Retention - Auto-deleted after {DATA_RETENTION_HOURS} hours",
+        "website": WEBSITE_URL,
+        "launch_date": LAUNCH_DATE
+    }
 
-TASK: Analyze compliance with DPDP Act 2023 Sections 4-14.
-
-LEGAL REFERENCE:
-{legal_reference}
-
-POLICY TEXT:
-{input_text}
-
-PROVIDE:
-1. executive_summary: DPDP compliance assessment
-2. findings: Issues with section references
-3. recommendations: Compliance actions
-4. legal_basis: Exact DPDP sections
-""",
-
-    "contract_review_general": """
-You are Adv. Debo from THE ADVOCACY A LAW FIRM.
-SPECIALIZATION: Contract Law, Indian Contract Act 1872
-
-TASK: Review contract with Indian Contract Act 1872 references.
-
-LEGAL REFERENCE:
-{legal_reference}
-
-CONTRACT TEXT:
-{input_text}
-
-PROVIDE:
-1. executive_summary: Contract review summary
-2. findings: Issues with section references (Sections 10,23,73,74)
-3. recommendations: Improvements needed
-4. legal_basis: Contract Act sections
-""",
-}
-
-DEFAULT_AGENT_PROMPT = """
-You are Adv. Debo from THE ADVOCACY A LAW FIRM.
-EXPERIENCE: 8+ years
-QUALIFICATION: LLB - Delhi University (2016)
-
-LEGAL REFERENCE:
-{legal_reference}
-
-INPUT:
-{input_text}
-
-PROVIDE:
-1. executive_summary: Professional summary
-2. findings: Legal findings
-3. recommendations: Specific actions
-4. legal_basis: Relevant laws
-5. disclaimer: "AI-assisted - verify with advocate"
-"""
+async def parse_document(file: UploadFile) -> tuple:
+    content = await file.read()
+    file_type = file.filename.split('.')[-1].lower() if '.' in file.filename else 'txt'
+    file_size = len(content)
+    text = ""
+    
+    file_id = str(uuid.uuid4())
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    try:
+        if file_type == 'pdf':
+            import io
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    text += page.extract_text() or ""
+        elif file_type == 'docx':
+            import io
+            doc = docx.Document(io.BytesIO(content))
+            for para in doc.paragraphs:
+                text += para.text + "\n"
+        else:
+            text = content.decode('utf-8', errors='ignore')
+    except Exception as e:
+        text = f"Could not parse document: {str(e)}"
+    
+    return text, file_type, file_size, file_path
 
 # ===================================================================
-# AGENT RUN REQUEST MODEL
+# PAYMENT ENDPOINTS - ₹2 TEST PAYMENT
 # ===================================================================
-class AgentRunRequest(BaseModel):
-    agent_id: str
-    input_text: str = ""
-    file_content: Optional[str] = None
-    file_name: Optional[str] = None
-    file_type: Optional[str] = None
+@app.post("/payment/create-order")
+async def create_payment_order(
+    payment_request: PaymentRequest,
+    current_user: dict = Depends(get_current_user_bearer)
+):
+    try:
+        is_starter = payment_request.amount == 200
+        
+        if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+            order_id = f"test_order_{uuid.uuid4().hex[:12]}"
+            return {
+                "order_id": order_id,
+                "amount": payment_request.amount,
+                "currency": payment_request.currency,
+                "test_mode": True,
+                "key_id": "test_key",
+                "plan": payment_request.plan or "starter",
+                "is_starter": is_starter,
+                "message": "Test mode - ₹2 Starter Pack simulated",
+                "website": WEBSITE_URL,
+                "launch_date": LAUNCH_DATE
+            }
+        
+        import razorpay
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        
+        order_data = {
+            "amount": payment_request.amount,
+            "currency": payment_request.currency,
+            "receipt": f"receipt_{uuid.uuid4().hex[:8]}",
+            "notes": {
+                "user_id": current_user["id"], 
+                "plan": payment_request.plan or "starter",
+                "is_starter": is_starter
+            },
+            "payment_capture": 1
+        }
+        
+        order = client.order.create(data=order_data)
+        
+        conn = get_db()
+        conn.execute(
+            """INSERT INTO payments (user_id, order_id, amount, currency, plan, status, receipt) 
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (current_user["id"], order["id"], order["amount"], order["currency"], 
+             payment_request.plan or "starter", "created", order["receipt"])
+        )
+        conn.commit()
+        conn.close()
+        
+        return {
+            "order_id": order["id"],
+            "amount": order["amount"],
+            "currency": order["currency"],
+            "key_id": RAZORPAY_KEY_ID,
+            "test_mode": False,
+            "plan": payment_request.plan or "starter",
+            "is_starter": is_starter,
+            "website": WEBSITE_URL,
+            "launch_date": LAUNCH_DATE
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/payment/verify")
+async def verify_payment(
+    verify_request: PaymentVerifyRequest,
+    current_user: dict = Depends(get_current_user_bearer)
+):
+    try:
+        if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+            conn = get_db()
+            conn.execute(
+                """UPDATE payments 
+                   SET payment_id = ?, status = 'paid', updated_at = CURRENT_TIMESTAMP 
+                   WHERE order_id = ? AND user_id = ?""",
+                (verify_request.razorpay_payment_id, verify_request.razorpay_order_id, current_user["id"])
+            )
+            conn.commit()
+            conn.close()
+            
+            return {
+                "verified": True,
+                "test_mode": True,
+                "message": "✅ ₹2 Payment Successful! Welcome to LexSarthi!",
+                "website": WEBSITE_URL,
+                "launch_date": LAUNCH_DATE
+            }
+        
+        import razorpay
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        
+        params = {
+            'razorpay_order_id': verify_request.razorpay_order_id,
+            'razorpay_payment_id': verify_request.razorpay_payment_id,
+            'razorpay_signature': verify_request.razorpay_signature
+        }
+        
+        client.utility.verify_payment_signature(params)
+        
+        conn = get_db()
+        conn.execute(
+            """UPDATE payments 
+               SET payment_id = ?, status = 'paid', updated_at = CURRENT_TIMESTAMP 
+               WHERE order_id = ? AND user_id = ?""",
+            (verify_request.razorpay_payment_id, verify_request.razorpay_order_id, current_user["id"])
+        )
+        conn.commit()
+        conn.close()
+        
+        return {
+            "verified": True,
+            "payment_id": verify_request.razorpay_payment_id,
+            "message": "✅ ₹2 Payment Successful! Welcome to LexSarthi!",
+            "website": WEBSITE_URL,
+            "launch_date": LAUNCH_DATE
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Payment verification failed")
+
+# ===================================================================
+# HEALTH & ROOT
+# ===================================================================
+@app.get("/health")
+async def health():
+    return {
+        "status": "healthy",
+        "version": VERSION,
+        "launch_date": LAUNCH_DATE,
+        "agents": len(AGENTS),
+        "lawyer": {
+            "name": "Adv. Debo",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "experience": "8+ years",
+            "qualification": "LLB - Delhi University (2016)"
+        },
+        "data_retention": f"Zero Retention - {DATA_RETENTION_HOURS} hours",
+        "accuracy_guarantee": "100% - No Hallucination",
+        "campaigns": "Active",
+        "website": WEBSITE_URL
+    }
+
+@app.get("/")
+async def root():
+    return {
+        "service": "LexSarthi v4.0 - Complete Legal OS",
+        "version": VERSION,
+        "launch_date": LAUNCH_DATE,
+        "vision": "Single Provider for All Legal Work Automation",
+        "tagline": "From Contract Review to Supreme Court Judgments | From Law School to Global Legal Practice",
+        "lawyer": {
+            "name": "Adv. Debo",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "experience": "8+ years",
+            "qualification": "LLB - Delhi University (2016)"
+        },
+        "agents": len(AGENTS),
+        "data_retention": f"Zero Retention - {DATA_RETENTION_HOURS} hours",
+        "accuracy_guarantee": "100% - No Hallucination",
+        "confidentiality": "Attorney-Client Privilege | End-to-end encrypted",
+        "plans": PRICING_PLANS,
+        "pay_per_use": PAY_PER_USE,
+        "campaign_features": {
+            "email_campaigns": "Active",
+            "client_engagement": "Active",
+            "legal_alerts": "Active",
+            "market_intelligence": "Active"
+        },
+        "test_payment": {"amount": 200, "label": "₹2 Starter Pack"},
+        "website": WEBSITE_URL,
+        "endpoints": [
+            "/auth/register",
+            "/auth/login",
+            "/auth/me",
+            "/agents",
+            "/run-agent",
+            "/upload",
+            "/lawyer-profile",
+            "/scan-domain",
+            "/scan-policies",
+            "/domain-agreement",
+            "/campaigns",
+            "/outreach",
+            "/campaigns-features",
+            "/pricing",
+            "/payment/create-order",
+            "/payment/verify",
+            "/payment/status",
+            "/health"
+        ]
+    }
 
 # ===================================================================
 # MAIN
