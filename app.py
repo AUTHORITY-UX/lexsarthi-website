@@ -188,7 +188,6 @@ def init_db():
     
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
     if not cursor.fetchone():
-        # Users table
         conn.execute("""
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -213,7 +212,6 @@ def init_db():
             )
         """)
         
-        # Documents table
         conn.execute("""
             CREATE TABLE documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -235,7 +233,6 @@ def init_db():
             )
         """)
         
-        # Campaigns table
         conn.execute("""
             CREATE TABLE campaigns (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -255,7 +252,6 @@ def init_db():
             )
         """)
         
-        # Outreach table
         conn.execute("""
             CREATE TABLE outreach (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -274,7 +270,6 @@ def init_db():
             )
         """)
         
-        # History table
         conn.execute("""
             CREATE TABLE history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -288,7 +283,6 @@ def init_db():
             )
         """)
         
-        # Payments table
         conn.execute("""
             CREATE TABLE payments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -305,7 +299,6 @@ def init_db():
             )
         """)
         
-        # Analytics Events table
         conn.execute("""
             CREATE TABLE analytics_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -320,7 +313,6 @@ def init_db():
             )
         """)
         
-        # Daily Metrics table
         conn.execute("""
             CREATE TABLE daily_metrics (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -336,7 +328,6 @@ def init_db():
             )
         """)
         
-        # Reports table
         conn.execute("""
             CREATE TABLE reports (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -348,7 +339,6 @@ def init_db():
             )
         """)
         
-        # Retention Log
         conn.execute("""
             CREATE TABLE retention_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -405,159 +395,16 @@ async def schedule_data_deletion():
             await delete_expired_data()
         await asyncio.sleep(3600)
 
-# ===================================================================
-# DAILY REPORT GENERATOR (4:00 AM IST)
-# ===================================================================
-async def generate_daily_report():
-    try:
-        ist_now = datetime.now()
-        report_date = ist_now.strftime("%Y-%m-%d")
-        
-        print(f"📊 Generating daily report for {report_date}")
-        
-        conn = get_db()
-        previous_date = (ist_now - timedelta(days=1)).strftime("%Y-%m-%d")
-        
-        # Collect metrics
-        total_users = conn.execute("SELECT COUNT(*) as count FROM users WHERE is_active = 1").fetchone()["count"]
-        new_users_today = conn.execute("SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = ?", (report_date,)).fetchone()["count"]
-        new_users_yesterday = conn.execute("SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = ?", (previous_date,)).fetchone()["count"]
-        
-        active_users_today = conn.execute("SELECT COUNT(DISTINCT user_id) as count FROM history WHERE DATE(created_at) = ?", (report_date,)).fetchone()["count"]
-        active_users_yesterday = conn.execute("SELECT COUNT(DISTINCT user_id) as count FROM history WHERE DATE(created_at) = ?", (previous_date,)).fetchone()["count"]
-        
-        total_agents_run_today = conn.execute("SELECT COUNT(*) as count FROM history WHERE DATE(created_at) = ?", (report_date,)).fetchone()["count"]
-        total_agents_run_yesterday = conn.execute("SELECT COUNT(*) as count FROM history WHERE DATE(created_at) = ?", (previous_date,)).fetchone()["count"]
-        
-        top_agents_today = conn.execute(
-            """SELECT agent, COUNT(*) as count FROM history WHERE DATE(created_at) = ? 
-               GROUP BY agent ORDER BY count DESC LIMIT 10""",
-            (report_date,)
-        ).fetchall()
-        
-        documents_today = conn.execute("SELECT COUNT(*) as count FROM documents WHERE DATE(created_at) = ?", (report_date,)).fetchone()["count"]
-        documents_yesterday = conn.execute("SELECT COUNT(*) as count FROM documents WHERE DATE(created_at) = ?", (previous_date,)).fetchone()["count"]
-        
-        payments_today = conn.execute("SELECT COUNT(*) as count, SUM(amount) as total FROM payments WHERE DATE(created_at) = ? AND status = 'paid'", (report_date,)).fetchone()
-        payments_yesterday = conn.execute("SELECT COUNT(*) as count, SUM(amount) as total FROM payments WHERE DATE(created_at) = ? AND status = 'paid'", (previous_date,)).fetchone()
-        
-        payments_today_count = payments_today["count"] if payments_today else 0
-        payments_today_total = (payments_today["total"] / 100) if payments_today and payments_today["total"] else 0
-        payments_yesterday_count = payments_yesterday["count"] if payments_yesterday else 0
-        payments_yesterday_total = (payments_yesterday["total"] / 100) if payments_yesterday and payments_yesterday["total"] else 0
-        
-        revenue_by_plan = conn.execute(
-            """SELECT plan, COUNT(*) as count, SUM(amount) as total FROM payments 
-               WHERE DATE(created_at) = ? AND status = 'paid' GROUP BY plan""",
-            (report_date,)
-        ).fetchall()
-        
-        campaigns_sent = conn.execute("SELECT COUNT(*) as count FROM campaigns WHERE DATE(sent_date) = ?", (report_date,)).fetchone()["count"]
-        campaigns_opened = conn.execute("SELECT SUM(open_count) as total FROM campaigns WHERE DATE(sent_date) = ?", (report_date,)).fetchone()["total"] or 0
-        campaigns_clicked = conn.execute("SELECT SUM(click_count) as total FROM campaigns WHERE DATE(sent_date) = ?", (report_date,)).fetchone()["total"] or 0
-        
-        conn.close()
-        
-        # Build report
-        report = {
-            "report_date": report_date,
-            "generated_at": ist_now.isoformat(),
-            "summary": {
-                "total_users": total_users,
-                "new_users_today": new_users_today,
-                "new_users_yesterday": new_users_yesterday,
-                "active_users_today": active_users_today,
-                "active_users_yesterday": active_users_yesterday,
-                "growth_percentage": round(((new_users_today - new_users_yesterday) / max(new_users_yesterday, 1)) * 100, 2)
-            },
-            "agent_usage": {
-                "total_runs_today": total_agents_run_today,
-                "total_runs_yesterday": total_agents_run_yesterday,
-                "change_percentage": round(((total_agents_run_today - total_agents_run_yesterday) / max(total_agents_run_yesterday, 1)) * 100, 2),
-                "top_agents": [dict(row) for row in top_agents_today]
-            },
-            "documents": {
-                "uploaded_today": documents_today,
-                "uploaded_yesterday": documents_yesterday,
-                "change_percentage": round(((documents_today - documents_yesterday) / max(documents_yesterday, 1)) * 100, 2)
-            },
-            "revenue": {
-                "today": {"count": payments_today_count, "total": payments_today_total},
-                "yesterday": {"count": payments_yesterday_count, "total": payments_yesterday_total},
-                "change_percentage": round(((payments_today_total - payments_yesterday_total) / max(payments_yesterday_total, 0.01)) * 100, 2),
-                "by_plan": [dict(row) for row in revenue_by_plan]
-            },
-            "campaigns": {
-                "sent_today": campaigns_sent,
-                "opened_today": campaigns_opened,
-                "clicked_today": campaigns_clicked,
-                "open_rate": round((campaigns_opened / max(campaigns_sent, 1)) * 100, 2),
-                "click_rate": round((campaigns_clicked / max(campaigns_opened, 1)) * 100, 2)
-            },
-            "insights": generate_insights({
-                "new_users_today": new_users_today,
-                "new_users_yesterday": new_users_yesterday,
-                "active_users_today": active_users_today,
-                "total_agents_run_today": total_agents_run_today,
-                "payments_today_total": payments_today_total,
-                "payments_yesterday_total": payments_yesterday_total
-            }),
-            "lawyer": LAWYER_PROFILE,
-            "website": WEBSITE_URL
-        }
-        
-        # Save report
-        conn = get_db()
-        conn.execute(
-            """INSERT OR REPLACE INTO reports (report_type, report_date, report_data) VALUES (?, ?, ?)""",
-            ("daily", report_date, json.dumps(report))
-        )
-        conn.commit()
-        conn.close()
-        
-        print(f"✅ Daily report generated successfully for {report_date}")
-        return report
-        
-    except Exception as e:
-        print(f"❌ Error generating daily report: {e}")
-        return {"error": str(e)}
-
-def generate_insights(data):
-    insights = []
-    if data["new_users_today"] > data["new_users_yesterday"]:
-        insights.append(f"📈 User growth increased by {data['new_users_today'] - data['new_users_yesterday']} new users")
-    else:
-        insights.append("📊 User growth remained stable")
-    if data["active_users_today"] > 50:
-        insights.append(f"🔥 {data['active_users_today']} active users today - strong engagement!")
-    elif data["active_users_today"] > 10:
-        insights.append(f"✅ {data['active_users_today']} active users today - steady engagement")
-    if data["total_agents_run_today"] > 100:
-        insights.append(f"🤖 {data['total_agents_run_today']} agent runs today - high platform usage")
-    if data["payments_today_total"] > data["payments_yesterday_total"]:
-        insights.append(f"💰 Revenue increased by ₹{data['payments_today_total'] - data['payments_yesterday_total']:.2f}")
-    else:
-        insights.append(f"💳 Revenue today: ₹{data['payments_today_total']:.2f}")
-    return insights
-
-# ===================================================================
-# SCHEDULER
-# ===================================================================
-scheduler = None
-
 @app.on_event("startup")
-async def startup_events():
+async def startup_event():
     asyncio.create_task(schedule_data_deletion())
 
-@app.on_event("shutdown")
-async def shutdown_events():
-    print("🛑 Shutdown complete")
-
 # ===================================================================
-# PYDANTIC MODELS
+# PYDANTIC MODELS - FIXED: Supports BOTH email AND username
 # ===================================================================
 class UserRegister(BaseModel):
-    username: EmailStr
+    username: Optional[EmailStr] = None
+    email: Optional[EmailStr] = None
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2)
     plan: str = "free"
@@ -565,47 +412,12 @@ class UserRegister(BaseModel):
     confidentiality_accepted: bool = False
 
 class UserLogin(BaseModel):
-    username: EmailStr
+    username: Optional[EmailStr] = None
+    email: Optional[EmailStr] = None
     password: str
 
-class AgentRunRequest(BaseModel):
-    agent_id: str
-    input_text: str = ""
-    file_content: Optional[str] = None
-    file_name: Optional[str] = None
-    file_type: Optional[str] = None
-
-class DomainScanRequest(BaseModel):
-    domain: str
-
-class PolicyScanRequest(BaseModel):
-    website_url: str
-
-class PaymentRequest(BaseModel):
-    amount: int
-    currency: str = "INR"
-    plan: Optional[str] = None
-
-class PaymentVerifyRequest(BaseModel):
-    razorpay_payment_id: str
-    razorpay_order_id: str
-    razorpay_signature: str
-
-class CampaignCreate(BaseModel):
-    name: str
-    type: str
-    audience: Optional[str] = None
-    content: Optional[str] = None
-    scheduled_date: Optional[str] = None
-
-class OutreachCreate(BaseModel):
-    campaign_id: int
-    client_email: str
-    client_name: str
-    notes: Optional[str] = None
-
 # ===================================================================
-# UTILITY FUNCTIONS
+# AUTH FUNCTIONS
 # ===================================================================
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
@@ -625,18 +437,129 @@ def verify_jwt(token: str) -> Optional[dict]:
     except:
         return None
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = verify_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
+# ===================================================================
+# AUTH ENDPOINTS - FIXED: Supports BOTH email AND username
+# ===================================================================
+@app.post("/auth/register")
+async def register_user(user: UserRegister):
+    """Register a new user - Supports both 'username' and 'email' fields"""
+    try:
+        # Get username from either 'username' or 'email' field
+        username = user.username or user.email
+        if not username:
+            raise HTTPException(status_code=400, detail="Email/Username is required")
+        
+        if not user.consent_given:
+            raise HTTPException(status_code=400, detail="Consent required under DPDP Act 2023 Section 4")
+        
+        if not user.confidentiality_accepted:
+            raise HTTPException(status_code=400, detail="Confidentiality agreement must be accepted")
+        
+        conn = get_db()
+        existing = conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+        if existing:
+            conn.close()
+            raise HTTPException(status_code=400, detail="Username already registered")
+        
+        password_hash = hash_password(user.password)
+        trial_start = datetime.now()
+        trial_end = trial_start + timedelta(days=FREE_TRIAL_DAYS)
+        
+        conn.execute(
+            """INSERT INTO users 
+               (username, password_hash, full_name, plan, consent_given, consent_date, 
+                confidentiality_accepted, trial_start_date, trial_end_date, is_premium) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (username, password_hash, user.full_name, "free", 1, 
+             datetime.now().isoformat(), 1, trial_start.isoformat(), trial_end.isoformat(), 1)
+        )
+        conn.commit()
+        conn.close()
+        
+        return {
+            "message": "🎉 Welcome to LexSarthi! Your 15-day free trial has started.",
+            "lawyer": "Adv. Debo",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "consent_given": True,
+            "confidentiality_accepted": True,
+            "plan": "free",
+            "trial_days": FREE_TRIAL_DAYS,
+            "trial_end_date": trial_end.isoformat(),
+            "data_retention": f"Zero Retention - Auto-deleted after {DATA_RETENTION_HOURS} hours",
+            "website": WEBSITE_URL,
+            "launch_date": LAUNCH_DATE
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/auth/login")
+async def login_user(user: UserLogin):
+    """Login user - Supports both 'username' and 'email' fields"""
+    try:
+        # Get username from either 'username' or 'email' field
+        username = user.username or user.email
+        if not username:
+            raise HTTPException(status_code=400, detail="Email/Username is required")
+        
+        conn = get_db()
+        db_user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        conn.close()
+        if not db_user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        if hash_password(user.password) != db_user["password_hash"]:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        token = create_jwt(username, db_user["role"])
+        
+        trial_end = db_user["trial_end_date"]
+        trial_active = False
+        if trial_end:
+            trial_end_date = datetime.fromisoformat(trial_end)
+            trial_active = trial_end_date > datetime.now()
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": db_user["id"],
+                "username": db_user["username"],
+                "full_name": db_user["full_name"],
+                "role": db_user["role"],
+                "plan": db_user["plan"],
+                "is_premium": db_user["is_premium"],
+                "consent_given": bool(db_user["consent_given"]),
+                "confidentiality_accepted": bool(db_user["confidentiality_accepted"]),
+                "trial_active": trial_active,
+                "trial_end_date": trial_end
+            },
+            "website": WEBSITE_URL,
+            "launch_date": LAUNCH_DATE
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/auth/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     conn = get_db()
-    user = conn.execute("SELECT * FROM users WHERE username = ?", (payload.get("sub"),)).fetchone()
+    user = conn.execute(
+        """SELECT id, username, full_name, role, plan, is_premium, premium_expiry, 
+           created_at, consent_given, consent_date, confidentiality_accepted, data_deleted 
+           FROM users WHERE id = ?""",
+        (current_user["id"],)
+    ).fetchone()
     conn.close()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-async def get_current_user_bearer(auth: HTTPAuthorizationCredentials = Depends(security)):
+# ===================================================================
+# GET CURRENT USER (for other endpoints)
+# ===================================================================
+async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security)):
     payload = verify_jwt(auth.credentials)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -647,64 +570,244 @@ async def get_current_user_bearer(auth: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme)):
-    if not token:
-        return None
-    try:
-        payload = verify_jwt(token)
-        if not payload:
-            return None
-        conn = get_db()
-        user = conn.execute("SELECT * FROM users WHERE username = ?", (payload.get("sub"),)).fetchone()
-        conn.close()
-        return dict(user) if user else None
-    except:
-        return None
-
-async def parse_document(file: UploadFile) -> tuple:
-    content = await file.read()
-    file_type = file.filename.split('.')[-1].lower() if '.' in file.filename else 'txt'
-    file_size = len(content)
-    text = ""
-    
-    file_id = str(uuid.uuid4())
-    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
-    with open(file_path, "wb") as f:
-        f.write(content)
-    
-    try:
-        if file_type == 'pdf':
-            import io
-            with pdfplumber.open(io.BytesIO(content)) as pdf:
-                for page in pdf.pages:
-                    text += page.extract_text() or ""
-        elif file_type == 'docx':
-            import io
-            doc = docx.Document(io.BytesIO(content))
-            for para in doc.paragraphs:
-                text += para.text + "\n"
-        else:
-            text = content.decode('utf-8', errors='ignore')
-    except Exception as e:
-        text = f"Could not parse document: {str(e)}"
-    
-    return text, file_type, file_size, file_path
+# ===================================================================
+# AGENTS ENDPOINT
+# ===================================================================
+@app.get("/agents")
+async def get_agents():
+    return {
+        "agents": AGENTS,
+        "count": len(AGENTS),
+        "categories": list(set(a["category"] for a in AGENTS)),
+        "lawyer": {
+            "name": "Adv. Debo",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "experience": "8+ years",
+            "qualification": "LLB - Delhi University (2016)"
+        },
+        "website": WEBSITE_URL,
+        "launch_date": LAUNCH_DATE
+    }
 
 # ===================================================================
-# LAWYER DEBO PROFILE
+# AGENTS LIST - 73 AGENTS (Full list with all agents)
 # ===================================================================
-LAWYER_PROFILE = {
-    "name": "Adv. Debo",
-    "firm": "THE ADVOCACY A LAW FIRM",
-    "website": WEBSITE_URL,
-    "experience": "8+ years",
-    "qualification": "LLB - Campus Law Centre, Delhi University (2016)",
-    "management_qualification": "IIM Sirmaur (2025)",
-    "specialization": ["Corporate Law", "IBC", "RERA", "Contract Law", "Data Privacy"],
-    "certifications": ["DPDP Act 2023 Compliance", "GDPR Certified", "AI Governance"],
-    "languages": ["English", "Hindi", "Portuguese"],
-    "review_note": "Reviewed by Adv. Debo, THE ADVOCACY A LAW FIRM."
-}
+AGENTS = [
+    # Contract Review (8)
+    {"id": "contract_review_general", "name": "General Contract Review", "icon": "📄", "description": "Review contracts with Indian Contract Act 1872 - Adv. Debo", "category": "Contract Review", "premium": False},
+    {"id": "contract_review_employment", "name": "Employment Contract Review", "icon": "👔", "description": "Review employment agreements - Adv. Debo", "category": "Contract Review", "premium": False},
+    {"id": "contract_review_commercial", "name": "Commercial Contract Review", "icon": "🤝", "description": "Review commercial contracts - Adv. Debo", "category": "Contract Review", "premium": True},
+    {"id": "contract_review_nda", "name": "NDA Review", "icon": "🔒", "description": "Review confidentiality agreements - Adv. Debo", "category": "Contract Review", "premium": False},
+    {"id": "contract_review_service", "name": "Service Agreement Review", "icon": "📋", "description": "Review service agreements - Adv. Debo", "category": "Contract Review", "premium": False},
+    {"id": "contract_review_lease", "name": "Lease Agreement Review", "icon": "🏠", "description": "Review lease agreements - Adv. Debo", "category": "Contract Review", "premium": False},
+    {"id": "contract_review_loan", "name": "Loan Agreement Review", "icon": "💰", "description": "Review loan agreements - Adv. Debo", "category": "Contract Review", "premium": False},
+    {"id": "contract_review_partnership", "name": "Partnership Review", "icon": "🤝", "description": "Review partnership agreements - Adv. Debo", "category": "Contract Review", "premium": False},
+    
+    # Drafting (7)
+    {"id": "drafting_general", "name": "General Legal Drafting", "icon": "📝", "description": "Draft legal documents - Adv. Debo", "category": "Drafting", "premium": False},
+    {"id": "drafting_employment", "name": "Employment Contract Drafting", "icon": "📋", "description": "Draft employment agreements - Adv. Debo", "category": "Drafting", "premium": False},
+    {"id": "drafting_commercial", "name": "Commercial Agreement Drafting", "icon": "🏢", "description": "Draft commercial contracts - Adv. Debo", "category": "Drafting", "premium": True},
+    {"id": "drafting_nda", "name": "NDA Drafting", "icon": "📄", "description": "Draft confidentiality agreements - Adv. Debo", "category": "Drafting", "premium": False},
+    {"id": "drafting_lease", "name": "Lease Agreement Drafting", "icon": "🏠", "description": "Draft lease agreements - Adv. Debo", "category": "Drafting", "premium": False},
+    {"id": "drafting_policy", "name": "Policy Document Drafting", "icon": "📜", "description": "Draft company policies - Adv. Debo", "category": "Drafting", "premium": False},
+    {"id": "drafting_will", "name": "Will Drafting", "icon": "📜", "description": "Draft wills - Adv. Debo", "category": "Drafting", "premium": False},
+    
+    # Compliance (8) - INCLUDING DPDP
+    {"id": "compliance_dpdp", "name": "DPDP Act Compliance", "icon": "🛡️", "description": "DPDP Act 2023 Sections 4-14 - Adv. Debo (Certified)", "category": "Compliance", "premium": False},
+    {"id": "compliance_it_rules", "name": "IT Rules 2011 Compliance", "icon": "💻", "description": "IT Rules 2011 Rules 3-8 - Adv. Debo", "category": "Compliance", "premium": False},
+    {"id": "compliance_gdpr", "name": "GDPR Compliance", "icon": "🌍", "description": "GDPR compliance - Adv. Debo (Certified)", "category": "Compliance", "premium": True},
+    {"id": "compliance_employment", "name": "Employment Law Compliance", "icon": "👷", "description": "Labour law compliance - Adv. Debo", "category": "Compliance", "premium": False},
+    {"id": "compliance_privacy", "name": "Privacy Policy Compliance", "icon": "🔒", "description": "Privacy policy analysis - Adv. Debo", "category": "Compliance", "premium": False},
+    {"id": "compliance_corporate", "name": "Corporate Compliance", "icon": "🏛️", "description": "Companies Act 2013 compliance - Adv. Debo", "category": "Compliance", "premium": True},
+    {"id": "compliance_ibc", "name": "IBC Compliance", "icon": "📋", "description": "IBC 2016 compliance - Adv. Debo (IBC Expert)", "category": "Compliance", "premium": True},
+    {"id": "compliance_rera", "name": "RERA Compliance", "icon": "🏠", "description": "RERA Act 2016 compliance - Adv. Debo (RERA Expert)", "category": "Compliance", "premium": False},
+    
+    # Litigation (6)
+    {"id": "litigation_case_assessment", "name": "Case Assessment", "icon": "⚖️", "description": "Case strength assessment - Adv. Debo", "category": "Litigation", "premium": True},
+    {"id": "litigation_pleading", "name": "Pleading Drafting", "icon": "📜", "description": "Draft court pleadings - Adv. Debo", "category": "Litigation", "premium": False},
+    {"id": "litigation_discovery", "name": "Discovery Support", "icon": "🔍", "description": "Discovery assistance - Adv. Debo", "category": "Litigation", "premium": False},
+    {"id": "litigation_settlement", "name": "Settlement Analysis", "icon": "🤝", "description": "Settlement options - Adv. Debo", "category": "Litigation", "premium": False},
+    {"id": "litigation_appeal", "name": "Appeal Support", "icon": "📈", "description": "Appeal process support - Adv. Debo", "category": "Litigation", "premium": False},
+    {"id": "litigation_arbitration", "name": "Arbitration Support", "icon": "⚖️", "description": "Arbitration clauses - Adv. Debo", "category": "Litigation", "premium": False},
+    
+    # Research (5)
+    {"id": "research_case_law", "name": "Case Law Research", "icon": "📚", "description": "Case law research - Adv. Debo", "category": "Research", "premium": False},
+    {"id": "research_statutory", "name": "Statutory Research", "icon": "📖", "description": "Statute research - Adv. Debo", "category": "Research", "premium": False},
+    {"id": "research_legal_opinion", "name": "Legal Opinion Research", "icon": "📝", "description": "Legal opinion research - Adv. Debo", "category": "Research", "premium": False},
+    {"id": "research_judgments", "name": "Judgment Analysis", "icon": "⚖️", "description": "Judgment analysis - Adv. Debo", "category": "Research", "premium": False},
+    {"id": "citation_verifier", "name": "Citation Verifier", "icon": "📚", "description": "Verify legal citations - Adv. Debo", "category": "Research", "premium": False},
+    
+    # IP (4)
+    {"id": "ip_trademark", "name": "Trademark Assistance", "icon": "™️", "description": "Trademark registration - Adv. Debo", "category": "IP", "premium": False},
+    {"id": "ip_copyright", "name": "Copyright Assistance", "icon": "©️", "description": "Copyright registration - Adv. Debo", "category": "IP", "premium": False},
+    {"id": "ip_patent", "name": "Patent Assistance", "icon": "🔬", "description": "Patent applications - Adv. Debo", "category": "IP", "premium": True},
+    {"id": "ip_licensing", "name": "IP Licensing Review", "icon": "📄", "description": "IP licensing - Adv. Debo", "category": "IP", "premium": False},
+    
+    # Corporate (4)
+    {"id": "corporate_incorporation", "name": "Company Incorporation", "icon": "🏢", "description": "Company formation - Adv. Debo", "category": "Corporate", "premium": False},
+    {"id": "corporate_governance", "name": "Corporate Governance", "icon": "🏛️", "description": "Governance review - Adv. Debo", "category": "Corporate", "premium": False},
+    {"id": "corporate_merger", "name": "M&A Due Diligence", "icon": "📊", "description": "M&A due diligence - Adv. Debo", "category": "Corporate", "premium": True},
+    {"id": "corporate_board", "name": "Board Meeting Support", "icon": "👥", "description": "Board meeting support - Adv. Debo", "category": "Corporate", "premium": False},
+    
+    # Tax (3)
+    {"id": "tax_compliance", "name": "Tax Compliance Review", "icon": "💰", "description": "Tax compliance - Adv. Debo", "category": "Tax", "premium": False},
+    {"id": "tax_planning", "name": "Tax Planning Advice", "icon": "📊", "description": "Tax planning - Adv. Debo", "category": "Tax", "premium": False},
+    {"id": "tax_gst", "name": "GST Compliance", "icon": "📋", "description": "GST compliance - Adv. Debo", "category": "Tax", "premium": False},
+    
+    # Real Estate (3)
+    {"id": "real_estate_purchase", "name": "Property Purchase Review", "icon": "🏠", "description": "Property purchase - Adv. Debo (RERA Expert)", "category": "Real Estate", "premium": False},
+    {"id": "real_estate_lease", "name": "Property Lease Review", "icon": "🏢", "description": "Lease review - Adv. Debo", "category": "Real Estate", "premium": False},
+    {"id": "real_estate_due_diligence", "name": "Property Due Diligence", "icon": "🔍", "description": "Property due diligence - Adv. Debo", "category": "Real Estate", "premium": True},
+    
+    # Family (3)
+    {"id": "family_divorce", "name": "Divorce Support", "icon": "💔", "description": "Divorce support - Adv. Debo", "category": "Family", "premium": False},
+    {"id": "family_custody", "name": "Child Custody Support", "icon": "👶", "description": "Child custody - Adv. Debo", "category": "Family", "premium": False},
+    {"id": "family_maintenance", "name": "Maintenance Support", "icon": "💰", "description": "Maintenance support - Adv. Debo", "category": "Family", "premium": False},
+    
+    # Criminal (4)
+    {"id": "criminal_defense", "name": "Criminal Defense Support", "icon": "⚖️", "description": "Criminal defense - Adv. Debo", "category": "Criminal", "premium": False},
+    {"id": "criminal_bail", "name": "Bail Application", "icon": "🔓", "description": "Bail applications - Adv. Debo", "category": "Criminal", "premium": False},
+    {"id": "criminal_anticipatory_bail", "name": "Anticipatory Bail", "icon": "🛡️", "description": "Anticipatory bail - Adv. Debo", "category": "Criminal", "premium": True},
+    {"id": "criminal_fir", "name": "FIR Drafting", "icon": "📋", "description": "FIR drafting - Adv. Debo", "category": "Criminal", "premium": False},
+    
+    # Employment (3)
+    {"id": "employment_discrimination", "name": "Discrimination Claims", "icon": "⚖️", "description": "Discrimination claims - Adv. Debo", "category": "Employment", "premium": False},
+    {"id": "employment_harassment", "name": "Harassment Claims", "icon": "⚠️", "description": "Harassment claims - Adv. Debo", "category": "Employment", "premium": False},
+    {"id": "employment_termination", "name": "Termination Review", "icon": "❌", "description": "Termination review - Adv. Debo", "category": "Employment", "premium": False},
+    
+    # Cyber (3)
+    {"id": "cyber_privacy", "name": "Privacy & Data Protection", "icon": "🛡️", "description": "Privacy advice - Adv. Debo (Certified)", "category": "Cyber", "premium": False},
+    {"id": "cyber_incident", "name": "Cyber Incident Response", "icon": "🚨", "description": "Cyber incident - Adv. Debo", "category": "Cyber", "premium": False},
+    {"id": "cyber_compliance", "name": "Cyber Law Compliance", "icon": "🔒", "description": "Cyber compliance - Adv. Debo", "category": "Cyber", "premium": True},
+    
+    # Due Diligence (3)
+    {"id": "due_diligence_legal", "name": "Legal Due Diligence", "icon": "✅", "description": "Legal due diligence - Adv. Debo", "category": "Due Diligence", "premium": False},
+    {"id": "due_diligence_compliance", "name": "Compliance Due Diligence", "icon": "📋", "description": "Compliance due diligence - Adv. Debo", "category": "Due Diligence", "premium": True},
+    {"id": "due_diligence_contract", "name": "Contract Due Diligence", "icon": "📄", "description": "Contract due diligence - Adv. Debo", "category": "Due Diligence", "premium": False},
+    
+    # Campaign & Outreach (4)
+    {"id": "email_campaign", "name": "Email Campaign Manager", "icon": "📧", "description": "Automated legal newsletters and client updates - Adv. Debo", "category": "Campaigns", "premium": False},
+    {"id": "client_engagement", "name": "Client Engagement AI", "icon": "💬", "description": "AI-powered client communication and follow-ups - Adv. Debo", "category": "Campaigns", "premium": False},
+    {"id": "legal_alerts", "name": "Legal Alerts Engine", "icon": "🔔", "description": "Real-time regulatory updates and case law alerts - Adv. Debo", "category": "Campaigns", "premium": True},
+    {"id": "market_intelligence", "name": "Market Intelligence AI", "icon": "📊", "description": "Legal trend analysis and competitive intelligence - Adv. Debo", "category": "Campaigns", "premium": True},
+    
+    # Domain Intelligence (2)
+    {"id": "domain_intelligence", "name": "Domain Intelligence", "icon": "🌐", "description": "Scan domains with legal due diligence - WHOIS, SSL, DNS - Adv. Debo", "category": "Domain", "premium": False},
+    {"id": "domain_agreement", "name": "Domain Agreement AI", "icon": "📜", "description": "Generate domain purchase agreements and due diligence reports - Adv. Debo", "category": "Domain", "premium": False},
+    
+    # Policy & Translation (3)
+    {"id": "policy_scanner", "name": "Policy Scanner", "icon": "🔎", "description": "Policy compliance scanning - Adv. Debo", "category": "Compliance", "premium": False},
+    {"id": "legal_translation", "name": "Legal Translation", "icon": "🌐", "description": "Legal translation - Adv. Debo", "category": "Drafting", "premium": False},
+    {"id": "stamp_duty_calculator", "name": "Stamp Duty Calculator", "icon": "📊", "description": "Stamp duty calculation - Adv. Debo", "category": "Tax", "premium": False}
+]
+
+# ===================================================================
+# RUN AGENT ENDPOINT
+# ===================================================================
+@app.post("/run-agent")
+async def run_agent_endpoint(
+    agent_run: AgentRunRequest,
+    current_user: dict = Depends(get_current_user_bearer)
+):
+    agent = next((a for a in AGENTS if a["id"] == agent_run.agent_id), None)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent {agent_run.agent_id} not found")
+    
+    if agent.get("premium", False):
+        is_premium = current_user.get("is_premium", 0)
+        plan = current_user.get("plan", "free")
+        if plan not in ["free", "starter"] and not is_premium:
+            raise HTTPException(status_code=403, detail="Premium agent. Upgrade to Professional or Firm plan.")
+    
+    input_text = agent_run.input_text
+    if agent_run.file_content:
+        input_text += f"\n\nDocument: {agent_run.file_name}\n{agent_run.file_content[:5000]}"
+    
+    prompt = f"""
+You are Adv. Debo from THE ADVOCACY A LAW FIRM.
+EXPERIENCE: 8+ years
+QUALIFICATION: LLB - Delhi University (2016)
+
+LEGAL REFERENCE:
+{LEGAL_REFERENCE_LIBRARY}
+
+AGENT: {agent['name']}
+AGENT DESCRIPTION: {agent['description']}
+
+INPUT:
+{input_text}
+
+PROVIDE:
+1. executive_summary: Professional summary
+2. findings: Legal findings
+3. recommendations: Specific actions
+4. legal_basis: Relevant laws
+5. disclaimer: "AI-assisted - verify with advocate"
+"""
+    
+    result = {
+        "executive_summary": f"Analysis for {agent['name']} completed by Adv. Debo.",
+        "lawyer": {
+            "name": "Adv. Debo",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "experience": "8+ years",
+            "qualification": "LLB - Delhi University (2016)",
+            "review_date": datetime.now().isoformat()
+        },
+        "findings": ["Document processed with legal references"],
+        "recommendations": ["Verify with a licensed advocate"],
+        "risk_assessment": "Medium",
+        "legal_basis": ["DPDP Act 2023", "IT Rules 2011", "Indian Contract Act 1872"],
+        "disclaimer": "AI-assisted analysis - verify with licensed advocate",
+        "zero_retention": f"Data will be auto-deleted after {DATA_RETENTION_HOURS} hours",
+        "launch_date": LAUNCH_DATE,
+        "website": WEBSITE_URL
+    }
+    
+    if OPENROUTER_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": OPENROUTER_MODEL,
+                        "messages": [
+                            {"role": "system", "content": f"You are Adv. Debo from THE ADVOCACY A LAW FIRM. Website: {WEBSITE_URL}. Launch Date: 20 June 2026. Respond with valid JSON. NO HALLUCINATION."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.1,
+                        "response_format": {"type": "json_object"}
+                    }
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    result = json.loads(data["choices"][0]["message"]["content"])
+                    result["lawyer"] = {
+                        "name": "Adv. Debo",
+                        "firm": "THE ADVOCACY A LAW FIRM",
+                        "experience": "8+ years",
+                        "qualification": "LLB - Delhi University (2016)",
+                        "review_date": datetime.now().isoformat()
+                    }
+                    result["website"] = WEBSITE_URL
+                    result["launch_date"] = LAUNCH_DATE
+                    result["zero_retention"] = f"Data will be auto-deleted after {DATA_RETENTION_HOURS} hours"
+        except Exception as e:
+            result["ai_error"] = str(e)
+    
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO history (user_id, agent, input_text, result_json) VALUES (?, ?, ?, ?)",
+        (current_user["id"], agent_run.agent_id, input_text[:1000], json.dumps(result))
+    )
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse(result)
 
 # ===================================================================
 # LEGAL REFERENCE LIBRARY
@@ -823,722 +926,14 @@ PROVIDE:
 """
 
 # ===================================================================
-# AGENTS LIST - 73 AGENTS (FIXED SYNTAX)
+# AGENT RUN REQUEST MODEL
 # ===================================================================
-AGENTS = [
-    # Contract Review
-    {"id": "contract_review_general", "name": "General Contract Review", "icon": "📄", "description": "Review contracts with Indian Contract Act 1872 - Adv. Debo", "category": "Contract Review", "premium": False},
-    {"id": "contract_review_employment", "name": "Employment Contract Review", "icon": "👔", "description": "Review employment agreements - Adv. Debo", "category": "Contract Review", "premium": False},
-    {"id": "contract_review_commercial", "name": "Commercial Contract Review", "icon": "🤝", "description": "Review commercial contracts - Adv. Debo", "category": "Contract Review", "premium": True},
-    {"id": "contract_review_nda", "name": "NDA Review", "icon": "🔒", "description": "Review confidentiality agreements - Adv. Debo", "category": "Contract Review", "premium": False},
-    {"id": "contract_review_service", "name": "Service Agreement Review", "icon": "📋", "description": "Review service agreements - Adv. Debo", "category": "Contract Review", "premium": False},
-    {"id": "contract_review_lease", "name": "Lease Agreement Review", "icon": "🏠", "description": "Review lease agreements - Adv. Debo", "category": "Contract Review", "premium": False},
-    {"id": "contract_review_loan", "name": "Loan Agreement Review", "icon": "💰", "description": "Review loan agreements - Adv. Debo", "category": "Contract Review", "premium": False},
-    {"id": "contract_review_partnership", "name": "Partnership Review", "icon": "🤝", "description": "Review partnership agreements - Adv. Debo", "category": "Contract Review", "premium": False},
-    
-    # Drafting
-    {"id": "drafting_general", "name": "General Legal Drafting", "icon": "📝", "description": "Draft legal documents - Adv. Debo", "category": "Drafting", "premium": False},
-    {"id": "drafting_employment", "name": "Employment Contract Drafting", "icon": "📋", "description": "Draft employment agreements - Adv. Debo", "category": "Drafting", "premium": False},
-    {"id": "drafting_commercial", "name": "Commercial Agreement Drafting", "icon": "🏢", "description": "Draft commercial contracts - Adv. Debo", "category": "Drafting", "premium": True},
-    {"id": "drafting_nda", "name": "NDA Drafting", "icon": "📄", "description": "Draft confidentiality agreements - Adv. Debo", "category": "Drafting", "premium": False},
-    {"id": "drafting_lease", "name": "Lease Agreement Drafting", "icon": "🏠", "description": "Draft lease agreements - Adv. Debo", "category": "Drafting", "premium": False},
-    {"id": "drafting_policy", "name": "Policy Document Drafting", "icon": "📜", "description": "Draft company policies - Adv. Debo", "category": "Drafting", "premium": False},
-    {"id": "drafting_will", "name": "Will Drafting", "icon": "📜", "description": "Draft wills - Adv. Debo", "category": "Drafting", "premium": False},
-    
-    # Compliance
-    {"id": "compliance_dpdp", "name": "DPDP Act Compliance", "icon": "🛡️", "description": "DPDP Act 2023 Sections 4-14 - Adv. Debo (Certified)", "category": "Compliance", "premium": False},
-    {"id": "compliance_it_rules", "name": "IT Rules 2011 Compliance", "icon": "💻", "description": "IT Rules 2011 Rules 3-8 - Adv. Debo", "category": "Compliance", "premium": False},
-    {"id": "compliance_gdpr", "name": "GDPR Compliance", "icon": "🌍", "description": "GDPR compliance - Adv. Debo (Certified)", "category": "Compliance", "premium": True},
-    {"id": "compliance_employment", "name": "Employment Law Compliance", "icon": "👷", "description": "Labour law compliance - Adv. Debo", "category": "Compliance", "premium": False},
-    {"id": "compliance_privacy", "name": "Privacy Policy Compliance", "icon": "🔒", "description": "Privacy policy analysis - Adv. Debo", "category": "Compliance", "premium": False},
-    {"id": "compliance_corporate", "name": "Corporate Compliance", "icon": "🏛️", "description": "Companies Act 2013 compliance - Adv. Debo", "category": "Compliance", "premium": True},
-    {"id": "compliance_ibc", "name": "IBC Compliance", "icon": "📋", "description": "IBC 2016 compliance - Adv. Debo (IBC Expert)", "category": "Compliance", "premium": True},
-    {"id": "compliance_rera", "name": "RERA Compliance", "icon": "🏠", "description": "RERA Act 2016 compliance - Adv. Debo (RERA Expert)", "category": "Compliance", "premium": False},
-    
-    # Litigation
-    {"id": "litigation_case_assessment", "name": "Case Assessment", "icon": "⚖️", "description": "Case strength assessment - Adv. Debo", "category": "Litigation", "premium": True},
-    {"id": "litigation_pleading", "name": "Pleading Drafting", "icon": "📜", "description": "Draft court pleadings - Adv. Debo", "category": "Litigation", "premium": False},
-    {"id": "litigation_discovery", "name": "Discovery Support", "icon": "🔍", "description": "Discovery assistance - Adv. Debo", "category": "Litigation", "premium": False},
-    {"id": "litigation_settlement", "name": "Settlement Analysis", "icon": "🤝", "description": "Settlement options - Adv. Debo", "category": "Litigation", "premium": False},
-    {"id": "litigation_appeal", "name": "Appeal Support", "icon": "📈", "description": "Appeal process support - Adv. Debo", "category": "Litigation", "premium": False},
-    {"id": "litigation_arbitration", "name": "Arbitration Support", "icon": "⚖️", "description": "Arbitration clauses - Adv. Debo", "category": "Litigation", "premium": False},
-    
-    # Research
-    {"id": "research_case_law", "name": "Case Law Research", "icon": "📚", "description": "Case law research - Adv. Debo", "category": "Research", "premium": False},
-    {"id": "research_statutory", "name": "Statutory Research", "icon": "📖", "description": "Statute research - Adv. Debo", "category": "Research", "premium": False},
-    {"id": "research_legal_opinion", "name": "Legal Opinion Research", "icon": "📝", "description": "Legal opinion research - Adv. Debo", "category": "Research", "premium": False},
-    {"id": "research_judgments", "name": "Judgment Analysis", "icon": "⚖️", "description": "Judgment analysis - Adv. Debo", "category": "Research", "premium": False},
-    {"id": "citation_verifier", "name": "Citation Verifier", "icon": "📚", "description": "Verify legal citations - Adv. Debo", "category": "Research", "premium": False},
-    
-    # IP
-    {"id": "ip_trademark", "name": "Trademark Assistance", "icon": "™️", "description": "Trademark registration - Adv. Debo", "category": "IP", "premium": False},
-    {"id": "ip_copyright", "name": "Copyright Assistance", "icon": "©️", "description": "Copyright registration - Adv. Debo", "category": "IP", "premium": False},
-    {"id": "ip_patent", "name": "Patent Assistance", "icon": "🔬", "description": "Patent applications - Adv. Debo", "category": "IP", "premium": True},
-    {"id": "ip_licensing", "name": "IP Licensing Review", "icon": "📄", "description": "IP licensing - Adv. Debo", "category": "IP", "premium": False},
-    
-    # Corporate
-    {"id": "corporate_incorporation", "name": "Company Incorporation", "icon": "🏢", "description": "Company formation - Adv. Debo", "category": "Corporate", "premium": False},
-    {"id": "corporate_governance", "name": "Corporate Governance", "icon": "🏛️", "description": "Governance review - Adv. Debo", "category": "Corporate", "premium": False},
-    {"id": "corporate_merger", "name": "M&A Due Diligence", "icon": "📊", "description": "M&A due diligence - Adv. Debo", "category": "Corporate", "premium": True},
-    {"id": "corporate_board", "name": "Board Meeting Support", "icon": "👥", "description": "Board meeting support - Adv. Debo", "category": "Corporate", "premium": False},
-    
-    # Tax
-    {"id": "tax_compliance", "name": "Tax Compliance Review", "icon": "💰", "description": "Tax compliance - Adv. Debo", "category": "Tax", "premium": False},
-    {"id": "tax_planning", "name": "Tax Planning Advice", "icon": "📊", "description": "Tax planning - Adv. Debo", "category": "Tax", "premium": False},
-    {"id": "tax_gst", "name": "GST Compliance", "icon": "📋", "description": "GST compliance - Adv. Debo", "category": "Tax", "premium": False},
-    
-    # Real Estate
-    {"id": "real_estate_purchase", "name": "Property Purchase Review", "icon": "🏠", "description": "Property purchase - Adv. Debo (RERA Expert)", "category": "Real Estate", "premium": False},
-    {"id": "real_estate_lease", "name": "Property Lease Review", "icon": "🏢", "description": "Lease review - Adv. Debo", "category": "Real Estate", "premium": False},
-    {"id": "real_estate_due_diligence", "name": "Property Due Diligence", "icon": "🔍", "description": "Property due diligence - Adv. Debo", "category": "Real Estate", "premium": True},
-    
-    # Family
-    {"id": "family_divorce", "name": "Divorce Support", "icon": "💔", "description": "Divorce support - Adv. Debo", "category": "Family", "premium": False},
-    {"id": "family_custody", "name": "Child Custody Support", "icon": "👶", "description": "Child custody - Adv. Debo", "category": "Family", "premium": False},
-    {"id": "family_maintenance", "name": "Maintenance Support", "icon": "💰", "description": "Maintenance support - Adv. Debo", "category": "Family", "premium": False},
-    
-    # Criminal
-    {"id": "criminal_defense", "name": "Criminal Defense Support", "icon": "⚖️", "description": "Criminal defense - Adv. Debo", "category": "Criminal", "premium": False},
-    {"id": "criminal_bail", "name": "Bail Application", "icon": "🔓", "description": "Bail applications - Adv. Debo", "category": "Criminal", "premium": False},
-    {"id": "criminal_anticipatory_bail", "name": "Anticipatory Bail", "icon": "🛡️", "description": "Anticipatory bail - Adv. Debo", "category": "Criminal", "premium": True},
-    {"id": "criminal_fir", "name": "FIR Drafting", "icon": "📋", "description": "FIR drafting - Adv. Debo", "category": "Criminal", "premium": False},
-    
-    # Employment
-    {"id": "employment_discrimination", "name": "Discrimination Claims", "icon": "⚖️", "description": "Discrimination claims - Adv. Debo", "category": "Employment", "premium": False},
-    {"id": "employment_harassment", "name": "Harassment Claims", "icon": "⚠️", "description": "Harassment claims - Adv. Debo", "category": "Employment", "premium": False},
-    {"id": "employment_termination", "name": "Termination Review", "icon": "❌", "description": "Termination review - Adv. Debo", "category": "Employment", "premium": False},
-    
-    # Cyber
-    {"id": "cyber_privacy", "name": "Privacy & Data Protection", "icon": "🛡️", "description": "Privacy advice - Adv. Debo (Certified)", "category": "Cyber", "premium": False},
-    {"id": "cyber_incident", "name": "Cyber Incident Response", "icon": "🚨", "description": "Cyber incident - Adv. Debo", "category": "Cyber", "premium": False},
-    {"id": "cyber_compliance", "name": "Cyber Law Compliance", "icon": "🔒", "description": "Cyber compliance - Adv. Debo", "category": "Cyber", "premium": True},
-    
-    # Due Diligence
-    {"id": "due_diligence_legal", "name": "Legal Due Diligence", "icon": "✅", "description": "Legal due diligence - Adv. Debo", "category": "Due Diligence", "premium": False},
-    {"id": "due_diligence_compliance", "name": "Compliance Due Diligence", "icon": "📋", "description": "Compliance due diligence - Adv. Debo", "category": "Due Diligence", "premium": True},
-    {"id": "due_diligence_contract", "name": "Contract Due Diligence", "icon": "📄", "description": "Contract due diligence - Adv. Debo", "category": "Due Diligence", "premium": False},
-    
-    # Campaign & Outreach
-    {"id": "email_campaign", "name": "Email Campaign Manager", "icon": "📧", "description": "Automated legal newsletters and client updates - Adv. Debo", "category": "Campaigns", "premium": False},
-    {"id": "client_engagement", "name": "Client Engagement AI", "icon": "💬", "description": "AI-powered client communication and follow-ups - Adv. Debo", "category": "Campaigns", "premium": False},
-    {"id": "legal_alerts", "name": "Legal Alerts Engine", "icon": "🔔", "description": "Real-time regulatory updates and case law alerts - Adv. Debo", "category": "Campaigns", "premium": True},
-    {"id": "market_intelligence", "name": "Market Intelligence AI", "icon": "📊", "description": "Legal trend analysis and competitive intelligence - Adv. Debo", "category": "Campaigns", "premium": True},
-    
-    # Domain Intelligence
-    {"id": "domain_intelligence", "name": "Domain Intelligence", "icon": "🌐", "description": "Scan domains with legal due diligence - WHOIS, SSL, DNS - Adv. Debo", "category": "Domain", "premium": False},
-    {"id": "domain_agreement", "name": "Domain Agreement AI", "icon": "📜", "description": "Generate domain purchase agreements and due diligence reports - Adv. Debo", "category": "Domain", "premium": False},
-    
-    # Policy & Translation
-    {"id": "policy_scanner", "name": "Policy Scanner", "icon": "🔎", "description": "Policy compliance scanning - Adv. Debo", "category": "Compliance", "premium": False},
-    {"id": "legal_translation", "name": "Legal Translation", "icon": "🌐", "description": "Legal translation - Adv. Debo", "category": "Drafting", "premium": False},
-    {"id": "stamp_duty_calculator", "name": "Stamp Duty Calculator", "icon": "📊", "description": "Stamp duty calculation - Adv. Debo", "category": "Tax", "premium": False}
-]
-
-# ===================================================================
-# AUTH ENDPOINTS
-# ===================================================================
-@app.post("/auth/register")
-async def register_user(user: UserRegister):
-    if not user.consent_given:
-        raise HTTPException(status_code=400, detail="Consent required under DPDP Act 2023 Section 4")
-    
-    if not user.confidentiality_accepted:
-        raise HTTPException(status_code=400, detail="Confidentiality agreement must be accepted")
-    
-    conn = get_db()
-    existing = conn.execute("SELECT id FROM users WHERE username = ?", (user.username,)).fetchone()
-    if existing:
-        conn.close()
-        raise HTTPException(status_code=400, detail="Username already registered")
-    
-    password_hash = hash_password(user.password)
-    
-    trial_start = datetime.now()
-    trial_end = trial_start + timedelta(days=FREE_TRIAL_DAYS)
-    
-    conn.execute(
-        """INSERT INTO users 
-           (username, password_hash, full_name, plan, consent_given, consent_date, 
-            confidentiality_accepted, trial_start_date, trial_end_date, is_premium) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (user.username, password_hash, user.full_name, "free", 1, 
-         datetime.now().isoformat(), 1, trial_start.isoformat(), trial_end.isoformat(), 1)
-    )
-    conn.commit()
-    conn.close()
-    
-    return {
-        "message": "🎉 Welcome to LexSarthi! Your 15-day free trial has started.",
-        "lawyer": "Adv. Debo",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "consent_given": True,
-        "confidentiality_accepted": True,
-        "plan": "free",
-        "trial_days": FREE_TRIAL_DAYS,
-        "trial_end_date": trial_end.isoformat(),
-        "data_retention": f"Zero Retention - Auto-deleted after {DATA_RETENTION_HOURS} hours",
-        "website": WEBSITE_URL,
-        "launch_date": LAUNCH_DATE
-    }
-
-@app.post("/auth/login")
-async def login_user(user: UserLogin):
-    conn = get_db()
-    db_user = conn.execute("SELECT * FROM users WHERE username = ?", (user.username,)).fetchone()
-    conn.close()
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    if hash_password(user.password) != db_user["password_hash"]:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token = create_jwt(user.username, db_user["role"])
-    
-    trial_end = db_user["trial_end_date"]
-    trial_active = False
-    if trial_end:
-        trial_end_date = datetime.fromisoformat(trial_end)
-        trial_active = trial_end_date > datetime.now()
-    
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": db_user["id"],
-            "username": db_user["username"],
-            "full_name": db_user["full_name"],
-            "role": db_user["role"],
-            "plan": db_user["plan"],
-            "is_premium": db_user["is_premium"],
-            "consent_given": bool(db_user["consent_given"]),
-            "confidentiality_accepted": bool(db_user["confidentiality_accepted"]),
-            "trial_active": trial_active,
-            "trial_end_date": trial_end
-        },
-        "website": WEBSITE_URL,
-        "launch_date": LAUNCH_DATE
-    }
-
-@app.get("/auth/me")
-async def get_current_user_info(current_user: dict = Depends(get_current_user)):
-    conn = get_db()
-    user = conn.execute(
-        """SELECT id, username, full_name, role, plan, is_premium, premium_expiry, 
-           created_at, consent_given, consent_date, confidentiality_accepted, data_deleted 
-           FROM users WHERE id = ?""",
-        (current_user["id"],)
-    ).fetchone()
-    conn.close()
-    return dict(user)
-
-# ===================================================================
-# AGENTS ENDPOINT
-# ===================================================================
-@app.get("/agents")
-async def get_agents():
-    return {
-        "agents": AGENTS,
-        "count": len(AGENTS),
-        "categories": list(set(a["category"] for a in AGENTS)),
-        "lawyer": {
-            "name": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "experience": "8+ years",
-            "qualification": "LLB - Delhi University (2016)"
-        },
-        "website": WEBSITE_URL,
-        "launch_date": LAUNCH_DATE
-    }
-
-@app.get("/lawyer-profile")
-async def get_lawyer_profile():
-    return {
-        "lawyer": LAWYER_PROFILE,
-        "website": WEBSITE_URL,
-        "launch_date": LAUNCH_DATE
-    }
-
-# ===================================================================
-# RUN AGENT - FIXED SYNTAX ERROR
-# ===================================================================
-@app.post("/run-agent")
-async def run_agent_endpoint(
-    agent_run: AgentRunRequest,
-    current_user: dict = Depends(get_current_user_bearer)
-):
-    agent = next((a for a in AGENTS if a["id"] == agent_run.agent_id), None)
-    if not agent:
-        raise HTTPException(status_code=404, detail=f"Agent {agent_run.agent_id} not found")
-    
-    if agent.get("premium", False):
-        is_premium = current_user.get("is_premium", 0)
-        plan = current_user.get("plan", "free")
-        if plan not in ["free", "starter"] and not is_premium:
-            raise HTTPException(status_code=403, detail="Premium agent. Upgrade to Professional or Firm plan.")
-    
-    input_text = agent_run.input_text
-    if agent_run.file_content:
-        input_text += f"\n\nDocument: {agent_run.file_name}\n{agent_run.file_content[:5000]}"
-    
-    prompt_template = AGENT_PROMPTS.get(agent_run.agent_id, DEFAULT_AGENT_PROMPT)
-    
-    prompt = prompt_template.format(
-        legal_reference=LEGAL_REFERENCE_LIBRARY,
-        input_text=input_text
-    )
-    
-    result = {
-        "executive_summary": f"Analysis for {agent['name']} completed by Adv. Debo.",
-        "lawyer": {
-            "name": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "experience": "8+ years",
-            "qualification": "LLB - Delhi University (2016)",
-            "review_date": datetime.now().isoformat()
-        },
-        "findings": ["Document processed with legal references"],
-        "recommendations": ["Verify with a licensed advocate"],
-        "risk_assessment": "Medium",
-        "legal_basis": ["DPDP Act 2023", "IT Rules 2011", "Indian Contract Act 1872"],
-        "disclaimer": "AI-assisted analysis - verify with licensed advocate",
-        "zero_retention": f"Data will be auto-deleted after {DATA_RETENTION_HOURS} hours",
-        "launch_date": LAUNCH_DATE,
-        "website": WEBSITE_URL
-    }
-    
-    if OPENROUTER_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": OPENROUTER_MODEL,
-                        "messages": [
-                            {"role": "system", "content": f"You are Adv. Debo from THE ADVOCACY A LAW FIRM. Website: {WEBSITE_URL}. Launch Date: 20 June 2026. Respond with valid JSON. NO HALLUCINATION."},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "temperature": 0.1,
-                        "response_format": {"type": "json_object"}
-                    }
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    result = json.loads(data["choices"][0]["message"]["content"])
-                    result["lawyer"] = {
-                        "name": "Adv. Debo",
-                        "firm": "THE ADVOCACY A LAW FIRM",
-                        "experience": "8+ years",
-                        "qualification": "LLB - Delhi University (2016)",
-                        "review_date": datetime.now().isoformat()
-                    }
-                    result["website"] = WEBSITE_URL
-                    result["launch_date"] = LAUNCH_DATE
-                    result["zero_retention"] = f"Data will be auto-deleted after {DATA_RETENTION_HOURS} hours"
-        except Exception as e:
-            result["ai_error"] = str(e)
-    
-    conn = get_db()
-    conn.execute(
-        "INSERT INTO history (user_id, agent, input_text, result_json) VALUES (?, ?, ?, ?)",
-        (current_user["id"], agent_run.agent_id, input_text[:1000], json.dumps(result))
-    )
-    conn.commit()
-    conn.close()
-    
-    return JSONResponse(result)
-
-# ===================================================================
-# FILE UPLOAD
-# ===================================================================
-@app.post("/upload")
-async def upload_document(
-    file: UploadFile = File(...),
-    agent_id: Optional[str] = Form(None),
-    current_user: dict = Depends(get_current_user_bearer)
-):
-    content, file_type, file_size, file_path = await parse_document(file)
-    
-    conn = get_db()
-    result = conn.execute(
-        """INSERT INTO documents 
-           (user_id, filename, file_path, file_type, file_size, content, agent_used, status) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
-        (current_user["id"], file.filename, file_path, file_type, file_size, content[:10000], agent_id, "uploaded")
-    ).fetchone()
-    doc_id = result["id"]
-    conn.commit()
-    conn.close()
-    
-    return {
-        "message": "Document uploaded successfully",
-        "document_id": doc_id,
-        "filename": file.filename,
-        "file_type": file_type,
-        "file_size": file_size,
-        "retention": f"Zero Retention - Auto-deleted after {DATA_RETENTION_HOURS} hours",
-        "website": WEBSITE_URL,
-        "launch_date": LAUNCH_DATE
-    }
-
-# ===================================================================
-# PAYMENT ENDPOINTS - ₹2 TEST PAYMENT
-# ===================================================================
-@app.post("/payment/create-order")
-async def create_payment_order(
-    payment_request: PaymentRequest,
-    current_user: dict = Depends(get_current_user_bearer)
-):
-    try:
-        is_starter = payment_request.amount == 200
-        
-        if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
-            order_id = f"test_order_{uuid.uuid4().hex[:12]}"
-            return {
-                "order_id": order_id,
-                "amount": payment_request.amount,
-                "currency": payment_request.currency,
-                "test_mode": True,
-                "key_id": "test_key",
-                "plan": payment_request.plan or "starter",
-                "is_starter": is_starter,
-                "message": "Test mode - ₹2 Starter Pack simulated",
-                "website": WEBSITE_URL,
-                "launch_date": LAUNCH_DATE
-            }
-        
-        import razorpay
-        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-        
-        order_data = {
-            "amount": payment_request.amount,
-            "currency": payment_request.currency,
-            "receipt": f"receipt_{uuid.uuid4().hex[:8]}",
-            "notes": {
-                "user_id": current_user["id"], 
-                "plan": payment_request.plan or "starter",
-                "is_starter": is_starter
-            },
-            "payment_capture": 1
-        }
-        
-        order = client.order.create(data=order_data)
-        
-        conn = get_db()
-        conn.execute(
-            """INSERT INTO payments (user_id, order_id, amount, currency, plan, status, receipt) 
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (current_user["id"], order["id"], order["amount"], order["currency"], 
-             payment_request.plan or "starter", "created", order["receipt"])
-        )
-        conn.commit()
-        conn.close()
-        
-        return {
-            "order_id": order["id"],
-            "amount": order["amount"],
-            "currency": order["currency"],
-            "key_id": RAZORPAY_KEY_ID,
-            "test_mode": False,
-            "plan": payment_request.plan or "starter",
-            "is_starter": is_starter,
-            "website": WEBSITE_URL,
-            "launch_date": LAUNCH_DATE
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/payment/verify")
-async def verify_payment(
-    verify_request: PaymentVerifyRequest,
-    current_user: dict = Depends(get_current_user_bearer)
-):
-    try:
-        if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
-            conn = get_db()
-            conn.execute(
-                """UPDATE payments 
-                   SET payment_id = ?, status = 'paid', updated_at = CURRENT_TIMESTAMP 
-                   WHERE order_id = ? AND user_id = ?""",
-                (verify_request.razorpay_payment_id, verify_request.razorpay_order_id, current_user["id"])
-            )
-            conn.commit()
-            conn.close()
-            
-            return {
-                "verified": True,
-                "test_mode": True,
-                "message": "✅ ₹2 Payment Successful! Welcome to LexSarthi!",
-                "website": WEBSITE_URL,
-                "launch_date": LAUNCH_DATE
-            }
-        
-        import razorpay
-        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-        
-        params = {
-            'razorpay_order_id': verify_request.razorpay_order_id,
-            'razorpay_payment_id': verify_request.razorpay_payment_id,
-            'razorpay_signature': verify_request.razorpay_signature
-        }
-        
-        client.utility.verify_payment_signature(params)
-        
-        conn = get_db()
-        conn.execute(
-            """UPDATE payments 
-               SET payment_id = ?, status = 'paid', updated_at = CURRENT_TIMESTAMP 
-               WHERE order_id = ? AND user_id = ?""",
-            (verify_request.razorpay_payment_id, verify_request.razorpay_order_id, current_user["id"])
-        )
-        conn.commit()
-        conn.close()
-        
-        return {
-            "verified": True,
-            "payment_id": verify_request.razorpay_payment_id,
-            "message": "✅ ₹2 Payment Successful! Welcome to LexSarthi!",
-            "website": WEBSITE_URL,
-            "launch_date": LAUNCH_DATE
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail="Payment verification failed")
-
-# ===================================================================
-# CAMPAIGN ENDPOINTS
-# ===================================================================
-@app.post("/campaigns")
-async def create_campaign(
-    campaign: CampaignCreate,
-    current_user: dict = Depends(get_current_user_bearer)
-):
-    conn = get_db()
-    result = conn.execute(
-        """INSERT INTO campaigns 
-           (user_id, name, type, audience, content, scheduled_date, status) 
-           VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id""",
-        (current_user["id"], campaign.name, campaign.type, campaign.audience, campaign.content, campaign.scheduled_date, "draft")
-    ).fetchone()
-    conn.commit()
-    conn.close()
-    
-    return {
-        "message": "Campaign created successfully",
-        "campaign_id": result["id"],
-        "website": WEBSITE_URL
-    }
-
-@app.get("/campaigns")
-async def get_campaigns(current_user: dict = Depends(get_current_user_bearer)):
-    conn = get_db()
-    campaigns = conn.execute(
-        "SELECT * FROM campaigns WHERE user_id = ? ORDER BY created_at DESC",
-        (current_user["id"],)
-    ).fetchall()
-    conn.close()
-    return {"campaigns": [dict(c) for c in campaigns], "website": WEBSITE_URL}
-
-# ===================================================================
-# DOMAIN INTELLIGENCE
-# ===================================================================
-async def get_whois_info(domain: str) -> Dict:
-    try:
-        w = whois.whois(domain)
-        return {
-            "registrar": str(w.registrar) if w.registrar else None,
-            "creation_date": str(w.creation_date) if w.creation_date else None,
-            "expiration_date": str(w.expiration_date) if w.expiration_date else None,
-            "name_servers": w.name_servers if w.name_servers else []
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-async def get_ssl_info(domain: str) -> Dict:
-    try:
-        context = ssl.create_default_context()
-        with socket.create_connection((domain, 443), timeout=10) as sock:
-            with context.wrap_socket(sock, server_hostname=domain) as ssock:
-                cert = ssock.getpeercert()
-                return {
-                    "valid": True,
-                    "not_before": cert.get("notBefore"),
-                    "not_after": cert.get("notAfter")
-                }
-    except Exception as e:
-        return {"valid": False, "error": str(e)}
-
-async def get_dns_info(domain: str) -> Dict:
-    try:
-        records = {}
-        for record_type in ['A', 'MX', 'NS', 'TXT']:
-            try:
-                answers = dns.resolver.resolve(domain, record_type)
-                records[record_type] = [str(r) for r in answers]
-            except:
-                records[record_type] = []
-        return records
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.post("/scan-domain")
-async def scan_domain(
-    request: DomainScanRequest,
-    current_user: Optional[dict] = Depends(get_current_user_optional)
-):
-    domain = request.domain.strip().lower()
-    
-    if domain.startswith('http://') or domain.startswith('https://'):
-        domain = domain.split('//')[1].split('/')[0]
-    if domain.startswith('www.'):
-        domain = domain[4:]
-    
-    whois_data = await get_whois_info(domain)
-    ssl_data = await get_ssl_info(domain)
-    dns_data = await get_dns_info(domain)
-    
-    report = {
-        "domain": domain,
-        "scan_time": datetime.now().isoformat(),
-        "whois": whois_data,
-        "ssl_certificate": ssl_data,
-        "dns_records": dns_data,
-        "lawyer": {
-            "reviewed_by": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "review_date": datetime.now().isoformat()
-        }
-    }
-    
-    if current_user:
-        conn = get_db()
-        conn.execute(
-            "INSERT INTO history (user_id, agent, input_text, result_json) VALUES (?, ?, ?, ?)",
-            (current_user["id"], "domain_intelligence", f"Scanned: {domain}", json.dumps(report))
-        )
-        conn.commit()
-        conn.close()
-    
-    return JSONResponse(report)
-
-# ===================================================================
-# POLICY SCANNER
-# ===================================================================
-@app.post("/scan-policies")
-async def scan_policies(
-    request: PolicyScanRequest,
-    current_user: Optional[dict] = Depends(get_current_user_optional)
-):
-    base_url = request.website_url.rstrip('/')
-    
-    policy_text = ""
-    try:
-        async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
-            resp = await client.get(base_url)
-            if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, 'html.parser')
-                policy_text = soup.get_text()[:5000]
-    except:
-        policy_text = "Could not fetch page content"
-    
-    result = {
-        "url": base_url,
-        "scan_time": datetime.now().isoformat(),
-        "compliance_analysis": {
-            "privacy_policy_found": "privacy" in policy_text.lower(),
-            "terms_found": "terms" in policy_text.lower(),
-            "cookie_policy_found": "cookie" in policy_text.lower()
-        },
-        "lawyer": {
-            "reviewed_by": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "review_date": datetime.now().isoformat()
-        }
-    }
-    
-    if current_user:
-        conn = get_db()
-        conn.execute(
-            "INSERT INTO history (user_id, agent, input_text, result_json) VALUES (?, ?, ?, ?)",
-            (current_user["id"], "policy_scanner", f"Scanned: {base_url}", json.dumps(result))
-        )
-        conn.commit()
-        conn.close()
-    
-    return JSONResponse(result)
-
-# ===================================================================
-# HEALTH & ROOT
-# ===================================================================
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "version": VERSION,
-        "launch_date": LAUNCH_DATE,
-        "agents": len(AGENTS),
-        "lawyer": {
-            "name": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "experience": "8+ years",
-            "qualification": "LLB - Delhi University (2016)"
-        },
-        "data_retention": f"Zero Retention - {DATA_RETENTION_HOURS} hours",
-        "accuracy_guarantee": "100% - No Hallucination",
-        "campaigns": "Active",
-        "website": WEBSITE_URL
-    }
-
-@app.get("/")
-async def root():
-    return {
-        "service": "LexSarthi v4.0 - Complete Legal OS",
-        "version": VERSION,
-        "launch_date": LAUNCH_DATE,
-        "vision": "Single Provider for All Legal Work Automation",
-        "tagline": "From Contract Review to Supreme Court Judgments | From Law School to Global Legal Practice",
-        "lawyer": {
-            "name": "Adv. Debo",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "experience": "8+ years",
-            "qualification": "LLB - Delhi University (2016)"
-        },
-        "agents": len(AGENTS),
-        "data_retention": f"Zero Retention - {DATA_RETENTION_HOURS} hours",
-        "accuracy_guarantee": "100% - No Hallucination",
-        "confidentiality": "Attorney-Client Privilege | End-to-end encrypted",
-        "plans": PRICING_PLANS,
-        "pay_per_use": PAY_PER_USE,
-        "campaign_features": {
-            "email_campaigns": "Active",
-            "client_engagement": "Active",
-            "legal_alerts": "Active",
-            "market_intelligence": "Active"
-        },
-        "test_payment": {"amount": 200, "label": "₹2 Starter Pack"},
-        "website": WEBSITE_URL,
-        "endpoints": [
-            "/auth/register",
-            "/auth/login",
-            "/auth/me",
-            "/agents",
-            "/run-agent",
-            "/upload",
-            "/lawyer-profile",
-            "/scan-domain",
-            "/scan-policies",
-            "/domain-agreement",
-            "/campaigns",
-            "/outreach",
-            "/campaigns-features",
-            "/pricing",
-            "/payment/create-order",
-            "/payment/verify",
-            "/payment/status",
-            "/health"
-        ]
-    }
+class AgentRunRequest(BaseModel):
+    agent_id: str
+    input_text: str = ""
+    file_content: Optional[str] = None
+    file_name: Optional[str] = None
+    file_type: Optional[str] = None
 
 # ===================================================================
 # MAIN
