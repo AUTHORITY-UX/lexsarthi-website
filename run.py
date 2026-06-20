@@ -1,9 +1,16 @@
-# Copyright (c) 2025 THE ADVOCACY A LAW FIRM. All rights reserved.
+# ===================================================================
+# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
 # Confidential and proprietary. Do not distribute without a license.
-# THE ADVOCACY A LAW FIRM is the sole owner and title holder of this software.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY A LAW FIRM.
+# ===================================================================
+# LEXSARTHI v4.0 - THE COMPLETE LEGAL OS
+# $10B VISION - SINGLE PROVIDER FOR ALL LEGAL WORK AUTOMATION
+# ===================================================================
+# Powered By THE ADVOCACY A LAW FIRM
+# ===================================================================
 
 import uvicorn
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860)
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
     
