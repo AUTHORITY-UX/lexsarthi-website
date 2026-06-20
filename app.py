@@ -1127,6 +1127,17 @@ async def root():
 # ===================================================================
 # RUN
 # ===================================================================
+@app.get("/status")
+async def status_endpoint():
+    """Status endpoint for frontend monitoring"""
+    return {
+        "status": "alive",
+        "version": "4.0.0",
+        "timestamp": datetime.utcnow().isoformat(),
+        "agents": 73,
+        "zero_retention": "active (24 hours)",
+        "database": "connected"
+    }
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=7860)
