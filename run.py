@@ -12,5 +12,12 @@
 import uvicorn
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
-    
+    # Port 7860 is the default for Hugging Face Spaces
+    # reload=False for production stability
+    uvicorn.run(
+        "app:app",           # app.py file, app instance
+        host="0.0.0.0",      # Listen on all network interfaces
+        port=7860,           # Hugging Face default port
+        reload=False,        # Production mode - no auto-reload
+        workers=1            # Single worker for stability
+    )
