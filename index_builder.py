@@ -1,33 +1,52 @@
+# ===================================================================
+# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
+# Confidential and proprietary. Do not distribute without a license.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY A LAW FIRM.
+# ===================================================================
+# LEXSARTHI v4.0 - THE COMPLETE LEGAL OS
+# $10B VISION - SINGLE PROVIDER FOR ALL LEGAL WORK AUTOMATION
+# ===================================================================
+# Powered By THE ADVOCACY A LAW FIRM
+# ===================================================================
+
 import os
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
-from llama_index.core.node_parser import SimpleNodeParser
-from llama_parse import LlamaParse
+import json
+from datetime import datetime
 
-def build_legal_index(docs_path="./legal_docs", persist_dir="./legal_index"):
-    if not os.path.exists(docs_path):
-        print(f"Error: {docs_path} folder not found. Create it and add legal PDFs/txt files.")
-        return
+LEGAL_DOCS_DIR = "legal_docs"
 
-    # Use LlamaParse for PDFs, fallback to default for txt
-    parser = LlamaParse(api_key=os.getenv("LLAMA_CLOUD_API_KEY"), result_type="text") if os.getenv("LLAMA_CLOUD_API_KEY") else None
-    reader = SimpleDirectoryReader(
-        input_dir=docs_path,
-        file_extractor={".pdf": parser} if parser else {},
-        recursive=True
-    )
-    print("Loading legal documents...")
-    documents = reader.load_data()
-    print(f"Loaded {len(documents)} raw documents")
-
-    # Split into smaller chunks for better retrieval
-    node_parser = SimpleNodeParser.from_defaults(chunk_size=1024, chunk_overlap=200)
-    nodes = node_parser.get_nodes_from_documents(documents)
-    print(f"Created {len(nodes)} index nodes")
-
-    # Build and persist index
-    index = VectorStoreIndex(nodes)
-    index.storage_context.persist(persist_dir=persist_dir)
-    print(f"Legal index saved to {persist_dir}")
+def build_index():
+    """Build search index for legal documents"""
+    print("Building LexSarthi legal document index...")
+    
+    index_data = {
+        "version": "4.0.0",
+        "build_date": datetime.utcnow().isoformat(),
+        "documents": []
+    }
+    
+    if os.path.exists(LEGAL_DOCS_DIR):
+        for filename in os.listdir(LEGAL_DOCS_DIR):
+            if filename.endswith('.txt') or filename.endswith('.md'):
+                filepath = os.path.join(LEGAL_DOCS_DIR, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    index_data["documents"].append({
+                        "filename": filename,
+                        "title": filename.replace('.txt', '').replace('.md', '').replace('_', ' '),
+                        "content": content[:2000],
+                        "word_count": len(content.split()),
+                        "indexed_at": datetime.utcnow().isoformat()
+                    })
+                except Exception as e:
+                    print(f"Error indexing {filename}: {e}")
+    
+    # Save index
+    with open("legal_index.json", "w", encoding='utf-8') as f:
+        json.dump(index_data, f, indent=2)
+    
+    print(f"Index built: {len(index_data['documents'])} documents indexed")
 
 if __name__ == "__main__":
-    build_legal_index()
+    build_index()
