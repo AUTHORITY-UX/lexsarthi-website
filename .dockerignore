@@ -1,0 +1,30 @@
+# ===================================================================
+# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
+# Confidential and proprietary. Do not distribute without a license.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY A LAW FIRM.
+# ===================================================================
+# LEXSARTHI v4.0 - THE COMPLETE LEGAL OS
+# $10B VISION - SINGLE PROVIDER FOR ALL LEGAL WORK AUTOMATION
+# ===================================================================
+# Powered By THE ADVOCACY A LAW FIRM
+# ===================================================================
+
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+*.log
+*.db
+*.sqlite3
+.data
+.env
+.git
+.gitignore
+README.md
+*.md
+LICENSE
+.gitattributes
