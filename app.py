@@ -29,7 +29,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
@@ -659,11 +659,6 @@ async def lifespan(app: FastAPI):
     logger.info("🔒 Zero Data Retention Policy Active (24 hours)")
     logger.info("💳 Payment Gateway Ready (₹2 Test Payment)")
     logger.info("⏰ Daily Reports Scheduled (4:00 AM IST)")
-    logger.info("🌐 Domain Intelligence Active")
-    logger.info("📈 Market Intelligence Active")
-    logger.info("⚖️ Legal Intelligence Active")
-    logger.info("📊 Trade Analysis Active")
-    logger.info("📊 Self-Data Analytics Active")
     
     yield
     
@@ -698,7 +693,7 @@ async def health_check():
             "daily_reports": "scheduled (4:00 AM IST)",
             "payment_gateway": "active (₹2 test payment)"
         },
-        "vision": "$10B Vision - Single Provider for All Legal Work Automation",
+        "vision": "Single Provider for All Legal Work Automation",
         "tagline": "From Contract Review to Supreme Court Judgments | From Law School to Global Legal Practice"
     }
 
@@ -760,14 +755,6 @@ async def register(user_data: UserRegister):
             INSERT INTO tokens (id, user_id, refresh_token, access_token, expires_at)
             VALUES (?, ?, ?, ?, ?)
         """, (token_id, user_id, tokens['refresh_token'], tokens['access_token'], expires_at))
-        db.conn.commit()
-        
-        # Log analytics
-        db.cursor.execute("""
-            INSERT INTO analytics (id, user_id, event_type, event_data)
-            VALUES (?, ?, ?, ?)
-        """, (str(uuid.uuid4()), user_id, 'user_registration', 
-              json.dumps({'email': user_data.email, 'user_type': user_data.user_type})))
         db.conn.commit()
         
         logger.info(f"✅ User registered: {user_data.email}")
@@ -832,13 +819,6 @@ async def login(login_data: UserLogin):
             INSERT INTO tokens (id, user_id, refresh_token, access_token, expires_at)
             VALUES (?, ?, ?, ?, ?)
         """, (token_id, user_id, tokens['refresh_token'], tokens['access_token'], expires_at))
-        db.conn.commit()
-        
-        # Log analytics
-        db.cursor.execute("""
-            INSERT INTO analytics (id, user_id, event_type, event_data)
-            VALUES (?, ?, ?, ?)
-        """, (str(uuid.uuid4()), user_id, 'user_login', json.dumps({'email': email})))
         db.conn.commit()
         
         logger.info(f"✅ User logged in: {email}")
@@ -926,14 +906,6 @@ async def logout(current_user: Dict[str, Any] = Depends(get_current_user)):
     try:
         db.cursor.execute("UPDATE tokens SET revoked = 1 WHERE user_id = ?", (current_user['id'],))
         db.conn.commit()
-        
-        db.cursor.execute("""
-            INSERT INTO analytics (id, user_id, event_type, event_data)
-            VALUES (?, ?, ?, ?)
-        """, (str(uuid.uuid4()), current_user['id'], 'user_logout', 
-              json.dumps({'email': current_user['email']})))
-        db.conn.commit()
-        
         return {"message": "Logged out successfully"}
     except Exception as e:
         logger.error(f"Logout error: {str(e)}")
@@ -1028,399 +1000,11 @@ async def verify_payment(verify_data: PaymentVerify, current_user: Dict[str, Any
               datetime.utcnow().isoformat(), verify_data.razorpay_order_id, current_user['id']))
         db.conn.commit()
         
-        # Log analytics
-        db.cursor.execute("""
-            INSERT INTO analytics (id, user_id, event_type, event_data)
-            VALUES (?, ?, ?, ?)
-        """, (str(uuid.uuid4()), current_user['id'], 'payment_completed', 
-              json.dumps({'order_id': verify_data.razorpay_order_id, 
-                         'payment_id': verify_data.razorpay_payment_id})))
-        db.conn.commit()
-        
         return {"status": "success", "message": "Payment verified successfully"}
         
     except Exception as e:
         logger.error(f"Payment verification error: {str(e)}")
         raise HTTPException(status_code=500, detail="Payment verification failed")
-
-# ===================================================================
-# Legal Intelligence - 73 AI Agents
-# ===================================================================
-@app.post("/legal-intelligence/analyze")
-async def analyze_legal(query_data: LegalQuery, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """AI-powered legal analysis with 73 agents"""
-    try:
-        # Simulate AI analysis with all 73 agents
-        agents = {
-            "contract_review": "AI Contract Review Expert",
-            "case_analysis": "Case Law Analysis Expert",
-            "legal_research": "Legal Research Expert",
-            "compliance_check": "Compliance Check Expert",
-            "judgment_drafting": "Judgment Drafting Expert",
-            "legal_document_analysis": "Legal Document Analysis Expert",
-            "risk_assessment": "Risk Assessment Expert",
-            "regulatory_advice": "Regulatory Compliance Expert",
-            "merger_acquisition": "M&A Legal Expert",
-            "intellectual_property": "IP Law Expert",
-            "tax_law": "Tax Law Expert",
-            "corporate_law": "Corporate Law Expert",
-            "employment_law": "Employment Law Expert",
-            "real_estate_law": "Real Estate Law Expert",
-            "family_law": "Family Law Expert",
-            "criminal_law": "Criminal Law Expert",
-            "constitutional_law": "Constitutional Law Expert",
-            "international_law": "International Law Expert",
-            "arbitration": "Arbitration Expert",
-            "mediation": "Mediation Expert"
-        }
-        
-        response = {
-            "query": query_data.query,
-            "agent_type": query_data.agent_type,
-            "agent_name": agents.get(query_data.agent_type, "General Legal Agent"),
-            "analysis": f"Legal analysis for: {query_data.query}",
-            "confidence_score": 0.95,
-            "relevant_laws": ["Constitution of India", "IPC", "CrPC", "DPDP Act 2023"],
-            "precedents": ["Supreme Court Case 2023", "High Court Case 2022"],
-            "risk_level": "Low",
-            "recommendations": [
-                "Review relevant case law",
-                "Consult with senior counsel",
-                "Document all findings"
-            ],
-            "disclaimer": "This is for informational purposes only. Not legal advice.",
-            "attorney_client_privilege": True,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-        # Store query
-        query_id = str(uuid.uuid4())
-        db.cursor.execute("""
-            INSERT INTO legal_queries (id, user_id, query, response, agent_type, context, confidence_score, processed_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (query_id, current_user['id'], query_data.query, json.dumps(response),
-              query_data.agent_type, json.dumps(query_data.context), 
-              response['confidence_score'], datetime.utcnow().isoformat()))
-        db.conn.commit()
-        
-        return response
-        
-    except Exception as e:
-        logger.error(f"Legal query error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Legal query processing failed")
-
-# ===================================================================
-# Market Intelligence - Public
-# ===================================================================
-@app.get("/market-intelligence/trends")
-async def get_market_trends():
-    """Market intelligence - trends"""
-    return {
-        "market_size": "$50B",
-        "growth_rate": "14.5%",
-        "legal_tech_growth": "23.7%",
-        "ai_adoption": "67%",
-        "trends": [
-            {"sector": "Technology", "growth": 15.5},
-            {"sector": "Healthcare", "growth": 12.3},
-            {"sector": "Finance", "growth": 8.7},
-            {"sector": "Legal", "growth": 18.2}
-        ],
-        "competitors": [
-            {"name": "LegalTech Corp", "market_share": 20},
-            {"name": "LawAI Solutions", "market_share": 15},
-            {"name": "JusticeAI", "market_share": 10}
-        ],
-        "regulatory_updates": [
-            {"date": "2026-06-15", "change": "DPDP Act 2023 Implementation"},
-            {"date": "2026-06-10", "change": "Supreme Court AI Advisory"},
-            {"date": "2026-06-05", "change": "New Data Protection Rules"}
-        ],
-        "timestamp": datetime.utcnow().isoformat()
-    }
-
-@app.get("/market-intelligence/competitors")
-async def get_competitors():
-    return {
-        "competitors": [
-            {"name": "LegalTech Corp", "market_share": 20, "strength": "Strong", "founded": 2018},
-            {"name": "LawAI Solutions", "market_share": 15, "strength": "Growing", "founded": 2020},
-            {"name": "JusticeAI", "market_share": 10, "strength": "Emerging", "founded": 2022}
-        ],
-        "timestamp": datetime.utcnow().isoformat()
-    }
-
-@app.get("/market-intelligence/regulatory")
-async def get_regulatory_updates():
-    return {
-        "updates": [
-            {"date": "2026-06-15", "title": "DPDP Act 2023 Implementation Guidelines"},
-            {"date": "2026-06-10", "title": "Supreme Court AI Advisory Committee Formed"},
-            {"date": "2026-06-05", "title": "New Data Protection Rules for Legal Tech"}
-        ],
-        "timestamp": datetime.utcnow().isoformat()
-    }
-
-# ===================================================================
-# Domain Intelligence
-# ===================================================================
-@app.post("/domain-intelligence/analyze")
-async def analyze_domain(domain_data: DomainIntelligenceRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Domain Intelligence - WHOIS, SSL, DNS"""
-    try:
-        domain = domain_data.domain
-        result = {"domain": domain, "timestamp": datetime.utcnow().isoformat()}
-        
-        if domain_data.check_whois:
-            try:
-                w = whois.whois(domain)
-                result["whois"] = {
-                    "registrar": str(w.registrar) if w.registrar else "Unknown",
-                    "creation_date": str(w.creation_date) if w.creation_date else "Unknown",
-                    "expiration_date": str(w.expiration_date) if w.expiration_date else "Unknown",
-                    "name_servers": w.name_servers if w.name_servers else []
-                }
-            except:
-                result["whois"] = {"error": "WHOIS lookup failed"}
-        
-        if domain_data.check_ssl:
-            try:
-                context = ssl.create_default_context()
-                with socket.create_connection((domain, 443), timeout=10) as sock:
-                    with context.wrap_socket(sock, server_hostname=domain) as ssock:
-                        cert = ssock.getpeercert()
-                        result["ssl"] = {
-                            "issuer": dict(cert.get('issuer', [])),
-                            "valid_from": cert.get('notBefore', ''),
-                            "valid_to": cert.get('notAfter', ''),
-                            "subject": dict(cert.get('subject', []))
-                        }
-            except:
-                result["ssl"] = {"error": "SSL check failed"}
-        
-        if domain_data.check_dns:
-            try:
-                records = {"A": [], "AAAA": [], "MX": [], "TXT": []}
-                for record_type in records.keys():
-                    try:
-                        answers = dns.resolver.resolve(domain, record_type)
-                        records[record_type] = [str(r) for r in answers]
-                    except:
-                        records[record_type] = []
-                result["dns"] = records
-            except:
-                result["dns"] = {"error": "DNS lookup failed"}
-        
-        # Store result
-        domain_id = str(uuid.uuid4())
-        db.cursor.execute("""
-            INSERT INTO domain_intelligence (id, user_id, domain, whois_data, ssl_data, dns_data)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (domain_id, current_user['id'], domain, 
-              json.dumps(result.get('whois', {})),
-              json.dumps(result.get('ssl', {})),
-              json.dumps(result.get('dns', {}))))
-        db.conn.commit()
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Domain intelligence error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Domain intelligence failed")
-
-# ===================================================================
-# Trade Analysis
-# ===================================================================
-@app.post("/trade-analysis/analyze")
-async def analyze_trade(trade_data: TradeAnalysisRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Trade Analysis - Import/Export, Commodities, Trends"""
-    try:
-        # Simulate trade analysis
-        analysis = {
-            "commodity": trade_data.commodity,
-            "timeframe": trade_data.timeframe,
-            "metrics": trade_data.metrics,
-            "price_trend": {
-                "current": 245.50,
-                "high": 280.30,
-                "low": 210.45,
-                "change": 12.5,
-                "volatility": 8.2
-            },
-            "volume": {
-                "average": 15000,
-                "total": 5482000,
-                "trend": "increasing"
-            },
-            "market_sentiment": "Bullish",
-            "forecast": {
-                "next_month": 260.75,
-                "next_quarter": 275.50,
-                "next_year": 310.25
-            },
-            "risk_factors": ["Regulatory changes", "Supply chain issues"],
-            "opportunities": ["New markets", "Technology integration"],
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-        # Store analysis
-        analysis_id = str(uuid.uuid4())
-        db.cursor.execute("""
-            INSERT INTO trade_analysis (id, user_id, commodity, analysis_data)
-            VALUES (?, ?, ?, ?)
-        """, (analysis_id, current_user['id'], trade_data.commodity, json.dumps(analysis)))
-        db.conn.commit()
-        
-        return analysis
-        
-    except Exception as e:
-        logger.error(f"Trade analysis error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Trade analysis failed")
-
-# ===================================================================
-# Campaign Management
-# ===================================================================
-@app.post("/campaigns/create")
-async def create_campaign(campaign_data: CampaignCreate, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Create campaign"""
-    try:
-        campaign_id = str(uuid.uuid4())
-        db.cursor.execute("""
-            INSERT INTO campaigns (id, user_id, name, type, subject, content, target_audience, status, schedule_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (campaign_id, current_user['id'], campaign_data.name, campaign_data.type,
-              campaign_data.subject, campaign_data.content, json.dumps(campaign_data.target_audience),
-              'draft', campaign_data.schedule_time.isoformat() if campaign_data.schedule_time else None))
-        db.conn.commit()
-        
-        return {
-            "id": campaign_id,
-            "name": campaign_data.name,
-            "type": campaign_data.type,
-            "status": "draft",
-            "created_at": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Campaign creation error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Campaign creation failed")
-
-@app.post("/campaigns/send/{campaign_id}")
-async def send_campaign(campaign_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Send campaign"""
-    try:
-        db.cursor.execute("""
-            UPDATE campaigns 
-            SET status = 'sent', sent_at = ?, sent_count = 100
-            WHERE id = ? AND user_id = ?
-        """, (datetime.utcnow().isoformat(), campaign_id, current_user['id']))
-        db.conn.commit()
-        
-        return {
-            "campaign_id": campaign_id,
-            "status": "sent",
-            "sent_count": 100,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Campaign send error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Campaign send failed")
-
-# ===================================================================
-# Self-Data Analytics
-# ===================================================================
-@app.get("/analytics/self-data")
-async def get_self_analytics(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Self-Data Analytics - LexSarthi's Own Data Analysis"""
-    try:
-        # Get user statistics
-        db.cursor.execute("""
-            SELECT 
-                COUNT(*) as total_queries,
-                COUNT(DISTINCT agent_type) as agents_used,
-                MAX(created_at) as last_activity,
-                AVG(confidence_score) as avg_confidence
-            FROM legal_queries
-            WHERE user_id = ?
-        """, (current_user['id'],))
-        stats = db.cursor.fetchone()
-        
-        # Get agent usage
-        db.cursor.execute("""
-            SELECT agent_type, COUNT(*) as count
-            FROM legal_queries
-            WHERE user_id = ?
-            GROUP BY agent_type
-            ORDER BY count DESC
-        """, (current_user['id'],))
-        agent_usage = db.cursor.fetchall()
-        
-        # Get activity pattern
-        db.cursor.execute("""
-            SELECT 
-                strftime('%H', created_at) as hour,
-                COUNT(*) as activity
-            FROM legal_queries
-            WHERE user_id = ? AND created_at > datetime('now', '-30 days')
-            GROUP BY strftime('%H', created_at)
-            ORDER BY hour
-        """, (current_user['id'],))
-        activity_pattern = db.cursor.fetchall()
-        
-        # Get payment summary
-        db.cursor.execute("""
-            SELECT 
-                COUNT(*) as total_payments,
-                SUM(amount) as total_amount
-            FROM payments
-            WHERE user_id = ? AND status = 'completed'
-        """, (current_user['id'],))
-        payment_summary = db.cursor.fetchone()
-        
-        return {
-            "user_stats": dict(stats) if stats else {},
-            "agent_usage": [dict(a) for a in agent_usage],
-            "activity_pattern": [dict(a) for a in activity_pattern],
-            "payment_summary": dict(payment_summary) if payment_summary else {},
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Self-analytics error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Self-analytics failed")
-
-# ===================================================================
-# Report Generation
-# ===================================================================
-@app.post("/reports/generate")
-async def generate_report(report_data: ReportGeneration, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Generate report"""
-    try:
-        report_id = str(uuid.uuid4())
-        report = {
-            "id": report_id,
-            "report_type": report_data.report_type,
-            "generated_at": datetime.utcnow().isoformat(),
-            "data": {
-                "summary": f"Generated report for {report_data.report_type}",
-                "filters": report_data.filters,
-                "date_range": report_data.date_range
-            },
-            "user_id": current_user['id']
-        }
-        
-        db.cursor.execute("""
-            INSERT INTO reports (id, user_id, report_type, report_data)
-            VALUES (?, ?, ?, ?)
-        """, (report_id, current_user['id'], report_data.report_type, json.dumps(report)))
-        db.conn.commit()
-        
-        return report
-        
-    except Exception as e:
-        logger.error(f"Report generation error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Report generation failed")
 
 # ===================================================================
 # Root Endpoint
@@ -1430,29 +1014,16 @@ async def root():
     return {
         "service": "LexSarthi v4.0 - Complete Legal OS",
         "version": "4.0.0",
-        "launch_date": "20 June 2026",
-        "vision": "$10B Vision - Single Provider for All Legal Work Automation",
+        "launch_date": "2026",
+        "vision": "Single Provider for All Legal Work Automation",
         "tagline": "From Contract Review to Supreme Court Judgments | From Law School to Global Legal Practice",
         "lawyer": {
-            "name": "Adv. Upmanyu",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "experience": "8+ years",
-            "qualification": "LLB - Delhi University (2016)"
+            "firm": "THE ADVOCACY A LAW FIRM"
         },
         "agents": 73,
         "data_retention": "Zero Retention - 24 hours",
         "accuracy_guarantee": "100% - No Hallucination",
         "confidentiality": "Attorney-Client Privilege | End-to-end encrypted",
-        "features": {
-            "legal_intelligence": "active",
-            "market_intelligence": "active",
-            "domain_intelligence": "active",
-            "trade_analysis": "active",
-            "campaign_tools": "active",
-            "self_analytics": "active",
-            "daily_reports": "scheduled (4:00 AM IST)",
-            "payment_gateway": "active (₹2 test payment)"
-        },
         "website": "https://www.advocacyalawfrim.in",
         "contact": "upmanyu@advocacyalawfrim.in"
     }
