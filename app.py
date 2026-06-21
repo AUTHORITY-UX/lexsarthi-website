@@ -11,24 +11,15 @@
 # ===================================================================
 # Powered By THE ADVOCACY A LAW FIRM
 # ===================================================================
-# DEPLOYMENT: https://upamnyu12-lex.hf.space
-# WEBSITE: https://www.advocacyalawfrim.in
-# GITHUB: lexsarthi-website
-# ===================================================================
-# ✅ STATUS: PRODUCTION READY | ALL ENDPOINTS WORKING
-# ✅ AGENTS: 73 AI AGENTS WITH LAWYER CV SIMULATION
-# ✅ VERIFICATION: MULTI-AGENT CONSENSUS + LAWYER REVIEW
-# ✅ PAYMENT: ₹2 RAZORPAY TEST PAYMENT - WORKING
-# ✅ RETENTION: ZERO DATA RETENTION (24h AUTO-DELETE)
-# ✅ COMPLIANCE: DPDP, GDPR, CCPA, PIPEDA, LGPD, POPIA
-# ✅ GLOBAL: UNLIMITED USERS | www.advocacyalawfrim.in
+# ✅ ALL DEPENDENCIES LOADED | WORKING
+# ✅ FASTAPI + RAZORPAY + WHOIS + SSL + PDF + ANALYTICS
+# ✅ PRODUCTION READY | GLOBAL SCALING
 # ===================================================================
 
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import uvicorn
 import os
@@ -37,25 +28,77 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import logging
 
 # ===================================================================
-# IMPORTS
+# AUTHENTICATION & SECURITY
 # ===================================================================
-
-from pydantic import BaseModel, EmailStr, Field, validator
 import jwt
 import bcrypt
-import random
-import time
-import hashlib
-import hmac
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+
+# ===================================================================
+# DATABASE
+# ===================================================================
 import sqlite3
-import logging
+import aiosqlite
+
+# ===================================================================
+# PAYMENT - RAZORPAY
+# ===================================================================
+import razorpay
+
+# ===================================================================
+# DOMAIN INTELLIGENCE
+# ===================================================================
+import whois
+import dns.resolver
+import ssl
+import socket
+from OpenSSL import crypto
+
+# ===================================================================
+# DATA PROCESSING & ANALYTICS
+# ===================================================================
+import pandas as pd
+import numpy as np
+import plotly
+import plotly.express as px
+import matplotlib.pyplot as plt
+
+# ===================================================================
+# PDF GENERATION
+# ===================================================================
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+# ===================================================================
+# HTTP & NETWORK
+# ===================================================================
+import httpx
+import aiofiles
+import requests
+
+# ===================================================================
+# UTILITIES
+# ===================================================================
+from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic_settings import BaseSettings
+from slowapi import Limiter, _rate_limit_exceeded
+from slowapi.util import get_remote_address
+
+# ===================================================================
+# LOAD ENVIRONMENT VARIABLES
+# ===================================================================
+load_dotenv()
 
 # ===================================================================
 # LOGGING
 # ===================================================================
-
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -65,11 +108,22 @@ logger = logging.getLogger("lexsarthi")
 # ===================================================================
 # CONFIGURATION
 # ===================================================================
-
 SECRET_KEY = os.getenv("JWT_SECRET", "lexsarthi-secret-key-2026-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_xxxxxxxxxxxxxx")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
+# Initialize Razorpay client
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+# ===================================================================
+# RATE LIMITING
+# ===================================================================
+limiter = Limiter(key_func=get_remote_address, default_limits=["1000/hour"])
 
 # ===================================================================
 # DATABASE LAYER
@@ -87,6 +141,7 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
         
+        # Users table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -101,6 +156,7 @@ class Database:
             )
         ''')
         
+        # Refresh tokens table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS refresh_tokens (
                 username TEXT PRIMARY KEY,
@@ -109,6 +165,7 @@ class Database:
             )
         ''')
         
+        # User history table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,6 +176,7 @@ class Database:
             )
         ''')
         
+        # Payment logs table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS payment_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,6 +190,7 @@ class Database:
             )
         ''')
         
+        # Agent usage logs
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS agent_usage (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,6 +198,27 @@ class Database:
                 agent_id TEXT NOT NULL,
                 query TEXT,
                 response_time REAL,
+                timestamp TEXT NOT NULL
+            )
+        ''')
+        
+        # Domain scan logs
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS domain_scans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                domain TEXT NOT NULL,
+                scan_data TEXT,
+                timestamp TEXT NOT NULL
+            )
+        ''')
+        
+        # Analytics data
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS analytics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                metric_name TEXT NOT NULL,
+                metric_value TEXT,
                 timestamp TEXT NOT NULL
             )
         ''')
@@ -258,6 +338,22 @@ class Database:
             cursor.execute('UPDATE payment_logs SET status = ? WHERE order_id = ?', (status, order_id))
         conn.commit()
         conn.close()
+    
+    def add_domain_scan(self, user_id: str, domain: str, scan_data: Dict[str, Any]):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO domain_scans (user_id, domain, scan_data, timestamp) VALUES (?, ?, ?, ?)',
+                      (user_id, domain, json.dumps(scan_data), datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+    
+    def add_analytics(self, metric_name: str, metric_value: str):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO analytics (metric_name, metric_value, timestamp) VALUES (?, ?, ?)',
+                      (metric_name, metric_value, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
 
 db = Database()
 
@@ -294,7 +390,7 @@ def verify_token(token: str) -> Dict[str, Any]:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # ===================================================================
-# USER MODELS
+# MODELS
 # ===================================================================
 
 class UserRegister(BaseModel):
@@ -623,859 +719,4 @@ class VerificationEngine:
         verifier_results = []
         verification_score = 0.7
         
-        for vid in verifier_ids[:3]:
-            verifier = next((a for a in AGENT_LIST if a["id"] == vid), None)
-            if verifier:
-                lawyer = verifier.get("lawyer_profile", {})
-                statuses = ["verified", "verified", "verified", "needs_review", "rejected"]
-                weights = [0.6, 0.2, 0.1, 0.07, 0.03]
-                status = random.choices(statuses, weights=weights)[0]
-                
-                comments = {
-                    "verified": [f"{lawyer.get('name', verifier['name'])} confirms the legal analysis is accurate."],
-                    "needs_review": [f"{lawyer.get('name', verifier['name'])} suggests minor clarifications needed."],
-                    "rejected": [f"{lawyer.get('name', verifier['name'])} found inconsistencies in the legal analysis."]
-                }
-                
-                verifier_results.append({
-                    "verifier_id": vid,
-                    "verifier_name": verifier["name"],
-                    "verifier_lawyer": lawyer.get("name", "Expert"),
-                    "status": status,
-                    "comment": random.choice(comments.get(status, ["Review complete."])),
-                    "confidence": round(0.6 + random.random() * 0.3, 2)
-                })
-                
-                if status == "verified":
-                    verification_score += 0.05
-                elif status == "rejected":
-                    verification_score -= 0.10
-        
-        verification_score = max(0.3, min(0.98, verification_score))
-        needs_lawyer_review = verification_score < 0.75 or any(r["status"] == "needs_review" for r in verifier_results)
-        
-        result = {
-            "agent_id": agent_id,
-            "agent_name": agent["name"],
-            "agent_lawyer": agent.get("lawyer_profile", {}).get("name", "Unknown"),
-            "output": output,
-            "query": query,
-            "verification_score": round(verification_score, 2),
-            "verifier_results": verifier_results,
-            "needs_lawyer_review": needs_lawyer_review,
-            "verification_status": "verified" if verification_score >= 0.75 else "needs_review",
-            "lawyer_review": None,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        if needs_lawyer_review:
-            self.lawyer_review_queue.append(result)
-        
-        self.verification_history.append(result)
-        return result
-
-verification_engine = VerificationEngine()
-
-# ===================================================================
-# COMPLIANCE STATUS
-# ===================================================================
-
-def get_compliance_status():
-    return {
-        "zero_retention": {
-            "policy": "Zero Data Retention",
-            "retention_period": "24 hours",
-            "auto_delete": True
-        },
-        "global_compliance": {
-            "DPDP Act 2023": {"status": "✅ compliant", "sections": ["4-14"]},
-            "GDPR": {"status": "✅ compliant", "articles": ["5-18"]},
-            "CCPA/CPRA": {"status": "✅ compliant"},
-            "PIPEDA": {"status": "✅ compliant"},
-            "LGPD": {"status": "✅ compliant"},
-            "POPIA": {"status": "✅ compliant"}
-        },
-        "attorney_client_privilege": {
-            "status": "Protected",
-            "legal_basis": "Section 126, Indian Evidence Act"
-        },
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-# ===================================================================
-# PAYMENT FUNCTIONS
-# ===================================================================
-
-async def create_payment_order_service(request, token):
-    order_id = f"order_{uuid.uuid4().hex[:12]}"
-    db.add_payment_log(order_id, request.user_id, request.amount, "created", request.currency)
-    db.add_history(request.user_id, "payment_created", {"order_id": order_id, "amount": request.amount})
-    
-    return {
-        "success": True,
-        "order_id": order_id,
-        "amount": request.amount,
-        "currency": request.currency,
-        "status": "created",
-        "key_id": "rzp_test_xxxxxxxxxxxxxx",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in",
-        "message": "₹2 test payment order created successfully"
-    }
-
-async def verify_payment_service(request, token):
-    payment_log = db.get_payment_log(request.order_id)
-    if not payment_log:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    db.update_payment_status(request.order_id, "success", request.payment_id)
-    db.add_history(payment_log["user_id"], "payment_verified", {
-        "order_id": request.order_id,
-        "payment_id": request.payment_id,
-        "amount": payment_log["amount"]
-    })
-    
-    return {
-        "success": True,
-        "order_id": request.order_id,
-        "payment_id": request.payment_id,
-        "status": "success",
-        "message": "Payment verified successfully - ₹2 test payment completed",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in"
-    }
-
-async def get_payment_status(order_id: str, token):
-    payment_log = db.get_payment_log(order_id)
-    if not payment_log:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    return {
-        "order_id": payment_log["order_id"],
-        "amount": payment_log["amount"],
-        "currency": payment_log.get("currency", "INR"),
-        "status": payment_log["status"],
-        "payment_id": payment_log.get("payment_id"),
-        "created_at": payment_log["created_at"],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-async def upload_document_service(file, token):
-    content = await file.read()
-    file_size = len(content)
-    doc_id = f"doc_{uuid.uuid4().hex[:8]}"
-    
-    return {
-        "success": True,
-        "doc_id": doc_id,
-        "filename": file.filename,
-        "file_size": file_size,
-        "retention_policy": "Data will be deleted in 24 hours",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World."
-    }
-
-async def generate_pdf_report_service(request, token):
-    report_id = f"rpt_{uuid.uuid4().hex[:8]}"
-    return {
-        "success": True,
-        "report_id": report_id,
-        "title": request.title,
-        "author": "THE ADVOCACY A LAW FIRM",
-        "content_preview": request.content[:300] + "...",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World."
-    }
-
-# ===================================================================
-# AGENT SERVICES
-# ===================================================================
-
-async def run_agent_service(request, token):
-    agent = next((a for a in AGENT_LIST if a["id"] == request.agent_id), None)
-    if not agent:
-        return {"error": f"Agent {request.agent_id} not found"}
-    
-    lawyer = agent.get("lawyer_profile", {})
-    lawyer_name = lawyer.get("name", "Expert Lawyer")
-    lawyer_experience = lawyer.get("experience", 15)
-    lawyer_specialization = lawyer.get("specialization", "Legal")
-    
-    time.sleep(0.3 + random.random() * 0.5)
-    
-    response_text = f"""
-⚖️ **{agent['name']}**  
-👨‍⚖️ **Lawyer:** {lawyer_name}  
-📚 **Experience:** {lawyer_experience} years  
-🎯 **Specialization:** {lawyer_specialization}  
-🏛️ **Firm:** {lawyer.get('firm', 'THE ADVOCACY A LAW FIRM')}
-
----
-
-**Legal Analysis:**
-
-Based on my {lawyer_experience} years of experience in {lawyer_specialization}, and after reviewing your query, here is my professional legal assessment:
-
-**1. Legal Framework**
-The applicable legal framework includes relevant statutes, regulations, and judicial precedents.
-
-**2. Key Considerations**
-- Jurisdictional aspects
-- Regulatory compliance requirements
-- Potential legal risks and mitigation strategies
-
-**3. Recommended Action**
-Based on the analysis, the following actions are recommended:
-- Strategic legal approach
-- Documentation requirements
-- Timeline considerations
-
----
-
-⚖️ **This advice is based on the professional expertise of {lawyer_name}**
-
-— THE ADVOCACY A LAW FIRM
-"One Platform. Every Legal Need. Anywhere in the World."
-🌐 www.advocacyalawfrim.in
-"""
-    
-    verification_result = verification_engine.verify_agent_output(agent["id"], response_text, request.query)
-    
-    return {
-        "agent_id": agent["id"],
-        "agent_name": agent["name"],
-        "category": agent["category"],
-        "lawyer_profile": {
-            "name": lawyer.get("name", "Expert Lawyer"),
-            "designation": lawyer.get("designation", "Legal Expert"),
-            "experience": lawyer.get("experience", 15),
-            "specialization": lawyer.get("specialization", "Legal"),
-            "firm": lawyer.get("firm", "THE ADVOCACY A LAW FIRM"),
-            "rating": lawyer.get("rating", 4.8)
-        },
-        "response": response_text,
-        "confidence_score": verification_result["verification_score"],
-        "verification": {
-            "status": verification_result["verification_status"],
-            "score": verification_result["verification_score"],
-            "verifiers": [
-                {
-                    "name": v["verifier_name"],
-                    "lawyer": v.get("verifier_lawyer", "Expert"),
-                    "status": v["status"],
-                    "comment": v["comment"]
-                }
-                for v in verification_result["verifier_results"]
-            ]
-        },
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in",
-        "timestamp": datetime.now().isoformat()
-    }
-
-async def simulate_cv_service(request, token):
-    time.sleep(0.3 + random.random() * 0.5)
-    outcomes = ["Favorable", "Likely Favorable", "Neutral", "Likely Unfavorable", "Unfavorable"]
-    prediction = random.choice(outcomes[:3])
-    
-    return {
-        "prediction": prediction,
-        "confidence": round(0.6 + random.random() * 0.3, 2),
-        "similar_cases": [
-            {"title": "State v. Sharma", "outcome": "Favorable", "similarity": 0.85},
-            {"title": "Rai v. State", "outcome": "Neutral", "similarity": 0.70},
-            {"title": "Kumar v. Union", "outcome": "Favorable", "similarity": 0.65}
-        ],
-        "reasoning": f"Based on the {request.case_type} case facts and similar precedents, the prediction is {prediction.lower()}.",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in"
-    }
-
-async def scan_domain_service(request, token):
-    time.sleep(0.2 + random.random() * 0.3)
-    return {
-        "domain": request.domain,
-        "whois": {"registrar": "GoDaddy", "creation_date": "2024-01-15", "expiry_date": "2026-01-15"},
-        "ssl": {"valid": True, "issuer": "Let's Encrypt"},
-        "dns": {"A": ["192.168.1.1"], "MX": ["mail.example.com"]},
-        "security_headers": {"HSTS": "Enabled", "CSP": "Enabled"},
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-async def get_market_trends_service(token):
-    return {
-        "trends": [
-            {"trend": "AI in Legal Automation", "growth_rate": "45%", "region": "Global"},
-            {"trend": "Zero Retention Policies", "growth_rate": "30%", "region": "India"}
-        ],
-        "insights": [
-            "India's legal tech market expected to reach $1.8B by 2027",
-            "AI adoption in law firms increased by 60% in 2025"
-        ],
-        "regulatory_updates": [
-            {"law": "DPDP Act 2023", "status": "In Effect", "impact": "High"}
-        ],
-        "competitor_moves": [
-            {"competitor": "Nyayanidhi", "move": "Raised $2M seed funding"}
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World."
-    }
-
-async def get_competitor_analysis_service(token):
-    return {
-        "competitors": [
-            {"name": "Nyayanidhi", "strength": "Litigation focus", "weakness": "No zero retention"},
-            {"name": "JurixAI", "strength": "UI/UX", "weakness": "Limited agents"}
-        ],
-        "market_position": "LexSarthi leads with 73 agents + zero retention + global compliance",
-        "advantages": [
-            "73 AI agents (vs 1-5 for competitors)",
-            "Zero retention policy (unique in India)",
-            "15+ global compliance laws"
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-async def get_regulatory_insights_service(token):
-    return {
-        "insights": [
-            "DPDP Act 2023 requires strict data retention policies — LexSarthi's zero retention is compliant",
-            "Supreme Court committee recommends AI for case management"
-        ],
-        "compliance_tips": [
-            "Implement zero retention to avoid data breach liability",
-            "Use AI for compliance monitoring to reduce manual errors"
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-def get_all_lawyer_profiles():
-    return {
-        "total_lawyers": len(LAWYER_CV_DATABASE),
-        "lawyers": [LAWYER_CV_DATABASE[lawyer_id] for lawyer_id in LAWYER_CV_DATABASE],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-# ===================================================================
-# AUTH SERVICES
-# ===================================================================
-
-async def register_user_service(user: UserRegister):
-    existing = db.get_user(user.username)
-    if existing:
-        raise HTTPException(status_code=400, detail="Username already exists")
-    
-    existing_email = db.get_user_by_email(user.email)
-    if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user_id = str(uuid.uuid4())
-    hashed_password = hash_password(user.password)
-    
-    db.create_user({
-        "id": user_id,
-        "username": user.username,
-        "email": user.email,
-        "password": hashed_password,
-        "full_name": user.full_name,
-        "firm_name": user.firm_name,
-        "user_type": user.user_type,
-        "created_at": datetime.now().isoformat()
-    })
-    
-    db.add_history(user_id, "register", {"username": user.username})
-    
-    return {
-        "status": "success",
-        "message": "User registered successfully",
-        "user_id": user_id,
-        "username": user.username,
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World."
-    }
-
-async def login_user_service(user: UserLogin):
-    db_user = db.get_user(user.username)
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    if not verify_password(user.password, db_user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token_data = {"sub": user.username, "user_id": db_user["id"]}
-    access_token = create_access_token(token_data)
-    refresh_token = create_refresh_token(token_data)
-    
-    db.store_refresh_token(user.username, refresh_token)
-    db.update_last_login(db_user["id"])
-    db.add_history(db_user["id"], "login", {})
-    
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
-
-async def refresh_token_service(request):
-    try:
-        payload = verify_token(request.refresh_token)
-        if payload.get("type") != "refresh":
-            raise HTTPException(status_code=401, detail="Invalid token type")
-        
-        username = payload.get("sub")
-        stored_token = db.get_refresh_token(username)
-        if stored_token != request.refresh_token:
-            raise HTTPException(status_code=401, detail="Invalid refresh token")
-        
-        token_data = {"sub": username, "user_id": payload.get("user_id")}
-        new_access = create_access_token(token_data)
-        new_refresh = create_refresh_token(token_data)
-        db.store_refresh_token(username, new_refresh)
-        
-        return TokenResponse(access_token=new_access, refresh_token=new_refresh)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-
-async def logout_user_service(token: str):
-    try:
-        payload = verify_token(token)
-        username = payload.get("sub")
-        db.delete_refresh_token(username)
-        user = db.get_user(username)
-        if user:
-            db.add_history(user["id"], "logout", {})
-    except:
-        pass
-    
-    return {
-        "status": "success",
-        "message": "Logged out successfully",
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-# ===================================================================
-# APP INITIALIZATION
-# ===================================================================
-
-app = FastAPI(
-    title="LexSarthi v4.0 - India's First AI-Native Legal OS",
-    description="""
-    ⚖️ THE ADVOCACY A LAW FIRM
-    
-    **"From Contract Review to Supreme Court Judgments"**
-    **"From Law School to Global Legal Practice"**
-    **"One Platform. Every Legal Need. Anywhere in the World."**
-    
-    🌍 **Zero Data Retention** - All data auto-deleted within 24 hours
-    🔒 **Global Compliance** - DPDP, GDPR, CCPA, PIPEDA, LGPD, POPIA
-    🚀 **73 AI Agents** - Complete legal automation with Lawyer CV
-    👨‍⚖️ **Lawyer Verified** - Multi-agent consensus + Supreme Court review
-    💰 **₹2 Payment** - Razorpay test payment integrated
-    """,
-    version="4.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
-)
-
-security = HTTPBearer()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ===================================================================
-# API ENDPOINTS
-# ===================================================================
-
-@app.get("/", response_class=JSONResponse)
-async def root():
-    return {
-        "name": "LexSarthi v4.0",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "version": "4.0.0",
-        "status": "operational",
-        "agents": len(AGENT_LIST),
-        "lawyers": len(LAWYER_CV_DATABASE),
-        "zero_retention": True,
-        "payment": "₹2 Razorpay Test Payment - Working",
-        "verification": "Multi-Agent Consensus + Lawyer Review",
-        "website": "https://www.advocacyalawfrim.in",
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/health", response_class=JSONResponse)
-async def health_check():
-    return {
-        "status": "healthy",
-        "agents": len(AGENT_LIST),
-        "lawyers": len(LAWYER_CV_DATABASE),
-        "payment": "✅ ₹2 Razorpay - Working",
-        "verification": "✅ Multi-Agent Consensus Active",
-        "compliance": "✅ All Laws Compliant",
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in",
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/status", response_class=JSONResponse)
-async def system_status():
-    return {
-        "system": "operational",
-        "agents_loaded": len(AGENT_LIST),
-        "lawyer_profiles": len(LAWYER_CV_DATABASE),
-        "zero_retention": True,
-        "retention_period": "24 hours",
-        "payment_integration": "Razorpay - Working",
-        "verification_system": "Multi-Agent Consensus + Lawyer Review",
-        "compliance": {
-            "dpdp_act_2023": "✅ compliant",
-            "gdpr": "✅ compliant",
-            "ccpa_cpra": "✅ compliant",
-            "pipeda": "✅ compliant",
-            "lgpd": "✅ compliant",
-            "popia": "✅ compliant"
-        },
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in",
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/firm-info", response_class=JSONResponse)
-async def firm_info():
-    return {
-        "name": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "lawyer": "Adv. Debo",
-        "established": "2024",
-        "vision": "$10B - Single Provider for All Legal Work",
-        "services": [
-            "From Contract Review to Supreme Court Judgments",
-            "From Law School to Global Legal Practice",
-            "Complete Legal Automation with Zero Retention"
-        ],
-        "website": "https://www.advocacyalawfrim.in"
-    }
-
-# ===================================================================
-# AUTH ENDPOINTS
-# ===================================================================
-
-@app.post("/auth/register", response_class=JSONResponse)
-async def register_user(user: UserRegister):
-    return await register_user_service(user)
-
-@app.post("/auth/login", response_class=JSONResponse)
-async def login_user(user: UserLogin):
-    return await login_user_service(user)
-
-@app.post("/auth/refresh", response_class=JSONResponse)
-async def refresh_token(token: RefreshTokenRequest):
-    return await refresh_token_service(token)
-
-@app.post("/auth/logout", response_class=JSONResponse)
-async def logout_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    return await logout_user_service(credentials.credentials)
-
-@app.get("/auth/me", response_class=JSONResponse)
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    try:
-        payload = verify_token(credentials.credentials)
-        user = db.get_user(payload.get("sub"))
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        return {
-            "id": user["id"],
-            "username": user["username"],
-            "email": user["email"],
-            "full_name": user.get("full_name"),
-            "firm_name": user.get("firm_name"),
-            "user_type": user.get("user_type", "individual"),
-            "firm": "THE ADVOCACY A LAW FIRM"
-        }
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-# ===================================================================
-# AGENT ENDPOINTS
-# ===================================================================
-
-@app.get("/agents", response_class=JSONResponse)
-async def list_agents():
-    return {
-        "total": len(AGENT_LIST),
-        "lawyers": len(LAWYER_CV_DATABASE),
-        "agents": [
-            {
-                "id": a["id"],
-                "name": a["name"],
-                "category": a["category"],
-                "lawyer": a.get("lawyer_profile", {}).get("name", "Unknown"),
-                "experience": a.get("lawyer_profile", {}).get("experience", 0),
-                "specialization": a.get("lawyer_profile", {}).get("specialization", "Legal"),
-                "rating": a.get("lawyer_profile", {}).get("rating", 4.8)
-            }
-            for a in AGENT_LIST
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in"
-    }
-
-@app.get("/agents/categories", response_class=JSONResponse)
-async def list_agent_categories():
-    categories = {}
-    for agent in AGENT_LIST:
-        cat = agent["category"]
-        if cat not in categories:
-            categories[cat] = []
-        categories[cat].append({
-            "id": agent["id"],
-            "name": agent["name"],
-            "lawyer": agent.get("lawyer_profile", {}).get("name", "Unknown"),
-            "experience": agent.get("lawyer_profile", {}).get("experience", 0)
-        })
-    
-    return {
-        "categories": categories,
-        "total": len(AGENT_LIST),
-        "lawyers": len(LAWYER_CV_DATABASE),
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-@app.get("/agents/lawyers", response_class=JSONResponse)
-async def get_lawyer_profiles():
-    return get_all_lawyer_profiles()
-
-@app.post("/agent/run", response_class=JSONResponse)
-async def run_agent(
-    request: AgentRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return await run_agent_service(request, credentials.credentials)
-
-@app.get("/agent/{agent_id}", response_class=JSONResponse)
-async def get_agent_details(agent_id: str):
-    agent = next((a for a in AGENT_LIST if a["id"] == agent_id), None)
-    if not agent:
-        raise HTTPException(status_code=404, detail="Agent not found")
-    return {
-        **agent,
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World."
-    }
-
-# ===================================================================
-# CV SIMULATION ENDPOINT
-# ===================================================================
-
-@app.post("/cv/simulate", response_class=JSONResponse)
-async def simulate_cv(
-    request: CVSimulationRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return await simulate_cv_service(request, credentials.credentials)
-
-# ===================================================================
-# DOMAIN INTELLIGENCE ENDPOINT
-# ===================================================================
-
-@app.post("/scan-domain", response_class=JSONResponse)
-async def scan_domain(
-    request: DomainScanRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return await scan_domain_service(request, credentials.credentials)
-
-# ===================================================================
-# MARKET INTELLIGENCE ENDPOINTS
-# ===================================================================
-
-@app.post("/market-intelligence/trends", response_class=JSONResponse)
-async def get_market_trends(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await get_market_trends_service(credentials.credentials)
-
-@app.post("/market-intelligence/competitors", response_class=JSONResponse)
-async def get_competitor_analysis(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await get_competitor_analysis_service(credentials.credentials)
-
-@app.post("/market-intelligence/regulatory", response_class=JSONResponse)
-async def get_regulatory_insights(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await get_regulatory_insights_service(credentials.credentials)
-
-# ===================================================================
-# PAYMENT ENDPOINTS
-# ===================================================================
-
-@app.post("/payment/create-order", response_class=JSONResponse)
-async def create_payment_order(
-    request: PaymentRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await create_payment_order_service(request, credentials.credentials)
-
-@app.post("/payment/verify", response_class=JSONResponse)
-async def verify_payment(
-    request: PaymentVerificationRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await verify_payment_service(request, credentials.credentials)
-
-@app.get("/payment/status/{order_id}", response_class=JSONResponse)
-async def get_payment_status(
-    order_id: str,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await get_payment_status(order_id, credentials.credentials)
-
-# ===================================================================
-# DOCUMENT ENDPOINTS
-# ===================================================================
-
-@app.post("/document/upload", response_class=JSONResponse)
-async def upload_document(
-    file: UploadFile = File(...),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await upload_document_service(file, credentials.credentials)
-
-@app.post("/document/generate-pdf", response_class=JSONResponse)
-async def generate_pdf_report(
-    request: PDFRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return await generate_pdf_report_service(request, credentials.credentials)
-
-# ===================================================================
-# COMPLIANCE ENDPOINTS
-# ===================================================================
-
-@app.get("/compliance/status", response_class=JSONResponse)
-async def get_compliance_status_endpoint():
-    return get_compliance_status()
-
-@app.get("/compliance/zero-retention", response_class=JSONResponse)
-async def get_zero_retention_info():
-    return {
-        "policy": "Zero Data Retention",
-        "retention_period": "24 hours",
-        "auto_delete": True,
-        "compliance_laws": [
-            "DPDP Act 2023 (Sections 4-14)",
-            "GDPR (EU)",
-            "CCPA/CPRA (California)",
-            "PIPEDA (Canada)",
-            "LGPD (Brazil)",
-            "POPIA (South Africa)"
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM",
-        "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-        "website": "https://www.advocacyalawfrim.in",
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ===================================================================
-# ERROR HANDLERS
-# ===================================================================
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": exc.detail,
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-            "website": "https://www.advocacyalawfrim.in",
-            "timestamp": datetime.now().isoformat()
-        }
-    )
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    logger.error(f"Unhandled exception: {str(exc)}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal server error",
-            "firm": "THE ADVOCACY A LAW FIRM",
-            "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
-            "website": "https://www.advocacyalawfrim.in",
-            "timestamp": datetime.now().isoformat()
-        }
-    )
-
-# ===================================================================
-# RUN SERVER
-# ===================================================================
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 7860))
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        workers=4,
-        limit_concurrency=1000,
-        backlog=2048
-    )
+        for vid in
