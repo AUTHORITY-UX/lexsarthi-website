@@ -1,5 +1,5 @@
 # ===================================================================
-# LEXSARTHI v4.0 - INDIA'S FIRST AI-NATIVE COMPLETE LEGAL OS
+# LEXSARTHI v4.0 - DOCKERFILE
 # ===================================================================
 # Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
 # Confidential and proprietary. Do not distribute without a license.
@@ -9,30 +9,30 @@
 # "From Law School to Global Legal Practice"
 # "One Platform. Every Legal Need. Anywhere in the World."
 # ===================================================================
-# Powered By THE ADVOCACY A LAW FIRM
-# ===================================================================
-# ✅ ALL DEPENDENCIES LOADED | WORKING
-# ✅ FASTAPI + RAZORPAY + WHOIS + SSL + PDF + ANALYTICS
-# ✅ PRODUCTION READY | GLOBAL SCALING
+# 🔥 NO OPENAI - USING OPENROUTER
+# 🔥 UNLIMITED TOKENS - GLOBAL SCALING
 # ===================================================================
 
 FROM python:3.10-slim
 
-WORKDIR /code
+WORKDIR /app
 
-# Install system dependencies required for SQLite networking and PDFs
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    sqlite3 \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY ./requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# Copy requirements first for better caching
+COPY requirements.txt .
 
+# Install Python dependencies (no openai)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
-# Hugging Face Spaces strictly maps internal routing to port 7860
+# Expose port
 EXPOSE 7860
 
-# Run uvicorn on host 0.0.0.0 and port 7860
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "7860"]
+# Run the application
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
