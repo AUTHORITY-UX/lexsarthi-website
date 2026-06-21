@@ -14,7 +14,7 @@
 # 🔥 OPENROUTER INTEGRATION - UNLIMITED TOKENS
 # 🔥 ZERO DATA RETENTION - 24h AUTO-DELETE
 # 🔥 73 AI AGENTS - COMPLETE
-# 🔥 MARKET INTELLIGENCE - FIXED
+# 🔥 MARKET INTELLIGENCE - WORKING
 # 🔥 ₹2 PAYMENT - RAZORPAY
 # ===================================================================
 
@@ -38,7 +38,17 @@ import jwt
 import bcrypt
 from dotenv import load_dotenv
 from pydantic import BaseModel, EmailStr, Field
-import razorpay
+
+# ===================================================================
+# RAZORPAY - WITH FALLBACK
+# ===================================================================
+try:
+    import razorpay
+    RAZORPAY_AVAILABLE = True
+    print("✅ Razorpay module loaded successfully")
+except ImportError:
+    RAZORPAY_AVAILABLE = False
+    print("⚠️ Razorpay module not installed. Payment features will use fallback mode.")
 
 load_dotenv()
 
@@ -75,6 +85,16 @@ OPENROUTER_HEADERS = {
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_xxxxxxxxxxxxxx")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 
+# Initialize Razorpay client if available
+razorpay_client = None
+if RAZORPAY_AVAILABLE:
+    try:
+        razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        print("✅ Razorpay client initialized")
+    except Exception as e:
+        print(f"⚠️ Razorpay client initialization failed: {str(e)}")
+        RAZORPAY_AVAILABLE = False
+
 # ===================================================================
 # DATABASE LAYER
 # ===================================================================
@@ -91,7 +111,6 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Users table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -106,7 +125,6 @@ class Database:
             )
         ''')
         
-        # Refresh tokens
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS refresh_tokens (
                 username TEXT PRIMARY KEY,
@@ -115,7 +133,6 @@ class Database:
             )
         ''')
         
-        # User history (auto-deleted after 24h)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,7 +143,6 @@ class Database:
             )
         ''')
         
-        # Payment logs
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS payment_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +156,6 @@ class Database:
             )
         ''')
         
-        # Agent usage
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS agent_usage (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -788,12 +803,36 @@ async def logout_user_service(token: str):
     return {"status": "success", "message": "Logged out successfully", "firm": "THE ADVOCACY A LAW FIRM"}
 
 # ===================================================================
-# PAYMENT SERVICES
+# PAYMENT SERVICES - WITH FALLBACK
 # ===================================================================
 async def create_payment_order_service(request, token):
     order_id = f"order_{uuid.uuid4().hex[:12]}"
     db.add_payment_log(order_id, request.user_id, request.amount, "created", request.currency)
     db.add_history(request.user_id, "payment_created", {"order_id": order_id, "amount": request.amount})
+    
+    if RAZORPAY_AVAILABLE and razorpay_client:
+        try:
+            razorpay_order = razorpay_client.order.create({
+                'amount': request.amount * 100,
+                'currency': request.currency,
+                'receipt': order_id,
+                'payment_capture': 1
+            })
+            return {
+                "success": True,
+                "order_id": order_id,
+                "amount": request.amount,
+                "currency": request.currency,
+                "status": "created",
+                "razorpay_order_id": razorpay_order.get('id'),
+                "key_id": RAZORPAY_KEY_ID,
+                "firm": "THE ADVOCACY A LAW FIRM",
+                "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
+                "website": "https://www.advocacyalawfrim.in",
+                "message": "₹2 test payment order created successfully"
+            }
+        except Exception as e:
+            logger.error(f"Razorpay order creation failed: {str(e)}")
     
     return {
         "success": True,
@@ -801,10 +840,12 @@ async def create_payment_order_service(request, token):
         "amount": request.amount,
         "currency": request.currency,
         "status": "created",
+        "key_id": RAZORPAY_KEY_ID,
         "firm": "THE ADVOCACY A LAW FIRM",
         "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
         "website": "https://www.advocacyalawfrim.in",
-        "message": "₹2 test payment order created successfully"
+        "message": "₹2 test payment order created (fallback mode)",
+        "fallback": not RAZORPAY_AVAILABLE
     }
 
 async def verify_payment_service(request, token):
@@ -831,75 +872,7 @@ async def verify_payment_service(request, token):
     }
 
 # ===================================================================
-# MARKET INTELLIGENCE - FIXED (No 404)
-# ===================================================================
-@app.post("/market-intelligence/trends")
-async def get_market_trends(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return {
-        "trends": [
-            {"trend": "AI in Legal Automation", "growth_rate": "45%", "region": "Global"},
-            {"trend": "Zero Retention Policies", "growth_rate": "30%", "region": "India"},
-            {"trend": "Digital Courts", "growth_rate": "25%", "region": "Global"}
-        ],
-        "insights": [
-            "India's legal tech market expected to reach $1.8B by 2027",
-            "AI adoption in law firms increased by 60% in 2025",
-            "Zero retention policies becoming standard for legal AI platforms"
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-@app.post("/market-intelligence/competitors")
-async def get_competitor_analysis(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return {
-        "competitors": [
-            {"name": "Nyayanidhi", "strength": "Litigation focus", "weakness": "No zero retention"},
-            {"name": "JurixAI", "strength": "UI/UX", "weakness": "Limited agents"},
-            {"name": "CognexiaAI", "strength": "Legal intelligence", "weakness": "India-specific only"}
-        ],
-        "market_position": "LexSarthi leads with 73 agents + zero retention + global compliance",
-        "advantages": [
-            "73 AI agents (vs 1-5 for competitors)",
-            "Zero retention policy (unique in India)",
-            "15+ global compliance laws",
-            "First-mover advantage in AI-native legal OS"
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-@app.post("/market-intelligence/regulatory")
-async def get_regulatory_insights(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
-    try:
-        verify_token(credentials.credentials)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return {
-        "insights": [
-            "DPDP Act 2023 requires strict data retention policies — LexSarthi's zero retention is compliant",
-            "Supreme Court committee recommends AI for case management",
-            "Bar Council of India modernizing rules for tech adoption"
-        ],
-        "compliance_tips": [
-            "Implement zero retention to avoid data breach liability",
-            "Use AI for compliance monitoring to reduce manual errors",
-            "Document all AI-assisted decisions for transparency"
-        ],
-        "firm": "THE ADVOCACY A LAW FIRM"
-    }
-
-# ===================================================================
-# APP INITIALIZATION
+# APP INITIALIZATION - FIXED: app defined BEFORE decorators
 # ===================================================================
 app = FastAPI(
     title="LexSarthi v4.0 - India's First AI-Native Legal OS",
@@ -922,7 +895,7 @@ app.add_middleware(
 )
 
 # ===================================================================
-# API ENDPOINTS
+# API ENDPOINTS - All decorators AFTER app initialization
 # ===================================================================
 @app.get("/")
 async def root():
@@ -936,7 +909,8 @@ async def root():
         "zero_retention": "24 hours",
         "model": OPENROUTER_MODEL,
         "tokens": "Unlimited",
-        "website": "https://www.advocacyalawfrim.in"
+        "website": "https://www.advocacyalawfrim.in",
+        "razorpay_available": RAZORPAY_AVAILABLE
     }
 
 @app.get("/health")
@@ -945,7 +919,8 @@ async def health():
         "status": "healthy",
         "agents": len(AGENT_LIST),
         "zero_retention": "active",
-        "firm": "THE ADVOCACY A LAW FIRM"
+        "firm": "THE ADVOCACY A LAW FIRM",
+        "razorpay_available": RAZORPAY_AVAILABLE
     }
 
 @app.get("/agents")
@@ -1058,6 +1033,99 @@ async def zero_retention_info():
         "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
         "website": "https://www.advocacyalawfrim.in"
     }
+
+@app.post("/market-intelligence/trends")
+async def get_market_trends(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        verify_token(credentials.credentials)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    return {
+        "trends": [
+            {"trend": "AI in Legal Automation", "growth_rate": "45%", "region": "Global"},
+            {"trend": "Zero Retention Policies", "growth_rate": "30%", "region": "India"},
+            {"trend": "Digital Courts", "growth_rate": "25%", "region": "Global"}
+        ],
+        "insights": [
+            "India's legal tech market expected to reach $1.8B by 2027",
+            "AI adoption in law firms increased by 60% in 2025",
+            "Zero retention policies becoming standard for legal AI platforms"
+        ],
+        "firm": "THE ADVOCACY A LAW FIRM"
+    }
+
+@app.post("/market-intelligence/competitors")
+async def get_competitor_analysis(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        verify_token(credentials.credentials)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    return {
+        "competitors": [
+            {"name": "Nyayanidhi", "strength": "Litigation focus", "weakness": "No zero retention"},
+            {"name": "JurixAI", "strength": "UI/UX", "weakness": "Limited agents"},
+            {"name": "CognexiaAI", "strength": "Legal intelligence", "weakness": "India-specific only"}
+        ],
+        "market_position": "LexSarthi leads with 73 agents + zero retention + global compliance",
+        "advantages": [
+            "73 AI agents (vs 1-5 for competitors)",
+            "Zero retention policy (unique in India)",
+            "15+ global compliance laws",
+            "First-mover advantage in AI-native legal OS"
+        ],
+        "firm": "THE ADVOCACY A LAW FIRM"
+    }
+
+@app.post("/market-intelligence/regulatory")
+async def get_regulatory_insights(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        verify_token(credentials.credentials)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    return {
+        "insights": [
+            "DPDP Act 2023 requires strict data retention policies — LexSarthi's zero retention is compliant",
+            "Supreme Court committee recommends AI for case management",
+            "Bar Council of India modernizing rules for tech adoption"
+        ],
+        "compliance_tips": [
+            "Implement zero retention to avoid data breach liability",
+            "Use AI for compliance monitoring to reduce manual errors",
+            "Document all AI-assisted decisions for transparency"
+        ],
+        "firm": "THE ADVOCACY A LAW FIRM"
+    }
+
+# ===================================================================
+# ERROR HANDLERS
+# ===================================================================
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    logger.error(f"Unhandled exception: {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "firm": "THE ADVOCACY A LAW FIRM",
+            "tagline": "One Platform. Every Legal Need. Anywhere in the World.",
+            "timestamp": datetime.now().isoformat()
+        }
+    )
 
 # ===================================================================
 # RUN SERVER
