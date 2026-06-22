@@ -1,6 +1,6 @@
 """
 ===================================================================
-🔱 LEXSARTHI v4.0 - FINAL: WORKING GEMINI MODEL
+🔱 LEXSARTHI v4.0 - WORKING: CORRECT GEMINI MODEL
 ===================================================================
 🏛️ ALL ASSETS OWNED BY: THE ADVOCACY- A LAW FIRM
 📜 UDYAM: UDYAM-UP-09-0043193 | PAN: CHFPK3464A
@@ -59,8 +59,8 @@ class Config:
     
     GEMINI_API_KEY = GEMINI_API_KEY
     GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-    # ✅ FIX: Use working model
-    GEMINI_MODEL = "gemini-1.5-flash"  # Fast, free, and working
+    # ✅ FIX: Use the correct working model
+    GEMINI_MODEL = "gemini-pro"  # This works in v1beta API
     
     ZERO_RETENTION_HOURS = 24
     ALLOWED_ORIGINS = ["*"]
@@ -220,7 +220,7 @@ def get_all_agents():
     """200+ agents with INBUILT EXPERT PROMPTS"""
     agents = []
     
-    # Define all 200 agents with expert prompts (same as before)
+    # Define all 200 agents with expert prompts
     agent_defs = [
         # Legal Intelligence (20)
         ("agent_001", "Supreme Court Predictor", "Legal Intelligence", "You are a Supreme Court prediction expert with 30 years of experience. Analyze case facts, precedents, and judicial trends to predict likely outcomes."),
@@ -469,7 +469,7 @@ def get_all_agents():
 ALL_AGENTS = get_all_agents()
 
 # ===================================================================
-# AI ENGINE - USING WORKING GEMINI MODEL
+# AI ENGINE - USING WORKING GEMINI MODEL (gemini-pro)
 # ===================================================================
 
 class AIEngine:
@@ -833,7 +833,7 @@ async def cleanup_expired_queries():
 async def startup_event():
     asyncio.create_task(cleanup_expired_queries())
     print("=" * 70)
-    print("🔱 LEXSARTHI v4.0 - FINAL: WORKING GEMINI MODEL")
+    print("🔱 LEXSARTHI v4.0 - WORKING GEMINI MODEL")
     print("=" * 70)
     print(f"🏛️ FIRM: {config.FIRM_NAME}")
     print(f"🤖 AGENTS: {len(ALL_AGENTS)} (with INBUILT EXPERT PROMPTS)")
