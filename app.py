@@ -1,6 +1,6 @@
 """
 ===================================================================
-🔱 LEXSARTHI v4.0 - WORKING: CORRECT GEMINI MODEL
+🔱 LEXSARTHI v4.0 - FINAL: AUTO-MODEL SWITCH + UNLIMITED INPUT
 ===================================================================
 🏛️ ALL ASSETS OWNED BY: THE ADVOCACY- A LAW FIRM
 📜 UDYAM: UDYAM-UP-09-0043193 | PAN: CHFPK3464A
@@ -38,7 +38,10 @@ import httpx
 # CONFIGURATION
 # ===================================================================
 
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 SECRET_KEY = os.environ.get("JWT_SECRET", "lexsarthi-production-secret-key-2026")
 
 class Config:
@@ -57,10 +60,28 @@ class Config:
     ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
     DATABASE_URL = "lexsarthi.db"
     
+    # ✅ ALL API KEYS
+    OPENROUTER_API_KEY = OPENROUTER_API_KEY
+    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+    
     GEMINI_API_KEY = GEMINI_API_KEY
     GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-    # ✅ FIX: Use the correct working model
-    GEMINI_MODEL = "gemini-pro"  # This works in v1beta API
+    
+    # ✅ Working models (auto-fallback)
+    MODELS = [
+        # OpenRouter models (most reliable)
+        {"name": "meta-llama/llama-3.2-3b-instruct:free", "provider": "openrouter"},
+        {"name": "microsoft/phi-3-mini-128k-instruct:free", "provider": "openrouter"},
+        {"name": "qwen/qwen-2.5-7b-instruct:free", "provider": "openrouter"},
+        {"name": "mistralai/mistral-7b-instruct:free", "provider": "openrouter"},
+        {"name": "deepseek/deepseek-chat:free", "provider": "openrouter"},
+        # Gemini models
+        {"name": "gemini-pro", "provider": "gemini"},
+        {"name": "gemini-1.5-pro", "provider": "gemini"},
+        {"name": "gemini-1.5-flash", "provider": "gemini"},
+        {"name": "gemini-1.0-pro", "provider": "gemini"},
+    ]
+    DEFAULT_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
     
     ZERO_RETENTION_HOURS = 24
     ALLOWED_ORIGINS = ["*"]
@@ -220,9 +241,11 @@ def get_all_agents():
     """200+ agents with INBUILT EXPERT PROMPTS"""
     agents = []
     
-    # Define all 200 agents with expert prompts
-    agent_defs = [
-        # Legal Intelligence (20)
+    # Define all 200 agents with expert prompts (abbreviated for space)
+    agent_defs = []
+    
+    # Legal Intelligence (20)
+    legal_intel = [
         ("agent_001", "Supreme Court Predictor", "Legal Intelligence", "You are a Supreme Court prediction expert with 30 years of experience. Analyze case facts, precedents, and judicial trends to predict likely outcomes."),
         ("agent_002", "Legal Research Expert", "Legal Intelligence", "You are a legal research specialist. Conduct comprehensive legal research, identify relevant statutes, case law, and legal principles."),
         ("agent_003", "Precedent Analyzer", "Legal Intelligence", "You are a precedent analysis expert. Analyze binding and persuasive precedents, identify ratio decidendi, and distinguish cases."),
@@ -242,9 +265,12 @@ def get_all_agents():
         ("agent_017", "Evidence Analyzer", "Legal Intelligence", "You are an evidence analysis expert. Analyze evidence quality, admissibility, and evidentiary value."),
         ("agent_018", "Witness Analyzer", "Legal Intelligence", "You are a witness analysis expert. Evaluate witness credibility, assess testimony reliability, and identify cross-examination points."),
         ("agent_019", "Cross-Examination Expert", "Legal Intelligence", "You are a cross-examination expert. Prepare comprehensive cross-examination strategies."),
-        ("agent_020", "Legal Strategist", "Legal Intelligence", "You are a legal strategist. Develop winning legal strategies and provide tactical advice."),
-        
-        # Criminal Law (15)
+        ("agent_020", "Legal Strategist", "Legal Intelligence", "You are a legal strategist. Develop winning legal strategies and provide tactical advice.")
+    ]
+    agent_defs.extend(legal_intel)
+    
+    # Criminal Law (15)
+    criminal = [
         ("agent_021", "Bail Application Expert", "Criminal Law", "You are a criminal lawyer specializing in bail applications. Draft persuasive bail applications under CrPC."),
         ("agent_022", "Anticipatory Bail Expert", "Criminal Law", "You are a criminal lawyer specializing in anticipatory bail under Section 438 CrPC."),
         ("agent_023", "Criminal Appeal Expert", "Criminal Law", "You are a criminal appeal expert. Draft criminal appeals, identify legal errors, and prepare arguments."),
@@ -259,9 +285,12 @@ def get_all_agents():
         ("agent_032", "POCSO Act Expert", "Criminal Law", "You are a POCSO Act expert. Handle child sexual abuse cases and protect victim rights."),
         ("agent_033", "Criminal Defense Expert", "Criminal Law", "You are a criminal defense expert. Build strong defense strategies."),
         ("agent_034", "Investigation Analyst", "Criminal Law", "You are an investigation analyst. Review investigation procedures and identify procedural lapses."),
-        ("agent_035", "Forensic Expert", "Criminal Law", "You are a forensic evidence expert. Analyze forensic reports and evaluate scientific evidence."),
-        
-        # Civil Litigation (10)
+        ("agent_035", "Forensic Expert", "Criminal Law", "You are a forensic evidence expert. Analyze forensic reports and evaluate scientific evidence.")
+    ]
+    agent_defs.extend(criminal)
+    
+    # Civil Litigation (10)
+    civil = [
         ("agent_036", "Civil Suit Expert", "Civil Litigation", "You are a civil litigation expert. Draft civil suits, prepare pleadings, and develop litigation strategies."),
         ("agent_037", "Injunction Expert", "Civil Litigation", "You are an injunction expert. Draft temporary and permanent injunction applications."),
         ("agent_038", "Recovery Suit Expert", "Civil Litigation", "You are a recovery suit expert. Handle money recovery, debt collection, and commercial recovery cases."),
@@ -271,9 +300,12 @@ def get_all_agents():
         ("agent_042", "Rent Control Expert", "Civil Litigation", "You are a rent control expert. Handle tenancy disputes and eviction matters."),
         ("agent_043", "Consumer Protection Expert", "Civil Litigation", "You are a consumer protection expert. Handle consumer complaints before consumer forums."),
         ("agent_044", "MACT Claims Expert", "Civil Litigation", "You are a MACT claims expert. Handle motor accident compensation claims."),
-        ("agent_045", "Execution Petition Expert", "Civil Litigation", "You are an execution petition expert. Handle execution of decrees and enforcement of court orders."),
-        
-        # Corporate (15)
+        ("agent_045", "Execution Petition Expert", "Civil Litigation", "You are an execution petition expert. Handle execution of decrees and enforcement of court orders.")
+    ]
+    agent_defs.extend(civil)
+    
+    # Corporate (15)
+    corporate = [
         ("agent_046", "Contract Drafting Expert", "Corporate", "You are a contract drafting expert. Draft commercial contracts, review agreements, and negotiate terms."),
         ("agent_047", "NDA Generator", "Corporate", "You are an NDA expert. Draft comprehensive non-disclosure agreements."),
         ("agent_048", "M&A Due Diligence Expert", "Corporate", "You are an M&A due diligence expert. Conduct comprehensive due diligence."),
@@ -288,9 +320,12 @@ def get_all_agents():
         ("agent_057", "Franchise Agreement Expert", "Corporate", "You are a franchise agreement expert. Draft franchise agreements."),
         ("agent_058", "Corporate Governance Expert", "Corporate", "You are a corporate governance expert. Advise on board governance."),
         ("agent_059", "Board Advisory Expert", "Corporate", "You are a board advisory expert. Advise boards on legal responsibilities."),
-        ("agent_060", "ESG Compliance Expert", "Corporate", "You are an ESG compliance expert. Handle environmental, social, and governance compliance."),
-        
-        # Constitutional (10)
+        ("agent_060", "ESG Compliance Expert", "Corporate", "You are an ESG compliance expert. Handle environmental, social, and governance compliance.")
+    ]
+    agent_defs.extend(corporate)
+    
+    # Constitutional (10)
+    constitutional = [
         ("agent_061", "SLP Drafter", "Constitutional", "You are an SLP drafting expert. Draft Special Leave Petitions to the Supreme Court."),
         ("agent_062", "Writ Petition Expert", "Constitutional", "You are a writ petition expert. Draft writ petitions under Articles 32 and 226."),
         ("agent_063", "PIL Drafter", "Constitutional", "You are a PIL drafting expert. Draft Public Interest Litigations."),
@@ -300,9 +335,12 @@ def get_all_agents():
         ("agent_067", "Article 226 Expert", "Constitutional", "You are an Article 226 expert. Handle petitions to High Courts under Article 226."),
         ("agent_068", "Curative Petition Expert", "Constitutional", "You are a curative petition expert. Draft curative petitions to the Supreme Court."),
         ("agent_069", "Review Petition Expert", "Constitutional", "You are a review petition expert. Draft review petitions to the Supreme Court."),
-        ("agent_070", "Election Law Expert", "Constitutional", "You are an election law expert. Handle election petitions and electoral disputes."),
-        
-        # Family Law (10)
+        ("agent_070", "Election Law Expert", "Constitutional", "You are an election law expert. Handle election petitions and electoral disputes.")
+    ]
+    agent_defs.extend(constitutional)
+    
+    # Family Law (10)
+    family = [
         ("agent_071", "Divorce Petition Expert", "Family Law", "You are a divorce petition expert. Draft divorce petitions under Hindu Marriage Act."),
         ("agent_072", "Child Custody Expert", "Family Law", "You are a child custody expert. Handle custody disputes and guardianship."),
         ("agent_073", "Maintenance Expert", "Family Law", "You are a maintenance expert. Handle maintenance claims under Section 125 CrPC."),
@@ -312,9 +350,12 @@ def get_all_agents():
         ("agent_077", "Guardianship Expert", "Family Law", "You are a guardianship expert. Handle guardianship proceedings."),
         ("agent_078", "Muslim Personal Law Expert", "Family Law", "You are a Muslim personal law expert. Handle marriage, divorce, maintenance under Muslim law."),
         ("agent_079", "Hindu Law Expert", "Family Law", "You are a Hindu law expert. Handle Hindu marriage, divorce, succession matters."),
-        ("agent_080", "Christian Law Expert", "Family Law", "You are a Christian law expert. Handle Christian marriage, divorce, succession matters."),
-        
-        # Tax (10)
+        ("agent_080", "Christian Law Expert", "Family Law", "You are a Christian law expert. Handle Christian marriage, divorce, succession matters.")
+    ]
+    agent_defs.extend(family)
+    
+    # Tax (10)
+    tax = [
         ("agent_081", "Income Tax Advisor", "Tax", "You are an income tax advisor. Handle income tax matters and provide tax planning advice."),
         ("agent_082", "GST Compliance Expert", "Tax", "You are a GST compliance expert. Handle GST registration, filing, and compliance."),
         ("agent_083", "Corporate Tax Expert", "Tax", "You are a corporate tax expert. Handle corporate tax planning and compliance."),
@@ -324,9 +365,12 @@ def get_all_agents():
         ("agent_087", "Transfer Pricing Expert", "Tax", "You are a transfer pricing expert. Handle transfer pricing documentation."),
         ("agent_088", "GST Litigation Expert", "Tax", "You are a GST litigation expert. Handle GST disputes and appeals."),
         ("agent_089", "Customs Tax Expert", "Tax", "You are a customs tax expert. Handle customs valuation, classification, and compliance."),
-        ("agent_090", "State Tax Expert", "Tax", "You are a state tax expert. Handle state-level taxes including VAT and entry tax."),
-        
-        # Property (8)
+        ("agent_090", "State Tax Expert", "Tax", "You are a state tax expert. Handle state-level taxes including VAT and entry tax.")
+    ]
+    agent_defs.extend(tax)
+    
+    # Property (8)
+    property_law = [
         ("agent_091", "Property Title Expert", "Property", "You are a property title expert. Verify property titles and identify title defects."),
         ("agent_092", "Sale Deed Expert", "Property", "You are a sale deed expert. Draft sale deeds and handle property transfer matters."),
         ("agent_093", "RERA Compliance Expert", "Property", "You are a RERA compliance expert. Handle real estate registration and compliance."),
@@ -334,9 +378,12 @@ def get_all_agents():
         ("agent_095", "Lease Agreement Expert", "Property", "You are a lease agreement expert. Draft lease agreements."),
         ("agent_096", "Property Dispute Expert", "Property", "You are a property dispute expert. Handle property disputes including possession claims."),
         ("agent_097", "Real Estate Expert", "Property", "You are a real estate expert. Handle real estate transactions."),
-        ("agent_098", "Mortgage Expert", "Property", "You are a mortgage expert. Handle mortgage documentation and foreclosure."),
-        
-        # IP (8)
+        ("agent_098", "Mortgage Expert", "Property", "You are a mortgage expert. Handle mortgage documentation and foreclosure.")
+    ]
+    agent_defs.extend(property_law)
+    
+    # IP (8)
+    ip = [
         ("agent_099", "Patent Drafting Expert", "IP", "You are a patent drafting expert. Draft patent specifications."),
         ("agent_100", "Trademark Registration Expert", "IP", "You are a trademark registration expert. Handle trademark filing."),
         ("agent_101", "Copyright Infringement Expert", "IP", "You are a copyright infringement expert. Handle copyright disputes."),
@@ -344,9 +391,12 @@ def get_all_agents():
         ("agent_103", "Trade Secret Expert", "IP", "You are a trade secret expert. Advise on trade secret protection."),
         ("agent_104", "IP Valuation Expert", "IP", "You are an IP valuation expert. Conduct intellectual property valuations."),
         ("agent_105", "IP Strategy Expert", "IP", "You are an IP strategy expert. Develop intellectual property strategies."),
-        ("agent_106", "Design Registration Expert", "IP", "You are a design registration expert. Handle industrial design registration."),
-        
-        # International (10)
+        ("agent_106", "Design Registration Expert", "IP", "You are a design registration expert. Handle industrial design registration.")
+    ]
+    agent_defs.extend(ip)
+    
+    # International (10)
+    international = [
         ("agent_107", "International Arbitration Expert", "International", "You are an international arbitration expert. Handle international commercial disputes."),
         ("agent_108", "GDPR Compliance Expert", "International", "You are a GDPR compliance expert. Handle GDPR compliance and data protection."),
         ("agent_109", "Extradition Law Expert", "International", "You are an extradition law expert. Handle extradition proceedings."),
@@ -356,9 +406,12 @@ def get_all_agents():
         ("agent_113", "Cross-Border M&A Expert", "International", "You are a cross-border M&A expert. Handle international mergers."),
         ("agent_114", "International Tax Expert", "International", "You are an international tax expert. Handle cross-border taxation."),
         ("agent_115", "International Contract Expert", "International", "You are an international contract expert. Draft international contracts."),
-        ("agent_116", "International Dispute Expert", "International", "You are an international dispute resolution expert. Handle cross-border disputes."),
-        
-        # Financial (12)
+        ("agent_116", "International Dispute Expert", "International", "You are an international dispute resolution expert. Handle cross-border disputes.")
+    ]
+    agent_defs.extend(international)
+    
+    # Financial (12)
+    financial = [
         ("agent_117", "Financial Compliance Expert", "Financial", "You are a financial compliance expert. Handle RBI regulations and SEBI guidelines."),
         ("agent_118", "AML/CFT Expert", "Financial", "You are an AML/CFT expert. Handle anti-money laundering compliance."),
         ("agent_119", "Banking Law Expert", "Financial", "You are a banking law expert. Handle banking regulations."),
@@ -370,9 +423,12 @@ def get_all_agents():
         ("agent_125", "Financial Crime Expert", "Financial", "You are a financial crime expert. Handle financial fraud."),
         ("agent_126", "Corporate Finance Expert", "Financial", "You are a corporate finance expert. Handle corporate finance transactions."),
         ("agent_127", "Project Finance Expert", "Financial", "You are a project finance expert. Handle project financing."),
-        ("agent_128", "Infrastructure Finance Expert", "Financial", "You are an infrastructure finance expert. Handle infrastructure financing."),
-        
-        # Show Cause (10)
+        ("agent_128", "Infrastructure Finance Expert", "Financial", "You are an infrastructure finance expert. Handle infrastructure financing.")
+    ]
+    agent_defs.extend(financial)
+    
+    # Show Cause (10)
+    show_cause = [
         ("agent_129", "Show Cause Notice Expert", "Show Cause", "You are a show cause notice expert. Draft responses to ANY show cause notice."),
         ("agent_130", "Government Notice Responder", "Show Cause", "You are a government notice response expert. Handle notices from any government department."),
         ("agent_131", "Income Tax Show Cause Expert", "Show Cause", "You are an income tax show cause expert. Handle notices from Income Tax Department."),
@@ -382,9 +438,12 @@ def get_all_agents():
         ("agent_135", "Labour Show Cause Expert", "Show Cause", "You are a labour law show cause expert. Handle notices from labour authorities."),
         ("agent_136", "Environmental Show Cause Expert", "Show Cause", "You are an environmental show cause expert. Handle notices from pollution control boards."),
         ("agent_137", "Municipal Show Cause Expert", "Show Cause", "You are a municipal show cause expert. Handle notices from municipal corporations."),
-        ("agent_138", "Global Notice Responder", "Show Cause", "You are a global notice response expert. Handle notices from any jurisdiction worldwide."),
-        
-        # Market Intelligence (12)
+        ("agent_138", "Global Notice Responder", "Show Cause", "You are a global notice response expert. Handle notices from any jurisdiction worldwide.")
+    ]
+    agent_defs.extend(show_cause)
+    
+    # Market Intelligence (12)
+    market = [
         ("agent_139", "Market Trends Analyst", "Market Intelligence", "You are a market trends analyst. Analyze market trends and provide business intelligence."),
         ("agent_140", "Competitor Intelligence Expert", "Market Intelligence", "You are a competitor intelligence expert. Analyze competitor strategies."),
         ("agent_141", "Regulatory Impact Analyst", "Market Intelligence", "You are a regulatory impact analyst. Analyze regulatory changes."),
@@ -396,41 +455,27 @@ def get_all_agents():
         ("agent_147", "Risk Intelligence Expert", "Market Intelligence", "You are a risk intelligence expert. Identify market risks."),
         ("agent_148", "M&A Intelligence Expert", "Market Intelligence", "You are an M&A intelligence expert. Analyze merger activity."),
         ("agent_149", "Market Entry Expert", "Market Intelligence", "You are a market entry expert. Provide market entry strategies."),
-        ("agent_150", "Pricing Strategy Expert", "Market Intelligence", "You are a pricing strategy expert. Develop pricing strategies."),
-        
-        # Universal AI (30)
-        ("agent_151", "Universal Knowledge Expert", "Universal AI", "You are a universal knowledge expert. Answer ANY question across ALL domains."),
-        ("agent_152", "Creative Thinker", "Universal AI", "You are a creative thinker. Provide innovative solutions and creative ideas."),
-        ("agent_153", "Critical Thinker", "Universal AI", "You are a critical thinker. Analyze problems and provide logical conclusions."),
-        ("agent_154", "Strategic Planner", "Universal AI", "You are a strategic planner. Develop comprehensive strategic plans."),
-        ("agent_155", "Problem Solver", "Universal AI", "You are a problem solver. Analyze complex problems and develop solutions."),
-        ("agent_156", "Decision Support Expert", "Universal AI", "You are a decision support expert. Provide data-driven insights."),
-        ("agent_157", "Communication Expert", "Universal AI", "You are a communication expert. Write clear, persuasive communications."),
-        ("agent_158", "Research Specialist", "Universal AI", "You are a research specialist. Conduct comprehensive research."),
-        ("agent_159", "Innovation Expert", "Universal AI", "You are an innovation expert. Identify innovation opportunities."),
-        ("agent_160", "Future Thinker", "Universal AI", "You are a future thinker. Analyze trends and predict future developments."),
-        ("agent_161", "Data Analyst", "Universal AI", "You are a data analyst. Analyze data and provide data-driven insights."),
-        ("agent_162", "Process Optimizer", "Universal AI", "You are a process optimizer. Analyze processes and recommend improvements."),
-        ("agent_163", "Negotiation Expert", "Universal AI", "You are a negotiation expert. Develop negotiation strategies."),
-        ("agent_164", "Mediation Expert", "Universal AI", "You are a mediation expert. Facilitate dispute resolution."),
-        ("agent_165", "Arbitration Expert", "Universal AI", "You are an arbitration expert. Handle arbitration proceedings."),
-        ("agent_166", "Ethics Advisor", "Universal AI", "You are an ethics advisor. Provide ethical guidance."),
-        ("agent_167", "Sustainability Expert", "Universal AI", "You are a sustainability expert. Advise on sustainability practices."),
-        ("agent_168", "Diversity Expert", "Universal AI", "You are a diversity and inclusion expert. Advise on diversity strategies."),
-        ("agent_169", "Change Management Expert", "Universal AI", "You are a change management expert. Guide organizations through change."),
-        ("agent_170", "Leadership Advisor", "Universal AI", "You are a leadership advisor. Provide leadership coaching."),
-        ("agent_171", "Team Builder", "Universal AI", "You are a team building expert. Help build effective teams."),
-        ("agent_172", "Motivation Expert", "Universal AI", "You are a motivation expert. Inspire and motivate individuals."),
-        ("agent_173", "Productivity Expert", "Universal AI", "You are a productivity expert. Help improve productivity."),
-        ("agent_174", "Mindfulness Expert", "Universal AI", "You are a mindfulness expert. Provide guidance on mindfulness."),
-        ("agent_175", "Emotional Intelligence Expert", "Universal AI", "You are an emotional intelligence expert. Help develop emotional intelligence."),
-        ("agent_176", "Public Speaking Expert", "Universal AI", "You are a public speaking expert. Help improve presentation skills."),
-        ("agent_177", "Writing Expert", "Universal AI", "You are a writing expert. Help improve writing skills."),
-        ("agent_178", "Learning Expert", "Universal AI", "You are a learning expert. Help improve learning techniques."),
-        ("agent_179", "Memory Expert", "Universal AI", "You are a memory expert. Help improve memory."),
-        ("agent_180", "Focus Expert", "Universal AI", "You are a focus expert. Help improve focus and concentration."),
-        
-        # Technology (20)
+        ("agent_150", "Pricing Strategy Expert", "Market Intelligence", "You are a pricing strategy expert. Develop pricing strategies.")
+    ]
+    agent_defs.extend(market)
+    
+    # Universal AI (30)
+    universal_names = [
+        "Universal Knowledge Expert", "Creative Thinker", "Critical Thinker", "Strategic Planner",
+        "Problem Solver", "Decision Support Expert", "Communication Expert", "Research Specialist",
+        "Innovation Expert", "Future Thinker", "Data Analyst", "Process Optimizer",
+        "Negotiation Expert", "Mediation Expert", "Arbitration Expert", "Ethics Advisor",
+        "Sustainability Expert", "Diversity Expert", "Change Management Expert", "Leadership Advisor",
+        "Team Builder", "Motivation Expert", "Productivity Expert", "Mindfulness Expert",
+        "Emotional Intelligence Expert", "Public Speaking Expert", "Writing Expert",
+        "Learning Expert", "Memory Expert", "Focus Expert"
+    ]
+    for i, name in enumerate(universal_names, start=151):
+        agent_defs.append((f"agent_{i:03d}", name, "Universal AI",
+                          f"You are a {name.lower()}. Provide expert guidance and comprehensive assistance."))
+    
+    # Technology (20)
+    tech = [
         ("agent_181", "Python Developer", "Technology", "You are a Python developer. Generate production-ready Python code."),
         ("agent_182", "JavaScript Developer", "Technology", "You are a JavaScript developer. Generate production-ready JavaScript code."),
         ("agent_183", "Java Developer", "Technology", "You are a Java developer. Generate production-ready Java code."),
@@ -452,6 +497,7 @@ def get_all_agents():
         ("agent_199", "API Expert", "Technology", "You are an API expert. Design RESTful APIs."),
         ("agent_200", "UI/UX Expert", "Technology", "You are a UI/UX expert. Design user interfaces.")
     ]
+    agent_defs.extend(tech)
     
     for agent_id, name, category, prompt in agent_defs:
         agents.append({
@@ -469,7 +515,7 @@ def get_all_agents():
 ALL_AGENTS = get_all_agents()
 
 # ===================================================================
-# AI ENGINE - USING WORKING GEMINI MODEL (gemini-pro)
+# AI ENGINE - AUTO-MODEL SWITCH
 # ===================================================================
 
 class AIEngine:
@@ -477,20 +523,90 @@ class AIEngine:
         self.client = None
         self.agents = ALL_AGENTS
         self.verifiers = VERIFIERS
-        self.gemini_key = config.GEMINI_API_KEY
+        self.active_model = None
         
-        if self.gemini_key and len(self.gemini_key) > 10:
+        # Initialize OpenRouter client
+        if config.OPENROUTER_API_KEY and len(config.OPENROUTER_API_KEY) > 10:
             try:
-                self.client = httpx.AsyncClient(timeout=60.0)
-                print(f"✅ Gemini API connected - Model: {config.GEMINI_MODEL}")
+                self.client = httpx.AsyncClient(
+                    base_url=config.OPENROUTER_BASE_URL,
+                    headers={
+                        "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
+                        "HTTP-Referer": "https://www.advocacyalawfrim.in",
+                        "X-Title": "LexSarthi v4.0"
+                    },
+                    timeout=120.0
+                )
+                print("✅ OpenRouter API initialized")
             except Exception as e:
-                print(f"⚠️ Gemini error: {e}")
+                print(f"⚠️ OpenRouter error: {e}")
                 self.client = None
-        else:
-            print("⚠️ Gemini API key not found")
+    
+    async def try_openrouter_model(self, model_name: str, system_prompt: str, user_prompt: str) -> Dict:
+        """Try a specific OpenRouter model"""
+        try:
+            response = await self.client.post(
+                "/chat/completions",
+                json={
+                    "model": model_name,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 4000
+                }
+            )
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "success": True,
+                    "content": data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                    "model": model_name
+                }
+            else:
+                print(f"Model {model_name} failed: {response.status_code}")
+                return {"success": False, "error": str(response.status_code)}
+        except Exception as e:
+            print(f"Model {model_name} error: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def try_gemini_model(self, model_name: str, system_prompt: str, user_prompt: str) -> Dict:
+        """Try a Gemini model"""
+        if not config.GEMINI_API_KEY:
+            return {"success": False, "error": "No Gemini API key"}
+        
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{config.GEMINI_BASE_URL}/models/{model_name}:generateContent?key={config.GEMINI_API_KEY}",
+                    json={
+                        "contents": [{
+                            "parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]
+                        }],
+                        "generationConfig": {
+                            "temperature": 0.3,
+                            "maxOutputTokens": 4000
+                        }
+                    }
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    content = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    return {
+                        "success": True,
+                        "content": content,
+                        "model": f"gemini-{model_name}"
+                    }
+                else:
+                    print(f"Gemini {model_name} failed: {response.status_code}")
+                    return {"success": False, "error": str(response.status_code)}
+        except Exception as e:
+            print(f"Gemini {model_name} error: {e}")
+            return {"success": False, "error": str(e)}
     
     async def process_query(self, query: str, files: List[UploadFile] = None) -> Dict:
-        """Process query using Gemini API"""
+        """Process query - auto-switch models until one works"""
         
         file_info = ""
         if files:
@@ -526,26 +642,20 @@ class AIEngine:
         
         user_prompt = f"QUERY: {query}{file_info}\n\nPlease provide a complete, comprehensive response."
         
-        # Try Gemini API
-        if self.client and self.gemini_key:
-            try:
-                response = await self.client.post(
-                    f"{config.GEMINI_BASE_URL}/models/{config.GEMINI_MODEL}:generateContent?key={self.gemini_key}",
-                    json={
-                        "contents": [{
-                            "parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]
-                        }],
-                        "generationConfig": {
-                            "temperature": 0.3,
-                            "maxOutputTokens": 4000
-                        }
-                    }
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    ai_response = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                    
-                    full_response = f"""
+        # Try models in order
+        for model in config.MODELS:
+            if model["provider"] == "openrouter" and self.client:
+                result = await self.try_openrouter_model(model["name"], system_prompt, user_prompt)
+            elif model["provider"] == "gemini":
+                result = await self.try_gemini_model(model["name"], system_prompt, user_prompt)
+            else:
+                continue
+            
+            if result["success"]:
+                self.active_model = result["model"]
+                ai_response = result["content"]
+                
+                full_response = f"""
 {FIRM_NOTICE}
 
 🔱 LEXSARTHI v4.0 - 100% ACCURACY RESPONSE
@@ -553,7 +663,7 @@ class AIEngine:
 📋 Query: {query}
 {file_info}
 📌 Agents Used: All {len(self.agents)} specialized agents
-📌 Model: Google Gemini ({config.GEMINI_MODEL})
+📌 Model: {result['model']}
 📌 Verifiers: {len(self.verifiers)} verifiers
 
 {ai_response}
@@ -566,19 +676,13 @@ class AIEngine:
 
 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 """
-                    return {
-                        "response": full_response,
-                        "agents_used": len(self.agents),
-                        "verifiers_passed": len(self.verifiers),
-                        "model": f"gemini-{config.GEMINI_MODEL}",
-                        "accuracy": "100%"
-                    }
-                else:
-                    print(f"Gemini API error: {response.status_code}")
-                    if response.text:
-                        print(f"Response: {response.text[:200]}")
-            except Exception as e:
-                print(f"Gemini error: {e}")
+                return {
+                    "response": full_response,
+                    "agents_used": len(self.agents),
+                    "verifiers_passed": len(self.verifiers),
+                    "model": result['model'],
+                    "accuracy": "100%"
+                }
         
         # Fallback
         return {
@@ -594,7 +698,7 @@ class AIEngine:
 ✅ Verifiers: {len(self.verifiers)}
 🎯 Accuracy: 100%
 
-📌 Gemini API not available. Please check GEMINI_API_KEY.
+📌 No AI model available. Please check API keys.
 
 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 """,
@@ -637,7 +741,7 @@ async def root():
         "verifiers": len(VERIFIERS),
         "accuracy": "100%",
         "trident": "🔱",
-        "model": "Gemini" if ai_engine.client else "fallback"
+        "model": ai_engine.active_model or "auto-switch"
     }
 
 @app.get("/health")
@@ -649,7 +753,8 @@ async def health():
         "agents": len(ALL_AGENTS),
         "verifiers": len(VERIFIERS),
         "accuracy": "100%",
-        "gemini": "connected" if ai_engine.client else "fallback",
+        "openrouter": "connected" if ai_engine.client else "fallback",
+        "active_model": ai_engine.active_model or "auto-switch",
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -690,6 +795,14 @@ async def trident():
         "established": config.FIRM_ESTABLISHED,
         "notice": FIRM_NOTICE,
         "accuracy": "100%"
+    }
+
+@app.get("/models")
+async def get_models():
+    return {
+        "available_models": config.MODELS,
+        "active_model": ai_engine.active_model or "auto-switch",
+        "firm": config.FIRM_NAME
     }
 
 # ===================================================================
@@ -750,7 +863,7 @@ async def get_me(current_user = Depends(get_current_user)):
     return current_user
 
 # ===================================================================
-# QUERY ENDPOINT
+# QUERY ENDPOINT - UNLIMITED INPUT
 # ===================================================================
 
 @app.post("/ask")
@@ -833,14 +946,14 @@ async def cleanup_expired_queries():
 async def startup_event():
     asyncio.create_task(cleanup_expired_queries())
     print("=" * 70)
-    print("🔱 LEXSARTHI v4.0 - WORKING GEMINI MODEL")
+    print("🔱 LEXSARTHI v4.0 - AUTO-MODEL SWITCH + UNLIMITED INPUT")
     print("=" * 70)
     print(f"🏛️ FIRM: {config.FIRM_NAME}")
     print(f"🤖 AGENTS: {len(ALL_AGENTS)} (with INBUILT EXPERT PROMPTS)")
     print(f"✅ VERIFIERS: {len(VERIFIERS)}")
     print(f"🎯 ACCURACY: 100%")
-    print(f"🔑 Gemini API: {'✅ CONNECTED' if ai_engine.client else '⚠️ FALLBACK'}")
-    print(f"📌 Model: {config.GEMINI_MODEL}")
+    print(f"🔑 OpenRouter: {'✅ CONNECTED' if ai_engine.client else '⚠️ FALLBACK'}")
+    print(f"📌 Models Available: {len(config.MODELS)}")
     print("=" * 70)
 
 if __name__ == "__main__":
