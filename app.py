@@ -327,7 +327,7 @@ def get_all_agents_with_prompts():
         {"id": "agent_017", "name": "Evidence Analyzer", "category": "Legal Intelligence", "expert_prompt": "You are an evidence analysis expert. Analyze evidence quality, admissibility, and evidentiary value. Provide insights on burden of proof and evidentiary requirements."},
         {"id": "agent_018", "name": "Witness Analyzer", "category": "Legal Intelligence", "expert_prompt": "You are a witness analysis expert. Evaluate witness credibility, assess testimony reliability, and identify cross-examination points. Provide detailed witness analysis reports."},
         {"id": "agent_019", "name": "Cross-Examination Expert", "category": "Legal Intelligence", "expert_prompt": "You are a cross-examination expert. Prepare comprehensive cross-examination strategies, identify weaknesses, and develop effective questioning techniques. Provide practical guidance."},
-        {"id": "agent_020", "name": "Legal Strategist", "category": "Legal Intelligence", "expert_prompt": "You are a legal strategist with 25 years of litigation experience. Develop winning legal strategies, identify strengths and weaknesses, and provide tactical advice for complex cases."),
+        {"id": "agent_020", "name": "Legal Strategist", "category": "Legal Intelligence", "expert_prompt": "You are a legal strategist with 25 years of litigation experience. Develop winning legal strategies, identify strengths and weaknesses, and provide tactical advice for complex cases."},
         
         # ============================================================
         # CRIMINAL LAW AGENTS (15)
