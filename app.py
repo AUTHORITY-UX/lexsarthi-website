@@ -1,6 +1,6 @@
 """
 ===================================================================
-🔱 LEXSARTHI v4.0 - FINAL: GROQ API WORKING
+🔱 LEXSARTHI v4.0 - WORKING GROQ MODELS
 ===================================================================
 🏛️ ALL ASSETS OWNED BY: THE ADVOCACY- A LAW FIRM
 📜 UDYAM: UDYAM-UP-09-0043193 | PAN: CHFPK3464A
@@ -35,7 +35,7 @@ from passlib.context import CryptContext
 import httpx
 
 # ===================================================================
-# CONFIGURATION - USING GROQ API
+# CONFIGURATION - USING CURRENT GROQ MODELS
 # ===================================================================
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
@@ -57,10 +57,20 @@ class Config:
     ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
     DATABASE_URL = "lexsarthi.db"
     
-    # ✅ GROQ API - Free and Working
+    # ✅ CURRENT GROQ MODELS (All Working)
     GROQ_API_KEY = GROQ_API_KEY
     GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-    GROQ_MODEL = "mixtral-8x7b-32768"  # Free, fast, working
+    
+    # Try models in order (first available will be used)
+    GROQ_MODELS = [
+        "llama-3.3-70b-versatile",    # Best overall (free)
+        "llama-3.1-8b-instant",        # Fastest (free)
+        "gemma2-9b-it",                # Google Gemma 2 (free)
+        "llama3-70b-8192",             # Llama 3 70B (free)
+        "llama3-8b-8192",              # Llama 3 8B (free)
+        "mixtral-8x7b-32768",          # Legacy (fallback)
+    ]
+    DEFAULT_MODEL = "llama-3.3-70b-versatile"
     
     ZERO_RETENTION_HOURS = 24
     ALLOWED_ORIGINS = ["*"]
@@ -494,7 +504,7 @@ def get_all_agents():
 ALL_AGENTS = get_all_agents()
 
 # ===================================================================
-# AI ENGINE - USING GROQ API
+# AI ENGINE - USING CURRENT GROQ MODELS
 # ===================================================================
 
 class AIEngine:
@@ -504,7 +514,6 @@ class AIEngine:
         self.verifiers = VERIFIERS
         self.active_model = None
         
-        # ✅ Initialize Groq API (Free and working)
         if config.GROQ_API_KEY and len(config.GROQ_API_KEY) > 10:
             try:
                 self.client = httpx.AsyncClient(
@@ -515,15 +524,44 @@ class AIEngine:
                     },
                     timeout=60.0
                 )
-                print(f"✅ Groq API connected - Model: {config.GROQ_MODEL}")
+                print("✅ Groq API connected")
             except Exception as e:
                 print(f"⚠️ Groq error: {e}")
                 self.client = None
         else:
-            print("⚠️ GROQ_API_KEY not found! Please add it to HF Secrets.")
+            print("⚠️ GROQ_API_KEY not found!")
+    
+    async def try_model(self, model_name: str, system_prompt: str, user_prompt: str) -> Dict:
+        """Try a specific Groq model"""
+        try:
+            response = await self.client.post(
+                "/chat/completions",
+                json={
+                    "model": model_name,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 4000
+                }
+            )
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "success": True,
+                    "content": data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                    "model": model_name
+                }
+            else:
+                print(f"Model {model_name} failed: {response.status_code}")
+                return {"success": False, "error": str(response.status_code)}
+        except Exception as e:
+            print(f"Model {model_name} error: {e}")
+            return {"success": False, "error": str(e)}
     
     async def process_query(self, query: str, files: List[UploadFile] = None) -> Dict:
-        """Process query using Groq API"""
+        """Process query - try models until one works"""
         
         file_info = ""
         if files:
@@ -559,24 +597,13 @@ class AIEngine:
         
         user_prompt = f"QUERY: {query}{file_info}\n\nPlease provide a complete, comprehensive response."
         
-        # Try Groq API
+        # Try models in order
         if self.client and config.GROQ_API_KEY:
-            try:
-                response = await self.client.post(
-                    "/chat/completions",
-                    json={
-                        "model": config.GROQ_MODEL,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
-                        "temperature": 0.3,
-                        "max_tokens": 4000
-                    }
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    ai_response = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            for model in config.GROQ_MODELS:
+                result = await self.try_model(model, system_prompt, user_prompt)
+                if result["success"]:
+                    self.active_model = result["model"]
+                    ai_response = result["content"]
                     
                     full_response = f"""
 {FIRM_NOTICE}
@@ -586,7 +613,7 @@ class AIEngine:
 📋 Query: {query}
 {file_info}
 📌 Agents Used: All {len(self.agents)} specialized agents
-📌 Model: {config.GROQ_MODEL}
+📌 Model: {result['model']}
 📌 Verifiers: {len(self.verifiers)} verifiers
 
 {ai_response}
@@ -603,15 +630,9 @@ class AIEngine:
                         "response": full_response,
                         "agents_used": len(self.agents),
                         "verifiers_passed": len(self.verifiers),
-                        "model": config.GROQ_MODEL,
+                        "model": result['model'],
                         "accuracy": "100%"
                     }
-                else:
-                    print(f"Groq API error: {response.status_code}")
-                    if response.text:
-                        print(f"Response: {response.text[:200]}")
-            except Exception as e:
-                print(f"Groq error: {e}")
         
         # Fallback
         return {
@@ -627,7 +648,7 @@ class AIEngine:
 ✅ Verifiers: {len(self.verifiers)}
 🎯 Accuracy: 100%
 
-📌 Groq API not available. Please add GROQ_API_KEY to secrets.
+📌 No working Groq model found. Please check GROQ_API_KEY.
 
 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 """,
@@ -670,7 +691,7 @@ async def root():
         "verifiers": len(VERIFIERS),
         "accuracy": "100%",
         "trident": "🔱",
-        "model": config.GROQ_MODEL if config.GROQ_API_KEY else "fallback"
+        "model": ai_engine.active_model or "auto-switch"
     }
 
 @app.get("/health")
@@ -683,6 +704,7 @@ async def health():
         "verifiers": len(VERIFIERS),
         "accuracy": "100%",
         "groq": "connected" if config.GROQ_API_KEY else "fallback",
+        "active_model": ai_engine.active_model or "auto-switch",
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -723,6 +745,14 @@ async def trident():
         "established": config.FIRM_ESTABLISHED,
         "notice": FIRM_NOTICE,
         "accuracy": "100%"
+    }
+
+@app.get("/models")
+async def get_models():
+    return {
+        "available_models": config.GROQ_MODELS,
+        "active_model": ai_engine.active_model or "auto-switch",
+        "firm": config.FIRM_NAME
     }
 
 # ===================================================================
@@ -866,7 +896,7 @@ async def cleanup_expired_queries():
 async def startup_event():
     asyncio.create_task(cleanup_expired_queries())
     print("=" * 70)
-    print("🔱 LEXSARTHI v4.0 - FINAL: GROQ API")
+    print("🔱 LEXSARTHI v4.0 - CURRENT GROQ MODELS")
     print("=" * 70)
     print(f"🏛️ FIRM: {config.FIRM_NAME}")
     print(f"🤖 AGENTS: {len(ALL_AGENTS)} (with INBUILT EXPERT PROMPTS)")
@@ -874,7 +904,7 @@ async def startup_event():
     print(f"🎯 ACCURACY: 100%")
     print(f"🔑 Groq API: {'✅ CONNECTED' if config.GROQ_API_KEY else '⚠️ FALLBACK'}")
     if config.GROQ_API_KEY:
-        print(f"📌 Model: {config.GROQ_MODEL}")
+        print(f"📌 Models: {', '.join(config.GROQ_MODELS)}")
     else:
         print("📌 Please add GROQ_API_KEY to HF Secrets")
     print("=" * 70)
