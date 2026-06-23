@@ -2,7 +2,7 @@
 # ║  🔱 LEXSARTHI v4.0 — India's First AI Universal OS         ║
 # ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM               ║
 # ║  All Rights Reserved.                                      ║
-#                                  ║
+# ║  Proprietor: UPMANYU KUMAR                                 ║
 # ║  ⚠️ PROPRIETARY & CONFIDENTIAL — DO NOT REMOVE THIS NOTICE ║
 # ╚══════════════════════════════════════════════════════════════╝
 
@@ -33,23 +33,27 @@ import PyPDF2
 import docx
 from PIL import Image
 import pytesseract
-from duckduckgo_search import DDGS  # Web search (no API key needed)
+
+# Optional web search – app won’t crash if package is missing
+try:
+    from duckduckgo_search import DDGS
+    WEB_SEARCH_AVAILABLE = True
+except ImportError:
+    WEB_SEARCH_AVAILABLE = False
+    print("⚠️ duckduckgo_search not installed. Web search disabled.")
 
 # ===================================================================
-# CONFIGURATION – All private details removed from runtime
+# CONFIGURATION
 # ===================================================================
 
 class Config:
-    FIRM_NAME = "THE ADVOCACY - A LAW FIRM"  # Only used for internal logs, never in AI output
-    # API keys from environment variables
+    FIRM_NAME = "THE ADVOCACY - A LAW FIRM"  # Only for internal logs, never in AI output
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
     OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
     SECRET_KEY = os.environ.get("JWT_SECRET", os.urandom(24).hex())
-    
     RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
     RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
     RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
-    
     DATABASE_URL = "lexsarthi.db"
     ZERO_RETENTION_HOURS = 24
     CAMPAIGN_PRICE = 2
@@ -308,12 +312,12 @@ class AIEngine:
                 "accuracy": "100%"
             }
 
-        # Inject web search results if requested
+        # Inject web search results if requested and available
         if search_web:
             web_results = self._web_search(query)
             document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-        # System prompt – universal, multilingual, no firm name, with disclaimer
+        # System prompt – universal, multilingual, no firm name, with mandatory disclaimer
         system_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
 
 🔱 **Core Rules:**
@@ -400,6 +404,8 @@ class AIEngine:
         }
 
     def _web_search(self, query: str, max_results: int = 5) -> str:
+        if not WEB_SEARCH_AVAILABLE:
+            return "Web search is not available (package missing). Please install duckduckgo_search."
         try:
             with DDGS() as ddgs:
                 results = list(ddgs.text(query, max_results=max_results))
@@ -509,7 +515,7 @@ async def root():
             "input_methods": ["Text", "PDF", "Voice", "Image"],
             "output_methods": ["Copy", "PDF", "TXT", "Print", "Share"],
             "payment": "₹2 – 15 Days Unlimited Access",
-            "web_search": "Available (real-time internet scanning)",
+            "web_search": "Available" if WEB_SEARCH_AVAILABLE else "Unavailable (package missing)",
             "multilingual": "Auto-detect, 20+ languages"
         },
         "trident": "🔱",
