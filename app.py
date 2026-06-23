@@ -336,7 +336,7 @@ class AIEngine:
         ]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
-🔍 **LEGAL QUERY DETECTED – ULTRA‑DETAILED INSTRUCTION SET (10/10 DEPTH):**
+🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET (CASE LAW, RESTITUTION, FORCE MAJEURE, DRAFTING):**
 
 - **Case Law:** Cite at least 2–3 leading judicial precedents (e.g., Satyabrata Ghose v. Mugneeram (AIR 1954 SC 44), Taylor v. Caldwell (1863)), AND include at least one **recent Supreme Court decision** from the last 20 years (e.g., Energy Watchdog v. CERC (2017) or Raja Dhruv Dev Chand v. Raja Harmohinder Singh (1968)). Provide full citations and explain their ratio.
 
@@ -356,7 +356,7 @@ class AIEngine:
 """
             base_prompt += legal_instruction
 
-            # ========== DRAFTING SUB‑BLOCK (with CPC/CrPC and Annexure formats) ==========
+            # ========== DRAFTING SUB‑BLOCK ==========
             if any(kw in query.lower() for kw in ["draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit"]):
                 drafting_instruction = """
 🔍 **LEGAL DRAFTING REQUEST DETECTED – SUBSTANTIVE, READY‑TO‑FILE DRAFT WITH CPC/CRPC AND ANNEXURES:**
@@ -385,7 +385,7 @@ class AIEngine:
         ]
         if any(kw in query.lower() for kw in investment_keywords):
             investment_instruction = """
-🔍 **INVESTMENT/FINANCE QUERY DETECTED – INVESTMENT‑GRADE INSTRUCTION SET:**
+🔍 **INVESTMENT/FINANCE QUERY DETECTED – 10/10 QUANTITATIVE INSTRUCTION SET:**
 
 Your response must be **quantitative** and **actionable**. Include the following:
 
@@ -412,7 +412,7 @@ Use actual numbers, percentages, and cite relevant financial theories (e.g., CAP
 """
             base_prompt += investment_instruction
 
-        # ========== ENHANCED SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
+        # ========== SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
         spiritual_keywords = [
             "life", "existence", "consciousness", "spirit", "soul", "meaning",
             "purpose", "self", "brahman", "atman", "maya", "karma", "dharma",
@@ -421,7 +421,7 @@ Use actual numbers, percentages, and cite relevant financial theories (e.g., CAP
         ]
         if any(kw in query.lower() for kw in spiritual_keywords):
             spiritual_instruction = """
-🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – ENGAGING, SUPPORTIVE, AND UNIVERSALLY HELPFUL INSTRUCTION SET:**
+🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – 10/10 CONTEMPLATIVE INSTRUCTION SET:**
 
 Your response must be **both profound and practical** – a blend of wisdom, warmth, and actionable guidance for readers of any background. Follow these guidelines:
 
@@ -448,42 +448,42 @@ Remember to keep the mandatory disclaimer at the top, and maintain a tone of hum
 """
             base_prompt += spiritual_instruction
 
-        # ========== EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
+        # ========== 10/10 EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
         psych_keywords = [
             "emotion", "feel", "anxiety", "stress", "mental health", "psychology",
             "self-esteem", "relationship", "trauma", "therapy", "mindfulness",
             "depression", "happiness", "grief", "anger", "fear", "love",
-            "cognitive", "behavioral", "attachment", "resilience", "coping"
+            "cognitive", "behavioral", "attachment", "resilience", "coping",
+            "panic", "overwhelm", "burnout", "self-care", "support"
         ]
         if any(kw in query.lower() for kw in psych_keywords):
             psych_instruction = """
-🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – EMPATHETIC, SUPPORTIVE, AND EVIDENCE‑BASED INSTRUCTION SET:**
+🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – 10/10 INSTRUCTION SET (EMPATHETIC, EVIDENCE‑BASED, ACTIONABLE):**
 
-Your response must be **warm, validating, and grounded in psychological science**. Follow these guidelines:
+Your response must be warm, validating, and grounded in established psychological science. Follow these guidelines to deliver a LexSarthi‑grade answer:
 
-1. **Acknowledge & Validate** – start with empathy: "It takes courage to explore these feelings..." or "Many people experience this – you're not alone."
+1. **Acknowledge & Validate** – open with genuine empathy: "It takes courage to explore these feelings..." or "You are not alone; many people experience this."
 
-2. **Reference Psychological Theories** – ground your response in established frameworks:
-   - **Maslow's Hierarchy of Needs** – discuss how basic needs affect well‑being.
-   - **Cognitive Behavioral Therapy (CBT)** – explore thought‑feeling‑behavior connections.
-   - **Attachment Theory** – explain relationship patterns and security.
-   - **Positive Psychology** (Seligman) – discuss PERMA (Positive emotion, Engagement, Relationships, Meaning, Accomplishment).
-   - **Emotional Intelligence** (Goleman) – break down self‑awareness, self‑regulation, motivation, empathy, social skills.
+2. **Science‑Backed Frameworks** – cite at least 2‑3 specific theories/models:
+   - **Cognitive Behavioural Therapy (CBT)** – explain thought‑feeling‑behaviour loops.
+   - **Acceptance and Commitment Therapy (ACT)** – discuss acceptance, values, and committed action.
+   - **Polyvagal Theory** – describe the nervous system's three states and how to shift.
+   - **Maslow’s Hierarchy** – link needs to anxiety.
+   - **Positive Psychology (PERMA)** – emphasise meaning, relationships, engagement.
 
-3. **Offer Practical Coping Strategies** – provide actionable, evidence‑based techniques:
-   - Grounding exercises (e.g., 5‑4‑3‑2‑1 senses).
-   - Cognitive reframing (changing unhelpful thoughts).
-   - Mindfulness and breathwork.
-   - Journaling prompts.
-   - Self‑compassion practices.
+3. **Self‑Assessment Tool** – provide a simple scale (1‑10) for the user to gauge their current state and track progress.
 
-4. **Normalise Professional Help** – gently remind that while this guidance is supportive, it is not a substitute for therapy. Encourage seeking licensed professionals when needed.
+4. **Actionable Coping Strategies** – present at least 3‑4 specific techniques with clear how‑to instructions and the rationale (why it works). Use bullet points or a table for clarity.
 
-5. **End with Hope & Encouragement** – leave the user with an empowering, forward‑looking message.
+5. **Short‑Term vs Long‑Term Plan** – differentiate immediate (minutes) and preparatory (days/weeks) actions. Include a timeline.
 
-6. **Structure** – still follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations), but keep the tone warm and the content practical.
+6. **Clear Criteria for Professional Help** – state when to seek therapy (e.g., persistent interference, panic attacks) and normalise it as a sign of strength.
 
-Maintain the mandatory disclaimer at the top (already present) and add a brief note that this is educational, not therapeutic.
+7. **Reflection Prompt** – end with a question or journaling exercise to encourage self‑exploration.
+
+8. **Structure** – follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations). Ensure the "Recommendations" section is practical and time‑bound.
+
+Maintain the mandatory disclaimer at the top and add: *"This is educational, not therapeutic."*
 """
             base_prompt += psych_instruction
 
