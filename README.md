@@ -1,6 +1,20 @@
-# 🔱 LEXSARTHI v4.0 - India's First AI-Native Universal OS
+---
+title: LEXSARTHI v4.0
+emoji: 🔱
+colorFrom: yellow
+colorTo: yellow
+sdk: docker
+app_file: app.py
+pinned: false
+license: other
+---
 
-## 🏛️ THE ADVOCACY - A LAW FIRM
+# 🔱 LEXSARTHI v4.0
+
+## India's First AI-Native Universal Operating System
+
+### Powered by THE ADVOCACY - A LAW FIRM
+
 **UDYAM-UP-09-0043193 | PAN: CHFPK3464A | Proprietor: Upmanyu Kumar**
 
 ---
@@ -16,14 +30,16 @@
 
 ---
 
-## Deployment
+## Live URL
+**https://upamnyu12-lex.hf.space/**
 
-```bash
-# Clone
-git clone https://huggingface.co/spaces/upamnyu12/LEX
-cd LEX
+---
 
-# Push updates
-git add .
-git commit -m "🔱 LEXSARTHI v4.0 - Production"
-git push
+## Contact
+- **Email:** asmitasinghdu058@gmail.com
+- **Phone:** 9718665039
+- **Website:** www.advocacyalawfrim.in
+
+---
+
+**🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE**
