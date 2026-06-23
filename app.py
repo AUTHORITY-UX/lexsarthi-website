@@ -448,6 +448,45 @@ Remember to keep the mandatory disclaimer at the top, and maintain a tone of hum
 """
             base_prompt += spiritual_instruction
 
+        # ========== EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
+        psych_keywords = [
+            "emotion", "feel", "anxiety", "stress", "mental health", "psychology",
+            "self-esteem", "relationship", "trauma", "therapy", "mindfulness",
+            "depression", "happiness", "grief", "anger", "fear", "love",
+            "cognitive", "behavioral", "attachment", "resilience", "coping"
+        ]
+        if any(kw in query.lower() for kw in psych_keywords):
+            psych_instruction = """
+🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – EMPATHETIC, SUPPORTIVE, AND EVIDENCE‑BASED INSTRUCTION SET:**
+
+Your response must be **warm, validating, and grounded in psychological science**. Follow these guidelines:
+
+1. **Acknowledge & Validate** – start with empathy: "It takes courage to explore these feelings..." or "Many people experience this – you're not alone."
+
+2. **Reference Psychological Theories** – ground your response in established frameworks:
+   - **Maslow's Hierarchy of Needs** – discuss how basic needs affect well‑being.
+   - **Cognitive Behavioral Therapy (CBT)** – explore thought‑feeling‑behavior connections.
+   - **Attachment Theory** – explain relationship patterns and security.
+   - **Positive Psychology** (Seligman) – discuss PERMA (Positive emotion, Engagement, Relationships, Meaning, Accomplishment).
+   - **Emotional Intelligence** (Goleman) – break down self‑awareness, self‑regulation, motivation, empathy, social skills.
+
+3. **Offer Practical Coping Strategies** – provide actionable, evidence‑based techniques:
+   - Grounding exercises (e.g., 5‑4‑3‑2‑1 senses).
+   - Cognitive reframing (changing unhelpful thoughts).
+   - Mindfulness and breathwork.
+   - Journaling prompts.
+   - Self‑compassion practices.
+
+4. **Normalise Professional Help** – gently remind that while this guidance is supportive, it is not a substitute for therapy. Encourage seeking licensed professionals when needed.
+
+5. **End with Hope & Encouragement** – leave the user with an empowering, forward‑looking message.
+
+6. **Structure** – still follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations), but keep the tone warm and the content practical.
+
+Maintain the mandatory disclaimer at the top (already present) and add a brief note that this is educational, not therapeutic.
+"""
+            base_prompt += psych_instruction
+
         system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
 
         user_prompt = f"USER QUERY: {query}\n"
