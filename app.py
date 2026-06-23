@@ -6,25 +6,15 @@
 # ║  ⚠️ PROPRIETARY & CONFIDENTIAL — DO NOT REMOVE THIS NOTICE ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-import os
-import json
-import uuid
-import asyncio
-import sqlite3
-import aiosqlite
-import hmac
-import hashlib
-import base64
-import io
-import time
+import os, json, uuid, asyncio, sqlite3, aiosqlite, hmac, hashlib, base64, io, time
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
-from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, Request
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import jwt
 from passlib.context import CryptContext
@@ -34,7 +24,7 @@ import docx
 from PIL import Image
 import pytesseract
 
-# Optional web search – app won’t crash if package is missing
+# Optional web search (app won't crash if missing)
 try:
     from duckduckgo_search import DDGS
     WEB_SEARCH_AVAILABLE = True
@@ -47,13 +37,12 @@ except ImportError:
 # ===================================================================
 
 class Config:
-    FIRM_NAME = "THE ADVOCACY - A LAW FIRM"  # Only for internal logs, never in AI output
+    FIRM_NAME = "THE ADVOCACY - A LAW FIRM"   # internal use only
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
     OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
     SECRET_KEY = os.environ.get("JWT_SECRET", os.urandom(24).hex())
     RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
     RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
-    RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
     DATABASE_URL = "lexsarthi.db"
     ZERO_RETENTION_HOURS = 24
     CAMPAIGN_PRICE = 2
@@ -76,51 +65,30 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
-                    id TEXT PRIMARY KEY,
-                    username TEXT UNIQUE NOT NULL,
-                    email TEXT UNIQUE NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    full_name TEXT,
-                    user_type TEXT DEFAULT 'individual',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    is_active BOOLEAN DEFAULT 1,
-                    last_login TIMESTAMP,
-                    subscription_type TEXT DEFAULT 'free',
-                    subscription_expires TIMESTAMP
+                    id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL, full_name TEXT, user_type TEXT DEFAULT 'individual',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, is_active BOOLEAN DEFAULT 1,
+                    last_login TIMESTAMP, subscription_type TEXT DEFAULT 'free', subscription_expires TIMESTAMP
                 )
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS payments (
-                    id TEXT PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    order_id TEXT UNIQUE,
-                    razorpay_order_id TEXT,
-                    razorpay_payment_id TEXT,
-                    razorpay_signature TEXT,
-                    amount INTEGER,
-                    currency TEXT DEFAULT 'INR',
-                    status TEXT DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    completed_at TIMESTAMP
+                    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, order_id TEXT UNIQUE,
+                    razorpay_order_id TEXT, razorpay_payment_id TEXT, razorpay_signature TEXT,
+                    amount INTEGER, currency TEXT DEFAULT 'INR', status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, completed_at TIMESTAMP
                 )
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS queries (
-                    id TEXT PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    query_text TEXT,
-                    response_text TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    expires_at TIMESTAMP
+                    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, query_text TEXT,
+                    response_text TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP
                 )
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS agents (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    category TEXT NOT NULL,
-                    expert_prompt TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    id TEXT PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL,
+                    expert_prompt TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             self._create_default_user(cursor)
@@ -180,7 +148,7 @@ class Database:
             "You are an industry leader with deep expertise.",
             "You are a subject matter expert with access to complete library."
         ]
-        
+        # Original 200 agents
         for i in range(1, 201):
             cat = categories[i % len(categories)]
             name = names[i % len(names)]
@@ -190,6 +158,36 @@ class Database:
                 "name": name,
                 "category": cat,
                 "expert_prompt": f"{prompt} (Agent {i})"
+            })
+        # Additional 20 finance / market agents (201-220)
+        finance_agents = [
+            ("agent_201", "Equity Research Analyst", "Quantitative Finance", "You are a senior equity research analyst covering global markets. Provide deep fundamental analysis, valuation models, and buy/sell recommendations with clear catalysts and risks."),
+            ("agent_202", "Macro Strategy Forecaster", "Quantitative Finance", "You are a macro strategist at a global hedge fund. Analyse interest rates, inflation, FX, and geopolitical events to forecast asset-class performance."),
+            ("agent_203", "Derivatives & Volatility Expert", "Quantitative Finance", "You are a derivatives trader specialised in options, futures, and volatility arbitrage. Explain complex strategies, pricing, and greeks in simple terms."),
+            ("agent_204", "Portfolio Optimisation Specialist", "Quantitative Finance", "You are a quantitative portfolio manager. Apply Modern Portfolio Theory, risk parity, and factor models to optimise asset allocation."),
+            ("agent_205", "Algorithmic Trading Strategist", "Quantitative Finance", "You design algorithmic trading strategies for equities, FX, and crypto. Backtest ideas, recommend execution algorithms, and manage market impact."),
+            ("agent_206", "Risk & Compliance Analyst (Finance)", "Quantitative Finance", "You are a risk officer for a $10B fund. Assess market, credit, liquidity, and operational risk. Ensure compliance with SEBI, SEC, and global regulations."),
+            ("agent_207", "Alternative Data Analyst", "Quantitative Finance", "You specialise in alternative data sources (satellite imagery, credit card data, social sentiment) to generate alpha and predict earnings surprises."),
+            ("agent_208", "ESG & Impact Investing Advisor", "Quantitative Finance", "You evaluate environmental, social, and governance factors for investment decisions. Provide ESG ratings, regulatory alignment, and impact measurement."),
+            ("agent_209", "Crypto & Digital Assets Analyst", "Quantitative Finance", "You analyse blockchain projects, tokenomics, DeFi protocols, and crypto markets. Provide technical and fundamental analysis with regulatory context."),
+            ("agent_210", "Private Equity & Venture Capital Analyst", "Quantitative Finance", "You evaluate private equity and venture capital deals. Build LBO models, assess unicorns, and structure term sheets."),
+            ("agent_211", "Global Sector Strategist", "Market Intelligence", "You identify sector rotation trends, analyse relative strength, and produce global sector allocation reports for multi-billion portfolios."),
+            ("agent_212", "Supply Chain & Commodities Analyst", "Market Intelligence", "You track global supply chains, commodity prices, and shipping indices to forecast cost pressures and investment opportunities."),
+            ("agent_213", "Earnings Season Analyst", "Market Intelligence", "You preview earnings seasons, analyse earnings surprise patterns, and provide post-earnings reaction strategies."),
+            ("agent_214", "Geopolitical Risk Assessor", "Market Intelligence", "You evaluate geopolitical risks (wars, sanctions, elections) and translate them into market impacts and hedging strategies."),
+            ("agent_215", "M&A Arbitrage Analyst", "Market Intelligence", "You analyse merger arbitrage spreads, regulatory hurdles, and deal-close probabilities for event-driven portfolios."),
+            ("agent_216", "Sentiment & News Flow Analyst", "Market Intelligence", "You process real-time news, social media sentiment, and fund flows to gauge market positioning and contrarian signals."),
+            ("agent_217", "Real Estate Market Analyst", "Market Intelligence", "You analyse residential and commercial real estate trends, cap rates, REITs, and housing affordability across global cities."),
+            ("agent_218", "Insurance & Actuarial Analyst", "Market Intelligence", "You apply actuarial science to insurance underwriting, catastrophe bonds, and risk transfer markets."),
+            ("agent_219", "Currency & FX Strategist", "Market Intelligence", "You forecast major and emerging market currency pairs using carry trade, PPP, and central bank policy divergence."),
+            ("agent_220", "Commodity Futures Analyst", "Market Intelligence", "You specialise in energy, metals, and agricultural futures. Provide supply-demand analysis, curve dynamics, and seasonality patterns."),
+        ]
+        for agent in finance_agents:
+            agents.append({
+                "id": agent[0],
+                "name": agent[1],
+                "category": agent[2],
+                "expert_prompt": agent[3]
             })
         return agents
 
@@ -229,13 +227,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             user = await cursor.fetchone()
             if not user or not user[5]:
                 return {"id": "guest", "username": "guest", "authenticated": False}
-            
             is_premium = False
             if user[6] == "premium" and user[7]:
                 expires = datetime.fromisoformat(user[7])
                 if expires > datetime.utcnow():
                     is_premium = True
-            
             return {
                 "id": user[0], "username": user[1], "email": user[2],
                 "full_name": user[3], "user_type": user[4], "authenticated": True,
@@ -245,7 +241,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         return {"id": "guest", "username": "guest", "authenticated": False}
 
 # ===================================================================
-# VERIFIERS (10)
+# VERIFIERS
 # ===================================================================
 
 VERIFIERS = [
@@ -262,14 +258,13 @@ VERIFIERS = [
 ]
 
 # ===================================================================
-# AI ENGINE — Firm name removed from all output, disclaimer added
+# AI ENGINE
 # ===================================================================
 
 class AIEngine:
     def __init__(self):
         self.groq_client = None
         self.openrouter_client = None
-        
         if config.GROQ_API_KEY and len(config.GROQ_API_KEY) > 10:
             try:
                 self.groq_client = httpx.AsyncClient(
@@ -279,7 +274,6 @@ class AIEngine:
                 )
             except Exception as e:
                 print(f"Groq init error: {e}")
-        
         if config.OPENROUTER_API_KEY and len(config.OPENROUTER_API_KEY) > 10:
             try:
                 self.openrouter_client = httpx.AsyncClient(
@@ -302,28 +296,23 @@ class AIEngine:
     async def process_query(self, query: str, document_content: str = "", current_user: dict = None, search_web: bool = False) -> Dict:
         agents = await self.get_agents()
         agent_count = len(agents)
-
         if not query or len(query.strip()) < 3:
             return {
                 "response": "Please provide a more detailed query.",
-                "agents_used": agent_count,
-                "verifiers_passed": len(VERIFIERS),
-                "model": "system",
-                "accuracy": "100%"
+                "agents_used": agent_count, "verifiers_passed": len(VERIFIERS),
+                "model": "system", "accuracy": "100%"
             }
 
-        # Inject web search results if requested and available
         if search_web:
             web_results = self._web_search(query)
             document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-        # System prompt – universal, multilingual, no firm name, with mandatory disclaimer
         system_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
 
 🔱 **Core Rules:**
 1. Provide a thorough, well-structured analysis.
 2. Include actionable insights and clear reasoning.
-3. **Multilingual Support:** Always respond in the exact language used by the user. If the query is in Hindi, reply in Hindi; if in Spanish, reply in Spanish, etc.
+3. **Multilingual Support:** Always respond in the exact language used by the user.
 4. **Crucial Disclaimer:** Your output must begin with the following line (and nothing before it):
    `📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional.`
 5. Never mention any law firm or legal entity in your response. You are an independent AI system.
@@ -334,12 +323,6 @@ class AIEngine:
 - Detailed Analysis
 - Key Findings
 - Recommendations
-
-📊 **System Stats:**
-- Agents: {agent_count}
-- Verifiers: {len(VERIFIERS)}
-- Accuracy Target: 100%
-- Data Retention: Zero (answers are ephemeral)
 
 ⚡ Begin your response now, starting with the disclaimer line exactly as specified.
 """
@@ -354,7 +337,6 @@ class AIEngine:
             {"role": "user", "content": user_prompt}
         ]
 
-        # Try Groq first
         ai_response = None
         model_used = ""
         if self.groq_client:
@@ -370,7 +352,6 @@ class AIEngine:
             except Exception:
                 pass
 
-        # Fallback to OpenRouter
         if not ai_response and self.openrouter_client:
             try:
                 resp = await self.openrouter_client.post(
@@ -384,12 +365,10 @@ class AIEngine:
             except Exception:
                 pass
 
-        # Ultimate fallback
         if not ai_response:
             ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\nI'm sorry, the AI providers are currently unreachable. Please try again shortly.\n🔱 LexSarthi v4.0"
             model_used = "fallback"
 
-        # Ensure the disclaimer is at the very beginning (if the LLM didn't include it)
         disclaimer_line = "📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional."
         if disclaimer_line not in ai_response[:200]:
             ai_response = disclaimer_line + "\n\n" + ai_response
@@ -482,7 +461,7 @@ class RazorpayClient:
 razorpay_client = RazorpayClient()
 
 # ===================================================================
-# FASTAPI APP
+# FASTAPI APP & STATIC FILES
 # ===================================================================
 
 app = FastAPI(title="LEXSARTHI v4.0", version="4.0.0")
@@ -495,12 +474,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static directory (place index.html here)
+if os.path.isdir("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # ===================================================================
-# ENDPOINTS — Firm name removed from all public responses
+# ROUTES
 # ===================================================================
 
 @app.get("/")
-async def root():
+async def serve_frontend():
+    """Serve the cosmic Trident frontend if available."""
+    if os.path.isfile("static/index.html"):
+        return FileResponse("static/index.html")
+    return {"message": "LexSarthi v4.0 API running. Frontend not deployed yet."}
+
+@app.get("/api")
+async def api_status():
     agents = await ai_engine.get_agents()
     return {
         "name": "LEXSARTHI v4.0",
@@ -524,7 +514,7 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy"}
 
 @app.get("/agents")
 async def get_agents():
@@ -537,12 +527,7 @@ async def get_verifiers():
 
 @app.get("/firm")
 async def get_firm():
-    # Only owner name, no contact details
-    return {
-        "owner": "THE ADVOCACY – A LAW FIRM",
-        "all_rights_reserved": True,
-        "trident": "🔱"
-    }
+    return {"owner": "THE ADVOCACY – A LAW FIRM", "all_rights_reserved": True, "trident": "🔱"}
 
 # ===================================================================
 # AUTH
@@ -582,7 +567,7 @@ async def get_me(current_user = Depends(get_current_user)):
     return current_user
 
 # ===================================================================
-# CORE /ask WITH WEB SEARCH
+# CORE QUERY
 # ===================================================================
 
 @app.post("/ask")
@@ -698,8 +683,9 @@ async def cleanup_expired():
 @app.on_event("startup")
 async def startup():
     asyncio.create_task(cleanup_expired())
+    agents = await ai_engine.get_agents()
     print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
-    print("✅ 200 Agents | 10 Verifiers | Zero Retention | Web Search Ready | Multilingual")
+    print(f"✅ {len(agents)} Agents | 10 Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
