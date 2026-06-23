@@ -512,6 +512,9 @@ async def api_status():
         "permanent": "TRIDENT – PERMANENT ASSET – NEVER REMOVE"
     }
 
+@app.get("/alpha")
+async def alpha_page():
+    return FileResponse("static/alpha.html")
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
