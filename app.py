@@ -326,11 +326,13 @@ class AIEngine:
 - Recommendations
 """
 
-        # ========== LEGAL INSTRUCTION BLOCK ==========
+        # ========== LEGAL INSTRUCTION BLOCK (includes drafting with CPC/CrPC & annexures) ==========
         legal_keywords = [
             "section", "act", "case", "judgment", "contract", "tort", "constitution",
             "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
-            "impossibility", "void", "discharge", "contractual obligation"
+            "impossibility", "void", "discharge", "contractual obligation",
+            "draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit",
+            "cpc", "crpc", "civil procedure", "criminal procedure", "annexure", "exhibit"
         ]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
@@ -353,6 +355,26 @@ class AIEngine:
 - **Effect on Incidental Obligations:** Briefly discuss whether collateral obligations (e.g., confidentiality, arbitration) survive frustration.
 """
             base_prompt += legal_instruction
+
+            # ========== DRAFTING SUB‑BLOCK (with CPC/CrPC and Annexure formats) ==========
+            if any(kw in query.lower() for kw in ["draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit"]):
+                drafting_instruction = """
+🔍 **LEGAL DRAFTING REQUEST DETECTED – SUBSTANTIVE, READY‑TO‑FILE DRAFT WITH CPC/CRPC AND ANNEXURES:**
+
+- Generate a complete, ready‑to‑file draft (e.g., Special Leave Petition, Writ Petition, Plaint, Application, Notice, Affidavit).
+- Include all formal sections: cause title, facts, grounds, reliefs, verification, and any required annexures.
+- **Procedural References:**
+  - For civil matters, cite relevant provisions of the **Code of Civil Procedure, 1908** (e.g., Order 39, Rule 1 & 2 for injunction; Order 7, Rule 11 for rejection of plaint; Section 9 for jurisdiction).
+  - For criminal matters, cite relevant provisions of the **Code of Criminal Procedure, 1973** (e.g., Section 482 for inherent powers; Section 438 for anticipatory bail; Section 125 for maintenance).
+  - Include references to the **Indian Evidence Act, 1872** where relevant (e.g., Section 65B for electronic evidence).
+- **Annexure/Exhibit Format:**
+  - List all documents/annexures with clear labelling (e.g., "Annexure A – Copy of Contract", "Annexure B – Correspondence", "Exhibit P-1 – Invoices").
+  - Provide a model verification clause and a list of annexures in the draft.
+- Base the draft on the principles, case law, and statutory provisions discussed in the analysis.
+- Note that this is a template and should be customised for the specific facts; recommend legal review.
+- Use proper legal formatting and language (e.g., "In the Supreme Court of India", "Most Respectfully Sheweth", "Under protest").
+"""
+                base_prompt += drafting_instruction
 
         # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
         investment_keywords = [
