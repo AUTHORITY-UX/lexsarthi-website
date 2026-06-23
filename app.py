@@ -11,8 +11,9 @@
 # 🔱 ₹2 Live Payments | Razorpay Integrated
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # ===================================================================
-# "From Contract Review to Supreme Court Judgments"
 # "One Platform. Every Need. Anywhere in the World."
+# "Intelligence, Accelerated by AI"
+# "Zero Retention. Total Transparency."
 # ===================================================================
 
 import os
@@ -320,7 +321,6 @@ class AIEngine:
         agents = await self.get_agents()
         agent_count = len(agents)
         
-        # Validate query
         if not query or len(query.strip()) < 3:
             return {
                 "response": "Please provide a more detailed query. I need at least a few words to work with.",
@@ -330,7 +330,6 @@ class AIEngine:
                 "accuracy": "100%"
             }
         
-        # LOCKED SYSTEM PROMPT
         system_prompt = f"""
 You are LexSarthi v4.0, a Universal AI System with {agent_count} specialized agents.
 
@@ -390,8 +389,6 @@ IMPORTANT: Answer the query directly and thoroughly.
                     print(f"✅ Groq response: {len(ai_response)} characters")
                     if ai_response and len(ai_response) > 50:
                         return self._format_response(query, ai_response, agent_count, "Groq", document_content)
-                    else:
-                        print(f"⚠️ Groq response too short: '{ai_response[:100]}'")
                 else:
                     print(f"⚠️ Groq error: {response.status_code}")
             except Exception as e:
@@ -416,14 +413,12 @@ IMPORTANT: Answer the query directly and thoroughly.
                     print(f"✅ OpenRouter response: {len(ai_response)} characters")
                     if ai_response and len(ai_response) > 50:
                         return self._format_response(query, ai_response, agent_count, "OpenRouter", document_content)
-                    else:
-                        print(f"⚠️ OpenRouter response too short")
                 else:
                     print(f"⚠️ OpenRouter error: {response.status_code}")
             except Exception as e:
                 print(f"⚠️ OpenRouter exception: {e}")
         
-        # FINAL FALLBACK - But with meaningful response
+        # FINAL FALLBACK
         print("⚠️ All AI providers failed - using fallback")
         return {
             "response": f"""📋 Query: {query}
@@ -454,11 +449,9 @@ Please try:
         }
     
     def _format_response(self, query, ai_response, agent_count, model, document_content):
-        # CRITICAL FIX: Ensure response is not empty
         if not ai_response or len(ai_response.strip()) < 10:
             ai_response = "The AI analysis was generated but the response content was empty. Please try rephrasing your query."
         
-        # Build complete response
         response_text = f"""📋 Query: {query}
 {'📎 Document attached and analyzed' if document_content else ''}
 
@@ -581,24 +574,52 @@ app.add_middleware(
 )
 
 # ===================================================================
-# ENDPOINTS
+# ENHANCED ROOT ENDPOINT - ALL FEATURES INCLUDED
 # ===================================================================
 
 @app.get("/")
 async def root():
+    agents = await ai_engine.get_agents()
     return {
         "name": "LEXSARTHI v4.0",
         "description": "Universal AI Operating System",
         "tagline": "Intelligence, Accelerated by AI",
+        "firm": {
+            "name": config.FIRM_NAME,
+            "website": config.FIRM_WEBSITE,
+            "established": config.FIRM_ESTABLISHED
+        },
         "features": {
-            "agents": "200+ Specialized AI Agents",
+            "agents": {
+                "total": len(agents),
+                "description": "Specialized AI Agents with Expert Prompts"
+            },
+            "verifiers": {
+                "total": len(VERIFIERS),
+                "description": "Quality Verification Layers"
+            },
             "accuracy": "100% Guaranteed",
             "retention": "Zero Retention (24h Auto-Delete)",
-            "compliance": "DPDPA 2023 Compliant"
+            "compliance": "DPDPA 2023 Compliant",
+            "input_methods": ["Text", "PDF Upload", "Voice Input", "Image Upload"],
+            "output_methods": ["Copy", "PDF Download", "TXT Download", "Print", "Share"],
+            "payment": "₹2 - 15 Days Unlimited Access",
+            "model": "Groq (Primary) + OpenRouter (Fallback)",
+            "security": "End-to-End Encryption",
+            "support": "24/7 Global Access"
         },
-        "campaign": "₹2 - 15 Days Unlimited Access",
-        "trident": "🔱"
+        "campaign": {
+            "price": "₹2",
+            "duration": "15 Days",
+            "type": "Unlimited Access"
+        },
+        "trident": "🔱",
+        "permanent": "TRIDENT - PERMANENT ASSET - NEVER REMOVE"
     }
+
+# ===================================================================
+# OTHER ENDPOINTS
+# ===================================================================
 
 @app.get("/health")
 async def health():
@@ -619,7 +640,7 @@ async def get_agents():
 async def get_verifiers():
     return {
         "total": len(VERIFIERS),
-        "verifiers": [{"id": v["id"], "name": v["name"]} for v in VERIFIERS]
+        "verifiers": [{"id": v["id"], "name": v["name"], "description": v["description"]} for v in VERIFIERS]
     }
 
 @app.get("/trident")
@@ -627,6 +648,21 @@ async def trident():
     return {
         "trident": "🔱",
         "permanent": "TRIDENT - PERMANENT ASSET - NEVER REMOVE"
+    }
+
+@app.get("/firm")
+async def get_firm():
+    return {
+        "firm": config.FIRM_NAME,
+        "udyam": config.FIRM_UDYAM,
+        "pan": config.FIRM_PAN,
+        "owner": config.FIRM_OWNER,
+        "established": config.FIRM_ESTABLISHED,
+        "address": config.FIRM_ADDRESS,
+        "email": config.FIRM_EMAIL,
+        "mobile": config.FIRM_MOBILE,
+        "website": config.FIRM_WEBSITE,
+        "trident": "🔱"
     }
 
 # ===================================================================
@@ -681,20 +717,18 @@ async def get_me(current_user = Depends(get_current_user)):
     return current_user
 
 # ===================================================================
-# MAIN QUERY ENDPOINT - FIXED
+# MAIN QUERY ENDPOINT
 # ===================================================================
 
 @app.post("/ask")
 async def ask(
     query: str = Form(""),
     files: List[UploadFile] = File(None),
-    current_user = Depends(get_current_user),
-    request: Request = None
+    current_user = Depends(get_current_user)
 ):
     if not query and not files:
         raise HTTPException(status_code=400, detail="Please provide a query or file")
     
-    # Process documents
     document_content = ""
     if files:
         for file in files:
@@ -710,10 +744,8 @@ async def ask(
             except Exception as e:
                 document_content += f"[Error: {str(e)}]\n"
     
-    # Process query
     result = await ai_engine.process_query(query, document_content, current_user)
     
-    # Store query
     query_id = str(uuid.uuid4())
     expires_at = datetime.utcnow() + timedelta(hours=config.ZERO_RETENTION_HOURS)
     async with aiosqlite.connect(config.DATABASE_URL) as conn:
@@ -809,7 +841,7 @@ async def verify_payment(
     }
 
 # ===================================================================
-# TERMS OF USE - LEGAL DOCUMENT
+# TERMS OF USE
 # ===================================================================
 
 @app.get("/terms")
@@ -820,50 +852,6 @@ async def get_terms():
         "governing_law": "India",
         "jurisdiction": "Baghpat, Uttar Pradesh",
         "firm": config.FIRM_NAME,
-        "terms": [
-            {
-                "section": "1. Acceptance",
-                "content": "By using LexSarthi v4.0, you agree to these Terms of Use. If you do not agree, please do not use the platform."
-            },
-            {
-                "section": "2. Not Legal Advice",
-                "content": "LexSarthi is an AI-powered assistant and does NOT constitute legal advice. All outputs must be reviewed by qualified legal professionals before any reliance or action."
-            },
-            {
-                "section": "3. Confidentiality",
-                "content": "All documents uploaded are confidential. Data is auto-deleted within 24 hours. No data is shared with third parties."
-            },
-            {
-                "section": "4. Data Retention",
-                "content": "Zero Retention Policy: All data is deleted automatically after 24 hours. No permanent storage of user data occurs."
-            },
-            {
-                "section": "5. Payment",
-                "content": "₹2 campaign provides 15 days of unlimited access. Payments are non-refundable and processed via Razorpay."
-            },
-            {
-                "section": "6. Disclaimer of Liability",
-                "content": "THE ADVOCACY - A LAW FIRM is not liable for any actions taken based on AI-generated content. Users assume full responsibility."
-            },
-            {
-                "section": "7. Governing Law",
-                "content": "These terms are governed by Indian law. Jurisdiction: Baghpat, Uttar Pradesh, India."
-            },
-            {
-                "section": "8. Intellectual Property",
-                "content": "LexSarthi v4.0 is proprietary software owned by THE ADVOCACY - A LAW FIRM. TRIDENT is a permanent asset."
-            },
-            {
-                "section": "9. Changes to Terms",
-                "content": "Terms may be updated. Continued use constitutes acceptance of changes."
-            }
-        ],
-        "contact": {
-            "firm": config.FIRM_NAME,
-            "email": config.FIRM_EMAIL,
-            "mobile": config.FIRM_MOBILE,
-            "address": config.FIRM_ADDRESS
-        },
         "trident": "🔱"
     }
 
