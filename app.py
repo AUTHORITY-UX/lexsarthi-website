@@ -307,10 +307,11 @@ class AIEngine:
             web_results = self._web_search(query)
             document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-        system_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
+        # ========== ENHANCED SYSTEM PROMPT WITH FORCED CASE LAW, RESTITUTION, AND FORCE MAJEURE ==========
+        base_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
 
 🔱 **Core Rules:**
-1. Provide a thorough, well-structured analysis.
+1. Provide a thorough, well‑structured analysis.
 2. Include actionable insights and clear reasoning.
 3. **Multilingual Support:** Always respond in the exact language used by the user.
 4. **Crucial Disclaimer:** Your output must begin with the following line (and nothing before it):
@@ -323,9 +324,21 @@ class AIEngine:
 - Detailed Analysis
 - Key Findings
 - Recommendations
-
-⚡ Begin your response now, starting with the disclaimer line exactly as specified.
 """
+
+        # Dynamic legal‑query extension
+        legal_keywords = ["section", "act", "case", "judgment", "contract", "tort", "constitution", "tribunal", "court", "appeal", "frustration", "restitution", "force majeure"]
+        if any(kw in query.lower() for kw in legal_keywords):
+            legal_instruction = """
+🔍 **LEGAL QUERY DETECTED – ADDITIONAL REQUIREMENTS:**
+- **Case Law:** Cite at least 2–3 leading judicial precedents with full case names and years (e.g., Satyabrata Ghose v. Mugneeram (AIR 1954 SC 44), Taylor v. Caldwell (1863)).
+- **Restitution:** Discuss the effect on advance payments and the obligations under Section 65 of the Indian Contract Act (or analogous provisions if the context is different).
+- **Distinction between frustration and force majeure:** Clearly explain when a contract is frustrated (supervening impossibility) versus when a force majeure clause operates, and how courts treat each. Include the legal test for frustration.
+- **Statutory Cross‑References:** Mention other relevant sections of the same Act or related statutes that interact with the subject matter.
+"""
+            base_prompt += legal_instruction
+
+        system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
 
         user_prompt = f"USER QUERY: {query}\n"
         if document_content:
@@ -515,6 +528,7 @@ async def api_status():
 @app.get("/alpha")
 async def alpha_page():
     return FileResponse("static/alpha.html")
+
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
@@ -688,7 +702,7 @@ async def startup():
     asyncio.create_task(cleanup_expired())
     agents = await ai_engine.get_agents()
     print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
-    print(f"✅ {len(agents)} Agents | 10 Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual")
+    print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
