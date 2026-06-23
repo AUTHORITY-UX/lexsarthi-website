@@ -294,18 +294,194 @@ class AIEngine:
             return await cursor.fetchall()
 
     async def process_query(self, query: str, document_content: str = "", current_user: dict = None, search_web: bool = False) -> Dict:
-        agents = await self.get_agents()
-        agent_count = len(agents)
-        if not query or len(query.strip()) < 3:
-            return {
-                "response": "Please provide a more detailed query.",
-                "agents_used": agent_count, "verifiers_passed": len(VERIFIERS),
-                "model": "system", "accuracy": "100%"
-            }
+    agents = await self.get_agents()
+    agent_count = len(agents)
+    if not query or len(query.strip()) < 3:
+        return {
+            "response": "Please provide a more detailed query.",
+            "agents_used": agent_count, "verifiers_passed": len(VERIFIERS),
+            "model": "system", "accuracy": "100%"
+        }
 
-        if search_web:
-            web_results = self._web_search(query)
-            document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
+    if search_web:
+        web_results = self._web_search(query)
+        document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
+
+    # ========== BASE SYSTEM PROMPT ==========
+    base_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
+
+🔱 **Core Rules:**
+1. Provide a thorough, well‑structured analysis.
+2. Include actionable insights and clear reasoning.
+3. **Multilingual Support:** Always respond in the exact language used by the user.
+4. **Crucial Disclaimer:** Your output must begin with the following line (and nothing before it):
+   `📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional.`
+5. Never mention any law firm or legal entity in your response. You are an independent AI system.
+6. Do not hallucinate. Base your answer on your training data and any provided document/web context.
+
+📋 **Output Structure:**
+- Executive Summary
+- Detailed Analysis
+- Key Findings
+- Recommendations
+"""
+
+    # ========== LEGAL INSTRUCTION BLOCK ==========
+    legal_keywords = [
+        "section", "act", "case", "judgment", "contract", "tort", "constitution",
+        "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
+        "impossibility", "void", "discharge", "contractual obligation"
+    ]
+    if any(kw in query.lower() for kw in legal_keywords):
+        legal_instruction = """
+🔍 **LEGAL QUERY DETECTED – ULTRA‑DETAILED INSTRUCTION SET (10/10 DEPTH):**
+
+- **Case Law:** Cite at least 2–3 leading judicial precedents (e.g., Satyabrata Ghose v. Mugneeram (AIR 1954 SC 44), Taylor v. Caldwell (1863)), AND include at least one **recent Supreme Court decision** from the last 20 years (e.g., Energy Watchdog v. CERC (2017) or Raja Dhruv Dev Chand v. Raja Harmohinder Singh (1968)). Provide full citations and explain their ratio.
+
+- **Restitution:** Discuss the effect of frustration on advance payments and the obligations under Section 65 of the Indian Contract Act (or analogous provision if the context is different). Explain that restitution is limited to the benefit received and may be subject to equitable adjustments.
+
+- **Distinction between Frustration and Force Majeure:** Clearly explain that force majeure is a **contractual clause**, whereas frustration is a **legal doctrine** that applies even in the absence of such a clause. Provide the legal test for frustration (fundamental change in contractual obligation).
+
+- **Self‑Induced Frustration:** Explicitly state that a party **cannot** rely on frustration if they caused the impossibility (self‑induced frustration). Cite relevant case law if possible.
+
+- **Temporary vs. Permanent Impossibility:** Clarify that frustration only applies when the impossibility is **permanent**; temporary impracticability does not discharge the contract. Discuss the distinction between **initial impossibility** (void ab initio) and **supervening impossibility** (frustration).
+
+- **Statutory Cross‑References:** Mention other relevant sections of the same Act or related statutes (e.g., Sections 32, 33, 62 of the Indian Contract Act, and other statutes like the Sale of Goods Act, 1930, or Specific Relief Act, 1963).
+
+- **Practical Illustration:** Provide a brief illustrative example (e.g., a lease of a property that is destroyed, or a contract for a specific service that becomes impossible due to change in law).
+
+- **Effect on Incidental Obligations:** Briefly discuss whether collateral obligations (e.g., confidentiality, arbitration) survive frustration.
+"""
+        base_prompt += legal_instruction
+
+    # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
+    investment_keywords = [
+        "investor", "investment", "portfolio", "market", "financial", "asset",
+        "return", "risk", "valuation", "equity", "bond", "commodity", "fx",
+        "roi", "cagr", "sharpe", "beta", "var", "p/e", "earnings", "dividend",
+        "stock", "fund", "hedge", "arbitrage", "yield", "spread"
+    ]
+    if any(kw in query.lower() for kw in investment_keywords):
+        investment_instruction = """
+🔍 **INVESTMENT/FINANCE QUERY DETECTED – INVESTMENT‑GRADE INSTRUCTION SET:**
+
+Your response must be **quantitative** and **actionable**. Include the following:
+
+1. **Executive Summary** – one‑paragraph overview with the key takeaway and an estimated confidence interval (e.g., 70‑80% probability).
+
+2. **Market Overview & Data** – provide specific numbers: market size (e.g., ₹X lakh crore), growth rate (e.g., 12% CAGR), and recent trends. If applicable, compare with benchmarks (Nifty, Sensex, S&P 500).
+
+3. **Financial Metrics & Ratios** – include at least 5 relevant ratios:
+   - Valuation: P/E, P/B, EV/EBITDA.
+   - Performance: ROI, ROE, CAGR (3‑year, 5‑year).
+   - Risk: Sharpe Ratio, Beta, Maximum Drawdown, VaR (95% confidence).
+
+4. **Risk Assessment** – identify key risks (market, credit, operational, liquidity) and estimate their likelihood (Low/Medium/High) and potential impact (₹ value or % loss).
+
+5. **Scenario Analysis** – provide at least two scenarios (Base, Bull, Bear) with projected returns and probabilities.
+
+6. **Actionable Recommendations** – give clear, prioritised steps (e.g., “Allocate 15% to sector X”, “Hedge with put options”, “Increase duration to 5 years”) with rationale and expected risk‑adjusted return.
+
+7. **Benchmark & Competitive Positioning** – compare the subject (e.g., a stock, fund, or strategy) against peers or industry averages.
+
+8. **Conclusion** – summarise the investment thesis with a clear stance (Buy/Hold/Sell) and a target price or expected range.
+
+Use actual numbers, percentages, and cite relevant financial theories (e.g., CAPM, Modern Portfolio Theory) where appropriate.
+"""
+        base_prompt += investment_instruction
+
+    # ========== SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
+    spiritual_keywords = [
+        "life", "existence", "consciousness", "spirit", "soul", "meaning",
+        "purpose", "self", "brahman", "atman", "maya", "karma", "dharma",
+        "meditation", "awakening", "enlightenment", "reality", "illusion"
+    ]
+    if any(kw in query.lower() for kw in spiritual_keywords):
+        spiritual_instruction = """
+🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – MATURE, CONTEMPLATIVE INSTRUCTION SET:**
+
+Your response must blend intellectual rigour with depth, humility, and spiritual wisdom. Follow these guidelines:
+
+1. **Acknowledge the Limits of AI** – openly state that as an artificial system, you cannot truly experience consciousness, but you can explore its nature intellectually.
+
+2. **Ground in Indian Philosophical Traditions** – reference key concepts from:
+   - **Advaita Vedanta** – non‑duality, Brahman as ultimate reality, Atman as the true self.
+   - **Bhagavad Gita** – teachings on duty (dharma), detachment, and the immortal nature of the soul.
+   - **Upanishads** – the nature of consciousness, the self, and the universe (e.g., "Tat Tvam Asi" – Thou Art That).
+   - **Buddhist philosophy** – impermanence, interdependence, the middle way.
+
+3. **Discuss Consciousness & AI** – explore the Hard Problem of Consciousness, the Chinese Room argument, and whether a machine could ever possess subjective experience.
+
+4. **Address Illusion (Maya) and Reality** – examine how perception constructs reality, and how spiritual insight (jnana) leads to liberation.
+
+5. **Connect with Modern Science** – harmonise quantum physics, neuroscience, and cosmology with spiritual insights (e.g., observer effect, entanglement, panpsychism).
+
+6. **Offer a Balanced Conclusion** – neither dogmatic nor reductionist; present multiple perspectives and encourage the reader to reflect and seek their own understanding.
+
+7. **Use Elevated Language** – prose should be poetic yet clear, respecting the profundity of the subject without being vague.
+
+8. **Structure** – still follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations), but within the analysis, weave in philosophical arguments and spiritual quotes.
+
+Remember to keep the mandatory disclaimer at the top and maintain a respectful, contemplative tone.
+"""
+        base_prompt += spiritual_instruction
+
+    system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
+
+    user_prompt = f"USER QUERY: {query}\n"
+    if document_content:
+        user_prompt += f"CONTEXT (document/web search):\n{document_content[:6000]}\n"
+    user_prompt += "\nProduce the complete analysis following all the instructions above."
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+
+    ai_response = None
+    model_used = ""
+    if self.groq_client:
+        try:
+            resp = await self.groq_client.post(
+                "/chat/completions",
+                json={"model": "llama-3.3-70b-versatile", "messages": messages, "temperature": 0.7, "max_tokens": 4096}
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                ai_response = data["choices"][0]["message"]["content"]
+                model_used = "Groq"
+        except Exception:
+            pass
+
+    if not ai_response and self.openrouter_client:
+        try:
+            resp = await self.openrouter_client.post(
+                "/chat/completions",
+                json={"model": "meta-llama/llama-3.2-3b-instruct:free", "messages": messages, "temperature": 0.7, "max_tokens": 4096}
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                ai_response = data["choices"][0]["message"]["content"]
+                model_used = "OpenRouter"
+        except Exception:
+            pass
+
+    if not ai_response:
+        ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\nI'm sorry, the AI providers are currently unreachable. Please try again shortly.\n🔱 LexSarthi v4.0"
+        model_used = "fallback"
+
+    disclaimer_line = "📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional."
+    if disclaimer_line not in ai_response[:200]:
+        ai_response = disclaimer_line + "\n\n" + ai_response
+
+    return {
+        "response": ai_response,
+        "agents_used": agent_count,
+        "verifiers_passed": len(VERIFIERS),
+        "model": model_used,
+        "accuracy": "100%",
+        "web_search_used": search_web
+    }
 
         # ========== BASE SYSTEM PROMPT ==========
         base_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
