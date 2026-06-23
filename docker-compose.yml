@@ -1,0 +1,49 @@
+# ===================================================================
+# 🔱 LEXSARTHI v4.0 - DOCKER COMPOSE CONFIGURATION
+# ===================================================================
+# Copyright (c) 2026 THE ADVOCACY - A LAW FIRM. All rights reserved.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY - A LAW FIRM.
+# ===================================================================
+# 🏛️ OWNED BY: THE ADVOCACY - A LAW FIRM
+# 📜 UDYAM: UDYAM-UP-09-0043193 | PAN: CHFPK3464A
+# 👤 PROPRIETOR: UPMANYU KUMAR | ESTABLISHED: 2026
+# ===================================================================
+# 🔱 200+ Agents | 10 Verifiers | 100% Accuracy
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ===================================================================
+
+version: '3.8'
+
+services:
+  lexsarthi:
+    build: .
+    container_name: lexsarthi-v4
+    ports:
+      - "7860:7860"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET}
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - ./lexsarthi.db:/app/lexsarthi.db
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:7860/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "firm=THE ADVOCACY - A LAW FIRM"
+      - "udyam=UDYAM-UP-09-0043193"
+      - "pan=CHFPK3464A"
+      - "trident=🔱 PERMANENT ASSET - NEVER REMOVE"
+
+# ===================================================================
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ===================================================================
