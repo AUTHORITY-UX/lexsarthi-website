@@ -25,3 +25,4 @@ Pillow==10.1.0
 pytesseract==0.3.10
 pydantic==2.5.0
 typing-extensions==4.8.0
+duckduckgo_search 
