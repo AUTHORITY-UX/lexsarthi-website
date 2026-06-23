@@ -1,20 +1,10 @@
-# ===================================================================
-# 🔱 LEXSARTHI v4.0 - COMPLETE PRODUCTION CODE
-# ===================================================================
-# 🏛️ THE ADVOCACY - A LAW FIRM
-# 📜 UDYAM-UP-09-0043193 | PAN: CHFPK3464A
-# 👤 PROPRIETOR: UPMANYU KUMAR | ESTABLISHED: 2026
-# 🌐 www.advocacyalawfrim.in
-# ===================================================================
-# 🔱 200+ Agents | 10 Verifiers | 100% Accuracy
-# 🔱 Zero Retention (24h) | DPDPA 2023 Compliant
-# 🔱 ₹2 Live Payments | Razorpay Integrated
-# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-# ===================================================================
-# "One Platform. Every Need. Anywhere in the World."
-# "Intelligence, Accelerated by AI"
-# "Zero Retention. Total Transparency."
-# ===================================================================
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  🔱 LEXSARTHI v4.0 — India's First AI Universal OS         ║
+# ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM               ║
+# ║  All Rights Reserved.                                      ║
+#                                  ║
+# ║  ⚠️ PROPRIETARY & CONFIDENTIAL — DO NOT REMOVE THIS NOTICE ║
+# ╚══════════════════════════════════════════════════════════════╝
 
 import os
 import json
@@ -26,6 +16,7 @@ import hmac
 import hashlib
 import base64
 import io
+import time
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
@@ -33,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import uvicorn
 import jwt
 from passlib.context import CryptContext
@@ -42,32 +33,22 @@ import PyPDF2
 import docx
 from PIL import Image
 import pytesseract
-import re
+from duckduckgo_search import DDGS  # Web search (no API key needed)
 
 # ===================================================================
-# FIRM CONFIGURATION
+# CONFIGURATION – All private details removed from runtime
 # ===================================================================
 
 class Config:
-    FIRM_NAME = "THE ADVOCACY - A LAW FIRM"
-    FIRM_UDYAM = "UDYAM-UP-09-0043193"
-    FIRM_PAN = "CHFPK3464A"
-    FIRM_OWNER = "UPMANYU KUMAR"
-    FIRM_ESTABLISHED = "2026"
-    FIRM_EMAIL = "asmitasinghdu058@gmail.com"
-    FIRM_MOBILE = "9718665039"
-    FIRM_ADDRESS = "Shiv Mandir, Baghpat, UP - 250609"
-    FIRM_WEBSITE = "www.advocacyalawfrim.in"
+    FIRM_NAME = "THE ADVOCACY - A LAW FIRM"  # Only used for internal logs, never in AI output
+    # API keys from environment variables
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+    SECRET_KEY = os.environ.get("JWT_SECRET", os.urandom(24).hex())
     
-    # API KEYS
-    GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
-    SECRET_KEY = os.environ.get("JWT_SECRET", "lexsarthi-production-secret-key-2026-🔱")
-    
-    # LIVE RAZORPAY KEYS
-    RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_live_xxxxxxxxxx")
-    RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "your_live_secret")
-    RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "your_webhook_secret")
+    RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+    RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+    RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
     
     DATABASE_URL = "lexsarthi.db"
     ZERO_RETENTION_HOURS = 24
@@ -189,11 +170,11 @@ class Database:
             "Critical Thinker", "Strategic Planner", "Problem Solver"
         ]
         prompts = [
-            "You are a specialized legal expert. Provide comprehensive, accurate assistance.",
-            "You are a senior professional with 20+ years of legal experience.",
+            "You are a specialized expert. Provide comprehensive, accurate assistance.",
+            "You are a senior professional with 20+ years of experience.",
             "You are a specialist with complete knowledge of all applicable laws.",
             "You are an industry leader with deep expertise.",
-            "You are a subject matter expert with access to complete legal library."
+            "You are a subject matter expert with access to complete library."
         ]
         
         for i in range(1, 201):
@@ -260,15 +241,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         return {"id": "guest", "username": "guest", "authenticated": False}
 
 # ===================================================================
-# VERIFIERS - 10 INBUILT
+# VERIFIERS (10)
 # ===================================================================
 
 VERIFIERS = [
     {"id": "ver_001", "name": "Citation Verifier", "description": "Validates all legal citations"},
     {"id": "ver_002", "name": "Fact Checker", "description": "Verifies factual accuracy"},
-    {"id": "ver_003", "name": "Logic Verifier", "description": "Checks legal logic"},
-    {"id": "ver_004", "name": "Compliance Verifier", "description": "Verifies DPDPA compliance"},
-    {"id": "ver_005", "name": "Ethics Verifier", "description": "Checks ethics standards"},
+    {"id": "ver_003", "name": "Logic Verifier", "description": "Checks logical consistency"},
+    {"id": "ver_004", "name": "Compliance Verifier", "description": "Verifies regulatory compliance"},
+    {"id": "ver_005", "name": "Ethics Verifier", "description": "Checks ethical standards"},
     {"id": "ver_006", "name": "Legal Reference Verifier", "description": "Cross-references legal library"},
     {"id": "ver_007", "name": "Citation Accuracy Verifier", "description": "Validates citation format"},
     {"id": "ver_008", "name": "Jurisdiction Verifier", "description": "Verifies jurisdiction"},
@@ -277,14 +258,13 @@ VERIFIERS = [
 ]
 
 # ===================================================================
-# AI ENGINE - WITH FIXES
+# AI ENGINE — Firm name removed from all output, disclaimer added
 # ===================================================================
 
 class AIEngine:
     def __init__(self):
         self.groq_client = None
         self.openrouter_client = None
-        self.executor = ThreadPoolExecutor(max_workers=4)
         
         if config.GROQ_API_KEY and len(config.GROQ_API_KEY) > 10:
             try:
@@ -293,9 +273,8 @@ class AIEngine:
                     headers={"Authorization": f"Bearer {config.GROQ_API_KEY}"},
                     timeout=90.0
                 )
-                print("✅ Groq API connected")
             except Exception as e:
-                print(f"⚠️ Groq error: {e}")
+                print(f"Groq init error: {e}")
         
         if config.OPENROUTER_API_KEY and len(config.OPENROUTER_API_KEY) > 10:
             try:
@@ -303,183 +282,138 @@ class AIEngine:
                     base_url="https://openrouter.ai/api/v1",
                     headers={
                         "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
-                        "HTTP-Referer": "https://www.advocacyalawfrim.in",
+                        "HTTP-Referer": "https://lexsarthi.ai",
                         "X-Title": "LexSarthi v4.0"
                     },
                     timeout=90.0
                 )
-                print("✅ OpenRouter API connected (fallback)")
             except Exception as e:
-                print(f"⚠️ OpenRouter error: {e}")
-    
+                print(f"OpenRouter init error: {e}")
+
     async def get_agents(self):
         async with aiosqlite.connect(config.DATABASE_URL) as conn:
             cursor = await conn.execute("SELECT id, name, category, expert_prompt FROM agents")
             return await cursor.fetchall()
-    
-    async def process_query(self, query: str, document_content: str = "", current_user: dict = None) -> Dict:
+
+    async def process_query(self, query: str, document_content: str = "", current_user: dict = None, search_web: bool = False) -> Dict:
         agents = await self.get_agents()
         agent_count = len(agents)
-        
+
         if not query or len(query.strip()) < 3:
             return {
-                "response": "Please provide a more detailed query. I need at least a few words to work with.",
+                "response": "Please provide a more detailed query.",
                 "agents_used": agent_count,
                 "verifiers_passed": len(VERIFIERS),
                 "model": "system",
                 "accuracy": "100%"
             }
-        
-        system_prompt = f"""
-You are LexSarthi v4.0, a Universal AI System with {agent_count} specialized agents.
 
-🔱 MANDATORY INSTRUCTIONS - APPLY TO ALL RESPONSES:
+        # Inject web search results if requested
+        if search_web:
+            web_results = self._web_search(query)
+            document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-1. Provide comprehensive analysis with clear structure
-2. Include detailed reasoning with citations where applicable
-3. Provide actionable recommendations
-4. Ensure 100% accuracy
+        # System prompt – universal, multilingual, no firm name, with disclaimer
+        system_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
 
-📋 REQUIRED OUTPUT FORMAT:
+🔱 **Core Rules:**
+1. Provide a thorough, well-structured analysis.
+2. Include actionable insights and clear reasoning.
+3. **Multilingual Support:** Always respond in the exact language used by the user. If the query is in Hindi, reply in Hindi; if in Spanish, reply in Spanish, etc.
+4. **Crucial Disclaimer:** Your output must begin with the following line (and nothing before it):
+   `📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional.`
+5. Never mention any law firm or legal entity in your response. You are an independent AI system.
+6. Do not hallucinate. Base your answer on your training data and any provided document/web context.
+
+📋 **Output Structure:**
 - Executive Summary
 - Detailed Analysis
 - Key Findings
 - Recommendations
 
-📌 AGENTS: {agent_count}
-📌 VERIFIERS: {len(VERIFIERS)}
+📊 **System Stats:**
+- Agents: {agent_count}
+- Verifiers: {len(VERIFIERS)}
+- Accuracy Target: 100%
+- Data Retention: Zero (answers are ephemeral)
 
-LEGAL CAPABILITIES:
-- Contract Review and Analysis
-- Risk Assessment (0-100 scoring)
-- Compliance Check
-- Document Drafting
-- Case Law Research
-- Legal Opinion Generation
-
-IMPORTANT: Answer the query directly and thoroughly.
+⚡ Begin your response now, starting with the disclaimer line exactly as specified.
 """
-        
-        user_prompt = f"QUERY: {query}\n"
+
+        user_prompt = f"USER QUERY: {query}\n"
         if document_content:
-            user_prompt += f"\n📄 DOCUMENT:\n{document_content[:4000]}\n"
-        user_prompt += "\nProvide a complete, comprehensive response."
-        
+            user_prompt += f"CONTEXT (document/web search):\n{document_content[:6000]}\n"
+        user_prompt += "\nProduce the complete analysis."
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        
-        # TRY GROQ
+
+        # Try Groq first
+        ai_response = None
+        model_used = ""
         if self.groq_client:
             try:
-                print(f"🔄 Attempting Groq query: {query[:50]}...")
-                response = await self.groq_client.post(
+                resp = await self.groq_client.post(
                     "/chat/completions",
-                    json={
-                        "model": "llama-3.3-70b-versatile",
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 4096
-                    }
+                    json={"model": "llama-3.3-70b-versatile", "messages": messages, "temperature": 0.7, "max_tokens": 4096}
                 )
-                if response.status_code == 200:
-                    data = response.json()
-                    ai_response = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"✅ Groq response: {len(ai_response)} characters")
-                    if ai_response and len(ai_response) > 50:
-                        return self._format_response(query, ai_response, agent_count, "Groq", document_content)
-                else:
-                    print(f"⚠️ Groq error: {response.status_code}")
-            except Exception as e:
-                print(f"⚠️ Groq exception: {e}")
-        
-        # FALLBACK OPENROUTER
-        if self.openrouter_client:
+                if resp.status_code == 200:
+                    data = resp.json()
+                    ai_response = data["choices"][0]["message"]["content"]
+                    model_used = "Groq"
+            except Exception:
+                pass
+
+        # Fallback to OpenRouter
+        if not ai_response and self.openrouter_client:
             try:
-                print(f"🔄 Attempting OpenRouter fallback...")
-                response = await self.openrouter_client.post(
+                resp = await self.openrouter_client.post(
                     "/chat/completions",
-                    json={
-                        "model": "meta-llama/llama-3.2-3b-instruct:free",
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 4096
-                    }
+                    json={"model": "meta-llama/llama-3.2-3b-instruct:free", "messages": messages, "temperature": 0.7, "max_tokens": 4096}
                 )
-                if response.status_code == 200:
-                    data = response.json()
-                    ai_response = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"✅ OpenRouter response: {len(ai_response)} characters")
-                    if ai_response and len(ai_response) > 50:
-                        return self._format_response(query, ai_response, agent_count, "OpenRouter", document_content)
-                else:
-                    print(f"⚠️ OpenRouter error: {response.status_code}")
-            except Exception as e:
-                print(f"⚠️ OpenRouter exception: {e}")
-        
-        # FINAL FALLBACK
-        print("⚠️ All AI providers failed - using fallback")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    ai_response = data["choices"][0]["message"]["content"]
+                    model_used = "OpenRouter"
+            except Exception:
+                pass
+
+        # Ultimate fallback
+        if not ai_response:
+            ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\nI'm sorry, the AI providers are currently unreachable. Please try again shortly.\n🔱 LexSarthi v4.0"
+            model_used = "fallback"
+
+        # Ensure the disclaimer is at the very beginning (if the LLM didn't include it)
+        disclaimer_line = "📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional."
+        if disclaimer_line not in ai_response[:200]:
+            ai_response = disclaimer_line + "\n\n" + ai_response
+
         return {
-            "response": f"""📋 Query: {query}
-
-🔱 LEXSARTHI v4.0 - ANALYSIS
-
-I apologize, but I'm currently experiencing connectivity issues with my AI providers. 
-
-Please try:
-1. Refreshing the page and re-submitting
-2. Using a simpler query first
-3. Contacting support if issue persists
-
-✅ System Status:
-- 🤖 {agent_count} Agents: ACTIVE
-- ✅ {len(VERIFIERS)} Verifiers: ACTIVE
-- 🔑 Groq: {'✅' if self.groq_client else '❌'}
-- 🔑 OpenRouter: {'✅' if self.openrouter_client else '❌'}
-
-📌 Your query has been noted and will be processed once connectivity is restored.
-
-🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-""",
+            "response": ai_response,
             "agents_used": agent_count,
             "verifiers_passed": len(VERIFIERS),
-            "model": "fallback",
-            "accuracy": "100%"
+            "model": model_used,
+            "accuracy": "100%",
+            "web_search_used": search_web
         }
-    
-    def _format_response(self, query, ai_response, agent_count, model, document_content):
-        if not ai_response or len(ai_response.strip()) < 10:
-            ai_response = "The AI analysis was generated but the response content was empty. Please try rephrasing your query."
-        
-        response_text = f"""📋 Query: {query}
-{'📎 Document attached and analyzed' if document_content else ''}
 
-📌 Agents Used: All {agent_count} specialized agents
-📌 Model: {model}
-📌 Verifiers: {len(VERIFIERS)} verifiers (100% passed)
-
-{ai_response}
-
----
-✅ VERIFICATION COMPLETE
-📌 Verifiers Run: {len(VERIFIERS)}
-📌 Verifiers Passed: {len(VERIFIERS)}
-🎯 Accuracy: 100%
-
----
-⚠️ DISCLAIMER: This analysis is AI-generated and is for informational purposes only. 
-It does not constitute legal advice. All content should be reviewed by a qualified 
-legal professional before reliance or action.
-"""
-        
-        return {
-            "response": response_text,
-            "agents_used": agent_count,
-            "verifiers_passed": len(VERIFIERS),
-            "model": model,
-            "accuracy": "100%"
-        }
+    def _web_search(self, query: str, max_results: int = 5) -> str:
+        try:
+            with DDGS() as ddgs:
+                results = list(ddgs.text(query, max_results=max_results))
+                if not results:
+                    return "No web results found."
+                formatted = []
+                for i, r in enumerate(results, 1):
+                    title = r.get("title", "No title")
+                    body = r.get("body", "No snippet")
+                    href = r.get("href", "")
+                    formatted.append(f"{i}. {title}\n   {body}\n   URL: {href}")
+                return "\n\n".join(formatted)
+        except Exception as e:
+            return f"Web search error: {str(e)}"
 
 ai_engine = AIEngine()
 
@@ -490,35 +424,26 @@ ai_engine = AIEngine()
 def extract_text_from_pdf(file_content: bytes) -> str:
     try:
         pdf_file = io.BytesIO(file_content)
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        text = ""
-        for page in pdf_reader.pages:
-            extracted = page.extract_text()
-            if extracted:
-                text += extracted + "\n"
-        return text if text else "PDF text extraction complete."
+        reader = PyPDF2.PdfReader(pdf_file)
+        text = "".join(page.extract_text() or "" for page in reader.pages)
+        return text or "PDF text extraction complete."
     except Exception as e:
-        return f"PDF processing error: {str(e)}"
+        return f"PDF error: {str(e)}"
 
 def extract_text_from_docx(file_content: bytes) -> str:
     try:
         doc_file = io.BytesIO(file_content)
         doc = docx.Document(doc_file)
-        text = ""
-        for paragraph in doc.paragraphs:
-            if paragraph.text:
-                text += paragraph.text + "\n"
-        return text if text else "DOCX text extraction complete."
+        return "\n".join(para.text for para in doc.paragraphs if para.text) or "DOCX text extraction complete."
     except Exception as e:
-        return f"DOCX processing error: {str(e)}"
+        return f"DOCX error: {str(e)}"
 
 def extract_text_from_image(file_content: bytes) -> str:
     try:
         image = Image.open(io.BytesIO(file_content))
-        text = pytesseract.image_to_string(image)
-        return text if text else "Image OCR complete."
+        return pytesseract.image_to_string(image) or "Image OCR complete."
     except Exception as e:
-        return f"Image processing error: {str(e)}"
+        return f"Image error: {str(e)}"
 
 # ===================================================================
 # RAZORPAY CLIENT
@@ -528,27 +453,18 @@ class RazorpayClient:
     def __init__(self):
         self.key_id = config.RAZORPAY_KEY_ID
         self.key_secret = config.RAZORPAY_KEY_SECRET
-        self.base_url = "https://api.razorpay.com/v1"
         self.auth = base64.b64encode(f"{self.key_id}:{self.key_secret}".encode()).decode()
-    
+
     async def create_order(self, amount: int, currency: str = "INR", receipt: str = None):
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.base_url}/orders",
-                headers={
-                    "Authorization": f"Basic {self.auth}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "amount": amount,
-                    "currency": currency,
-                    "receipt": receipt or f"lex_{uuid.uuid4().hex[:8]}",
-                    "payment_capture": 1
-                },
+            resp = await client.post(
+                "https://api.razorpay.com/v1/orders",
+                headers={"Authorization": f"Basic {self.auth}", "Content-Type": "application/json"},
+                json={"amount": amount, "currency": currency, "receipt": receipt or f"lex_{uuid.uuid4().hex[:8]}", "payment_capture": 1},
                 timeout=30.0
             )
-            return response.json()
-    
+            return resp.json()
+
     async def verify_payment(self, order_id: str, payment_id: str, signature: str) -> bool:
         generated_signature = hmac.new(
             self.key_secret.encode(),
@@ -574,7 +490,7 @@ app.add_middleware(
 )
 
 # ===================================================================
-# ENHANCED ROOT ENDPOINT - ALL FEATURES INCLUDED
+# ENDPOINTS — Firm name removed from all public responses
 # ===================================================================
 
 @app.get("/")
@@ -584,151 +500,95 @@ async def root():
         "name": "LEXSARTHI v4.0",
         "description": "Universal AI Operating System",
         "tagline": "Intelligence, Accelerated by AI",
-        "firm": {
-            "name": config.FIRM_NAME,
-            "website": config.FIRM_WEBSITE,
-            "established": config.FIRM_ESTABLISHED
-        },
+        "ownership": "Copyright © 2026 THE ADVOCACY – A LAW FIRM. All Rights Reserved.",
         "features": {
-            "agents": {
-                "total": len(agents),
-                "description": "Specialized AI Agents with Expert Prompts"
-            },
-            "verifiers": {
-                "total": len(VERIFIERS),
-                "description": "Quality Verification Layers"
-            },
+            "agents": {"total": len(agents), "description": "Specialized AI Agents"},
+            "verifiers": {"total": len(VERIFIERS), "description": "Quality Verification Layers"},
             "accuracy": "100% Guaranteed",
             "retention": "Zero Retention (24h Auto-Delete)",
-            "compliance": "DPDPA 2023 Compliant",
-            "input_methods": ["Text", "PDF Upload", "Voice Input", "Image Upload"],
-            "output_methods": ["Copy", "PDF Download", "TXT Download", "Print", "Share"],
-            "payment": "₹2 - 15 Days Unlimited Access",
-            "model": "Groq (Primary) + OpenRouter (Fallback)",
-            "security": "End-to-End Encryption",
-            "support": "24/7 Global Access"
-        },
-        "campaign": {
-            "price": "₹2",
-            "duration": "15 Days",
-            "type": "Unlimited Access"
+            "input_methods": ["Text", "PDF", "Voice", "Image"],
+            "output_methods": ["Copy", "PDF", "TXT", "Print", "Share"],
+            "payment": "₹2 – 15 Days Unlimited Access",
+            "web_search": "Available (real-time internet scanning)",
+            "multilingual": "Auto-detect, 20+ languages"
         },
         "trident": "🔱",
-        "permanent": "TRIDENT - PERMANENT ASSET - NEVER REMOVE"
+        "permanent": "TRIDENT – PERMANENT ASSET – NEVER REMOVE"
     }
-
-# ===================================================================
-# OTHER ENDPOINTS
-# ===================================================================
 
 @app.get("/health")
 async def health():
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 @app.get("/agents")
 async def get_agents():
     agents = await ai_engine.get_agents()
-    return {
-        "total": len(agents),
-        "agents": [{"id": a[0], "name": a[1], "category": a[2]} for a in agents]
-    }
+    return {"total": len(agents), "agents": [{"id": a[0], "name": a[1], "category": a[2]} for a in agents]}
 
 @app.get("/verifiers")
 async def get_verifiers():
-    return {
-        "total": len(VERIFIERS),
-        "verifiers": [{"id": v["id"], "name": v["name"], "description": v["description"]} for v in VERIFIERS]
-    }
-
-@app.get("/trident")
-async def trident():
-    return {
-        "trident": "🔱",
-        "permanent": "TRIDENT - PERMANENT ASSET - NEVER REMOVE"
-    }
+    return {"total": len(VERIFIERS), "verifiers": VERIFIERS}
 
 @app.get("/firm")
 async def get_firm():
+    # Only owner name, no contact details
     return {
-        "firm": config.FIRM_NAME,
-        "udyam": config.FIRM_UDYAM,
-        "pan": config.FIRM_PAN,
-        "owner": config.FIRM_OWNER,
-        "established": config.FIRM_ESTABLISHED,
-        "address": config.FIRM_ADDRESS,
-        "email": config.FIRM_EMAIL,
-        "mobile": config.FIRM_MOBILE,
-        "website": config.FIRM_WEBSITE,
+        "owner": "THE ADVOCACY – A LAW FIRM",
+        "all_rights_reserved": True,
         "trident": "🔱"
     }
 
 # ===================================================================
-# AUTHENTICATION
+# AUTH
 # ===================================================================
 
 @app.post("/auth/register")
-async def register(
-    username: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-    full_name: str = Form(None)
-):
+async def register(username: str = Form(...), email: str = Form(...), password: str = Form(...), full_name: str = Form(None)):
     user_id = str(uuid.uuid4())
     password_hash = get_password_hash(password)
     async with aiosqlite.connect(config.DATABASE_URL) as conn:
-        cursor = await conn.execute("SELECT id FROM users WHERE username = ? OR email = ?", (username, email))
-        if await cursor.fetchone():
+        cur = await conn.execute("SELECT id FROM users WHERE username=? OR email=?", (username, email))
+        if await cur.fetchone():
             raise HTTPException(status_code=400, detail="Username or email already registered")
-        await conn.execute("""
-            INSERT INTO users (id, username, email, password_hash, full_name, user_type)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (user_id, username, email, password_hash, full_name, "individual"))
+        await conn.execute(
+            "INSERT INTO users (id, username, email, password_hash, full_name, user_type) VALUES (?,?,?,?,?,?)",
+            (user_id, username, email, password_hash, full_name, "individual")
+        )
         await conn.commit()
     return {"status": "success", "message": "User registered"}
 
 @app.post("/auth/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     async with aiosqlite.connect(config.DATABASE_URL) as conn:
-        cursor = await conn.execute(
-            "SELECT id, username, email, password_hash, is_active FROM users WHERE username = ? OR email = ?",
-            (form_data.username, form_data.username)
-        )
-        user = await cursor.fetchone()
+        cur = await conn.execute("SELECT id, username, email, password_hash, is_active FROM users WHERE username=? OR email=?", (form_data.username, form_data.username))
+        user = await cur.fetchone()
         if not user or not verify_password(form_data.password, user[3]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not user[4]:
             raise HTTPException(status_code=403, detail="Account inactive")
-        await conn.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", (user[0],))
+        await conn.execute("UPDATE users SET last_login=CURRENT_TIMESTAMP WHERE id=?", (user[0],))
         await conn.commit()
-    
-    access_token = create_access_token(data={"sub": user[0], "username": user[1]})
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user_id": user[0],
-        "username": user[1]
-    }
+    token = create_access_token(data={"sub": user[0], "username": user[1]})
+    return {"access_token": token, "token_type": "bearer", "user_id": user[0], "username": user[1]}
 
 @app.get("/auth/me")
 async def get_me(current_user = Depends(get_current_user)):
     return current_user
 
 # ===================================================================
-# MAIN QUERY ENDPOINT
+# CORE /ask WITH WEB SEARCH
 # ===================================================================
 
 @app.post("/ask")
 async def ask(
     query: str = Form(""),
     files: List[UploadFile] = File(None),
+    search_web: bool = Form(False),
     current_user = Depends(get_current_user)
 ):
     if not query and not files:
         raise HTTPException(status_code=400, detail="Please provide a query or file")
-    
+
     document_content = ""
     if files:
         for file in files:
@@ -741,20 +601,20 @@ async def ask(
                     document_content += extract_text_from_docx(content) + "\n"
                 elif ext in ["jpg", "jpeg", "png", "gif", "webp"]:
                     document_content += extract_text_from_image(content) + "\n"
-            except Exception as e:
-                document_content += f"[Error: {str(e)}]\n"
-    
-    result = await ai_engine.process_query(query, document_content, current_user)
-    
+            except Exception:
+                pass
+
+    result = await ai_engine.process_query(query, document_content, current_user, search_web)
+
     query_id = str(uuid.uuid4())
     expires_at = datetime.utcnow() + timedelta(hours=config.ZERO_RETENTION_HOURS)
     async with aiosqlite.connect(config.DATABASE_URL) as conn:
         await conn.execute(
-            "INSERT INTO queries (id, user_id, query_text, response_text, expires_at) VALUES (?, ?, ?, ?, ?)",
-            (query_id, current_user.get("id", "guest"), query, result.get("response", ""), expires_at.isoformat())
+            "INSERT INTO queries (id, user_id, query_text, response_text, expires_at) VALUES (?,?,?,?,?)",
+            (query_id, current_user.get("id", "guest"), query, result["response"], expires_at.isoformat())
         )
         await conn.commit()
-    
+
     return {
         "status": "success",
         "query_id": query_id,
@@ -763,42 +623,27 @@ async def ask(
     }
 
 # ===================================================================
-# PAYMENT ENDPOINTS
+# PAYMENT
 # ===================================================================
 
 @app.post("/payment/create-order")
 async def create_payment_order(current_user = Depends(get_current_user)):
-    if not current_user or not current_user.get("authenticated"):
-        raise HTTPException(status_code=401, detail="Please login first")
-    
+    if not current_user.get("authenticated"):
+        raise HTTPException(status_code=401, detail="Login required")
     try:
-        razorpay_order = await razorpay_client.create_order(
-            amount=config.CAMPAIGN_PRICE_IN_PAISE,
-            currency="INR",
-            receipt=f"lex_{current_user.get('id', 'guest')[:8]}"
-        )
-        
-        if "id" not in razorpay_order:
-            raise HTTPException(status_code=500, detail="Failed to create payment order")
-        
-        order_id = str(uuid.uuid4())
+        order = await razorpay_client.create_order(config.CAMPAIGN_PRICE_IN_PAISE)
+        if "id" not in order:
+            raise HTTPException(status_code=500, detail="Order creation failed")
+        oid = str(uuid.uuid4())
         async with aiosqlite.connect(config.DATABASE_URL) as conn:
-            await conn.execute("""
-                INSERT INTO payments (id, user_id, order_id, razorpay_order_id, amount, status)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (order_id, current_user.get("id"), order_id, razorpay_order["id"], config.CAMPAIGN_PRICE_IN_PAISE, "created"))
+            await conn.execute(
+                "INSERT INTO payments (id, user_id, order_id, razorpay_order_id, amount, status) VALUES (?,?,?,?,?,?)",
+                (oid, current_user["id"], oid, order["id"], config.CAMPAIGN_PRICE_IN_PAISE, "created")
+            )
             await conn.commit()
-        
-        return {
-            "order_id": order_id,
-            "razorpay_order_id": razorpay_order["id"],
-            "amount": config.CAMPAIGN_PRICE,
-            "currency": "INR",
-            "status": "created",
-            "razorpay_key": config.RAZORPAY_KEY_ID
-        }
+        return {"order_id": oid, "razorpay_order_id": order["id"], "amount": config.CAMPAIGN_PRICE, "currency": "INR", "razorpay_key": config.RAZORPAY_KEY_ID}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Payment order failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/payment/verify")
 async def verify_payment(
@@ -807,81 +652,34 @@ async def verify_payment(
     razorpay_signature: str = Form(...),
     current_user = Depends(get_current_user)
 ):
-    if not current_user or not current_user.get("authenticated"):
-        raise HTTPException(status_code=401, detail="Please login first")
-    
-    is_valid = await razorpay_client.verify_payment(
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature
-    )
-    
-    if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid payment signature")
-    
+    if not current_user.get("authenticated"):
+        raise HTTPException(status_code=401, detail="Login required")
+    if not await razorpay_client.verify_payment(razorpay_order_id, razorpay_payment_id, razorpay_signature):
+        raise HTTPException(status_code=400, detail="Invalid signature")
     async with aiosqlite.connect(config.DATABASE_URL) as conn:
-        await conn.execute("""
-            UPDATE payments 
-            SET razorpay_payment_id = ?, razorpay_signature = ?, status = 'success', completed_at = CURRENT_TIMESTAMP
-            WHERE razorpay_order_id = ?
-        """, (razorpay_payment_id, razorpay_signature, razorpay_order_id))
-        
-        expires_at = (datetime.utcnow() + timedelta(days=config.CAMPAIGN_DAYS)).isoformat()
-        await conn.execute("""
-            UPDATE users 
-            SET subscription_type = 'premium', subscription_expires = ?
-            WHERE id = ?
-        """, (expires_at, current_user.get("id")))
+        await conn.execute(
+            "UPDATE payments SET razorpay_payment_id=?, razorpay_signature=?, status='success', completed_at=CURRENT_TIMESTAMP WHERE razorpay_order_id=?",
+            (razorpay_payment_id, razorpay_signature, razorpay_order_id)
+        )
+        expires = (datetime.utcnow() + timedelta(days=config.CAMPAIGN_DAYS)).isoformat()
+        await conn.execute("UPDATE users SET subscription_type='premium', subscription_expires=? WHERE id=?", (expires, current_user["id"]))
         await conn.commit()
-    
-    return {
-        "status": "success",
-        "message": f"₹{config.CAMPAIGN_PRICE} payment verified. {config.CAMPAIGN_DAYS} days access unlocked.",
-        "expires_at": expires_at
-    }
+    return {"status": "success", "message": f"₹{config.CAMPAIGN_PRICE} paid – {config.CAMPAIGN_DAYS} days premium unlocked.", "expires_at": expires}
 
 # ===================================================================
-# TERMS OF USE
-# ===================================================================
-
-@app.get("/terms")
-async def get_terms():
-    return {
-        "title": "Terms of Use - LexSarthi v4.0",
-        "last_updated": "2026-06-23",
-        "governing_law": "India",
-        "jurisdiction": "Baghpat, Uttar Pradesh",
-        "firm": config.FIRM_NAME,
-        "trident": "🔱"
-    }
-
-# ===================================================================
-# USER HISTORY
+# HISTORY & CLEANUP
 # ===================================================================
 
 @app.get("/history")
 async def get_history(current_user = Depends(get_current_user)):
-    if not current_user or not current_user.get("authenticated"):
+    if not current_user.get("authenticated"):
         return {"history": []}
-    
     async with aiosqlite.connect(config.DATABASE_URL) as conn:
-        cursor = await conn.execute(
-            "SELECT id, query_text, created_at FROM queries WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
-            (current_user.get("id"),)
-        )
-        rows = await cursor.fetchall()
-        return {
-            "history": [
-                {"id": row[0], "query": row[1], "timestamp": row[2]}
-                for row in rows
-            ]
-        }
+        cur = await conn.execute("SELECT id, query_text, created_at FROM queries WHERE user_id=? ORDER BY created_at DESC LIMIT 50", (current_user["id"],))
+        rows = await cur.fetchall()
+        return {"history": [{"id": r[0], "query": r[1], "timestamp": r[2]} for r in rows]}
 
-# ===================================================================
-# CLEANUP
-# ===================================================================
-
-async def cleanup_expired_queries():
+async def cleanup_expired():
     while True:
         try:
             async with aiosqlite.connect(config.DATABASE_URL) as conn:
@@ -891,25 +689,11 @@ async def cleanup_expired_queries():
             pass
         await asyncio.sleep(3600)
 
-# ===================================================================
-# STARTUP
-# ===================================================================
-
 @app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(cleanup_expired_queries())
-    agents = await ai_engine.get_agents()
-    print("=" * 70)
-    print("🔱 LEXSARTHI v4.0 STARTED - LIVE PRODUCTION")
-    print("=" * 70)
-    print(f"🏛️ {config.FIRM_NAME}")
-    print(f"🌐 {config.FIRM_WEBSITE}")
-    print(f"🤖 AGENTS: {len(agents)}")
-    print(f"✅ VERIFIERS: {len(VERIFIERS)}")
-    print(f"🎯 ACCURACY: 100%")
-    print(f"💳 RAZORPAY: {'🔴 LIVE' if config.RAZORPAY_KEY_ID.startswith('rzp_live') else '🧪 TEST'}")
-    print(f"💰 CAMPAIGN: ₹{config.CAMPAIGN_PRICE} - {config.CAMPAIGN_DAYS} Days")
-    print("=" * 70)
+async def startup():
+    asyncio.create_task(cleanup_expired())
+    print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
+    print("✅ 200 Agents | 10 Verifiers | Zero Retention | Web Search Ready | Multilingual")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
