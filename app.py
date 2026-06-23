@@ -1,5 +1,5 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  🔱 LEXSARTHI v4.0 — India's First AI Universal OS         ║
+# ║  🔱 LEXSARTHI ALPHA — India's First AI Universal OS        ║
 # ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM               ║
 # ║  All Rights Reserved.                                      ║
 # ║  Proprietor: UPMANYU KUMAR                                 ║
@@ -307,7 +307,7 @@ class AIEngine:
             web_results = self._web_search(query)
             document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-        # ========== ENHANCED SYSTEM PROMPT WITH FORCED CASE LAW, RESTITUTION, AND FORCE MAJEURE ==========
+        # ========== BASE SYSTEM PROMPT ==========
         base_prompt = f"""You are LexSarthi v4.0, a Universal AI Operating System powered by a collective of {agent_count} specialized AI agents and {len(VERIFIERS)} verification layers.
 
 🔱 **Core Rules:**
@@ -326,24 +326,76 @@ class AIEngine:
 - Recommendations
 """
 
-        # Dynamic legal‑query extension
-        legal_keywords = ["section", "act", "case", "judgment", "contract", "tort", "constitution", "tribunal", "court", "appeal", "frustration", "restitution", "force majeure"]
+        # ========== LEGAL INSTRUCTION BLOCK ==========
+        legal_keywords = [
+            "section", "act", "case", "judgment", "contract", "tort", "constitution",
+            "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
+            "impossibility", "void", "discharge", "contractual obligation"
+        ]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
-🔍 **LEGAL QUERY DETECTED – ADDITIONAL REQUIREMENTS:**
-- **Case Law:** Cite at least 2–3 leading judicial precedents with full case names and years (e.g., Satyabrata Ghose v. Mugneeram (AIR 1954 SC 44), Taylor v. Caldwell (1863)).
-- **Restitution:** Discuss the effect on advance payments and the obligations under Section 65 of the Indian Contract Act (or analogous provisions if the context is different).
-- **Distinction between frustration and force majeure:** Clearly explain when a contract is frustrated (supervening impossibility) versus when a force majeure clause operates, and how courts treat each. Include the legal test for frustration.
-- **Statutory Cross‑References:** Mention other relevant sections of the same Act or related statutes that interact with the subject matter.
+🔍 **LEGAL QUERY DETECTED – ULTRA‑DETAILED INSTRUCTION SET (10/10 DEPTH):**
+
+- **Case Law:** Cite at least 2–3 leading judicial precedents (e.g., Satyabrata Ghose v. Mugneeram (AIR 1954 SC 44), Taylor v. Caldwell (1863)), AND include at least one **recent Supreme Court decision** from the last 20 years (e.g., Energy Watchdog v. CERC (2017) or Raja Dhruv Dev Chand v. Raja Harmohinder Singh (1968)). Provide full citations and explain their ratio.
+
+- **Restitution:** Discuss the effect of frustration on advance payments and the obligations under Section 65 of the Indian Contract Act (or analogous provision if the context is different). Explain that restitution is limited to the benefit received and may be subject to equitable adjustments.
+
+- **Distinction between Frustration and Force Majeure:** Clearly explain that force majeure is a **contractual clause**, whereas frustration is a **legal doctrine** that applies even in the absence of such a clause. Provide the legal test for frustration (fundamental change in contractual obligation).
+
+- **Self‑Induced Frustration:** Explicitly state that a party **cannot** rely on frustration if they caused the impossibility (self‑induced frustration). Cite relevant case law if possible.
+
+- **Temporary vs. Permanent Impossibility:** Clarify that frustration only applies when the impossibility is **permanent**; temporary impracticability does not discharge the contract. Discuss the distinction between **initial impossibility** (void ab initio) and **supervening impossibility** (frustration).
+
+- **Statutory Cross‑References:** Mention other relevant sections of the same Act or related statutes (e.g., Sections 32, 33, 62 of the Indian Contract Act, and other statutes like the Sale of Goods Act, 1930, or Specific Relief Act, 1963).
+
+- **Practical Illustration:** Provide a brief illustrative example (e.g., a lease of a property that is destroyed, or a contract for a specific service that becomes impossible due to change in law).
+
+- **Effect on Incidental Obligations:** Briefly discuss whether collateral obligations (e.g., confidentiality, arbitration) survive frustration.
 """
             base_prompt += legal_instruction
+
+        # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
+        investment_keywords = [
+            "investor", "investment", "portfolio", "market", "financial", "asset",
+            "return", "risk", "valuation", "equity", "bond", "commodity", "fx",
+            "roi", "cagr", "sharpe", "beta", "var", "p/e", "earnings", "dividend",
+            "stock", "fund", "hedge", "arbitrage", "yield", "spread"
+        ]
+        if any(kw in query.lower() for kw in investment_keywords):
+            investment_instruction = """
+🔍 **INVESTMENT/FINANCE QUERY DETECTED – INVESTMENT‑GRADE INSTRUCTION SET:**
+
+Your response must be **quantitative** and **actionable**. Include the following:
+
+1. **Executive Summary** – one‑paragraph overview with the key takeaway and an estimated confidence interval (e.g., 70‑80% probability).
+
+2. **Market Overview & Data** – provide specific numbers: market size (e.g., ₹X lakh crore), growth rate (e.g., 12% CAGR), and recent trends. If applicable, compare with benchmarks (Nifty, Sensex, S&P 500).
+
+3. **Financial Metrics & Ratios** – include at least 5 relevant ratios:
+   - Valuation: P/E, P/B, EV/EBITDA.
+   - Performance: ROI, ROE, CAGR (3‑year, 5‑year).
+   - Risk: Sharpe Ratio, Beta, Maximum Drawdown, VaR (95% confidence).
+
+4. **Risk Assessment** – identify key risks (market, credit, operational, liquidity) and estimate their likelihood (Low/Medium/High) and potential impact (₹ value or % loss).
+
+5. **Scenario Analysis** – provide at least two scenarios (Base, Bull, Bear) with projected returns and probabilities.
+
+6. **Actionable Recommendations** – give clear, prioritised steps (e.g., “Allocate 15% to sector X”, “Hedge with put options”, “Increase duration to 5 years”) with rationale and expected risk‑adjusted return.
+
+7. **Benchmark & Competitive Positioning** – compare the subject (e.g., a stock, fund, or strategy) against peers or industry averages.
+
+8. **Conclusion** – summarise the investment thesis with a clear stance (Buy/Hold/Sell) and a target price or expected range.
+
+Use actual numbers, percentages, and cite relevant financial theories (e.g., CAPM, Modern Portfolio Theory) where appropriate.
+"""
+            base_prompt += investment_instruction
 
         system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
 
         user_prompt = f"USER QUERY: {query}\n"
         if document_content:
             user_prompt += f"CONTEXT (document/web search):\n{document_content[:6000]}\n"
-        user_prompt += "\nProduce the complete analysis."
+        user_prompt += "\nProduce the complete analysis following all the instructions above."
 
         messages = [
             {"role": "system", "content": system_prompt},
