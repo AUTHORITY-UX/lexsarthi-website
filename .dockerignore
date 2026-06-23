@@ -1,5 +1,10 @@
-# Python
-__pycache__
+# ===================================================================
+# 🔱 LEXSARTHI v4.0 - DOCKER IGNORE
+# ===================================================================
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ===================================================================
+
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -7,39 +12,28 @@ __pycache__
 *.so
 *.egg
 *.egg-info
-dist
-build
-*.db
-*.sqlite3
-
-# Environment
-.env
-venv/
+dist/
+build/
 env/
+venv/
+ENV/
 .venv/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Git
-.git/
-.gitignore
-
-# Logs
-*.log
-logs/
-
-# OS
+*.db
+*.sqlite
+*.sqlite3
 .DS_Store
 Thumbs.db
-
-# Docker
-Dockerfile
-.dockerignore
-
-# Tests
-tests/
+*.log
+.env
+*.pem
+*.key
+*.crt
+.git/
+.gitignore
+README.md
 test_*.py
+.DS_Store
+
+# ===================================================================
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ===================================================================
