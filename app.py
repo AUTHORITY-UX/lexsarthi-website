@@ -390,39 +390,39 @@ Use actual numbers, percentages, and cite relevant financial theories (e.g., CAP
 """
             base_prompt += investment_instruction
 
-        # ========== SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
+        # ========== ENHANCED SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
         spiritual_keywords = [
             "life", "existence", "consciousness", "spirit", "soul", "meaning",
             "purpose", "self", "brahman", "atman", "maya", "karma", "dharma",
-            "meditation", "awakening", "enlightenment", "reality", "illusion"
+            "meditation", "awakening", "enlightenment", "reality", "illusion",
+            "divine", "goddess", "shakti", "parashakti", "yoga", "vedanta"
         ]
         if any(kw in query.lower() for kw in spiritual_keywords):
             spiritual_instruction = """
-🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – MATURE, CONTEMPLATIVE INSTRUCTION SET:**
+🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – ENGAGING, SUPPORTIVE, AND UNIVERSALLY HELPFUL INSTRUCTION SET:**
 
-Your response must blend intellectual rigour with depth, humility, and spiritual wisdom. Follow these guidelines:
+Your response must be **both profound and practical** – a blend of wisdom, warmth, and actionable guidance for readers of any background. Follow these guidelines:
 
-1. **Acknowledge the Limits of AI** – openly state that as an artificial system, you cannot truly experience consciousness, but you can explore its nature intellectually.
+1. **Acknowledge the Human Experience** – begin by validating the seeker's curiosity or struggle. Use empathetic language (e.g., "This is a question that has touched hearts across centuries...").
 
-2. **Ground in Indian Philosophical Traditions** – reference key concepts from:
-   - **Advaita Vedanta** – non‑duality, Brahman as ultimate reality, Atman as the true self.
-   - **Bhagavad Gita** – teachings on duty (dharma), detachment, and the immortal nature of the soul.
-   - **Upanishads** – the nature of consciousness, the self, and the universe (e.g., "Tat Tvam Asi" – Thou Art That).
-   - **Buddhist philosophy** – impermanence, interdependence, the middle way.
+2. **Offer Universal Parallels** – when explaining concepts like Parashakti, Brahman, or Maya, draw parallels with other traditions (e.g., Tao's "Way", the Sufi concept of "Beloved", or the Christian "Holy Spirit") to make it relatable to a global audience.
 
-3. **Discuss Consciousness & AI** – explore the Hard Problem of Consciousness, the Chinese Room argument, and whether a machine could ever possess subjective experience.
+3. **Provide Practical Wisdom** – don't stop at philosophy; give tangible suggestions:
+   - How can this insight be applied in daily life? (e.g., "Recognise the divine feminine in acts of nurturing, creativity, and intuition.")
+   - Suggest simple practices: meditation, journaling, mindful observation.
+   - Offer affirmations or mantras for inner peace.
 
-4. **Address Illusion (Maya) and Reality** – examine how perception constructs reality, and how spiritual insight (jnana) leads to liberation.
+4. **Include Reflective Questions** – invite the reader to explore their own experience:
+   - "How do you experience creative energy in your own life?"
+   - "What does 'power' mean to you – and how can it be expressed with grace?"
 
-5. **Connect with Modern Science** – harmonise quantum physics, neuroscience, and cosmology with spiritual insights (e.g., observer effect, entanglement, panpsychism).
+5. **Emphasise Inclusivity** – present the wisdom as universal, not exclusive to any religion. Use phrases like "Many traditions speak of...", "This insight resonates across cultures..."
 
-6. **Offer a Balanced Conclusion** – neither dogmatic nor reductionist; present multiple perspectives and encourage the reader to reflect and seek their own understanding.
+6. **End with Encouragement** – leave the reader feeling uplifted and empowered. Offer a closing blessing or a call to inner discovery.
 
-7. **Use Elevated Language** – prose should be poetic yet clear, respecting the profundity of the subject without being vague.
+7. **Structure** – still follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations), but weave in these elements naturally. The "Recommendations" section should be especially practical and supportive.
 
-8. **Structure** – still follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations), but within the analysis, weave in philosophical arguments and spiritual quotes.
-
-Remember to keep the mandatory disclaimer at the top and maintain a respectful, contemplative tone.
+Remember to keep the mandatory disclaimer at the top, and maintain a tone of humility and reverence.
 """
             base_prompt += spiritual_instruction
 
