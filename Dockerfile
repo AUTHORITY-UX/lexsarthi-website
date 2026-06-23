@@ -1,38 +1,49 @@
 # ===================================================================
-# LEXSARTHI v4.0 - DOCKERFILE
+# 🔱 LEXSARTHI v4.0 - DOCKER CONFIGURATION
 # ===================================================================
-# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
-# Confidential and proprietary. Do not distribute without a license.
-# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY A LAW FIRM.
+# Copyright (c) 2026 THE ADVOCACY - A LAW FIRM. All rights reserved.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY - A LAW FIRM.
 # ===================================================================
-# "From Contract Review to Supreme Court Judgments"
-# "From Law School to Global Legal Practice"
-# "One Platform. Every Legal Need. Anywhere in the World."
+# 🏛️ OWNED BY: THE ADVOCACY - A LAW FIRM
+# 📜 UDYAM: UDYAM-UP-09-0043193 | PAN: CHFPK3464A
+# 👤 PROPRIETOR: UPMANYU KUMAR | ESTABLISHED: 2026
 # ===================================================================
-# 🔥 NO OPENAI - USING OPENROUTER
-# 🔥 UNLIMITED TOKENS - GLOBAL SCALING
+# 🔱 200+ Agents | 10 Verifiers | 100% Accuracy
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # ===================================================================
 
 FROM python:3.10-slim
 
-WORKDIR /app
+# Firm Label
+LABEL firm="THE ADVOCACY - A LAW FIRM"
+LABEL udyam="UDYAM-UP-09-0043193"
+LABEL pan="CHFPK3464A"
+LABEL owner="UPMANYU KUMAR"
+LABEL trident="🔱 PERMANENT ASSET - NEVER REMOVE"
 
-# Install system dependencies
+# Install Tesseract for OCR
 RUN apt-get update && apt-get install -y \
-    gcc \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-hin \
+    libtesseract-dev \
+    libleptonica-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+WORKDIR /app
 
-# Install Python dependencies (no openai)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Expose port
 EXPOSE 7860
 
-# Run the application
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:7860/health')" || exit 1
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+
+# ===================================================================
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ===================================================================
