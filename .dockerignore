@@ -1,38 +1,70 @@
 # ===================================================================
 # 🔱 LEXSARTHI v4.0 - DOCKER IGNORE
 # ===================================================================
+# Copyright (c) 2026 THE ADVOCACY - A LAW FIRM. All rights reserved.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY - A LAW FIRM.
+# ===================================================================
+# 🏛️ OWNED BY: THE ADVOCACY - A LAW FIRM
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # ===================================================================
 
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.py[cod]
+*$py.class
 *.so
-*.egg
-*.egg-info
-dist/
-build/
+.Python
 env/
 venv/
 ENV/
 .venv/
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Uploads
+uploads/
+temp/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
 Thumbs.db
-*.log
+
+# Secrets
 .env
 *.pem
 *.key
 *.crt
+
+# Logs
+*.log
+logs/
+
+# Tests
+test_*.py
+*.test.py
+
+# Misc
+*.pdf
+*.docx
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Git
 .git/
 .gitignore
-README.md
-test_*.py
-.DS_Store
 
 # ===================================================================
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
