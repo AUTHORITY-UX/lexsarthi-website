@@ -1,31 +1,23 @@
 # ===================================================================
-# LEXSARTHI v4.0 - COMPLETE DEPENDENCIES
+# 🔱 LEXSARTHI v4.0 - COMPLETE DEPENDENCIES
 # ===================================================================
-# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
-# Confidential and proprietary. Do not distribute without a license.
-# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY A LAW FIRM.
+# Copyright (c) 2026 THE ADVOCACY - A LAW FIRM. All rights reserved.
+# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY - A LAW FIRM.
 # ===================================================================
-# "From Contract Review to Supreme Court Judgments"
-# "From Law School to Global Legal Practice"
-# "One Platform. Every Legal Need. Anywhere in the World."
+# 🏛️ OWNED BY: THE ADVOCACY - A LAW FIRM
+# 📜 UDYAM: UDYAM-UP-09-0043193 | PAN: CHFPK3464A
+# 👤 PROPRIETOR: UPMANYU KUMAR | ESTABLISHED: 2026
 # ===================================================================
-# 🔥 OPENROUTER INTEGRATION - UNLIMITED TOKENS
-# 🔥 RAZORPAY PAYMENT - ₹2 TEST PAYMENT
-# 🔥 ZERO DATA RETENTION - 24h AUTO-DELETE
-# 🔥 FASTAPI + UVICORN + JWT + BCrypt
-# 🔥 GLOBAL SCALING - UNLIMITED USERS
+# 🔱 200+ Agents | 10 Verifiers | 100% Accuracy
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # ===================================================================
 
-# ===================================================================
-# CORE FRAMEWORKS
-# ===================================================================
+# Core Frameworks
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
-# ===================================================================
-# AUTHENTICATION & SECURITY
-# ===================================================================
+# Authentication & Security
 PyJWT==2.8.0
 bcrypt==4.1.2
 cryptography==41.0.7
@@ -33,58 +25,46 @@ python-dotenv==1.0.0
 email-validator==2.1.0
 passlib==1.7.4
 
-# ===================================================================
-# DATABASE
-# ===================================================================
+# Database
 aiosqlite==0.19.0
-# sqlite3 is built-in - no pip install needed
 
-# ===================================================================
-# PAYMENT INTEGRATION - RAZORPAY
-# ===================================================================
+# Payment - Razorpay
 razorpay==1.4.2
 
-# ===================================================================
-# HTTP & NETWORK
-# ===================================================================
+# HTTP & Network
 httpx==0.25.1
 aiofiles==23.2.1
 requests==2.31.0
 
-# ===================================================================
-# DATA PROCESSING & ANALYTICS
-# ===================================================================
+# Data Processing
 pandas==2.0.3
 numpy==1.24.3
 python-dateutil==2.8.2
 
-# ===================================================================
-# DOMAIN INTELLIGENCE
-# ===================================================================
+# Domain Intelligence
 python-whois==0.8.0
 dnspython==2.4.2
 pyOpenSSL==23.3.0
 
-# ===================================================================
-# PDF GENERATION & DOCUMENTS
-# ===================================================================
+# PDF & Document Processing
 reportlab==4.0.4
 PyPDF2==3.0.1
+python-docx==1.1.0          # <-- FIXED: Added this
+Pillow==10.1.0
+pytesseract==0.3.10
 
-# ===================================================================
-# ADDITIONAL UTILITIES
-# ===================================================================
+# Utilities
 pydantic==2.5.0
 pydantic-settings==2.1.0
 typing-extensions==4.8.0
 python-json-logger==2.0.7
 
-# ===================================================================
-# RATE LIMITING & PERFORMANCE
-# ===================================================================
+# Rate Limiting
 slowapi==0.1.9
 
-# ===================================================================
-# PRODUCTION DEPLOYMENT
-# ===================================================================
+# Production
 gunicorn==21.2.0
+
+# ===================================================================
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ===================================================================
