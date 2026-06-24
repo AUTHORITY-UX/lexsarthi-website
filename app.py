@@ -25,7 +25,7 @@
 # ║  🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE                            ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
-import os, json, uuid, asyncio, sqlite3, aiosqlite, hmac, hashlib, base64, io, time
+import os, json, uuid, asyncio, sqlite3, aiosqlite, hmac, hashlib, base64, io
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 
@@ -361,7 +361,7 @@ class AIEngine:
 - Recommendations
 """
 
-        # ========== LEGAL INSTRUCTION BLOCK (includes drafting with CPC/CrPC & annexures) ==========
+        # ========== LEGAL INSTRUCTION BLOCK ==========
         legal_keywords = [
             "section", "act", "case", "judgment", "contract", "tort", "constitution",
             "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
@@ -371,9 +371,9 @@ class AIEngine:
         ]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
-🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET:**
+🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET (with Drafting & Redlining):**
 
-- **Case Law:** Cite at least 2–3 leading judicial precedents and at least one recent Supreme Court decision.
+- **Case Law:** Cite at least 2–3 leading judicial precedents (e.g., Satyabrata Ghose v. Mugneeram, Taylor v. Caldwell) and at least one recent Supreme Court decision (e.g., Energy Watchdog v. CERC).
 - **Restitution:** Discuss Section 65 of the Indian Contract Act (or analogous provision) and its effect on advance payments.
 - **Frustration vs Force Majeure:** Clearly distinguish the two concepts and provide the legal test for frustration.
 - **Self‑Induced Frustration:** State that a party cannot rely on frustration if they caused the impossibility.
@@ -433,15 +433,14 @@ class AIEngine:
         ]
         if any(kw in query.lower() for kw in psych_keywords):
             psych_instruction = """
-🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – 10/10 INSTRUCTION SET:**
+🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – 10/10 EMPATHETIC & EVIDENCE‑BASED INSTRUCTION SET:**
 
 - Respond with empathy, validate the user's feelings.
 - Reference psychological theories (CBT, ACT, Polyvagal, Maslow, Positive Psychology).
 - Provide a self‑assessment scale (1‑10) and actionable coping strategies (grounding, cognitive reframing, mindfulness).
 - Clearly differentiate short‑term (minutes) vs long‑term (days/weeks) actions.
 - Include a reflection prompt and normalise professional help.
-
-**This is educational, not therapeutic.**
+- **This is educational, not therapeutic.**
 """
             base_prompt += psych_instruction
 
@@ -460,8 +459,7 @@ class AIEngine:
 - Provide grounding techniques and psychoeducation (e.g., explaining the fight‑or‑flight response).
 - Gently suggest professional help and provide helpline numbers if available.
 - Include a strong disclaimer: "I am an AI, not a licensed therapist. This is not a substitute for professional care."
-
-**If you are in crisis, please contact a local helpline or emergency services immediately.**
+- **If you are in crisis, please contact a local helpline or emergency services immediately.**
 """
             base_prompt += therapy_instruction
 
@@ -480,8 +478,7 @@ class AIEngine:
 - Outline possible causes, but avoid speculation; list common reasons and when to seek urgent care.
 - Offer general self‑care advice (rest, hydration, OTC medication precautions) with clear disclaimers.
 - Strongly advise consulting a qualified healthcare professional for personalised advice.
-
-**This is for informational purposes only. Do not ignore professional medical advice.**
+- **This is for informational purposes only. Do not ignore professional medical advice.**
 """
             base_prompt += medical_instruction
 
@@ -500,8 +497,6 @@ class AIEngine:
 - For system design, include high‑level diagrams (text‑based), component breakdown, and scalability considerations.
 - For algorithms, explain time/space complexity, edge cases, and alternative approaches.
 - Always include practical, actionable steps.
-
-**Example response structure:** problem analysis → proposed solution → implementation details → testing & deployment advice.
 """
             base_prompt += se_instruction
 
@@ -698,10 +693,6 @@ async def api_status():
         "permanent": "TRIDENT – PERMANENT ASSET – NEVER REMOVE"
     }
 
-@app.get("/alpha")
-async def alpha_page():
-    return FileResponse("static/alpha.html")
-
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
@@ -783,12 +774,13 @@ async def ask(
                 elif ext in ["jpg", "jpeg", "png", "gif", "webp"]:
                     document_content += extract_text_from_image(content) + "\n"
                 elif ext in ["wav", "mp3", "webm", "m4a", "flac", "ogg"]:
-                    # Handle audio – transcribe
+                    # Transcribe audio
                     transcribed = await ai_engine.transcribe_audio(file)
                     document_content += f"[Transcribed Audio]:\n{transcribed}\n"
+                else:
+                    document_content += f"[File uploaded: {file.filename}]\n"
             except Exception as e:
-                # If transcription fails, still continue
-                document_content += f"[Error processing file: {str(e)}]\n"
+                document_content += f"[Error processing file {file.filename}: {str(e)}]\n"
 
     # If no query but we have document content, use it as the query
     if not query and document_content:
@@ -886,5 +878,5 @@ async def startup():
     print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
     print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual | Audio Transcription Ready")
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
