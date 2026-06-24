@@ -850,4 +850,4 @@ async def startup():
     print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
