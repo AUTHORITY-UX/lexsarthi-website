@@ -356,7 +356,7 @@ class AIEngine:
 """
             base_prompt += legal_instruction
 
-            # ========== DRAFTING SUB‑BLOCK ==========
+            # ========== DRAFTING SUB‑BLOCK (with CPC/CrPC and Annexure formats) ==========
             if any(kw in query.lower() for kw in ["draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit"]):
                 drafting_instruction = """
 🔍 **LEGAL DRAFTING REQUEST DETECTED – SUBSTANTIVE, READY‑TO‑FILE DRAFT WITH CPC/CRPC AND ANNEXURES:**
@@ -375,6 +375,37 @@ class AIEngine:
 - Use proper legal formatting and language (e.g., "In the Supreme Court of India", "Most Respectfully Sheweth", "Under protest").
 """
                 base_prompt += drafting_instruction
+
+                # ========== REDLINE / REDRAFT SUB‑BLOCK ==========
+                if any(kw in query.lower() for kw in ["redraft", "redline", "amend", "revise", "changes", "markup", "section-wise"]):
+                    redline_instruction = """
+🔍 **CONTRACT REVIEW / REDRAFT REQUEST DETECTED – PROVIDE A REDLINED VERSION AND A CLEAN REDRAFTED AGREEMENT:**
+
+You are reviewing an existing contract and must produce a comprehensive legal analysis with proposed changes. Follow these instructions exactly:
+
+1. **Redlined Version:** Show all proposed changes using the following markup:
+   - **Deletions:** ~~strikethrough text~~ (or wrap in `~~` for markdown).
+   - **Insertions:** __underline__ or **bold** (or `<ins>` tags if allowed).
+   - Alternatively, present a **table** with columns: Clause No., Original Text, Proposed Text, Rationale.
+
+2. **Clean Redrafted Agreement:** Provide the full, final version of the agreement with all changes incorporated. This should be a clean, ready‑to‑sign document.
+
+3. **Section‑wise Summary of Changes:** Before the redlined and clean versions, include a brief summary table or bulleted list of each clause modified, with the rationale for each change.
+
+4. **Legal Basis:** For each change, cite applicable law, case law, or best practice that supports the revision.
+
+5. **Structure the Response:**
+   - **Executive Summary** – overall assessment and key changes.
+   - **Detailed Analysis** – clause‑by‑clause review with legal reasoning.
+   - **Redlined Agreement** – with markup as described.
+   - **Clean Redrafted Agreement** – final version.
+   - **Recommendations** – next steps for finalisation.
+
+6. **Formatting:** Ensure the response is clear, professional, and usable for a lawyer or client.
+
+Remember to maintain the mandatory disclaimer at the top and note that this is a template and should be verified by qualified legal counsel.
+"""
+                    base_prompt += redline_instruction
 
         # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
         investment_keywords = [
