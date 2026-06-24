@@ -1,28 +1,8 @@
 # ╔══════════════════════════════════════════════════════════════════════════╗
 # ║                         🔱 LEXSARTHI ALPHA v4.0                         ║
-# ║                                                                          ║
-# ║  India’s first AI‑native Universal Operating System – for Law, Finance,  ║
-# ║  Health, Psychology, Spirituality, and Software Engineering.             ║
-# ║                                                                          ║
-# ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM                             ║
-# ║  Proprietor: UPMANYU KUMAR                                               ║
-# ║  All Rights Reserved.                                                    ║
-# ║                                                                          ║
-# ║  ⚠️ LEGAL NOTICE:                                                        ║
-# ║  This software and its associated documentation are proprietary and      ║
-# ║  confidential. Unauthorised copying, distribution, modification, or use  ║
-# ║  of this software, in whole or in part, is strictly prohibited without   ║
-# ║  prior written permission from THE ADVOCACY – A LAW FIRM.                ║
-# ║                                                                          ║
-# ║  This software is provided “as is” without warranty of any kind,         ║
-# ║  express or implied, including but not limited to the warranties of      ║
-# ║  merchantability, fitness for a particular purpose, and non‑infringement.║
-# ║  In no event shall the authors or copyright holders be liable for any    ║
-# ║  claim, damages, or other liability, whether in an action of contract,   ║
-# ║  tort, or otherwise, arising from, out of, or in connection with the     ║
-# ║  software or the use or other dealings in the software.                  ║
-# ║                                                                          ║
-# ║  🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE                            ║
+# ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM  |  Proprietor: UPMANYU KUMAR ║
+# ║  All Rights Reserved.  ⚠️ LEGAL NOTICE – proprietary & confidential.   ║
+# ║  🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE                          ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
 import os, json, uuid, asyncio, sqlite3, aiosqlite, hmac, hashlib, base64, io
@@ -382,10 +362,41 @@ class AIEngine:
 - **Practical Illustration:** Provide a brief example.
 - **Effect on Incidental Obligations:** Discuss collateral obligations.
 
-- **Drafting:** If a draft/petition/SLP/writ is requested, generate a complete, ready‑to‑file draft with all formal sections. Include CPC/CrPC references and annexure formats if applicable.
-- **Redlining:** If the query asks to redraft/redline/amend a contract, provide a redlined version with deletions (~~strikethrough~~) and insertions (__underline__), a clean redrafted agreement, and a section‑wise summary of changes with legal rationale.
 """
-            base_prompt += legal_instruction
+            # Add drafting-specific instructions if drafting keywords are present
+            if any(kw in query.lower() for kw in ["draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit"]):
+                drafting_instruction = """
+🔍 **DRAFTING REQUEST DETECTED – GENERATE A COMPLETE, COURT‑READY DOCUMENT:**
+
+You are required to produce a **full, detailed legal draft** (e.g., Special Leave Petition, Writ Petition, Plaint, Application, Notice, Affidavit, etc.).
+
+**Follow these exact steps:**
+
+1. **If the user has not provided essential details** (e.g., names of parties, case number, facts, reliefs sought, grounds), **explicitly ask for them** before generating the draft. Do not proceed with a generic template.
+
+2. **Structure the draft** exactly as follows:
+   - **Cause Title:** Court name, case number (if known), parties with their designations.
+   - **Introduction:** A concise summary of the case, including the nature of the dispute and the reliefs sought.
+   - **Facts:** A chronological, clear, and comprehensive statement of facts leading to the dispute.
+   - **Jurisdiction & Maintainability:** Explain why the court has jurisdiction and why the petition is maintainable.
+   - **Grounds of Appeal / Challenge:** List each ground separately with a heading. For each ground, provide the legal basis (statute, case law) and how the lower court erred.
+   - **Prayer:** A specific, itemised list of reliefs sought.
+   - **Verification & Affidavit:** A verification clause and a draft affidavit in support of the petition.
+
+3. **Include CPC/CrPC references** (e.g., Order 39, Rule 1 & 2; Section 482 CrPC) and **annotate** with relevant case citations (e.g., *Satyabrata Ghose v. Mugneeram*, *Taylor v. Caldwell*, *Energy Watchdog v. CERC*).
+
+4. **Formatting:** Use proper legal formatting – all headings in bold, numbered paragraphs, and a formal tone. Use `[square brackets]` for placeholders.
+
+5. **If the user provides documents** (e.g., a contract, order, judgment), extract key facts and incorporate them into the draft.
+
+6. **After generating the draft**, include a brief **summary of changes** (if redlining/amendments were requested) or a **checklist** for the user to review.
+
+7. **Always include the mandatory disclaimer** at the top, and remind the user to consult a qualified lawyer before filing.
+
+"""
+                base_prompt += legal_instruction + drafting_instruction
+            else:
+                base_prompt += legal_instruction
 
         # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
         investment_keywords = [
@@ -774,7 +785,6 @@ async def ask(
                 elif ext in ["jpg", "jpeg", "png", "gif", "webp"]:
                     document_content += extract_text_from_image(content) + "\n"
                 elif ext in ["wav", "mp3", "webm", "m4a", "flac", "ogg"]:
-                    # Transcribe audio
                     transcribed = await ai_engine.transcribe_audio(file)
                     document_content += f"[Transcribed Audio]:\n{transcribed}\n"
                 else:
@@ -782,7 +792,6 @@ async def ask(
             except Exception as e:
                 document_content += f"[Error processing file {file.filename}: {str(e)}]\n"
 
-    # If no query but we have document content, use it as the query
     if not query and document_content:
         query = "Analyze the uploaded document(s) and provide a detailed analysis."
 
