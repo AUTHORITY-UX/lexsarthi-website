@@ -886,5 +886,5 @@ async def startup():
     print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
     print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual | Audio Transcription Ready")
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
