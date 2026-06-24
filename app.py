@@ -1,10 +1,29 @@
-# ╔══════════════════════════════════════════════════════════════╗
-# ║  🔱 LEXSARTHI ALPHA — India's First AI Universal OS        ║
-# ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM               ║
-# ║  All Rights Reserved.                                      ║
-# ║  Proprietor: UPMANYU KUMAR                                 ║
-# ║  ⚠️ PROPRIETARY & CONFIDENTIAL — DO NOT REMOVE THIS NOTICE ║
-# ╚══════════════════════════════════════════════════════════════╝
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                         🔱 LEXSARTHI ALPHA v4.0                         ║
+# ║                                                                          ║
+# ║  India’s first AI‑native Universal Operating System – for Law, Finance,  ║
+# ║  Health, Psychology, Spirituality, and Software Engineering.             ║
+# ║                                                                          ║
+# ║  Copyright © 2026 THE ADVOCACY – A LAW FIRM                             ║
+# ║  Proprietor: UPMANYU KUMAR                                               ║
+# ║  All Rights Reserved.                                                    ║
+# ║                                                                          ║
+# ║  ⚠️ LEGAL NOTICE:                                                        ║
+# ║  This software and its associated documentation are proprietary and      ║
+# ║  confidential. Unauthorised copying, distribution, modification, or use  ║
+# ║  of this software, in whole or in part, is strictly prohibited without   ║
+# ║  prior written permission from THE ADVOCACY – A LAW FIRM.                ║
+# ║                                                                          ║
+# ║  This software is provided “as is” without warranty of any kind,         ║
+# ║  express or implied, including but not limited to the warranties of      ║
+# ║  merchantability, fitness for a particular purpose, and non‑infringement.║
+# ║  In no event shall the authors or copyright holders be liable for any    ║
+# ║  claim, damages, or other liability, whether in an action of contract,   ║
+# ║  tort, or otherwise, arising from, out of, or in connection with the     ║
+# ║  software or the use or other dealings in the software.                  ║
+# ║                                                                          ║
+# ║  🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE                            ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
 
 import os, json, uuid, asyncio, sqlite3, aiosqlite, hmac, hashlib, base64, io, time
 from datetime import datetime, timedelta
@@ -120,8 +139,7 @@ class Database:
         categories = [
             "Legal Intelligence", "Criminal Law", "Civil Litigation", "Corporate",
             "Constitutional", "Family Law", "Tax", "Property", "IP", "International",
-            "Financial", "Show Cause", "Market Intelligence", "Universal AI", "Technology",
-            "Software Engineering", "Therapy", "Medical"
+            "Financial", "Show Cause", "Market Intelligence", "Universal AI", "Technology"
         ]
         names = [
             "Supreme Court Predictor", "Legal Research Expert", "Precedent Analyzer",
@@ -140,19 +158,14 @@ class Database:
             "GDPR Compliance Expert", "Financial Compliance Expert", "AML/CFT Expert",
             "Banking Law Expert", "Insurance Law Expert", "Show Cause Notice Expert",
             "Market Trends Analyst", "Universal Knowledge Expert", "Creative Thinker",
-            "Critical Thinker", "Strategic Planner", "Problem Solver",
-            "Python Architect", "Full‑Stack Developer", "DevOps Engineer", "Algorithm Specialist",
-            "Cognitive Therapist", "Counselling Psychologist", "Mindfulness Coach", "Trauma Specialist",
-            "General Practitioner", "Cardiologist", "Neurologist", "Psychiatrist"
+            "Critical Thinker", "Strategic Planner", "Problem Solver"
         ]
         prompts = [
             "You are a specialized expert. Provide comprehensive, accurate assistance.",
             "You are a senior professional with 20+ years of experience.",
             "You are a specialist with complete knowledge of all applicable laws.",
             "You are an industry leader with deep expertise.",
-            "You are a subject matter expert with access to complete library.",
-            "You are a compassionate guide with deep psychological insight.",
-            "You provide medical information with the highest standard of care and ethical responsibility."
+            "You are a subject matter expert with access to complete library."
         ]
         # Original 200 agents
         for i in range(1, 201):
@@ -299,6 +312,22 @@ class AIEngine:
             cursor = await conn.execute("SELECT id, name, category, expert_prompt FROM agents")
             return await cursor.fetchall()
 
+    async def transcribe_audio(self, file: UploadFile) -> str:
+        """Transcribe audio using Groq's Whisper API."""
+        if not self.groq_client:
+            raise HTTPException(status_code=503, detail="Audio transcription unavailable (Groq client not initialized)")
+        try:
+            content = await file.read()
+            files = {"file": (file.filename, content, file.content_type)}
+            data = {"model": "whisper-large-v3", "language": "auto"}
+            resp = await self.groq_client.post("/audio/transcriptions", files=files, data=data)
+            if resp.status_code == 200:
+                return resp.json()["text"]
+            else:
+                raise HTTPException(status_code=resp.status_code, detail=resp.text)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
+
     async def process_query(self, query: str, document_content: str = "", current_user: dict = None, search_web: bool = False) -> Dict:
         agents = await self.get_agents()
         agent_count = len(agents)
@@ -332,7 +361,7 @@ class AIEngine:
 - Recommendations
 """
 
-        # ========== LEGAL INSTRUCTION BLOCK ==========
+        # ========== LEGAL INSTRUCTION BLOCK (includes drafting with CPC/CrPC & annexures) ==========
         legal_keywords = [
             "section", "act", "case", "judgment", "contract", "tort", "constitution",
             "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
@@ -517,7 +546,6 @@ class AIEngine:
                 pass
 
         if not ai_response:
-            # Fallback: provide a helpful error message with guidance
             fallback_msg = (
                 "I'm currently unable to reach the AI providers (Groq/OpenRouter). This could be due to:\n"
                 "1. Missing or invalid API keys in your Space secrets.\n"
@@ -754,8 +782,17 @@ async def ask(
                     document_content += extract_text_from_docx(content) + "\n"
                 elif ext in ["jpg", "jpeg", "png", "gif", "webp"]:
                     document_content += extract_text_from_image(content) + "\n"
-            except Exception:
-                pass
+                elif ext in ["wav", "mp3", "webm", "m4a", "flac", "ogg"]:
+                    # Handle audio – transcribe
+                    transcribed = await ai_engine.transcribe_audio(file)
+                    document_content += f"[Transcribed Audio]:\n{transcribed}\n"
+            except Exception as e:
+                # If transcription fails, still continue
+                document_content += f"[Error processing file: {str(e)}]\n"
+
+    # If no query but we have document content, use it as the query
+    if not query and document_content:
+        query = "Analyze the uploaded document(s) and provide a detailed analysis."
 
     result = await ai_engine.process_query(query, document_content, current_user, search_web)
 
@@ -847,7 +884,7 @@ async def startup():
     asyncio.create_task(cleanup_expired())
     agents = await ai_engine.get_agents()
     print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
-    print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual")
+    print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual | Audio Transcription Ready")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
