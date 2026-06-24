@@ -1,21 +1,9 @@
 <!DOCTYPE html>
-<!--
-╔══════════════════════════════════════════════════════════════╗
-║  🔱 LEXSARTHI ALPHA — Institutional AI with AI Governance  ║
-║  Copyright © 2026 THE ADVOCACY – A LAW FIRM               ║
-║  All Rights Reserved.                                      ║
-║  Proprietor: UPMANYU KUMAR                                 ║
-║  ⚠️ PROPRIETARY & CONFIDENTIAL — DO NOT REMOVE THIS NOTICE ║
-╚══════════════════════════════════════════════════════════════╝
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0A0A0A">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>🔱 LexSarthi Alpha — Self‑Governing Enterprise AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -35,431 +23,87 @@
             --font: 'Inter', system-ui, -apple-system, sans-serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: var(--font);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            overflow-x: hidden;
-        }
-        .trident-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 180px;
-            margin: 20px 0 10px;
-            perspective: 800px;
-        }
-        .trident-3d {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            transform-style: preserve-3d;
-            animation: rotate3d 8s infinite linear;
-        }
-        @keyframes rotate3d {
-            0% { transform: rotateY(0deg) rotateX(10deg); }
-            50% { transform: rotateY(180deg) rotateX(20deg); }
-            100% { transform: rotateY(360deg) rotateX(10deg); }
-        }
-        .trident-face {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 80px;
-            backface-visibility: hidden;
-            filter: drop-shadow(0 0 20px rgba(212,175,55,0.6));
-        }
-        .front { transform: translateZ(60px); }
-        .back  { transform: rotateY(180deg) translateZ(60px); }
-        .left  { transform: rotateY(-90deg) translateZ(60px); }
-        .right { transform: rotateY(90deg) translateZ(60px); }
-        .top   { transform: rotateX(90deg) translateZ(60px); }
-        .bottom{ transform: rotateX(-90deg) translateZ(60px); }
-        .ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 2px solid rgba(212,175,55,0.2);
-            animation: ringPulse 3s ease-in-out infinite;
-        }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        .trident-wrapper { display: flex; justify-content: center; align-items: center; height: 180px; margin: 20px 0 10px; perspective: 800px; }
+        .trident-3d { position: relative; width: 120px; height: 120px; transform-style: preserve-3d; animation: rotate3d 8s infinite linear; }
+        @keyframes rotate3d { 0% { transform: rotateY(0deg) rotateX(10deg); } 50% { transform: rotateY(180deg) rotateX(20deg); } 100% { transform: rotateY(360deg) rotateX(10deg); } }
+        .trident-face { position: absolute; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 80px; backface-visibility: hidden; filter: drop-shadow(0 0 20px rgba(212,175,55,0.6)); }
+        .front { transform: translateZ(60px); } .back  { transform: rotateY(180deg) translateZ(60px); }
+        .left  { transform: rotateY(-90deg) translateZ(60px); } .right { transform: rotateY(90deg) translateZ(60px); }
+        .top   { transform: rotateX(90deg) translateZ(60px); } .bottom{ transform: rotateX(-90deg) translateZ(60px); }
+        .ring { position: absolute; border-radius: 50%; border: 2px solid rgba(212,175,55,0.2); animation: ringPulse 3s ease-in-out infinite; }
         .ring1 { width: 200px; height: 200px; top: -40px; left: -40px; }
         .ring2 { width: 260px; height: 260px; top: -70px; left: -70px; animation-delay: 0.5s; }
         .ring3 { width: 320px; height: 320px; top: -100px; left: -100px; animation-delay: 1s; }
-        @keyframes ringPulse {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.05); }
-        }
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 16px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .header {
-            text-align: center;
-            padding: 24px 0 12px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
-        }
-        .brand-name {
-            font-size: 2rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #F4D03F, #D4AF37);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-        }
-        .alpha-badge {
-            display: inline-block;
-            background: var(--gold);
-            color: #000;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 2px 12px;
-            border-radius: 20px;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-        .tagline {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin: 8px 0 4px;
-        }
-        .gov-line {
-            font-size: 0.8rem;
-            color: var(--gold);
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .btn {
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #ccc;
-        }
+        @keyframes ringPulse { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
+        .container { position: relative; z-index: 1; width: 100%; max-width: 800px; margin: 0 auto; padding: 0 16px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { text-align: center; padding: 24px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 20px; position: relative; }
+        .brand-name { font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, #F4D03F, #D4AF37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
+        .alpha-badge { display: inline-block; background: var(--gold); color: #000; font-size: 0.7rem; font-weight: 800; padding: 2px 12px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+        .tagline { font-size: 0.9rem; color: #aaa; margin: 8px 0 4px; }
+        .gov-line { font-size: 0.8rem; color: var(--gold); font-weight: 600; margin-bottom: 12px; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+        .settings-btn { background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; transition: 0.3s; padding: 4px 8px; border-radius: 4px; }
+        .settings-btn:hover { color: var(--gold); background: rgba(212,175,55,0.1); }
+        .settings-panel { display: none; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin: 10px auto 0; max-width: 400px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .settings-panel.open { display: block; }
+        .settings-panel label { display: block; margin: 6px 0 4px; font-size: 0.8rem; color: #aaa; }
+        .settings-panel select { width: 100%; padding: 8px 12px; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 0.9rem; }
+        .settings-panel .lang-note { font-size: 0.7rem; color: #666; margin-top: 8px; text-align: center; }
+        .btn { padding: 8px 18px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; border: none; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; }
         .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
-        .btn-gold {
-            background: linear-gradient(135deg, #D4AF37, #B8960F);
-            color: #000;
-            font-weight: 700;
-            box-shadow: 0 0 20px rgba(212,175,55,0.3);
-        }
+        .btn-gold { background: linear-gradient(135deg, #D4AF37, #B8960F); color: #000; font-weight: 700; box-shadow: 0 0 20px rgba(212,175,55,0.3); }
         .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(212,175,55,0.5); }
-        .stats-row {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin: 20px 0 24px;
-        }
-        .stat-item {
-            background: rgba(20,20,20,0.9);
-            border: 1px solid rgba(212,175,55,0.15);
-            border-radius: 16px;
-            padding: 14px 20px;
-            text-align: center;
-            min-width: 100px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-        }
-        .stat-item:hover {
-            border-color: var(--gold);
-            transform: translateY(-3px);
-        }
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--gold);
-            line-height: 1;
-            text-shadow: 0 0 10px rgba(212,175,55,0.4);
-        }
-        .stat-label {
-            font-size: 0.65rem;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 4px;
-        }
-        .governance-section {
-            background: rgba(20,20,20,0.6);
-            border: 1px solid rgba(212,175,55,0.15);
-            border-radius: 16px;
-            padding: 16px;
-            margin: 0 0 20px;
-            text-align: center;
-        }
-        .governance-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--gold);
-            margin-bottom: 10px;
-        }
-        .law-chips {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-        }
-        .law-chip {
-            background: rgba(212,175,55,0.1);
-            border: 1px solid rgba(212,175,55,0.3);
-            color: var(--gold);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-        .agent-showcase {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin: 16px 0 20px;
-        }
-        .agent-card {
-            background: rgba(20,20,20,0.6);
-            border: 1px solid rgba(212,175,55,0.15);
-            border-radius: 14px;
-            padding: 14px 12px;
-            text-align: center;
-            font-size: 0.7rem;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .agent-card:hover {
-            border-color: var(--gold);
-            background: rgba(212,175,55,0.08);
-            transform: translateY(-2px);
-        }
+        .stats-row { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 20px 0 24px; }
+        .stat-item { background: rgba(20,20,20,0.9); border: 1px solid rgba(212,175,55,0.15); border-radius: 16px; padding: 14px 20px; text-align: center; min-width: 100px; backdrop-filter: blur(10px); transition: all 0.3s; }
+        .stat-item:hover { border-color: var(--gold); transform: translateY(-3px); }
+        .stat-number { font-size: 1.8rem; font-weight: 900; color: var(--gold); line-height: 1; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        .stat-label { font-size: 0.65rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .governance-section { background: rgba(20,20,20,0.6); border: 1px solid rgba(212,175,55,0.15); border-radius: 16px; padding: 16px; margin: 0 0 20px; text-align: center; }
+        .governance-title { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
+        .law-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .law-chip { background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 500; }
+        .agent-showcase { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0 20px; }
+        .agent-card { background: rgba(20,20,20,0.6); border: 1px solid rgba(212,175,55,0.15); border-radius: 14px; padding: 14px 12px; text-align: center; font-size: 0.7rem; transition: 0.3s; cursor: pointer; }
+        .agent-card:hover { border-color: var(--gold); background: rgba(212,175,55,0.08); transform: translateY(-2px); }
         .agent-card i { font-size: 1.3rem; color: var(--gold); margin-bottom: 6px; }
         .agent-card .agent-title { color: #fff; font-weight: 600; margin-bottom: 3px; }
         .agent-card .agent-desc { color: #999; font-size: 0.65rem; line-height: 1.3; }
-        .input-card {
-            background: rgba(20,20,20,0.9);
-            border: 1px solid rgba(212,175,55,0.1);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        }
-        .query-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 1rem;
-            font-family: var(--font);
-            resize: vertical;
-            min-height: 70px;
-            outline: none;
-            margin-bottom: 14px;
-            line-height: 1.6;
-        }
+        .input-card { background: rgba(20,20,20,0.9); border: 1px solid rgba(212,175,55,0.1); border-radius: 20px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(15px); box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        .query-input { width: 100%; background: transparent; border: none; color: #fff; font-size: 1rem; font-family: var(--font); resize: vertical; min-height: 70px; outline: none; margin-bottom: 14px; line-height: 1.6; }
         .query-input::placeholder { color: #555; }
-        .input-tools {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-        .tool-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #bbb;
-            padding: 7px 16px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .input-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .tool-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #bbb; padding: 7px 16px; border-radius: 30px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 5px; }
         .tool-btn:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); color: var(--gold); }
-        .send-btn {
-            background: linear-gradient(135deg, #D4AF37, #B8960F);
-            color: #000;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-left: auto;
-            box-shadow: 0 0 20px rgba(212,175,55,0.3);
-        }
+        .send-btn { background: linear-gradient(135deg, #D4AF37, #B8960F); color: #000; border: none; padding: 10px 24px; border-radius: 30px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; margin-left: auto; box-shadow: 0 0 20px rgba(212,175,55,0.3); }
         .send-btn:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(212,175,55,0.6); }
-        .response-card {
-            background: rgba(20,20,20,0.7);
-            border: 1px solid rgba(212,175,55,0.08);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 16px;
-            display: none;
-            white-space: pre-wrap;
-            font-size: 0.9rem;
-            line-height: 1.7;
-            max-height: 400px;
-            overflow-y: auto;
-            color: #ddd;
-            backdrop-filter: blur(10px);
-        }
+        .response-card { background: rgba(20,20,20,0.7); border: 1px solid rgba(212,175,55,0.08); border-radius: 20px; padding: 20px; margin-bottom: 16px; display: none; white-space: pre-wrap; font-size: 0.9rem; line-height: 1.7; max-height: 400px; overflow-y: auto; color: #ddd; backdrop-filter: blur(10px); }
         .response-card.active { display: block; }
-        .output-tools {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .output-tools .tool-btn {
-            background: rgba(212,175,55,0.1);
-            border-color: rgba(212,175,55,0.3);
-            color: var(--gold);
-        }
-        .footer {
-            margin-top: auto;
-            padding: 20px 0 16px;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            font-size: 0.75rem;
-            color: #777;
-        }
-        .footer-links {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-        .footer-links a {
-            color: #aaa;
-            cursor: pointer;
-            transition: color 0.3s;
-            text-decoration: none;
-        }
+        .output-tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+        .output-tools .tool-btn { background: rgba(212,175,55,0.1); border-color: rgba(212,175,55,0.3); color: var(--gold); }
+        .footer { margin-top: auto; padding: 20px 0 16px; border-top: 1px solid var(--border); text-align: center; font-size: 0.75rem; color: #777; }
+        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 10px; }
+        .footer-links a { color: #aaa; cursor: pointer; transition: color 0.3s; text-decoration: none; }
         .footer-links a:hover { color: var(--gold); }
         .copyright { margin-top: 8px; font-size: 0.7rem; }
         .status-text { font-size: 0.75rem; margin-top: 6px; }
-        .file-preview {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            background: rgba(16,185,129,0.1);
-            border: 1px solid rgba(16,185,129,0.3);
-            border-radius: 30px;
-            padding: 5px 14px;
-            font-size: 0.75rem;
-            color: #34D399;
-            margin-top: 10px;
-        }
+        .file-preview { display: none; align-items: center; gap: 6px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 30px; padding: 5px 14px; font-size: 0.75rem; color: #34D399; margin-top: 10px; }
         .file-preview.show { display: flex; }
         .file-preview .remove { cursor: pointer; color: #aaa; }
         .file-preview .remove:hover { color: #e74c3c; }
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            z-index: 999; display: none; align-items: center; justify-content: center; padding: 16px;
-        }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 999; display: none; align-items: center; justify-content: center; padding: 16px; }
         .modal-overlay.active { display: flex; }
-        .modal-content {
-            background: #1A1A1A;
-            border: 1px solid rgba(212,175,55,0.12);
-            border-radius: 24px;
-            padding: 28px;
-            max-width: 650px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.8);
-        }
+        .modal-content { background: #1A1A1A; border: 1px solid rgba(212,175,55,0.12); border-radius: 24px; padding: 28px; max-width: 650px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
         .modal-content h3 { color: var(--gold); margin-bottom: 12px; }
-        .modal-content .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        /* Diya glow animation */
-        .diya {
-            display: inline-block;
-            font-size: 2.8rem;
-            animation: glow 2s ease-in-out infinite alternate;
-            line-height: 1;
-        }
-        @keyframes glow {
-            0% { text-shadow: 0 0 5px #d4a853, 0 0 10px #d4a853, 0 0 20px #f0d078; }
-            100% { text-shadow: 0 0 10px #f4d03f, 0 0 20px #f4d03f, 0 0 40px #d4a853, 0 0 60px #b8960f; }
-        }
-        .welcome-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--gold);
-            margin: 0.2rem 0 0.5rem;
-            letter-spacing: 1px;
-        }
-        .welcome-sub {
-            font-size: 1.1rem;
-            color: #ccc;
-            margin-bottom: 0.5rem;
-        }
-        .welcome-languages {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px 16px;
-            margin: 8px 0;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-        .welcome-languages span {
-            background: rgba(212,175,55,0.08);
-            padding: 2px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(212,175,55,0.15);
-        }
-        @media (max-width: 480px) {
-            .brand-name { font-size: 1.4rem; }
-            .stat-item { min-width: 80px; padding: 10px 14px; }
-            .stat-number { font-size: 1.4rem; }
-            .diya { font-size: 2rem; }
-            .welcome-title { font-size: 1.3rem; }
-        }
+        .modal-content .close-btn { float: right; background: none; border: none; color: #aaa; font-size: 1.5rem; cursor: pointer; }
+        .diya { display: inline-block; font-size: 2.8rem; animation: glow 2s ease-in-out infinite alternate; line-height: 1; }
+        @keyframes glow { 0% { text-shadow: 0 0 5px #d4a853, 0 0 10px #d4a853, 0 0 20px #f0d078; } 100% { text-shadow: 0 0 10px #f4d03f, 0 0 20px #f4d03f, 0 0 40px #d4a853, 0 0 60px #b8960f; } }
+        .welcome-title { font-size: 1.6rem; font-weight: 700; color: var(--gold); margin: 0.2rem 0 0.5rem; letter-spacing: 1px; }
+        .welcome-sub { font-size: 1.1rem; color: #ccc; margin-bottom: 0.5rem; }
+        .welcome-languages { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; margin: 8px 0; font-size: 0.9rem; color: #aaa; }
+        .welcome-languages span { background: rgba(212,175,55,0.08); padding: 2px 12px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.15); }
+        @media (max-width: 480px) { .brand-name { font-size: 1.4rem; } .stat-item { min-width: 80px; padding: 10px 14px; } .stat-number { font-size: 1.4rem; } .diya { font-size: 2rem; } .welcome-title { font-size: 1.3rem; } }
     </style>
 </head>
 <body>
@@ -486,9 +130,37 @@
         <div class="tagline">"Intelligence, Accelerated by AI"</div>
         <div class="gov-line">🔱 Self‑Governing AI · Trained on AI Laws · Enterprise‑Ready</div>
         <div class="header-actions">
+            <button class="settings-btn" onclick="toggleSettings()" title="Settings"><i class="fas fa-cog"></i></button>
             <button class="btn btn-outline" onclick="showLogin()">🔐 Login</button>
             <button class="btn btn-gold" onclick="showPayment()">₹2 Enterprise Trial</button>
             <button class="btn btn-outline" onclick="alert('Contact asmitasinghdu058@gmail.com for enterprise subscription.')">📧 Enterprise</button>
+        </div>
+        <div class="settings-panel" id="settingsPanel">
+            <label for="langSelect">🌐 Preferred Language</label>
+            <select id="langSelect" onchange="saveLanguage(this.value)">
+                <option value="auto">🔁 Auto-Detect (Default)</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="ta">🇮🇳 தமிழ்</option>
+                <option value="bn">🇮🇳 বাংলা</option>
+                <option value="kn">🇮🇳 ಕನ್ನಡ</option>
+                <option value="te">🇮🇳 తెలుగు</option>
+                <option value="ml">🇮🇳 മലയാളം</option>
+                <option value="mr">🇮🇳 मराठी</option>
+                <option value="gu">🇮🇳 ગુજરાતી</option>
+                <option value="pa">🇮🇳 ਪੰਜਾਬੀ</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="ko">🇰🇷 한국어</option>
+            </select>
+            <div class="lang-note">⚠️ This preference will be passed to the AI. Auto‑detect works for all languages.</div>
         </div>
     </div>
 
@@ -519,10 +191,9 @@
     <!-- Agent Showcase -->
     <div class="agent-showcase" id="agentShowcase"></div>
 
-    <!-- ===== RESPONSE AREA (moved UP) ===== -->
+    <!-- ===== RESPONSE AREA ===== -->
     <div class="response-card" id="responseArea">
         <div id="responseContent">
-            <!-- Welcome Message with Diya and Namaste -->
             <div id="defaultWelcome" style="color:#ddd; padding:10px; text-align:center; line-height:1.8;">
                 <div class="diya">🪔</div>
                 <div class="welcome-title">नमस्ते 🙏 Namaste</div>
@@ -537,7 +208,7 @@
                     <span>🇮🇳 தமிழ்</span>
                     <span>🇮🇳 বাংলা</span>
                     <span>🇮🇳 ಕನ್ನಡ</span>
-                    <span>🌍 + more</span>
+                    <span>🌍 + many more</span>
                 </div>
                 <p style="color:#aaa; font-size:0.9rem; margin-top:4px;">
                     <strong style="color:#fff;">How to begin:</strong>
@@ -549,7 +220,7 @@
         </div>
     </div>
 
-    <!-- ===== INPUT AREA (moved DOWN) ===== -->
+    <!-- ===== INPUT AREA ===== -->
     <div class="input-card">
         <textarea class="query-input" id="queryInput" placeholder="Ask Alpha: “Generate a pre‑FOMC macro trade strategy with options hedges” or “Audit this AI system for DPDPA compliance” — upload documents, voice, or web scan."></textarea>
         <div class="input-tools">
@@ -593,7 +264,7 @@
     </div>
 </div>
 
-<!-- Agent Detail Modal -->
+<!-- Modals -->
 <div class="modal-overlay" id="agentDetailModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('agentDetailModal')">&times;</button>
@@ -604,7 +275,6 @@
     </div>
 </div>
 
-<!-- Other Modals -->
 <div class="modal-overlay" id="loginModal"><div class="modal-content">
     <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
     <h3>🔐 Login / Register</h3>
@@ -624,6 +294,7 @@
     <div id="payment-status" class="status-text" style="margin-top:12px;"></div>
 </div></div>
 
+<!-- Other modals (privacy, terms, about, etc.) – same as previous versions -->
 <div class="modal-overlay" id="privacyModal"><div class="modal-content">
     <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
     <h3>🔒 Privacy Policy</h3>
@@ -662,7 +333,7 @@
 </div></div>
 
 <script>
-    // ========== ENTERPRISE AGENTS DATA ==========
+    // ========== AGENTS DATA ==========
     const enterpriseAgents = [
         { id: "agent_201", name: "Equity Research Analyst", category: "Quantitative Finance", icon: "fa-chart-line", desc: "Deep fundamental analysis & valuation", prompt: "You are a senior equity research analyst covering global markets. Provide deep fundamental analysis, valuation models, and buy/sell recommendations with clear catalysts and risks." },
         { id: "agent_202", name: "Macro Strategy Forecaster", category: "Quantitative Finance", icon: "fa-globe", desc: "Rates, FX, geopolitical forecasts", prompt: "You are a macro strategist at a global hedge fund. Analyse interest rates, inflation, FX, and geopolitical events to forecast asset-class performance." },
@@ -701,13 +372,16 @@
             container.appendChild(card);
         });
     }
-
     function showAgentDetail(agent) {
         document.getElementById('detailAgentName').textContent = agent.name;
         document.getElementById('detailAgentCategory').textContent = agent.category;
         document.getElementById('detailAgentPrompt').textContent = agent.prompt;
         openModal('agentDetailModal');
     }
+
+    // ========== SETTINGS ==========
+    function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+    function saveLanguage(lang) { localStorage.setItem('alpha_lang', lang); alert('Language preference saved.'); }
 
     // ========== MODALS ==========
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
@@ -829,6 +503,9 @@
         formData.append('query', query || 'Analyze uploaded document');
         if (uploadedFile) formData.append('files', uploadedFile);
         formData.append('search_web', document.getElementById('webSearchToggle').checked);
+        const langPref = localStorage.getItem('alpha_lang');
+        if (langPref && langPref !== 'auto') formData.append('lang', langPref);
+
         try {
             const res = await fetch(`${API_BASE}/ask`, { method: 'POST', body: formData });
             const data = await res.json();
@@ -888,7 +565,7 @@
         currentResponseText = '';
     }
 
-    // ========== PAYMENT (with 401 handling) ==========
+    // ========== PAYMENT ==========
     async function processPayment() {
         if (!JWT_TOKEN) {
             alert('Please login first.');
@@ -963,8 +640,9 @@
     // ========== INIT ==========
     document.addEventListener('DOMContentLoaded', function() {
         renderAgentCards();
-        // Show the response card with welcome message on load
         document.getElementById('responseArea').classList.add('active');
+        const saved = localStorage.getItem('alpha_lang');
+        if (saved) document.getElementById('langSelect').value = saved;
     });
 </script>
 </body>
