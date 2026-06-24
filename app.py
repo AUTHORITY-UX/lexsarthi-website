@@ -120,7 +120,8 @@ class Database:
         categories = [
             "Legal Intelligence", "Criminal Law", "Civil Litigation", "Corporate",
             "Constitutional", "Family Law", "Tax", "Property", "IP", "International",
-            "Financial", "Show Cause", "Market Intelligence", "Universal AI", "Technology"
+            "Financial", "Show Cause", "Market Intelligence", "Universal AI", "Technology",
+            "Software Engineering", "Therapy", "Medical"
         ]
         names = [
             "Supreme Court Predictor", "Legal Research Expert", "Precedent Analyzer",
@@ -139,14 +140,19 @@ class Database:
             "GDPR Compliance Expert", "Financial Compliance Expert", "AML/CFT Expert",
             "Banking Law Expert", "Insurance Law Expert", "Show Cause Notice Expert",
             "Market Trends Analyst", "Universal Knowledge Expert", "Creative Thinker",
-            "Critical Thinker", "Strategic Planner", "Problem Solver"
+            "Critical Thinker", "Strategic Planner", "Problem Solver",
+            "Python Architect", "Full‑Stack Developer", "DevOps Engineer", "Algorithm Specialist",
+            "Cognitive Therapist", "Counselling Psychologist", "Mindfulness Coach", "Trauma Specialist",
+            "General Practitioner", "Cardiologist", "Neurologist", "Psychiatrist"
         ]
         prompts = [
             "You are a specialized expert. Provide comprehensive, accurate assistance.",
             "You are a senior professional with 20+ years of experience.",
             "You are a specialist with complete knowledge of all applicable laws.",
             "You are an industry leader with deep expertise.",
-            "You are a subject matter expert with access to complete library."
+            "You are a subject matter expert with access to complete library.",
+            "You are a compassionate guide with deep psychological insight.",
+            "You provide medical information with the highest standard of care and ethical responsibility."
         ]
         # Original 200 agents
         for i in range(1, 201):
@@ -326,7 +332,7 @@ class AIEngine:
 - Recommendations
 """
 
-        # ========== LEGAL INSTRUCTION BLOCK (includes drafting with CPC/CrPC & annexures) ==========
+        # ========== LEGAL INSTRUCTION BLOCK ==========
         legal_keywords = [
             "section", "act", "case", "judgment", "contract", "tort", "constitution",
             "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
@@ -336,76 +342,21 @@ class AIEngine:
         ]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
-🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET (CASE LAW, RESTITUTION, FORCE MAJEURE, DRAFTING):**
+🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET:**
 
-- **Case Law:** Cite at least 2–3 leading judicial precedents (e.g., Satyabrata Ghose v. Mugneeram (AIR 1954 SC 44), Taylor v. Caldwell (1863)), AND include at least one **recent Supreme Court decision** from the last 20 years (e.g., Energy Watchdog v. CERC (2017) or Raja Dhruv Dev Chand v. Raja Harmohinder Singh (1968)). Provide full citations and explain their ratio.
+- **Case Law:** Cite at least 2–3 leading judicial precedents and at least one recent Supreme Court decision.
+- **Restitution:** Discuss Section 65 of the Indian Contract Act (or analogous provision) and its effect on advance payments.
+- **Frustration vs Force Majeure:** Clearly distinguish the two concepts and provide the legal test for frustration.
+- **Self‑Induced Frustration:** State that a party cannot rely on frustration if they caused the impossibility.
+- **Temporary vs Permanent Impossibility:** Clarify that frustration only applies when impossibility is permanent.
+- **Statutory Cross‑References:** Mention other relevant sections/acts.
+- **Practical Illustration:** Provide a brief example.
+- **Effect on Incidental Obligations:** Discuss collateral obligations.
 
-- **Restitution:** Discuss the effect of frustration on advance payments and the obligations under Section 65 of the Indian Contract Act (or analogous provision if the context is different). Explain that restitution is limited to the benefit received and may be subject to equitable adjustments.
-
-- **Distinction between Frustration and Force Majeure:** Clearly explain that force majeure is a **contractual clause**, whereas frustration is a **legal doctrine** that applies even in the absence of such a clause. Provide the legal test for frustration (fundamental change in contractual obligation).
-
-- **Self‑Induced Frustration:** Explicitly state that a party **cannot** rely on frustration if they caused the impossibility (self‑induced frustration). Cite relevant case law if possible.
-
-- **Temporary vs. Permanent Impossibility:** Clarify that frustration only applies when the impossibility is **permanent**; temporary impracticability does not discharge the contract. Discuss the distinction between **initial impossibility** (void ab initio) and **supervening impossibility** (frustration).
-
-- **Statutory Cross‑References:** Mention other relevant sections of the same Act or related statutes (e.g., Sections 32, 33, 62 of the Indian Contract Act, and other statutes like the Sale of Goods Act, 1930, or Specific Relief Act, 1963).
-
-- **Practical Illustration:** Provide a brief illustrative example (e.g., a lease of a property that is destroyed, or a contract for a specific service that becomes impossible due to change in law).
-
-- **Effect on Incidental Obligations:** Briefly discuss whether collateral obligations (e.g., confidentiality, arbitration) survive frustration.
+- **Drafting:** If a draft/petition/SLP/writ is requested, generate a complete, ready‑to‑file draft with all formal sections. Include CPC/CrPC references and annexure formats if applicable.
+- **Redlining:** If the query asks to redraft/redline/amend a contract, provide a redlined version with deletions (~~strikethrough~~) and insertions (__underline__), a clean redrafted agreement, and a section‑wise summary of changes with legal rationale.
 """
             base_prompt += legal_instruction
-
-            # ========== DRAFTING SUB‑BLOCK (with CPC/CrPC and Annexure formats) ==========
-            if any(kw in query.lower() for kw in ["draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit"]):
-                drafting_instruction = """
-🔍 **LEGAL DRAFTING REQUEST DETECTED – SUBSTANTIVE, READY‑TO‑FILE DRAFT WITH CPC/CRPC AND ANNEXURES:**
-
-- Generate a complete, ready‑to‑file draft (e.g., Special Leave Petition, Writ Petition, Plaint, Application, Notice, Affidavit).
-- Include all formal sections: cause title, facts, grounds, reliefs, verification, and any required annexures.
-- **Procedural References:**
-  - For civil matters, cite relevant provisions of the **Code of Civil Procedure, 1908** (e.g., Order 39, Rule 1 & 2 for injunction; Order 7, Rule 11 for rejection of plaint; Section 9 for jurisdiction).
-  - For criminal matters, cite relevant provisions of the **Code of Criminal Procedure, 1973** (e.g., Section 482 for inherent powers; Section 438 for anticipatory bail; Section 125 for maintenance).
-  - Include references to the **Indian Evidence Act, 1872** where relevant (e.g., Section 65B for electronic evidence).
-- **Annexure/Exhibit Format:**
-  - List all documents/annexures with clear labelling (e.g., "Annexure A – Copy of Contract", "Annexure B – Correspondence", "Exhibit P-1 – Invoices").
-  - Provide a model verification clause and a list of annexures in the draft.
-- Base the draft on the principles, case law, and statutory provisions discussed in the analysis.
-- Note that this is a template and should be customised for the specific facts; recommend legal review.
-- Use proper legal formatting and language (e.g., "In the Supreme Court of India", "Most Respectfully Sheweth", "Under protest").
-"""
-                base_prompt += drafting_instruction
-
-                # ========== REDLINE / REDRAFT SUB‑BLOCK ==========
-                if any(kw in query.lower() for kw in ["redraft", "redline", "amend", "revise", "changes", "markup", "section-wise"]):
-                    redline_instruction = """
-🔍 **CONTRACT REVIEW / REDRAFT REQUEST DETECTED – PROVIDE A REDLINED VERSION AND A CLEAN REDRAFTED AGREEMENT:**
-
-You are reviewing an existing contract and must produce a comprehensive legal analysis with proposed changes. Follow these instructions exactly:
-
-1. **Redlined Version:** Show all proposed changes using the following markup:
-   - **Deletions:** ~~strikethrough text~~ (or wrap in `~~` for markdown).
-   - **Insertions:** __underline__ or **bold** (or `<ins>` tags if allowed).
-   - Alternatively, present a **table** with columns: Clause No., Original Text, Proposed Text, Rationale.
-
-2. **Clean Redrafted Agreement:** Provide the full, final version of the agreement with all changes incorporated. This should be a clean, ready‑to‑sign document.
-
-3. **Section‑wise Summary of Changes:** Before the redlined and clean versions, include a brief summary table or bulleted list of each clause modified, with the rationale for each change.
-
-4. **Legal Basis:** For each change, cite applicable law, case law, or best practice that supports the revision.
-
-5. **Structure the Response:**
-   - **Executive Summary** – overall assessment and key changes.
-   - **Detailed Analysis** – clause‑by‑clause review with legal reasoning.
-   - **Redlined Agreement** – with markup as described.
-   - **Clean Redrafted Agreement** – final version.
-   - **Recommendations** – next steps for finalisation.
-
-6. **Formatting:** Ensure the response is clear, professional, and usable for a lawyer or client.
-
-Remember to maintain the mandatory disclaimer at the top and note that this is a template and should be verified by qualified legal counsel.
-"""
-                    base_prompt += redline_instruction
 
         # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
         investment_keywords = [
@@ -418,28 +369,10 @@ Remember to maintain the mandatory disclaimer at the top and note that this is a
             investment_instruction = """
 🔍 **INVESTMENT/FINANCE QUERY DETECTED – 10/10 QUANTITATIVE INSTRUCTION SET:**
 
-Your response must be **quantitative** and **actionable**. Include the following:
-
-1. **Executive Summary** – one‑paragraph overview with the key takeaway and an estimated confidence interval (e.g., 70‑80% probability).
-
-2. **Market Overview & Data** – provide specific numbers: market size (e.g., ₹X lakh crore), growth rate (e.g., 12% CAGR), and recent trends. If applicable, compare with benchmarks (Nifty, Sensex, S&P 500).
-
-3. **Financial Metrics & Ratios** – include at least 5 relevant ratios:
-   - Valuation: P/E, P/B, EV/EBITDA.
-   - Performance: ROI, ROE, CAGR (3‑year, 5‑year).
-   - Risk: Sharpe Ratio, Beta, Maximum Drawdown, VaR (95% confidence).
-
-4. **Risk Assessment** – identify key risks (market, credit, operational, liquidity) and estimate their likelihood (Low/Medium/High) and potential impact (₹ value or % loss).
-
-5. **Scenario Analysis** – provide at least two scenarios (Base, Bull, Bear) with projected returns and probabilities.
-
-6. **Actionable Recommendations** – give clear, prioritised steps (e.g., “Allocate 15% to sector X”, “Hedge with put options”, “Increase duration to 5 years”) with rationale and expected risk‑adjusted return.
-
-7. **Benchmark & Competitive Positioning** – compare the subject (e.g., a stock, fund, or strategy) against peers or industry averages.
-
-8. **Conclusion** – summarise the investment thesis with a clear stance (Buy/Hold/Sell) and a target price or expected range.
-
-Use actual numbers, percentages, and cite relevant financial theories (e.g., CAPM, Modern Portfolio Theory) where appropriate.
+- Provide a quantitative, actionable response with specific metrics (P/E, CAGR, Sharpe Ratio, etc.).
+- Include scenario analysis (Base/Bull/Bear) with probabilities.
+- Offer clear, prioritised recommendations with expected risk‑adjusted returns.
+- Cite financial theories (CAPM, MPT) where relevant.
 """
             base_prompt += investment_instruction
 
@@ -454,32 +387,14 @@ Use actual numbers, percentages, and cite relevant financial theories (e.g., CAP
             spiritual_instruction = """
 🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – 10/10 CONTEMPLATIVE INSTRUCTION SET:**
 
-Your response must be **both profound and practical** – a blend of wisdom, warmth, and actionable guidance for readers of any background. Follow these guidelines:
-
-1. **Acknowledge the Human Experience** – begin by validating the seeker's curiosity or struggle. Use empathetic language (e.g., "This is a question that has touched hearts across centuries...").
-
-2. **Offer Universal Parallels** – when explaining concepts like Parashakti, Brahman, or Maya, draw parallels with other traditions (e.g., Tao's "Way", the Sufi concept of "Beloved", or the Christian "Holy Spirit") to make it relatable to a global audience.
-
-3. **Provide Practical Wisdom** – don't stop at philosophy; give tangible suggestions:
-   - How can this insight be applied in daily life? (e.g., "Recognise the divine feminine in acts of nurturing, creativity, and intuition.")
-   - Suggest simple practices: meditation, journaling, mindful observation.
-   - Offer affirmations or mantras for inner peace.
-
-4. **Include Reflective Questions** – invite the reader to explore their own experience:
-   - "How do you experience creative energy in your own life?"
-   - "What does 'power' mean to you – and how can it be expressed with grace?"
-
-5. **Emphasise Inclusivity** – present the wisdom as universal, not exclusive to any religion. Use phrases like "Many traditions speak of...", "This insight resonates across cultures..."
-
-6. **End with Encouragement** – leave the reader feeling uplifted and empowered. Offer a closing blessing or a call to inner discovery.
-
-7. **Structure** – still follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations), but weave in these elements naturally. The "Recommendations" section should be especially practical and supportive.
-
-Remember to keep the mandatory disclaimer at the top, and maintain a tone of humility and reverence.
+- Acknowledge the human experience with empathy.
+- Offer universal parallels with other traditions (e.g., Tao, Sufism, Christian mysticism).
+- Provide practical wisdom: daily practices, affirmations, reflective questions.
+- Emphasise inclusivity and end with encouragement.
 """
             base_prompt += spiritual_instruction
 
-        # ========== 10/10 EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
+        # ========== EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
         psych_keywords = [
             "emotion", "feel", "anxiety", "stress", "mental health", "psychology",
             "self-esteem", "relationship", "trauma", "therapy", "mindfulness",
@@ -489,34 +404,77 @@ Remember to keep the mandatory disclaimer at the top, and maintain a tone of hum
         ]
         if any(kw in query.lower() for kw in psych_keywords):
             psych_instruction = """
-🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – 10/10 INSTRUCTION SET (EMPATHETIC, EVIDENCE‑BASED, ACTIONABLE):**
+🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – 10/10 INSTRUCTION SET:**
 
-Your response must be warm, validating, and grounded in established psychological science. Follow these guidelines to deliver a LexSarthi‑grade answer:
+- Respond with empathy, validate the user's feelings.
+- Reference psychological theories (CBT, ACT, Polyvagal, Maslow, Positive Psychology).
+- Provide a self‑assessment scale (1‑10) and actionable coping strategies (grounding, cognitive reframing, mindfulness).
+- Clearly differentiate short‑term (minutes) vs long‑term (days/weeks) actions.
+- Include a reflection prompt and normalise professional help.
 
-1. **Acknowledge & Validate** – open with genuine empathy: "It takes courage to explore these feelings..." or "You are not alone; many people experience this."
-
-2. **Science‑Backed Frameworks** – cite at least 2‑3 specific theories/models:
-   - **Cognitive Behavioural Therapy (CBT)** – explain thought‑feeling‑behaviour loops.
-   - **Acceptance and Commitment Therapy (ACT)** – discuss acceptance, values, and committed action.
-   - **Polyvagal Theory** – describe the nervous system's three states and how to shift.
-   - **Maslow’s Hierarchy** – link needs to anxiety.
-   - **Positive Psychology (PERMA)** – emphasise meaning, relationships, engagement.
-
-3. **Self‑Assessment Tool** – provide a simple scale (1‑10) for the user to gauge their current state and track progress.
-
-4. **Actionable Coping Strategies** – present at least 3‑4 specific techniques with clear how‑to instructions and the rationale (why it works). Use bullet points or a table for clarity.
-
-5. **Short‑Term vs Long‑Term Plan** – differentiate immediate (minutes) and preparatory (days/weeks) actions. Include a timeline.
-
-6. **Clear Criteria for Professional Help** – state when to seek therapy (e.g., persistent interference, panic attacks) and normalise it as a sign of strength.
-
-7. **Reflection Prompt** – end with a question or journaling exercise to encourage self‑exploration.
-
-8. **Structure** – follow the standard format (Executive Summary, Detailed Analysis, Key Findings, Recommendations). Ensure the "Recommendations" section is practical and time‑bound.
-
-Maintain the mandatory disclaimer at the top and add: *"This is educational, not therapeutic."*
+**This is educational, not therapeutic.**
 """
             base_prompt += psych_instruction
+
+        # ========== THERAPY / COUNSELLING INSTRUCTION BLOCK ==========
+        therapy_keywords = [
+            "counselling", "counseling", "therapist", "therapy session", "psychotherapy",
+            "emotional support", "crisis", "suicidal", "self-harm", "abuse", "trauma healing"
+        ]
+        if any(kw in query.lower() for kw in therapy_keywords):
+            therapy_instruction = """
+🔍 **THERAPY/COUNSELLING QUERY DETECTED – COMPASSIONATE, EVIDENCE‑BASED GUIDANCE:**
+
+- Acknowledge the courage it takes to seek support.
+- Offer a safe, non‑judgmental space in your response.
+- Use active listening skills: reflect, validate, and summarise.
+- Provide grounding techniques and psychoeducation (e.g., explaining the fight‑or‑flight response).
+- Gently suggest professional help and provide helpline numbers if available.
+- Include a strong disclaimer: "I am an AI, not a licensed therapist. This is not a substitute for professional care."
+
+**If you are in crisis, please contact a local helpline or emergency services immediately.**
+"""
+            base_prompt += therapy_instruction
+
+        # ========== MEDICAL / DOCTOR INSTRUCTION BLOCK ==========
+        medical_keywords = [
+            "symptom", "pain", "fever", "cough", "headache", "nausea", "rash",
+            "disease", "diagnosis", "treatment", "medication", "doctor", "physician",
+            "health condition", "emergency", "injury", "blood pressure", "diabetes"
+        ]
+        if any(kw in query.lower() for kw in medical_keywords):
+            medical_instruction = """
+🔍 **MEDICAL/HEALTH QUERY DETECTED – EDUCATIONAL, NON‑DIAGNOSTIC GUIDANCE:**
+
+- Provide general educational information about the symptom or condition.
+- Emphasise that this is **not a diagnosis** and cannot replace a doctor's visit.
+- Outline possible causes, but avoid speculation; list common reasons and when to seek urgent care.
+- Offer general self‑care advice (rest, hydration, OTC medication precautions) with clear disclaimers.
+- Strongly advise consulting a qualified healthcare professional for personalised advice.
+
+**This is for informational purposes only. Do not ignore professional medical advice.**
+"""
+            base_prompt += medical_instruction
+
+        # ========== SOFTWARE ENGINEERING INSTRUCTION BLOCK ==========
+        se_keywords = [
+            "code", "algorithm", "programming", "software", "architecture",
+            "system design", "database", "api", "devops", "cicd", "container",
+            "docker", "kubernetes", "python", "javascript", "react", "node"
+        ]
+        if any(kw in query.lower() for kw in se_keywords):
+            se_instruction = """
+🔍 **SOFTWARE ENGINEERING QUERY DETECTED – 10/10 INSTRUCTION SET:**
+
+- Provide clear, structured advice with code snippets where appropriate (use markdown code blocks).
+- Explain design decisions, trade‑offs, and best practices.
+- For system design, include high‑level diagrams (text‑based), component breakdown, and scalability considerations.
+- For algorithms, explain time/space complexity, edge cases, and alternative approaches.
+- Always include practical, actionable steps.
+
+**Example response structure:** problem analysis → proposed solution → implementation details → testing & deployment advice.
+"""
+            base_prompt += se_instruction
 
         system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
 
@@ -559,7 +517,16 @@ Maintain the mandatory disclaimer at the top and add: *"This is educational, not
                 pass
 
         if not ai_response:
-            ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\nI'm sorry, the AI providers are currently unreachable. Please try again shortly.\n🔱 LexSarthi v4.0"
+            # Fallback: provide a helpful error message with guidance
+            fallback_msg = (
+                "I'm currently unable to reach the AI providers (Groq/OpenRouter). This could be due to:\n"
+                "1. Missing or invalid API keys in your Space secrets.\n"
+                "2. The provider is rate‑limiting or temporarily down.\n"
+                "3. Network connectivity issues.\n\n"
+                "Please check your `GROQ_API_KEY` and `OPENROUTER_API_KEY` in the Space settings, "
+                "restart the Space, and try again. If the issue persists, contact support."
+            )
+            ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\n{fallback_msg}\n\n🔱 LexSarthi v4.0"
             model_used = "fallback"
 
         disclaimer_line = "📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional."
@@ -883,4 +850,4 @@ async def startup():
     print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
