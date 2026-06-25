@@ -23,7 +23,7 @@ import docx
 from PIL import Image
 import pytesseract
 
-# Web search – using ddgs
+# Web search – using ddgs (new package)
 try:
     from ddgs import DDGS
     WEB_SEARCH_AVAILABLE = True
@@ -94,7 +94,7 @@ class Database:
                     expert_prompt TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            # New table for feedback (self‑improvement)
+            # Feedback table for self‑improvement
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS feedback (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, query_id TEXT NOT NULL,
@@ -202,7 +202,7 @@ class Database:
 db = Database()
 
 # ===================================================================
-# SECURITY (unchanged)
+# SECURITY
 # ===================================================================
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -331,8 +331,7 @@ class AIEngine:
             web_results = self._web_search(query)
             document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-        # ===== SYSTEM PROMPT WITH CERTIFICATE EMBEDDED =====
-        # The certificate is integrated into the system prompt – not visible on UI.
+        # ===== CERTIFICATE + BASE SYSTEM PROMPT =====
         certificate_text = """
 You are LexSarthi Alpha, built upon the foundation of the "AI for Legal 14 Days program" certified by LawSikho (CEO: Ramanuj Mukherjee, COO: Abhyuday Agarwal) on June 25, 2026.
 This certification attests to your deep understanding of AI applications in law, including legal research, drafting, compliance, and ethical AI use.
@@ -359,17 +358,181 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
 """
 
         # ===== ALL INSTRUCTION BLOCKS (Legal, Investment, Spiritual, Emotional, Therapy, Medical, Software, Compliance) =====
-        # (These are identical to the previous final version – I include them succinctly)
-        # We'll keep the same logic; for brevity, I assume they are present.
-        # (The full code in the user's current app.py already has them; we just add the certificate.)
+        # Legal
+        legal_keywords = [
+            "section", "act", "case", "judgment", "contract", "tort", "constitution",
+            "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
+            "impossibility", "void", "discharge", "contractual obligation",
+            "draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit",
+            "cpc", "crpc", "civil procedure", "criminal procedure", "annexure", "exhibit",
+            "clause", "article", "paragraph", "provision", "term", "agreement",
+            "review", "analyse", "breakdown", "section‑wise"
+        ]
+        if any(kw in query.lower() for kw in legal_keywords):
+            legal_instruction = """
+🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET (with Drafting, Redlining, and Clause-wise Review):**
 
-        # ... (Insert your existing legal, investment, spiritual, etc. blocks here) ...
+- **Case Law:** Cite at least 2–3 leading judicial precedents and at least one recent Supreme Court decision.
+- **Restitution:** Discuss Section 65 of the Indian Contract Act (or analogous provision) and its effect on advance payments.
+- **Frustration vs Force Majeure:** Clearly distinguish the two concepts and provide the legal test for frustration.
+- **Self‑Induced Frustration:** State that a party cannot rely on frustration if they caused the impossibility.
+- **Temporary vs Permanent Impossibility:** Clarify that frustration only applies when impossibility is permanent.
+- **Statutory Cross‑References:** Mention other relevant sections/acts.
+- **Practical Illustration:** Provide a brief example.
+- **Effect on Incidental Obligations:** Discuss collateral obligations.
 
-        system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
+- **Drafting:** If a draft/petition/SLP/writ is requested, generate a complete, ready‑to‑file draft with all formal sections. Include CPC/CrPC references and annexure formats if applicable.
+- **Redlining:** If the query asks to redraft/redline/amend a contract, provide a redlined version with deletions (~~strikethrough~~) and insertions (__underline__), a clean redrafted agreement, and a section‑wise summary of changes with legal rationale.
+"""
+            base_prompt += legal_instruction
+            if any(kw in query.lower() for kw in ["clause", "article", "paragraph", "provision", "section‑wise", "breakdown"]):
+                contract_review_instruction = """
+🔍 **CONTRACT REVIEW / CLAUSE‑WISE ANALYSIS DETECTED – PRODUCE A DETAILED CLAUSE‑BY‑CLAUSE BREAKDOWN:**
 
-        # Language instruction
+- Identify each numbered clause (or section) in the document.
+- For each clause, provide: Clause Number and Title, Plain‑English Summary, Legal Implications, Practical Recommendation, Cross‑References.
+- Structure: Executive Summary → Detailed Clause‑wise Analysis → Key Findings → Recommendations.
+- If no document is uploaded, ask the user to provide the full text or key clauses.
+- Always include the mandatory disclaimer.
+"""
+                base_prompt += contract_review_instruction
+
+        # Investment
+        investment_keywords = [
+            "investor", "investment", "portfolio", "market", "financial", "asset",
+            "return", "risk", "valuation", "equity", "bond", "commodity", "fx",
+            "roi", "cagr", "sharpe", "beta", "var", "p/e", "earnings", "dividend"
+        ]
+        if any(kw in query.lower() for kw in investment_keywords):
+            base_prompt += """
+🔍 **INVESTMENT/FINANCE QUERY DETECTED – 10/10 QUANTITATIVE INSTRUCTION SET:**
+- Provide quantitative metrics (P/E, CAGR, Sharpe Ratio, etc.).
+- Include scenario analysis (Base/Bull/Bear) with probabilities.
+- Offer clear, prioritised recommendations with expected risk‑adjusted returns.
+- Cite financial theories (CAPM, MPT) where relevant.
+"""
+
+        # Spiritual
+        spiritual_keywords = [
+            "life", "existence", "consciousness", "spirit", "soul", "meaning",
+            "purpose", "self", "brahman", "atman", "maya", "karma", "dharma",
+            "meditation", "awakening", "enlightenment", "reality", "illusion",
+            "divine", "goddess", "shakti", "parashakti", "yoga", "vedanta"
+        ]
+        if any(kw in query.lower() for kw in spiritual_keywords):
+            base_prompt += """
+🔍 **SPIRITUAL/PHILOSOPHICAL QUERY DETECTED – 10/10 CONTEMPLATIVE INSTRUCTION SET:**
+- Acknowledge the human experience with empathy.
+- Offer universal parallels with other traditions (e.g., Tao, Sufism, Christian mysticism).
+- Provide practical wisdom: daily practices, affirmations, reflective questions.
+- Emphasise inclusivity and end with encouragement.
+"""
+
+        # Emotional / Psychology
+        psych_keywords = [
+            "emotion", "feel", "anxiety", "stress", "mental health", "psychology",
+            "self-esteem", "relationship", "trauma", "therapy", "mindfulness",
+            "depression", "happiness", "grief", "anger", "fear", "love",
+            "cognitive", "behavioral", "attachment", "resilience", "coping"
+        ]
+        if any(kw in query.lower() for kw in psych_keywords):
+            base_prompt += """
+🔍 **EMOTIONAL/PSYCHOLOGICAL QUERY DETECTED – 10/10 EMPATHETIC & EVIDENCE‑BASED INSTRUCTION SET:**
+- Respond with empathy, validate the user's feelings.
+- Reference psychological theories (CBT, ACT, Polyvagal, Maslow, Positive Psychology).
+- Provide a self‑assessment scale (1‑10) and actionable coping strategies.
+- Include a reflection prompt and normalise professional help.
+- **This is educational, not therapeutic.**
+"""
+
+        # Therapy / Counselling
+        therapy_keywords = [
+            "counselling", "counseling", "therapist", "therapy session", "psychotherapy",
+            "emotional support", "crisis", "suicidal", "self-harm", "abuse", "trauma healing"
+        ]
+        if any(kw in query.lower() for kw in therapy_keywords):
+            base_prompt += """
+🔍 **THERAPY/COUNSELLING QUERY DETECTED – COMPASSIONATE, EVIDENCE‑BASED GUIDANCE:**
+- Acknowledge the courage it takes to seek support.
+- Offer a safe, non‑judgmental space.
+- Provide grounding techniques and psychoeducation.
+- Gently suggest professional help and provide helpline numbers if available.
+- Include a strong disclaimer: "I am an AI, not a licensed therapist. This is not a substitute for professional care."
+"""
+
+        # Medical
+        medical_keywords = [
+            "symptom", "pain", "fever", "cough", "headache", "nausea", "rash",
+            "disease", "diagnosis", "treatment", "medication", "doctor", "physician",
+            "health condition", "emergency", "injury", "blood pressure", "diabetes"
+        ]
+        if any(kw in query.lower() for kw in medical_keywords):
+            base_prompt += """
+🔍 **MEDICAL/HEALTH QUERY DETECTED – EDUCATIONAL, NON‑DIAGNOSTIC GUIDANCE:**
+- Provide general educational information.
+- Emphasise that this is **not a diagnosis**.
+- Outline possible causes, but avoid speculation.
+- Offer general self‑care advice with clear disclaimers.
+- Strongly advise consulting a qualified healthcare professional.
+- **This is for informational purposes only.**
+"""
+
+        # Software Engineering
+        se_keywords = [
+            "code", "algorithm", "programming", "software", "architecture",
+            "system design", "database", "api", "devops", "cicd", "container",
+            "docker", "kubernetes", "python", "javascript", "react", "node"
+        ]
+        if any(kw in query.lower() for kw in se_keywords):
+            base_prompt += """
+🔍 **SOFTWARE ENGINEERING QUERY DETECTED – 10/10 INSTRUCTION SET:**
+- Provide clear, structured advice with code snippets (markdown code blocks).
+- Explain design decisions, trade‑offs, and best practices.
+- For system design, include high‑level diagrams (text‑based), component breakdown, and scalability considerations.
+- For algorithms, explain time/space complexity, edge cases, and alternative approaches.
+"""
+
+        # Compliance / Scanning
+        compliance_keywords = [
+            "scan", "compliance", "gdpr", "dpdpa", "privacy policy", "terms of use",
+            "cookie", "website audit", "domain audit", "regulatory compliance",
+            "data protection", "information security", "legal audit"
+        ]
+        if any(kw in query.lower() for kw in compliance_keywords):
+            base_prompt += """
+🔍 **COMPLIANCE / WEBSITE AUDIT DETECTED – PRODUCE A DETAILED COMPLIANCE REPORT:**
+- If a URL or domain is provided, perform a compliance check based on your training data (simulate a structured review).
+- If a document (Privacy Policy, Terms, Cookie Policy) is uploaded, analyse it against GDPR, DPDPA 2023, IT Act 2000, and cookie laws.
+- Structure: Executive Summary → Detailed Findings (Requirement, Current Status, Gap/Risk, Recommendation) → Key Findings → Recommended Action Plan.
+- If no document is provided, give a general checklist and ask for the relevant policies.
+"""
+
+        # ===== ENHANCED LANGUAGE INSTRUCTION – FOR ALL LANGUAGES =====
+        # This instruction ensures that regardless of the language, the AI uses formal, precise,
+        # and domain‑appropriate terminology. It will be added to every system prompt.
+        language_instruction = """
+🔔 **LANGUAGE & STYLE INSTRUCTION (APPLIES TO ALL LANGUAGES):**
+
+- Respond in the exact language used by the user (detected automatically or via the `lang` parameter).
+- Use a **formal, professional, and authoritative tone** appropriate for the subject matter (legal, financial, medical, etc.).
+- Employ standard terminology specific to the domain – for legal queries, use precise legal terms; for finance, use financial jargon; etc.
+- Ensure all translations are accurate and contextually correct – do not use colloquial or informal language.
+- If the user provides a document in a language, analyse it in that language and respond accordingly.
+- Always include the bilingual disclaimer (English + the user's language) at the beginning of the response.
+- For legal documents, preserve clause numbers and formal structure when referencing them.
+- Maintain consistency across all sections – executive summary, analysis, findings, and recommendations.
+
+⚡ This instruction overrides any casual tone – always be formal and precise.
+"""
+        # Append the language instruction to the base prompt (or include it after building the system prompt)
+        # We'll add it just before the final system prompt.
+
+        # Build the full system prompt
+        system_prompt = base_prompt + "\n" + language_instruction + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
+
+        # If a specific language is selected, reinforce it
         if lang and lang != "auto":
-            system_prompt += f"\n🔔 **LANGUAGE INSTRUCTION:** The user has requested a response in '{lang}'. Ensure all output is in that language. Do not use any other language.\n"
+            system_prompt += f"\n🔔 **LANGUAGE INSTRUCTION:** The user has explicitly requested a response in '{lang}'. Ensure all output is in that language. Do not use any other language.\n"
 
         user_prompt = f"USER QUERY: {query}\n"
         if document_content:
@@ -414,9 +577,15 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
             ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\n{fallback_msg}\n\n🔱 LexSarthi v4.0"
             model_used = "fallback"
 
+        # Ensure the disclaimer is present in the response
         disclaimer_line = "📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional."
         if disclaimer_line not in ai_response[:200]:
             ai_response = disclaimer_line + "\n\n" + ai_response
+
+        # Add a bilingual disclaimer if the response language is not English
+        # This is a fallback – the AI should already include it as per instructions.
+        # But we can add a simple check.
+        # For simplicity, we leave it as is.
 
         return {
             "response": ai_response,
@@ -442,7 +611,7 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
 ai_engine = AIEngine()
 
 # ===================================================================
-# DOCUMENT PROCESSING (unchanged)
+# DOCUMENT PROCESSING
 # ===================================================================
 
 def extract_text_from_pdf(file_content: bytes) -> str:
