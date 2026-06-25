@@ -124,10 +124,10 @@
                     <option value="auto">🔁 Auto-Detect</option>
                     <option value="en">🇬🇧 English</option>
                     <option value="hi">🇮🇳 हिन्दी</option>
-                    <option value="ta">🇮🇳 தமிழ்</option>
                     <option value="bn">🇮🇳 বাংলা</option>
-                    <option value="kn">🇮🇳 ಕನ್ನಡ</option>
+                    <option value="ta">🇮🇳 தமிழ்</option>
                     <option value="te">🇮🇳 తెలుగు</option>
+                    <option value="kn">🇮🇳 ಕನ್ನಡ</option>
                     <option value="ml">🇮🇳 മലയാളം</option>
                     <option value="mr">🇮🇳 मराठी</option>
                     <option value="gu">🇮🇳 ગુજરાતી</option>
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <!-- Premium message (hidden by default) -->
+        <!-- Premium message -->
         <div id="premiumMessage" class="premium-unlock-message">
             ⭐ <strong>Enterprise Access Unlocked!</strong> You now have full access to all 220+ agents and enterprise features for <strong>15 days</strong>.
         </div>
@@ -261,7 +261,7 @@
         </div>
     </div>
 
-    <!-- Terms, Privacy, About, History -->
+    <!-- Terms, Privacy, About, History (brief) -->
     <div class="modal-overlay" id="termsModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
@@ -315,7 +315,30 @@
             { id: "agent_201", name: "Equity Research Analyst", category: "Quantitative Finance", icon: "fa-chart-line",
                 desc: "Deep fundamental analysis & valuation",
                 prompt: "You are a senior equity research analyst." },
-            // ... (same 10 agents as before) ...
+            { id: "agent_202", name: "Macro Strategy Forecaster", category: "Quantitative Finance", icon: "fa-globe",
+                desc: "Rates, FX, geopolitical forecasts",
+                prompt: "You are a macro strategist." },
+            { id: "agent_203", name: "Derivatives & Volatility Expert", category: "Quantitative Finance",
+                icon: "fa-chart-bar", desc: "Options, futures, arbitrage",
+                prompt: "You are a derivatives trader." },
+            { id: "agent_204", name: "Portfolio Optimisation Specialist", category: "Quantitative Finance",
+                icon: "fa-balance-scale", desc: "Modern Portfolio Theory & risk parity",
+                prompt: "You are a quantitative portfolio manager." },
+            { id: "agent_205", name: "Algorithmic Trading Strategist", category: "Quantitative Finance", icon: "fa-robot",
+                desc: "Backtest & execution algorithms",
+                prompt: "You design algorithmic trading strategies." },
+            { id: "agent_206", name: "Risk & Compliance Analyst", category: "Quantitative Finance", icon: "fa-shield-alt",
+                desc: "SEBI, SEC, AI Act aligned",
+                prompt: "You are a risk officer." },
+            { id: "agent_207", name: "Alternative Data Analyst", category: "Quantitative Finance", icon: "fa-database",
+                desc: "Satellite, sentiment, cards",
+                prompt: "You specialise in alternative data." },
+            { id: "agent_208", name: "ESG & Impact Investing", category: "Quantitative Finance", icon: "fa-leaf",
+                desc: "Ratings, regulatory alignment",
+                prompt: "You evaluate ESG factors." },
+            { id: "agent_209", name: "Crypto & Digital Assets", category: "Quantitative Finance", icon: "fa-coins",
+                desc: "Tokenomics, on‑chain analysis",
+                prompt: "You analyse blockchain and crypto." },
             { id: "agent_210", name: "Private Equity / VC Analyst", category: "Quantitative Finance", icon: "fa-building",
                 desc: "LBO models, unicorn evaluation",
                 prompt: "You evaluate PE/VC deals." }
@@ -347,7 +370,7 @@
             openModal('agentDetailModal');
         }
 
-        // ===== FETCH ALL AGENTS (premium only) =====
+        // ===== FETCH ALL AGENTS =====
         async function fetchAllAgents() {
             if (!JWT_TOKEN) return;
             try {
