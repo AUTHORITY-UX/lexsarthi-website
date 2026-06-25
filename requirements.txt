@@ -13,7 +13,6 @@ cryptography==41.0.7
 python-dotenv==1.0.0
 email-validator==2.1.0
 passlib==1.7.4
-aiosqlite==0.19.0
 razorpay==1.4.2
 httpx==0.25.1
 aiofiles==23.2.1
@@ -24,6 +23,13 @@ Pillow==10.1.0
 pytesseract==0.3.10
 pydantic==2.5.0
 typing-extensions==4.8.0
-duckduckgo_search 
 bcrypt==4.0.1
-ddgs
+
+# --- NEW: PostgreSQL & Redis (for scaling) ---
+databases[asyncpg]==0.8.0
+asyncpg==0.29.0
+redis==5.0.1
+ddgs==0.1.0        # DuckDuckGo search (replaces duckduckgo_search)
+
+# --- OPTIONAL: Remove aiosqlite if you don't need it ---
+# aiosqlite==0.19.0   (no longer used with PostgreSQL)
