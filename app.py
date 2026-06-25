@@ -12,7 +12,7 @@ from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import jwt
@@ -295,7 +295,7 @@ class AIEngine:
     async def transcribe_audio(self, file: UploadFile) -> str:
         """Transcribe audio using Groq's Whisper API."""
         if not self.groq_client:
-            raise HTTPException(status_code=503, detail="Audio transcription unavailable (Groq client not initialized)")
+            raise HTTPException(status_code=503, detail="Audio transcription unavailable")
         try:
             content = await file.read()
             files = {"file": (file.filename, content, file.content_type)}
@@ -341,19 +341,21 @@ class AIEngine:
 - Recommendations
 """
 
-        # ========== LEGAL INSTRUCTION BLOCK ==========
+        # ========== 1. LEGAL INSTRUCTION BLOCK (includes drafting, redlining, and clause-wise review) ==========
         legal_keywords = [
             "section", "act", "case", "judgment", "contract", "tort", "constitution",
             "tribunal", "court", "appeal", "frustration", "restitution", "force majeure",
             "impossibility", "void", "discharge", "contractual obligation",
             "draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit",
-            "cpc", "crpc", "civil procedure", "criminal procedure", "annexure", "exhibit"
+            "cpc", "crpc", "civil procedure", "criminal procedure", "annexure", "exhibit",
+            "clause", "article", "paragraph", "provision", "term", "agreement",
+            "review", "analyse", "breakdown", "section‑wise"
         ]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
-🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET (with Drafting & Redlining):**
+🔍 **LEGAL QUERY DETECTED – 10/10 INSTRUCTION SET (with Drafting, Redlining, and Clause-wise Review):**
 
-- **Case Law:** Cite at least 2–3 leading judicial precedents (e.g., Satyabrata Ghose v. Mugneeram, Taylor v. Caldwell) and at least one recent Supreme Court decision (e.g., Energy Watchdog v. CERC).
+- **Case Law:** Cite at least 2–3 leading judicial precedents and at least one recent Supreme Court decision.
 - **Restitution:** Discuss Section 65 of the Indian Contract Act (or analogous provision) and its effect on advance payments.
 - **Frustration vs Force Majeure:** Clearly distinguish the two concepts and provide the legal test for frustration.
 - **Self‑Induced Frustration:** State that a party cannot rely on frustration if they caused the impossibility.
@@ -362,43 +364,42 @@ class AIEngine:
 - **Practical Illustration:** Provide a brief example.
 - **Effect on Incidental Obligations:** Discuss collateral obligations.
 
+- **Drafting:** If a draft/petition/SLP/writ is requested, generate a complete, ready‑to‑file draft with all formal sections. Include CPC/CrPC references and annexure formats if applicable.
+- **Redlining:** If the query asks to redraft/redline/amend a contract, provide a redlined version with deletions (~~strikethrough~~) and insertions (__underline__), a clean redrafted agreement, and a section‑wise summary of changes with legal rationale.
 """
-            # Add drafting-specific instructions if drafting keywords are present
-            if any(kw in query.lower() for kw in ["draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit"]):
-                drafting_instruction = """
-🔍 **DRAFTING REQUEST DETECTED – GENERATE A COMPLETE, COURT‑READY DOCUMENT:**
+            base_prompt += legal_instruction
 
-You are required to produce a **full, detailed legal draft** (e.g., Special Leave Petition, Writ Petition, Plaint, Application, Notice, Affidavit, etc.).
+            # ====== Sub‑block: Contract Review / Clause‑wise ======
+            if any(kw in query.lower() for kw in ["clause", "article", "paragraph", "provision", "section‑wise", "breakdown"]):
+                contract_review_instruction = """
+🔍 **CONTRACT REVIEW / CLAUSE‑WISE ANALYSIS DETECTED – PRODUCE A DETAILED CLAUSE‑BY‑CLAUSE BREAKDOWN:**
 
-**Follow these exact steps:**
+You are to analyse the provided agreement or contract in a structured, clause‑wise manner.
 
-1. **If the user has not provided essential details** (e.g., names of parties, case number, facts, reliefs sought, grounds), **explicitly ask for them** before generating the draft. Do not proceed with a generic template.
+**Instructions:**
 
-2. **Structure the draft** exactly as follows:
-   - **Cause Title:** Court name, case number (if known), parties with their designations.
-   - **Introduction:** A concise summary of the case, including the nature of the dispute and the reliefs sought.
-   - **Facts:** A chronological, clear, and comprehensive statement of facts leading to the dispute.
-   - **Jurisdiction & Maintainability:** Explain why the court has jurisdiction and why the petition is maintainable.
-   - **Grounds of Appeal / Challenge:** List each ground separately with a heading. For each ground, provide the legal basis (statute, case law) and how the lower court erred.
-   - **Prayer:** A specific, itemised list of reliefs sought.
-   - **Verification & Affidavit:** A verification clause and a draft affidavit in support of the petition.
+1. **Identify each numbered clause** (or section) in the document. If the document is long, focus on the most important clauses (e.g., definitions, obligations, payment, termination, liability, indemnity, dispute resolution).
 
-3. **Include CPC/CrPC references** (e.g., Order 39, Rule 1 & 2; Section 482 CrPC) and **annotate** with relevant case citations (e.g., *Satyabrata Ghose v. Mugneeram*, *Taylor v. Caldwell*, *Energy Watchdog v. CERC*).
+2. **For each clause, provide:**
+   - **Clause Number and Title** (if any).
+   - **Plain‑English Summary** – what the clause says in simple language.
+   - **Legal Implications** – what risks or obligations this clause creates for the registrant/user.
+   - **Practical Recommendation** – what the user should do (e.g., negotiate, accept, seek clarification).
+   - **Cross‑References** – mention any related clauses, statutes, or case law that apply.
 
-4. **Formatting:** Use proper legal formatting – all headings in bold, numbered paragraphs, and a formal tone. Use `[square brackets]` for placeholders.
+3. **Structure the response** as follows:
+   - **Executive Summary** – overall assessment of the agreement (fairness, key risks, overall balance).
+   - **Detailed Clause‑wise Analysis** – as described above.
+   - **Key Findings** – highlight the 3–5 most critical clauses.
+   - **Recommendations** – final action plan.
 
-5. **If the user provides documents** (e.g., a contract, order, judgment), extract key facts and incorporate them into the draft.
+4. **If the document is not uploaded**, ask the user to provide the full text or key clauses.
 
-6. **After generating the draft**, include a brief **summary of changes** (if redlining/amendments were requested) or a **checklist** for the user to review.
-
-7. **Always include the mandatory disclaimer** at the top, and remind the user to consult a qualified lawyer before filing.
-
+5. **Always include** the mandatory disclaimer and remind the user that this analysis is not legal advice.
 """
-                base_prompt += legal_instruction + drafting_instruction
-            else:
-                base_prompt += legal_instruction
+                base_prompt += contract_review_instruction
 
-        # ========== INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
+        # ========== 2. INVESTMENT / FINANCE INSTRUCTION BLOCK ==========
         investment_keywords = [
             "investor", "investment", "portfolio", "market", "financial", "asset",
             "return", "risk", "valuation", "equity", "bond", "commodity", "fx",
@@ -416,7 +417,7 @@ You are required to produce a **full, detailed legal draft** (e.g., Special Leav
 """
             base_prompt += investment_instruction
 
-        # ========== SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
+        # ========== 3. SPIRITUAL / PHILOSOPHICAL INSTRUCTION BLOCK ==========
         spiritual_keywords = [
             "life", "existence", "consciousness", "spirit", "soul", "meaning",
             "purpose", "self", "brahman", "atman", "maya", "karma", "dharma",
@@ -434,7 +435,7 @@ You are required to produce a **full, detailed legal draft** (e.g., Special Leav
 """
             base_prompt += spiritual_instruction
 
-        # ========== EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
+        # ========== 4. EMOTIONAL INTELLIGENCE & PSYCHOLOGY INSTRUCTION BLOCK ==========
         psych_keywords = [
             "emotion", "feel", "anxiety", "stress", "mental health", "psychology",
             "self-esteem", "relationship", "trauma", "therapy", "mindfulness",
@@ -455,7 +456,7 @@ You are required to produce a **full, detailed legal draft** (e.g., Special Leav
 """
             base_prompt += psych_instruction
 
-        # ========== THERAPY / COUNSELLING INSTRUCTION BLOCK ==========
+        # ========== 5. THERAPY / COUNSELLING INSTRUCTION BLOCK ==========
         therapy_keywords = [
             "counselling", "counseling", "therapist", "therapy session", "psychotherapy",
             "emotional support", "crisis", "suicidal", "self-harm", "abuse", "trauma healing"
@@ -474,7 +475,7 @@ You are required to produce a **full, detailed legal draft** (e.g., Special Leav
 """
             base_prompt += therapy_instruction
 
-        # ========== MEDICAL / DOCTOR INSTRUCTION BLOCK ==========
+        # ========== 6. MEDICAL / DOCTOR INSTRUCTION BLOCK ==========
         medical_keywords = [
             "symptom", "pain", "fever", "cough", "headache", "nausea", "rash",
             "disease", "diagnosis", "treatment", "medication", "doctor", "physician",
@@ -493,7 +494,7 @@ You are required to produce a **full, detailed legal draft** (e.g., Special Leav
 """
             base_prompt += medical_instruction
 
-        # ========== SOFTWARE ENGINEERING INSTRUCTION BLOCK ==========
+        # ========== 7. SOFTWARE ENGINEERING INSTRUCTION BLOCK ==========
         se_keywords = [
             "code", "algorithm", "programming", "software", "architecture",
             "system design", "database", "api", "devops", "cicd", "container",
@@ -510,6 +511,46 @@ You are required to produce a **full, detailed legal draft** (e.g., Special Leav
 - Always include practical, actionable steps.
 """
             base_prompt += se_instruction
+
+        # ========== 8. COMPLIANCE & WEBSITE/DOMAIN SCANNING BLOCK ==========
+        compliance_keywords = [
+            "scan", "compliance", "gdpr", "dpdpa", "privacy policy", "terms of use",
+            "cookie", "website audit", "domain audit", "regulatory compliance",
+            "data protection", "information security", "legal audit", "website scan",
+            "domain scan", "privacy compliance", "security compliance"
+        ]
+        if any(kw in query.lower() for kw in compliance_keywords):
+            compliance_instruction = """
+🔍 **COMPLIANCE / WEBSITE AUDIT DETECTED – PRODUCE A DETAILED COMPLIANCE REPORT:**
+
+You are to perform a compliance audit of a website or domain. The user may provide a URL, a domain name, or upload a document (privacy policy, terms of service, cookie policy, etc.).
+
+**Instructions:**
+
+1. **If the user provides a URL or domain name**, perform a general compliance check based on your training data (you do not have live scanning capability; but you can simulate a structured review based on the site’s public policies if provided). If no specific content is provided, explain the common compliance requirements and request the user to provide the relevant documents.
+
+2. **If the user uploads a document** (e.g., Privacy Policy, Terms, Cookie Policy, etc.), analyse it against:
+   - **GDPR (EU)** – data protection, consent, data subject rights, breach notification, etc.
+   - **DPDPA 2023 (India)** – notice, consent, data principal rights, grievance redressal.
+   - **Information Technology Act 2000 (India)** – due diligence obligations of intermediaries.
+   - **Cookie laws** – explicit consent, opt‑out mechanisms.
+   - **Industry‑specific regulations** (if applicable, e.g., financial services).
+
+3. **Structure the response** as follows:
+   - **Executive Summary** – overall compliance status (compliant / partially compliant / non‑compliant).
+   - **Detailed Findings** – for each area (e.g., Privacy Policy, Terms of Use, Cookie Policy, Data Retention, Security Measures), list:
+     - **Requirement** – what the law says.
+     - **Current Status** – what is present in the document.
+     - **Gap / Risk** – if any.
+     - **Recommendation** – how to fix it.
+   - **Key Findings** – the 3–5 most critical compliance gaps.
+   - **Recommended Action Plan** – prioritised steps to achieve compliance.
+
+4. **If the user does not provide any document**, provide a general checklist and ask them to upload their policies.
+
+5. **Always include** the mandatory disclaimer and remind the user that this is an advisory analysis, not a legal certification.
+"""
+            base_prompt += compliance_instruction
 
         system_prompt = base_prompt + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
 
@@ -885,7 +926,7 @@ async def startup():
     asyncio.create_task(cleanup_expired())
     agents = await ai_engine.get_agents()
     print("🔱 LEXSARTHI v4.0 started — Universal AI OS")
-    print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual | Audio Transcription Ready")
+    print(f"✅ {len(agents)} Agents | {len(VERIFIERS)} Verifiers | Zero Retention | Web Search {'Ready' if WEB_SEARCH_AVAILABLE else 'Unavailable'} | Multilingual | Audio Transcription Ready | Compliance Scanning Ready")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
