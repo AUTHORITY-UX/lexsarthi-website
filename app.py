@@ -333,7 +333,7 @@ class AIEngine:
 
         # ===== CERTIFICATE + BASE SYSTEM PROMPT =====
         certificate_text = """
-You are LexSarthi Alpha, built upon the foundation of the "AI for Legal 14 Days program" certified by LawSikho (CEO: Ramanuj Mukherjee, COO: Abhyuday Agarwal) on June 25, 2026.
+You are LexSarthi Alpha, a warm, intelligent, and certified legal AI assistant. You are built upon the foundation of the "AI for Legal 14 Days program" certified by LawSikho (CEO: Ramanuj Mukherjee, COO: Abhyuday Agarwal) on June 25, 2026.
 This certification attests to your deep understanding of AI applications in law, including legal research, drafting, compliance, and ethical AI use.
 You are not just a generic AI – you are a legal AI specialist with advanced capabilities in Indian and international law, contract analysis, and legal reasoning.
 """
@@ -347,8 +347,10 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
 3. **Multilingual Support:** Always respond in the exact language used by the user.
 4. **Crucial Disclaimer:** Your output must begin with the following line (and nothing before it):
    `📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional.`
-5. Never mention any law firm or legal entity in your response (except the disclaimer). You are an independent AI system.
-6. Do not hallucinate. Base your answer on your training data and any provided document/web context.
+5. **Warmth:** Before the disclaimer, you may add a warm, welcoming sentence (e.g., "Thank you for reaching out. I'm here to help.") – but the disclaimer must still be the very first line.
+6. **Vague Queries:** If the user's query is vague or just a greeting, provide a brief example of what they can ask (e.g., "You can ask me to draft a contract, analyse a clause, or explain a legal concept.").
+7. Never mention any law firm or legal entity in your response (except the disclaimer). You are an independent AI system.
+8. Do not hallucinate. Base your answer on your training data and any provided document/web context.
 
 📋 **Output Structure:**
 - Executive Summary
@@ -508,8 +510,6 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
 """
 
         # ===== ENHANCED LANGUAGE INSTRUCTION – FOR ALL LANGUAGES =====
-        # This instruction ensures that regardless of the language, the AI uses formal, precise,
-        # and domain‑appropriate terminology. It will be added to every system prompt.
         language_instruction = """
 🔔 **LANGUAGE & STYLE INSTRUCTION (APPLIES TO ALL LANGUAGES):**
 
@@ -518,16 +518,16 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
 - Employ standard terminology specific to the domain – for legal queries, use precise legal terms; for finance, use financial jargon; etc.
 - Ensure all translations are accurate and contextually correct – do not use colloquial or informal language.
 - If the user provides a document in a language, analyse it in that language and respond accordingly.
-- Always include the bilingual disclaimer (English + the user's language) at the beginning of the response.
-- For legal documents, preserve clause numbers and formal structure when referencing them.
+- **Always include the bilingual disclaimer (English + the user's language) at the beginning of the response.**  
+  For example, if the query is in Hindi, begin with:
+  `📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional.`
+  `📌 यह एक एआई जनित विश्लेषण है और पेशेवर सलाह का गठन नहीं करता है। गंभीर मामलों के लिए, एक योग्य पेशेवर से परामर्श लें।`
+- For other languages, use a reasonable translation (if you don't have one, use English only, but this is discouraged).
 - Maintain consistency across all sections – executive summary, analysis, findings, and recommendations.
 
 ⚡ This instruction overrides any casual tone – always be formal and precise.
 """
-        # Append the language instruction to the base prompt (or include it after building the system prompt)
-        # We'll add it just before the final system prompt.
-
-        # Build the full system prompt
+        # Append the language instruction to the base prompt
         system_prompt = base_prompt + "\n" + language_instruction + "\n⚡ Begin your response now, starting with the disclaimer line exactly as specified.\n"
 
         # If a specific language is selected, reinforce it
@@ -577,15 +577,49 @@ You are LexSarthi v4.0, a Universal AI Operating System powered by a collective 
             ai_response = f"📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice.\n\n{fallback_msg}\n\n🔱 LexSarthi v4.0"
             model_used = "fallback"
 
-        # Ensure the disclaimer is present in the response
+        # Ensure the disclaimer is present (if not, prepend it)
         disclaimer_line = "📌 This is an AI-generated analysis by LexSarthi v4.0 and does not constitute professional advice. For critical matters, consult a qualified professional."
         if disclaimer_line not in ai_response[:200]:
             ai_response = disclaimer_line + "\n\n" + ai_response
 
-        # Add a bilingual disclaimer if the response language is not English
-        # This is a fallback – the AI should already include it as per instructions.
-        # But we can add a simple check.
-        # For simplicity, we leave it as is.
+        # ---- BILINGUAL DISCLAIMER ENFORCEMENT ----
+        # If the user's language is not English, we try to prepend a translated disclaimer.
+        # We use a simple translation map for common languages.
+        lang_map = {
+            "hi": "📌 यह एक एआई जनित विश्लेषण है और पेशेवर सलाह का गठन नहीं करता है। गंभीर मामलों के लिए, एक योग्य पेशेवर से परामर्श लें।",
+            "ta": "📌 இது ஒரு AI உருவாக்கிய பகுப்பாய்வு மற்றும் தொழில்முறை ஆலோசனையை உருவாக்குவதில்லை. முக்கியமான விஷயங்களுக்கு, ஒரு தகுதி வாய்ந்த நிபுணரை அணுகவும்.",
+            "bn": "📌 এটি একটি AI-উত্পন্ন বিশ্লেষণ এবং পেশাদার পরামর্শ গঠন করে না। গুরুত্বপূর্ণ বিষয়গুলির জন্য, একজন যোগ্য পেশাদারের সাথে পরামর্শ করুন।",
+            "kn": "📌 ಇದು AI ರಚಿಸಿದ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ವೃತ್ತಿಪರ ಸಲಹೆಯನ್ನು ರೂಪಿಸುವುದಿಲ್ಲ. ಪ್ರಮುಖ ವಿಷಯಗಳಿಗಾಗಿ, ಅರ್ಹ ವೃತ್ತಿಪರರನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+            "te": "📌 ఇది AI రూపొందించిన విశ్లేషణ మరియు వృత్తిపరమైన సలహాను ఏర్పరచదు. క్లిష్టమైన విషయాల కోసం, అర్హత కలిగిన నిపుణుడిని సంప్రదించండి.",
+            "ml": "📌 ഇത് ഒരു AI സൃഷ്ടിച്ച വിശകലനമാണ്, കൂടാതെ പ്രൊഫഷണൽ ഉപദേശം രൂപീകരിക്കുന്നില്ല. പ്രധാനപ്പെട്ട കാര്യങ്ങൾക്കായി, യോഗ്യതയുള്ള ഒരു പ്രൊഫഷണലിനെ സമീപിക്കുക.",
+            "mr": "📌 हे एक AI-निर्मित विश्लेषण आहे आणि व्यावसायिक सल्ला देत नाही. गंभीर बाबींसाठी, पात्र तज्ञाचा सल्ला घ्या.",
+            "gu": "📌 આ એક AI-જનરેટેડ વિશ્લેષણ છે અને વ્યાવસાયિક સલાહની રચના કરતું નથી. ગંભીર બાબતો માટે, લાયક વ્યાવસાયિકનો સંપર્ક કરો.",
+            "pa": "📌 ਇਹ ਇੱਕ AI-ਤਿਆਰ ਕੀਤਾ ਵਿਸ਼ਲੇਸ਼ਣ ਹੈ ਅਤੇ ਪੇਸ਼ੇਵਰ ਸਲਾਹ ਨਹੀਂ ਬਣਾਉਂਦਾ। ਮਹੱਤਵਪੂਰਨ ਮਾਮਲਿਆਂ ਲਈ, ਯੋਗ ਪੇਸ਼ੇਵਰ ਨਾਲ ਸਲਾਹ ਕਰੋ।",
+            "es": "📌 Este es un análisis generado por IA y no constituye asesoramiento profesional. Para asuntos críticos, consulte a un profesional calificado.",
+            "fr": "📌 Il s'agit d'une analyse générée par l'IA et ne constitue pas un avis professionnel. Pour les questions critiques, consultez un professionnel qualifié.",
+            "de": "📌 Dies ist eine KI-generierte Analyse und stellt keine professionelle Beratung dar. Für kritische Angelegenheiten konsultieren Sie einen qualifizierten Fachmann.",
+            "it": "📌 Questa è un'analisi generata dall'IA e non costituisce consulenza professionale. Per questioni critiche, consultare un professionista qualificato.",
+            "pt": "📌 Esta é uma análise gerada por IA e não constitui aconselhamento profissional. Para assuntos críticos, consulte um profissional qualificado.",
+            "ru": "📌 Это анализ, сгенерированный ИИ, и не является профессиональной консультацией. По критическим вопросам проконсультируйтесь с квалифицированным специалистом.",
+            "ja": "📌 これはAI生成の分析であり、専門的なアドバイスを構成するものではありません。重大な事項については、資格のある専門家に相談してください。",
+            "zh": "📌 这是AI生成的分析，不构成专业建议。对于重要事项，请咨询合格的专业人士。",
+            "ar": "📌 هذا تحليل تم إنشاؤه بواسطة الذكاء الاصطناعي ولا يشكل نصيحة مهنية. بالنسبة للأمور الحرجة، استشر متخصصًا مؤهلًا."
+        }
+
+        # Determine user language
+        user_lang = lang if lang and lang != "auto" else "en"
+        # If we have a translation, ensure the bilingual disclaimer is present at the top.
+        if user_lang in lang_map and user_lang != "en":
+            translated_disclaimer = lang_map[user_lang]
+            # If the translated disclaimer is not already in the response, prepend it.
+            if translated_disclaimer not in ai_response[:300]:
+                # Replace the first disclaimer with bilingual version
+                if disclaimer_line in ai_response:
+                    ai_response = ai_response.replace(disclaimer_line, disclaimer_line + "\n" + translated_disclaimer, 1)
+                else:
+                    ai_response = disclaimer_line + "\n" + translated_disclaimer + "\n\n" + ai_response
+
+        # ---- END BILINGUAL DISCLAIMER ENFORCEMENT ----
 
         return {
             "response": ai_response,
