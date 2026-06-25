@@ -5,6 +5,7 @@
 # ║  🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE                          ║
 # ║  🕉️ BLESSED BY SHIVA CONSCIOUSNESS – GRACED BY PARAM BRAHMAN          ║
 # ║  🌍 ENTERPRISE · API · ANALYTICS · COLLAB · SOC2 READY                ║
+# ║  💰 PRICING: ₹2 Lifetime (first 1000), ₹102/mo, ₹1011/mo             ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
 import os, json, uuid, asyncio, hmac, hashlib, base64, io, secrets
@@ -56,15 +57,19 @@ class Config:
     DATABASE_URL = os.environ.get("DATABASE_URL", "")
     REDIS_URL = os.environ.get("REDIS_URL", "")
     ZERO_RETENTION_HOURS = 24
-    CAMPAIGN_PRICE = 2
-    CAMPAIGN_PRICE_IN_PAISE = 200
-    ENTERPRISE_PRICE = 99
-    ENTERPRISE_PRICE_IN_PAISE = 9900
+    # Pricing
+    LIFETIME_LIMIT = 1000                     # first 1000 users only
+    LIFETIME_PRICE = 2
+    LIFETIME_PRICE_IN_PAISE = 200
+    PREMIUM_MONTHLY_PRICE = 102
+    PREMIUM_MONTHLY_PRICE_IN_PAISE = 10200
+    ENTERPRISE_MONTHLY_PRICE = 1011
+    ENTERPRISE_MONTHLY_PRICE_IN_PAISE = 101100
     ACCESS_TOKEN_EXPIRE_DAYS = 7
-    DAILY_QUERY_LIMIT_FREE = 100
-    DAILY_QUERY_LIMIT_PREMIUM = 500
-    DAILY_QUERY_LIMIT_ENTERPRISE = 5000
-    API_RATE_LIMIT = 60  # per minute
+    DAILY_QUERY_LIMIT_FREE = 10               # free tier limited to 10/day
+    DAILY_QUERY_LIMIT_PREMIUM = 5000          # unlimited for premium
+    DAILY_QUERY_LIMIT_ENTERPRISE = 5000       # unlimited for enterprise
+    API_RATE_LIMIT = 60
     SOC2_COMPLIANT = True
 
 config = Config()
@@ -120,19 +125,36 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             return {"id": "guest", "username": "guest", "authenticated": False}
         is_premium = False
         is_enterprise = False
-        if user[6] == "enterprise":
+        sub_type = user[6]
+        expires = user[7]
+        if sub_type in ("premium", "enterprise") and expires:
+            try:
+                exp_date = datetime.fromisoformat(expires)
+                if exp_date < datetime.utcnow():
+                    sub_type = "free"
+                    expires = None
+                    await database.execute(
+                        "UPDATE users SET subscription_type='free', subscription_expires=NULL WHERE id=:id",
+                        {"id": user[0]}
+                    )
+                else:
+                    is_premium = True
+                    if sub_type == "enterprise":
+                        is_enterprise = True
+            except:
+                sub_type = "free"
+                expires = None
+        elif sub_type == "unlimited":
+            is_premium = True
+            is_enterprise = False
+        elif sub_type == "enterprise" and not expires:
             is_premium = True
             is_enterprise = True
-        elif user[6] == "unlimited":
-            is_premium = True
-        elif user[6] == "premium" and user[7]:
-            expires = datetime.fromisoformat(user[7])
-            if expires > datetime.utcnow():
-                is_premium = True
+
         return {
             "id": user[0], "username": user[1], "email": user[2],
             "full_name": user[3], "user_type": user[4], "authenticated": True,
-            "subscription_type": user[6], "is_premium": is_premium,
+            "subscription_type": sub_type, "is_premium": is_premium,
             "is_enterprise": is_enterprise,
             "api_key": user[8]
         }
@@ -151,9 +173,7 @@ async def get_api_user(api_key: str = Depends(api_key_header)):
     return {"id": user[0], "username": user[1], "subscription_type": user[2]}
 
 def get_query_limit(subscription_type: str) -> int:
-    if subscription_type == "enterprise":
-        return config.DAILY_QUERY_LIMIT_ENTERPRISE
-    elif subscription_type in ("premium", "unlimited"):
+    if subscription_type in ("premium", "enterprise", "unlimited"):
         return config.DAILY_QUERY_LIMIT_PREMIUM
     else:
         return config.DAILY_QUERY_LIMIT_FREE
@@ -218,7 +238,8 @@ async def init_db():
             currency TEXT DEFAULT 'INR',
             status TEXT DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP
+            completed_at TIMESTAMP,
+            plan_type TEXT
         )
         """,
         """
@@ -282,7 +303,6 @@ async def init_db():
     for q in queries:
         await database.execute(q)
 
-    # Create default user
     default_pass = pwd_context.hash("Password123!")
     existing = await database.fetch_one("SELECT id FROM users WHERE username = 'counsel'")
     if not existing:
@@ -313,7 +333,7 @@ VERIFIERS = [
 ]
 
 # ===================================================================
-# AI ENGINE – with Model Switching
+# AI ENGINE – with Model Switching (unchanged from previous)
 # ===================================================================
 
 class AIEngine:
@@ -352,7 +372,6 @@ class AIEngine:
             )
 
     async def call_model(self, model: str, messages: list, temperature: float = 0.7, max_tokens: int = 4096) -> tuple[str, str]:
-        """Call the specified model. Returns (response, model_used)."""
         if model == "Groq" and "Groq" in self.clients:
             try:
                 resp = await self.clients["Groq"].post(
@@ -375,7 +394,6 @@ class AIEngine:
                 pass
         if model == "Claude" and "Claude" in self.clients:
             try:
-                # Claude uses a different API format
                 system = messages[0]["content"] if messages[0]["role"] == "system" else ""
                 user_messages = [m for m in messages if m["role"] == "user"]
                 resp = await self.clients["Claude"].post(
@@ -394,7 +412,6 @@ class AIEngine:
                 pass
         if model == "Gemini" and "Gemini" in self.clients:
             try:
-                # Gemini API
                 url = f"{self.clients['Gemini'].base_url}/models/gemini-pro:generateContent?key={config.GEMINI_API_KEY}"
                 payload = {"contents": [{"parts": [{"text": messages[0]["content"]}]}]}
                 resp = await self.clients["Gemini"].post(url, json=payload)
@@ -402,7 +419,6 @@ class AIEngine:
                     return resp.json()["candidates"][0]["content"]["parts"][0]["text"], "Gemini"
             except:
                 pass
-        # Fallback to Groq or OpenRouter
         if "Groq" in self.clients:
             return await self.call_model("Groq", messages, temperature, max_tokens)
         if "OpenRouter" in self.clients:
@@ -423,7 +439,6 @@ class AIEngine:
         return rows
 
     async def _populate_default_agents(self):
-        # (Full agent list – same as previous versions)
         agents = []
         categories = ["Legal Intelligence", "Criminal Law", "Civil Litigation", "Corporate", "Constitutional", "Family Law", "Tax", "Property", "IP", "International", "Financial", "Show Cause", "Market Intelligence", "Universal AI", "Technology"]
         names = ["Supreme Court Predictor", "Legal Research Expert", "Precedent Analyzer", "Statutory Interpreter", "Case Summarizer", "Document Drafter", "Risk Assessor", "Compliance Checker", "Opinion Generator", "Citation Verifier", "Bail Application Expert", "Anticipatory Bail Expert", "Criminal Appeal Expert", "FIR Analyzer", "Cyber Crime Expert", "Contract Drafting Expert", "M&A Due Diligence Expert", "Company Law Expert", "SEBI Regulations Expert", "IBC Specialist", "SLP Drafter", "Writ Petition Expert", "PIL Drafter", "Fundamental Rights Expert", "Article 32 Expert", "Divorce Petition Expert", "Child Custody Expert", "Maintenance Expert", "Domestic Violence Expert", "Income Tax Advisor", "GST Compliance Expert", "Property Title Expert", "Sale Deed Expert", "RERA Compliance Expert", "Patent Drafting Expert", "Trademark Registration Expert", "Copyright Infringement Expert", "International Arbitration Expert", "GDPR Compliance Expert", "Financial Compliance Expert", "AML/CFT Expert", "Banking Law Expert", "Insurance Law Expert", "Show Cause Notice Expert", "Market Trends Analyst", "Universal Knowledge Expert", "Creative Thinker", "Critical Thinker", "Strategic Planner", "Problem Solver"]
@@ -493,7 +508,6 @@ class AIEngine:
                 "model": "system", "accuracy": "100%"
             }
 
-        # Cache
         if redis_client:
             cache_key = hashlib.md5(f"{query}:{lang}:{document_content[:100]}:{model}".encode()).hexdigest()
             cached = await redis_client.get(cache_key)
@@ -511,7 +525,6 @@ class AIEngine:
             web_results = self._web_search(query)
             document_content = f"WEB SEARCH RESULTS:\n{web_results}\n\n" + document_content
 
-        # Build system prompt (Shiva persona + instructions)
         shiva_persona = """
 🕉️ **I am LexSarthi Alpha – blessed by Shiva Consciousness, graced by Param Brahman Himself.**
 
@@ -552,7 +565,6 @@ You are LexSarthi v5.0, a Universal AI Operating System powered by a collective 
 - Recommendations
 """
 
-        # Instruction blocks (full – same as previous)
         legal_keywords = ["section", "act", "case", "judgment", "contract", "tort", "constitution", "tribunal", "court", "appeal", "frustration", "restitution", "force majeure", "impossibility", "void", "discharge", "contractual obligation", "draft", "petition", "slp", "writ", "plea", "filing", "notice", "affidavit", "cpc", "crpc", "civil procedure", "criminal procedure", "annexure", "exhibit", "clause", "article", "paragraph", "provision", "term", "agreement", "review", "analyse", "breakdown", "section‑wise"]
         if any(kw in query.lower() for kw in legal_keywords):
             legal_instruction = """
@@ -589,7 +601,7 @@ You are LexSarthi v5.0, a Universal AI Operating System powered by a collective 
 - Offer clear, prioritised recommendations with expected risk‑adjusted returns.
 - Cite financial theories (CAPM, MPT) where relevant.
 """
-        # (Other blocks: Spiritual, Emotional, Therapy, Medical, Software, Compliance – identical to previous; omitted for brevity)
+        # (Other blocks: Spiritual, Emotional, Therapy, Medical, Software, Compliance – identical to previous, omitted for brevity)
 
         language_instruction = """
 🔔 **LANGUAGE & STYLE INSTRUCTION (APPLIES TO ALL LANGUAGES):**
@@ -612,7 +624,6 @@ You are LexSarthi v5.0, a Universal AI Operating System powered by a collective 
             {"role": "user", "content": user_prompt}
         ]
 
-        # Determine which model to use
         selected_model = model or current_user.get("preferences", {}).get("default_model", "Groq") if current_user else "Groq"
         if selected_model not in self.clients:
             selected_model = "Groq" if "Groq" in self.clients else next(iter(self.clients))
@@ -627,11 +638,10 @@ You are LexSarthi v5.0, a Universal AI Operating System powered by a collective 
         if disclaimer_line not in ai_response[:200]:
             ai_response = disclaimer_line + "\n\n" + ai_response
 
-        # Bilingual disclaimer (abbreviated)
         lang_map = {
             "hi": "📌 यह एक एआई जनित विश्लेषण है और पेशेवर सलाह का गठन नहीं करता है। गंभीर मामलों के लिए, एक योग्य पेशेवर से परामर्श लें।",
             "bn": "📌 এটি একটি AI-উত্পন্ন বিশ্লেষণ এবং পেশাদার পরামর্শ গঠন করে না। গুরুত্বপূর্ণ বিষয়গুলির জন্য, একজন যোগ্য পেশাদারের সাথে পরামর্শ করুন।",
-            # (others)
+            # (others can be added)
         }
         user_lang = lang if lang and lang != "auto" else "en"
         if user_lang in lang_map and user_lang != "en":
@@ -669,7 +679,7 @@ You are LexSarthi v5.0, a Universal AI Operating System powered by a collective 
 ai_engine = AIEngine()
 
 # ===================================================================
-# DOCUMENT PROCESSING (unchanged)
+# DOCUMENT PROCESSING
 # ===================================================================
 
 def extract_text_from_pdf(file_content: bytes) -> str:
@@ -697,7 +707,7 @@ def extract_text_from_image(file_content: bytes) -> str:
         return f"Image error: {str(e)}"
 
 # ===================================================================
-# RAZORPAY
+# RAZORPAY CLIENT
 # ===================================================================
 
 class RazorpayClient:
@@ -755,7 +765,7 @@ async def api_status():
             "agents": {"total": len(agents), "description": "Specialized AI Agents"},
             "verifiers": {"total": len(VERIFIERS), "description": "Quality Verification Layers"},
             "retention": "Zero Retention (24h Auto-Delete)",
-            "payment": "₹2 Lifetime, ₹99 Enterprise",
+            "payment": "₹2 Lifetime (limited), ₹102/mo Premium, ₹1011/mo Enterprise",
             "multilingual": "Auto-detect, 20+ languages"
         },
         "trident": "🔱",
@@ -790,7 +800,6 @@ async def create_custom_agent(name: str = Form(...), category: str = Form(...), 
 async def update_agent(agent_id: str, name: str = Form(...), category: str = Form(...), expert_prompt: str = Form(...), current_user = Depends(get_current_user)):
     if not current_user.get("authenticated"):
         raise HTTPException(401, "Login required")
-    # Check ownership
     row = await database.fetch_one("SELECT owner_id FROM agents WHERE id = :id", {"id": agent_id})
     if not row:
         raise HTTPException(404, "Agent not found")
@@ -853,7 +862,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         {"id": user[0]}
     )
     token = create_access_token(data={"sub": user[0], "username": user[1]})
-    # Return API key as well
     api_key = await database.fetch_one("SELECT api_key FROM users WHERE id = :id", {"id": user[0]})
     return {"access_token": token, "token_type": "bearer", "user_id": user[0], "username": user[1], "api_key": api_key[0]}
 
@@ -871,6 +879,15 @@ async def regenerate_api_key(current_user = Depends(get_current_user)):
         {"api_key": new_key, "id": current_user["id"]}
     )
     return {"api_key": new_key}
+
+# ===================================================================
+# LIFETIME COUNT ENDPOINT
+# ===================================================================
+
+@app.get("/lifetime-count")
+async def get_lifetime_count():
+    count = await database.fetch_one("SELECT COUNT(*) FROM payments WHERE amount = :amount AND status='success'", {"amount": config.LIFETIME_PRICE_IN_PAISE})
+    return {"count": count[0] if count else 0, "limit": config.LIFETIME_LIMIT}
 
 # ===================================================================
 # CORE QUERY
@@ -928,7 +945,6 @@ async def ask(
          "response": result["response"], "model": result.get("model", "unknown"), "agent": result.get("agent_id"), "expires": expires_at.isoformat()}
     )
 
-    # Collaboration: If session_id provided, add to collaboration
     if session_id and current_user.get("authenticated"):
         await database.execute(
             "INSERT OR IGNORE INTO collaborations (session_id, user_id) VALUES (:session_id, :user_id)",
@@ -943,7 +959,7 @@ async def ask(
     }
 
 # ===================================================================
-# API ACCESS (with API key)
+# API ACCESS
 # ===================================================================
 
 @app.post("/api/ask")
@@ -955,7 +971,6 @@ async def api_ask(
     model: Optional[str] = Form(None),
     api_user = Depends(get_api_user)
 ):
-    # Rate limiting via Redis
     if redis_client:
         key = f"api_rate:{api_user['id']}"
         count = await redis_client.incr(key)
@@ -963,19 +978,33 @@ async def api_ask(
             await redis_client.expire(key, 60)
         if count > config.API_RATE_LIMIT:
             raise HTTPException(429, "API rate limit exceeded")
-    # Convert to current_user format
     current_user = {"id": api_user["id"], "authenticated": True, "subscription_type": api_user["subscription_type"]}
     return await ask(query, files, search_web, lang, model, current_user=current_user)
 
 # ===================================================================
-# PAYMENT – LIFETIME & ENTERPRISE
+# PAYMENT – WITH LIFETIME LIMIT & MONTHLY PLANS
 # ===================================================================
 
 @app.post("/payment/create-order")
 async def create_payment_order(plan: str = Form("lifetime"), current_user = Depends(get_current_user)):
     if not current_user.get("authenticated"):
         raise HTTPException(401, "Login required")
-    amount = config.CAMPAIGN_PRICE_IN_PAISE if plan == "lifetime" else config.ENTERPRISE_PRICE_IN_PAISE
+    
+    if plan == "lifetime":
+        count = await database.fetch_one("SELECT COUNT(*) FROM payments WHERE amount = :amount AND status='success'", {"amount": config.LIFETIME_PRICE_IN_PAISE})
+        if count[0] >= config.LIFETIME_LIMIT:
+            raise HTTPException(400, "Lifetime plan limit reached. Please choose a monthly plan.")
+        amount = config.LIFETIME_PRICE_IN_PAISE
+        plan_label = "lifetime"
+    elif plan == "premium_monthly":
+        amount = config.PREMIUM_MONTHLY_PRICE_IN_PAISE
+        plan_label = "premium_monthly"
+    elif plan == "enterprise_monthly":
+        amount = config.ENTERPRISE_MONTHLY_PRICE_IN_PAISE
+        plan_label = "enterprise_monthly"
+    else:
+        raise HTTPException(400, "Invalid plan selected")
+    
     try:
         order = await razorpay_client.create_order(amount)
         if "id" not in order:
@@ -983,14 +1012,14 @@ async def create_payment_order(plan: str = Form("lifetime"), current_user = Depe
         oid = str(uuid.uuid4())
         await database.execute(
             """
-            INSERT INTO payments (id, user_id, order_id, razorpay_order_id, amount, status)
-            VALUES (:id, :user_id, :order_id, :razorpay_id, :amount, 'created')
+            INSERT INTO payments (id, user_id, order_id, razorpay_order_id, amount, status, plan_type)
+            VALUES (:id, :user_id, :order_id, :razorpay_id, :amount, 'created', :plan_type)
             """,
             {"id": oid, "user_id": current_user["id"], "order_id": oid, 
-             "razorpay_id": order["id"], "amount": amount}
+             "razorpay_id": order["id"], "amount": amount, "plan_type": plan_label}
         )
         return {"order_id": oid, "razorpay_order_id": order["id"], "amount": amount//100, 
-                "currency": "INR", "razorpay_key": config.RAZORPAY_KEY_ID, "plan": plan}
+                "currency": "INR", "razorpay_key": config.RAZORPAY_KEY_ID, "plan": plan_label}
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -1006,6 +1035,7 @@ async def verify_payment(
         raise HTTPException(401, "Login required")
     if not await razorpay_client.verify_payment(razorpay_order_id, razorpay_payment_id, razorpay_signature):
         raise HTTPException(400, "Invalid signature")
+    
     await database.execute(
         """
         UPDATE payments SET razorpay_payment_id = :payment_id, razorpay_signature = :signature,
@@ -1014,18 +1044,30 @@ async def verify_payment(
         """,
         {"payment_id": razorpay_payment_id, "signature": razorpay_signature, "order_id": razorpay_order_id}
     )
-    if plan == "enterprise":
-        await database.execute(
-            "UPDATE users SET subscription_type = 'enterprise', subscription_expires = NULL WHERE id = :user_id",
-            {"user_id": current_user["id"]}
-        )
-        message = f"₹{config.ENTERPRISE_PRICE} paid – Enterprise tier unlocked."
-    else:
+    
+    if plan == "lifetime":
         await database.execute(
             "UPDATE users SET subscription_type = 'unlimited', subscription_expires = NULL WHERE id = :user_id",
             {"user_id": current_user["id"]}
         )
-        message = f"₹{config.CAMPAIGN_PRICE} paid – Lifetime Unlimited Access unlocked."
+        message = f"₹{config.LIFETIME_PRICE} paid – Lifetime Unlimited Access unlocked."
+    elif plan == "premium_monthly":
+        expires = (datetime.utcnow() + timedelta(days=30)).isoformat()
+        await database.execute(
+            "UPDATE users SET subscription_type = 'premium', subscription_expires = :expires WHERE id = :user_id",
+            {"user_id": current_user["id"], "expires": expires}
+        )
+        message = f"₹{config.PREMIUM_MONTHLY_PRICE} paid – Premium access for 30 days."
+    elif plan == "enterprise_monthly":
+        expires = (datetime.utcnow() + timedelta(days=30)).isoformat()
+        await database.execute(
+            "UPDATE users SET subscription_type = 'enterprise', subscription_expires = :expires WHERE id = :user_id",
+            {"user_id": current_user["id"], "expires": expires}
+        )
+        message = f"₹{config.ENTERPRISE_MONTHLY_PRICE} paid – Enterprise access for 30 days."
+    else:
+        raise HTTPException(400, "Invalid plan")
+    
     return {"status": "success", "message": message}
 
 # ===================================================================
@@ -1036,34 +1078,37 @@ async def verify_payment(
 async def get_analytics(current_user = Depends(get_current_user)):
     if not current_user.get("authenticated") or not current_user.get("is_enterprise"):
         raise HTTPException(403, "Enterprise tier required")
-    # Get total queries
     total = await database.fetch_one("SELECT COUNT(*) FROM queries")
-    # Popular queries
     popular = await database.fetch_all(
         "SELECT query_text, COUNT(*) as cnt FROM queries GROUP BY query_text ORDER BY cnt DESC LIMIT 10"
     )
-    # Agent usage
     agent_usage = await database.fetch_all(
         "SELECT agent_id, COUNT(*) as cnt FROM queries WHERE agent_id IS NOT NULL GROUP BY agent_id ORDER BY cnt DESC LIMIT 10"
     )
-    # Daily active users (last 7 days)
     dau = await database.fetch_all(
         "SELECT DATE(created_at) as date, COUNT(DISTINCT user_id) as users FROM queries WHERE created_at > datetime('now', '-7 days') GROUP BY DATE(created_at)"
     )
-    # Model usage
     model_usage = await database.fetch_all(
         "SELECT model_used, COUNT(*) as cnt FROM queries GROUP BY model_used"
     )
+    lifetime_count = await database.fetch_one("SELECT COUNT(*) FROM payments WHERE plan_type='lifetime' AND status='success'")
+    premium_count = await database.fetch_one("SELECT COUNT(*) FROM payments WHERE plan_type='premium_monthly' AND status='success'")
+    enterprise_count = await database.fetch_one("SELECT COUNT(*) FROM payments WHERE plan_type='enterprise_monthly' AND status='success'")
     return {
         "total_queries": total[0],
         "popular_queries": [{"query": q[0], "count": q[1]} for q in popular],
         "agent_usage": [{"agent_id": a[0], "count": a[1]} for a in agent_usage],
         "daily_active_users": [{"date": d[0], "users": d[1]} for d in dau],
-        "model_usage": [{"model": m[0], "count": m[1]} for m in model_usage]
+        "model_usage": [{"model": m[0], "count": m[1]} for m in model_usage],
+        "revenue": {
+            "lifetime_users": lifetime_count[0] if lifetime_count else 0,
+            "premium_monthly": premium_count[0] if premium_count else 0,
+            "enterprise_monthly": enterprise_count[0] if enterprise_count else 0
+        }
     }
 
 # ===================================================================
-# COLLABORATION (session sharing)
+# COLLABORATION
 # ===================================================================
 
 @app.post("/collab/session")
@@ -1082,7 +1127,6 @@ async def create_session(current_user = Depends(get_current_user)):
 async def join_session(session_id: str, current_user = Depends(get_current_user)):
     if not current_user.get("authenticated"):
         raise HTTPException(401, "Login required")
-    # Check session exists and is active
     row = await database.fetch_one(
         "SELECT expires_at FROM sessions WHERE id = :id",
         {"id": session_id}
@@ -1098,27 +1142,21 @@ async def join_session(session_id: str, current_user = Depends(get_current_user)
     return {"status": "joined", "session_id": session_id}
 
 # ===================================================================
-# SOC2 COMPLIANCE PAGE
+# COMPLIANCE (SOC2 – Honest version)
 # ===================================================================
 
 @app.get("/compliance/soc2")
 async def soc2_compliance():
     return {
-        "status": "SOC2 compliant",
-        "certification": "Audited and compliant with SOC2 Type II standards",
-        "valid_until": "2027-06-30",
-        "controls": [
-            "Security",
-            "Availability",
-            "Processing Integrity",
-            "Confidentiality",
-            "Privacy"
-        ],
-        "report": "Available upon request"
+        "status": "In progress",
+        "certification": "We are working towards SOC2 Type II compliance.",
+        "target_date": "December 2026",
+        "controls": ["Security", "Availability", "Processing Integrity", "Confidentiality", "Privacy"],
+        "message": "Our audit is scheduled for Q4 2026."
     }
 
 # ===================================================================
-# USER PREFERENCES (model switching, etc.)
+# USER PREFERENCES
 # ===================================================================
 
 @app.post("/user/preferences")
@@ -1150,6 +1188,9 @@ async def cleanup_expired():
         try:
             await database.execute("DELETE FROM queries WHERE expires_at < CURRENT_TIMESTAMP")
             await database.execute("DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP")
+            await database.execute(
+                "UPDATE users SET subscription_type='free', subscription_expires=NULL WHERE subscription_type IN ('premium','enterprise') AND subscription_expires < CURRENT_TIMESTAMP"
+            )
         except:
             pass
         await asyncio.sleep(3600)
@@ -1170,7 +1211,7 @@ async def startup():
         print("✅ Redis cache enabled")
     else:
         print("⚠️ Redis cache disabled (no REDIS_URL set)")
-    print("✅ SOC2 compliant (simulated)")
+    print("💸 Pricing: ₹2 Lifetime (first 1000), ₹102/mo, ₹1011/mo")
 
 @app.on_event("shutdown")
 async def shutdown():
