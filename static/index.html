@@ -10,7 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        /* Same styles as provided in the previous answer – I'll include them */
         * { margin:0; padding:0; box-sizing:border-box; }
         :root { --bg: #0a0a0a; --gold: #d4a853; --text: #e0e0e0; --font: 'Inter', system-ui, sans-serif; }
         body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; align-items:center; overflow-x:hidden; }
@@ -88,10 +87,8 @@
     </style>
 </head>
 <body>
-    <!-- Trident, Header, Settings, etc. (same as earlier) -->
-    <!-- I'll include the full body as provided in the previous answer, but ensure the premium badge and agent rendering logic are there. -->
-    <!-- Since the user already has the previous index.html, I'll provide the full one. -->
 
+    <!-- Trident -->
     <div class="trident-wrapper">
         <div class="trident-3d">
             <div class="trident-face front">🔱</div>
@@ -107,6 +104,8 @@
     </div>
 
     <div class="container">
+
+        <!-- Header -->
         <div class="header">
             <div class="brand-name">
                 LEXSARTHI ALPHA
@@ -128,7 +127,7 @@
                     <option value="ta">🇮🇳 தமிழ்</option>
                     <option value="bn">🇮🇳 বাংলা</option>
                     <option value="kn">🇮🇳 ಕನ್ನಡ</option>
-                    <option value="te">🇮🇳 తెలుగు</option>
+                    <option value="te">🇮🇳 ತೆಲುಗು</option>
                     <option value="ml">🇮🇳 മലയാളം</option>
                     <option value="mr">🇮🇳 मराठी</option>
                     <option value="gu">🇮🇳 ગુજરાતી</option>
@@ -152,10 +151,15 @@
             </div>
         </div>
 
-        <div id="premiumMessage" class="premium-unlock-message">⭐ <strong>Enterprise Access Unlocked!</strong> You now have full access to all 220+ agents and enterprise features.</div>
+        <!-- Premium message (hidden by default) -->
+        <div id="premiumMessage" class="premium-unlock-message">
+            ⭐ <strong>Enterprise Access Unlocked!</strong> You now have full access to all 220+ agents and enterprise features for <strong>15 days</strong>.
+        </div>
 
+        <!-- Agents -->
         <div class="agent-showcase" id="agentShowcase"></div>
 
+        <!-- Response Area -->
         <div class="response-card active" id="responseArea">
             <div id="responseContent">
                 <div id="defaultWelcome" style="color:#ddd; padding:10px; text-align:center; line-height:2;">
@@ -179,6 +183,7 @@
             </div>
         </div>
 
+        <!-- Input -->
         <div class="input-card">
             <textarea class="query-input" id="queryInput" placeholder="Ask Alpha anything… in any language. Upload documents, record voice, or enable web search."></textarea>
             <div class="input-tools">
@@ -194,6 +199,7 @@
             <div class="status-text" id="inputStatus"></div>
         </div>
 
+        <!-- Output Tools -->
         <div class="output-tools">
             <button class="tool-btn" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
             <button class="tool-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
@@ -203,6 +209,7 @@
             <button class="tool-btn" onclick="clearResponse()"><i class="fas fa-trash"></i> Clear</button>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
             <div class="footer-links">
                 <a onclick="openModal('termsModal')">Terms of Use</a>
@@ -213,12 +220,522 @@
             </div>
             <div class="copyright">© 2026 LexSarthi Technology | Powered by THE ADVOCACY - A LAW FIRM</div>
         </div>
+
     </div>
 
-    <!-- Modals and JavaScript – same as the previous answer, with the premium logic -->
-    <!-- I'll reuse the exact JS from the previous answer, which includes checkPremiumStatus, renderAgents, payment handler, etc. -->
-    <!-- To avoid duplication, I'll just summarise that the JS is the same as the previous "final" answer, but with the bug fixes. -->
-    <!-- The user already has that JS; I'll provide it if needed, but for brevity, I'll refer to the previous answer's JS. -->
+    <!-- ===== MODALS ===== -->
+
+    <!-- Agent Detail -->
+    <div class="modal-overlay" id="agentDetailModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('agentDetailModal')">&times;</button>
+            <h3 id="detailAgentName"></h3>
+            <p><strong>Category:</strong> <span id="detailAgentCategory"></span></p>
+            <p style="margin-top:12px;"><strong>Expert Prompt:</strong></p>
+            <p id="detailAgentPrompt" style="color:#ccc; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></p>
+        </div>
+    </div>
+
+    <!-- Login -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+            <h3>🔐 Login / Register</h3>
+            <input id="login-email" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" style="width:100%;padding:8px;margin-bottom:8px;background:#222;border:1px solid #444;color:#fff;border-radius:4px;">
+            <input id="login-password" type="password" placeholder="Password" value="Password123!" style="width:100%;padding:8px;margin-bottom:12px;background:#222;border:1px solid #444;color:#fff;border-radius:4px;">
+            <button class="btn btn-gold" onclick="handleLogin()" style="width:100%;">Login</button>
+            <button class="btn btn-outline" onclick="handleRegister()" style="width:100%;margin-top:8px;">Create Account</button>
+            <div id="login-status" class="status-text" style="margin-top:8px;"></div>
+        </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content" style="text-align:center;">
+            <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
+            <h3>💳 ₹2 Alpha Enterprise Trial — 15 Days</h3>
+            <div style="font-size:2.5rem;font-weight:900;color:var(--gold);margin:16px 0;">₹2</div>
+            <p>Unlock full 220‑agent suite, zero‑retention, multilingual, and all enterprise features for <strong>15 days</strong>.</p>
+            <button class="btn btn-gold" onclick="processPayment()" style="margin-top:16px;width:100%;">Pay ₹2 Now</button>
+            <div id="payment-status" class="status-text" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- Terms, Privacy, About, History (brief) -->
+    <div class="modal-overlay" id="termsModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
+            <h3>📜 Terms of Use</h3>
+            <p><strong>1.</strong> Acceptance of Terms</p>
+            <p><strong>2.</strong> AI‑Generated Content – for informational purposes only.</p>
+            <p><strong>3.</strong> User Responsibility – you are responsible for your use.</p>
+            <p><strong>4.</strong> Privacy – data not stored beyond 24h.</p>
+            <p><strong>5.</strong> Payments – ₹2 trial grants 15‑day access.</p>
+            <p><strong>6.</strong> Governing Law – India.</p>
+        </div>
+    </div>
+    <div class="modal-overlay" id="privacyModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
+            <h3>🔒 Privacy Policy</h3>
+            <p>Zero Retention – all data auto‑deleted within 24 hours.</p>
+            <p>We collect only email/username for auth; payments handled by Razorpay.</p>
+            <p>Secure HTTPS, no training on your data.</p>
+        </div>
+    </div>
+    <div class="modal-overlay" id="aboutModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
+            <h3>🔱 About LexSarthi Alpha</h3>
+            <p>India's first AI‑native Universal OS – 220 agents, 10 verifiers, zero‑retention.</p>
+        </div>
+    </div>
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('historyModal')">&times;</button>
+            <h3>📜 Query History</h3>
+            <div id="historyContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        // ===== CONFIG =====
+        const API_BASE = 'https://upamnyu12-lex.hf.space';
+        let JWT_TOKEN = localStorage.getItem("lex_token") || null;
+        let uploadedFile = null;
+        let mediaRecorder = null, audioChunks = [], isRecording = false;
+        let queryHistory = JSON.parse(localStorage.getItem("lex_history") || "[]");
+        let currentResponseText = '';
+        let allAgents = [];
+        let isPremium = false;
+
+        // ===== AGENTS (sample 10) – fallback =====
+        const sampleAgents = [
+            { id: "agent_201", name: "Equity Research Analyst", category: "Quantitative Finance", icon: "fa-chart-line",
+                desc: "Deep fundamental analysis & valuation",
+                prompt: "You are a senior equity research analyst." },
+            { id: "agent_202", name: "Macro Strategy Forecaster", category: "Quantitative Finance", icon: "fa-globe",
+                desc: "Rates, FX, geopolitical forecasts",
+                prompt: "You are a macro strategist." },
+            { id: "agent_203", name: "Derivatives & Volatility Expert", category: "Quantitative Finance",
+                icon: "fa-chart-bar", desc: "Options, futures, arbitrage",
+                prompt: "You are a derivatives trader." },
+            { id: "agent_204", name: "Portfolio Optimisation Specialist", category: "Quantitative Finance",
+                icon: "fa-balance-scale", desc: "Modern Portfolio Theory & risk parity",
+                prompt: "You are a quantitative portfolio manager." },
+            { id: "agent_205", name: "Algorithmic Trading Strategist", category: "Quantitative Finance", icon: "fa-robot",
+                desc: "Backtest & execution algorithms",
+                prompt: "You design algorithmic trading strategies." },
+            { id: "agent_206", name: "Risk & Compliance Analyst", category: "Quantitative Finance", icon: "fa-shield-alt",
+                desc: "SEBI, SEC, AI Act aligned",
+                prompt: "You are a risk officer." },
+            { id: "agent_207", name: "Alternative Data Analyst", category: "Quantitative Finance", icon: "fa-database",
+                desc: "Satellite, sentiment, cards",
+                prompt: "You specialise in alternative data." },
+            { id: "agent_208", name: "ESG & Impact Investing", category: "Quantitative Finance", icon: "fa-leaf",
+                desc: "Ratings, regulatory alignment",
+                prompt: "You evaluate ESG factors." },
+            { id: "agent_209", name: "Crypto & Digital Assets", category: "Quantitative Finance", icon: "fa-coins",
+                desc: "Tokenomics, on‑chain analysis",
+                prompt: "You analyse blockchain and crypto." },
+            { id: "agent_210", name: "Private Equity / VC Analyst", category: "Quantitative Finance", icon: "fa-building",
+                desc: "LBO models, unicorn evaluation",
+                prompt: "You evaluate PE/VC deals." }
+        ];
+
+        // ===== RENDER AGENTS =====
+        function renderAgents(agentsList) {
+            const container = document.getElementById('agentShowcase');
+            if (!container) return;
+            container.innerHTML = '';
+            const list = agentsList || [];
+            if (list.length === 0) {
+                container.innerHTML = '<p style="color:#555; text-align:center;">No agents available.</p>';
+                return;
+            }
+            list.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = 'agent-card';
+                card.innerHTML = `
+                        <i class="fas ${agent.icon || 'fa-robot'}"></i>
+                        <div class="agent-title">${agent.name}</div>
+                        <div class="agent-desc">${agent.desc || agent.category || 'Expert Agent'}</div>
+                    `;
+                card.addEventListener('click', () => showAgentDetail(agent));
+                container.appendChild(card);
+            });
+        }
+
+        function showAgentDetail(agent) {
+            document.getElementById('detailAgentName').textContent = agent.name;
+            document.getElementById('detailAgentCategory').textContent = agent.category || 'General';
+            document.getElementById('detailAgentPrompt').textContent = agent.prompt || agent.expert_prompt || 'No prompt available.';
+            openModal('agentDetailModal');
+        }
+
+        // ===== FETCH ALL AGENTS =====
+        async function fetchAllAgents() {
+            try {
+                const res = await fetch(`${API_BASE}/agents`, {
+                    headers: JWT_TOKEN ? { 'Authorization': `Bearer ${JWT_TOKEN}` } : {}
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    allAgents = data.agents || [];
+                    allAgents = allAgents.map(a => ({
+                        ...a,
+                        icon: a.icon || 'fa-robot',
+                        desc: a.desc || a.category || 'Expert Agent'
+                    }));
+                } else {
+                    allAgents = [];
+                }
+            } catch (e) {
+                allAgents = [];
+            }
+            updateAgentDisplay();
+        }
+
+        // ===== UPDATE AGENT DISPLAY BASED ON PREMIUM =====
+        function updateAgentDisplay() {
+            if (isPremium && allAgents.length > 0) {
+                renderAgents(allAgents);
+                document.getElementById('premiumMessage').style.display = 'block';
+            } else {
+                renderAgents(sampleAgents);
+                document.getElementById('premiumMessage').style.display = 'none';
+            }
+            const badge = document.getElementById('premiumBadge');
+            if (isPremium) {
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // ===== CHECK PREMIUM STATUS =====
+        async function checkPremiumStatus() {
+            if (!JWT_TOKEN) {
+                isPremium = false;
+                updateAgentDisplay();
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    isPremium = data.is_premium || false;
+                } else {
+                    isPremium = false;
+                }
+            } catch (e) {
+                isPremium = false;
+            }
+            updateAgentDisplay();
+            if (isPremium) {
+                fetchAllAgents();
+            }
+        }
+
+        // ===== SETTINGS =====
+        function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+
+        function saveLanguage(lang) { localStorage.setItem('alpha_lang', lang);
+            alert('Language preference saved.'); }
+
+        // ===== MODALS =====
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+
+        function showLogin() { openModal('loginModal'); }
+
+        function showPayment() {
+            if (!JWT_TOKEN) { alert('Please login first.');
+                showLogin(); return; }
+            openModal('paymentModal');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('active');
+        });
+
+        // ===== AUTH =====
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value || 'counsel@advocacyalawfrim.in';
+            const password = document.getElementById('login-password').value || 'Password123!';
+            const status = document.getElementById('login-status');
+            status.textContent = 'Logging in...';
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    JWT_TOKEN = data.access_token;
+                    localStorage.setItem('lex_token', JWT_TOKEN);
+                    status.textContent = '✅ Success!';
+                    closeModal('loginModal');
+                    checkPremiumStatus();
+                } else {
+                    status.textContent = '❌ ' + (data.detail || 'Login failed');
+                }
+            } catch (e) {
+                status.textContent = '❌ Network error. Please try again.';
+                console.error(e);
+            }
+        }
+
+        async function handleRegister() {
+            const email = document.getElementById('login-email').value || 'counsel@advocacyalawfrim.in';
+            const password = document.getElementById('login-password').value || 'Password123!';
+            const status = document.getElementById('login-status');
+            status.textContent = 'Registering...';
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `username=${encodeURIComponent(email.split('@')[0])}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&full_name=User`
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    status.textContent = '✅ Registered. Please login.';
+                } else {
+                    status.textContent = '❌ ' + (data.detail || 'Registration failed');
+                }
+            } catch (e) {
+                status.textContent = '❌ Network error.';
+                console.error(e);
+            }
+        }
+
+        // ===== FILE UPLOAD & VOICE (unchanged) =====
+        function handleFileUpload(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+            uploadedFile = file;
+            const preview = document.getElementById('filePreview');
+            document.getElementById('filePreviewText').textContent = `📎 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+            preview.classList.add('show');
+        }
+
+        function clearFilePreview() {
+            uploadedFile = null;
+            document.getElementById('filePreview').classList.remove('show');
+            document.getElementById('pdfUpload').value = '';
+            document.getElementById('imageUpload').value = '';
+        }
+
+        async function toggleVoice() {
+            const btn = document.getElementById('voiceBtn');
+            if (isRecording) {
+                if (mediaRecorder) { mediaRecorder.stop();
+                    mediaRecorder = null; }
+                isRecording = false;
+                btn.classList.remove('recording');
+                btn.innerHTML = '<i class="fas fa-microphone"></i> Voice';
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    uploadedFile = new File([blob], 'recording.webm', { type: 'audio/webm' });
+                    document.getElementById('filePreviewText').textContent =
+                    `🎤 Voice (${(blob.size/1024).toFixed(1)} KB)`;
+                    document.getElementById('filePreview').classList.add('show');
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                btn.classList.add('recording');
+                btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+            } catch (e) {
+                alert('Microphone access denied.');
+            }
+        }
+
+        // ===== SEND QUERY =====
+        async function sendQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query && !uploadedFile) {
+                document.getElementById('inputStatus').textContent = '⚠️ Enter a query or upload a file.';
+                return;
+            }
+            document.getElementById('inputStatus').textContent = 'Alpha processing...';
+            const formData = new FormData();
+            formData.append('query', query || 'Analyze uploaded document');
+            if (uploadedFile) formData.append('files', uploadedFile);
+            formData.append('search_web', document.getElementById('webSearchToggle').checked);
+            const langPref = localStorage.getItem('alpha_lang');
+            if (langPref && langPref !== 'auto') formData.append('lang', langPref);
+
+            try {
+                const res = await fetch(`${API_BASE}/ask`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok) {
+                    currentResponseText = data.response;
+                    document.getElementById('responseContent').innerHTML = data.response.replace(/\n/g, '<br>');
+                    document.getElementById('responseArea').classList.add('active');
+                    const welcome = document.getElementById('defaultWelcome');
+                    if (welcome) welcome.style.display = 'none';
+                    document.getElementById('inputStatus').textContent = '✅ Alpha response ready.';
+                    queryHistory.push({ query: query || 'File', response: data.response.substring(0, 200),
+                        timestamp: new Date().toISOString() });
+                    if (queryHistory.length > 50) queryHistory = queryHistory.slice(-50);
+                    localStorage.setItem('lex_history', JSON.stringify(queryHistory));
+                } else {
+                    document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Error');
+                }
+            } catch (e) {
+                document.getElementById('inputStatus').textContent = '❌ Network error. Please ensure you are connected.';
+                console.error(e);
+            }
+            clearFilePreview();
+            document.getElementById('queryInput').value = '';
+        }
+
+        // ===== OUTPUT TOOLS (unchanged) =====
+        function copyResponse() {
+            if (!currentResponseText) { alert('Nothing to copy.'); return; }
+            navigator.clipboard.writeText(currentResponseText).then(() => alert('Copied!'));
+        }
+
+        function downloadTXT() {
+            if (!currentResponseText) { alert('Nothing to download.'); return; }
+            const blob = new Blob([currentResponseText], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'lexsarthi_alpha_response.txt';
+            a.click();
+        }
+
+        function downloadPDF() {
+            if (!currentResponseText) { alert('Nothing to download.'); return; }
+            const el = document.createElement('div');
+            el.innerHTML =
+                `<div style="font-family:Georgia;padding:40px;white-space:pre-wrap;">${currentResponseText.replace(/\n/g,'<br>')}</div>`;
+            html2pdf().from(el).save(`LexSarthiAlpha_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+
+        function printResponse() {
+            if (!currentResponseText) { alert('Nothing to print.'); return; }
+            const w = window.open('', '_blank');
+            w.document.write(
+                `<pre style="white-space:pre-wrap;font-family:sans-serif;padding:20px;">${currentResponseText}</pre>`);
+            w.print();
+        }
+
+        function shareResponse() {
+            if (!currentResponseText) { alert('Nothing to share.'); return; }
+            if (navigator.share) navigator.share({ text: currentResponseText.substring(0, 500) });
+            else copyResponse();
+        }
+
+        function clearResponse() {
+            document.getElementById('responseArea').classList.remove('active');
+            document.getElementById('responseContent').innerHTML = '';
+            const welcome = document.getElementById('defaultWelcome');
+            if (welcome) welcome.style.display = 'block';
+            document.getElementById('responseArea').classList.add('active');
+            currentResponseText = '';
+        }
+
+        // ===== PAYMENT (with 15-day message) =====
+        async function processPayment() {
+            if (!JWT_TOKEN) {
+                alert('Please login first.');
+                showLogin();
+                return;
+            }
+            const status = document.getElementById('payment-status');
+            status.textContent = 'Creating order...';
+            try {
+                const res = await fetch(`${API_BASE}/payment/create-order`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
+                });
+                if (res.status === 401) {
+                    alert('Your session has expired. Please login again.');
+                    localStorage.removeItem('lex_token');
+                    JWT_TOKEN = null;
+                    showLogin();
+                    return;
+                }
+                const data = await res.json();
+                if (!res.ok || !data.razorpay_key) throw new Error('Order failed');
+                const options = {
+                    key: data.razorpay_key,
+                    amount: data.amount * 100,
+                    currency: data.currency,
+                    name: 'LexSarthi Alpha',
+                    description: '15 Days Enterprise Trial',
+                    order_id: data.razorpay_order_id,
+                    handler: async function(response) {
+                        const form = new FormData();
+                        form.append('razorpay_order_id', response.razorpay_order_id);
+                        form.append('razorpay_payment_id', response.razorpay_payment_id);
+                        form.append('razorpay_signature', response.razorpay_signature);
+                        const vRes = await fetch(`${API_BASE}/payment/verify`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${JWT_TOKEN}` },
+                            body: form
+                        });
+                        if (vRes.ok) {
+                            status.textContent = '✅ Payment successful! 15 days of Alpha unlocked.';
+                            // Reload premium status and agents
+                            await checkPremiumStatus();
+                            document.getElementById('premiumMessage').style.display = 'block';
+                            document.getElementById('premiumMessage').innerHTML =
+                                '⭐ <strong>Enterprise Access Unlocked!</strong> You now have full access to all 220+ agents and enterprise features for <strong>15 days</strong>.';
+                            // Close payment modal after 2 seconds
+                            setTimeout(() => closeModal('paymentModal'), 2000);
+                        } else {
+                            status.textContent = '❌ Verification failed.';
+                        }
+                    },
+                    theme: { color: '#d4a853' }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (e) {
+                status.textContent = '❌ ' + e.message;
+            }
+        }
+
+        // ===== HISTORY =====
+        function toggleHistory() {
+            const container = document.getElementById('historyContent');
+            if (queryHistory.length === 0) {
+                container.innerHTML = '<p>No history yet.</p>';
+            } else {
+                container.innerHTML = queryHistory.slice().reverse().map(item =>
+                    `<div style="margin-bottom:6px;"><strong>${item.query}</strong><br><small>${new Date(item.timestamp).toLocaleString()}</small></div>`
+                ).join('');
+            }
+            openModal('historyModal');
+        }
+
+        document.getElementById('queryInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault();
+                sendQuery(); }
+        });
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', function() {
+            checkPremiumStatus();
+            document.getElementById('responseArea').classList.add('active');
+            const saved = localStorage.getItem('alpha_lang');
+            if (saved) document.getElementById('langSelect').value = saved;
+        });
+    </script>
 
 </body>
 </html>
