@@ -20,7 +20,8 @@
         .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background:radial-gradient(ellipse at center, #0a0a2a 0%, #000000 100%); }
         .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--duration) ease-in-out infinite alternate; }
         @keyframes twinkle { 0%{ opacity:0.2; transform:scale(1); } 100%{ opacity:1; transform:scale(1.5); } }
-        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:220px; margin:20px 0 10px; perspective:1000px; }
+
+        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:220px; margin:10px 0 0; perspective:1000px; }
         .om-3d { width:140px; height:140px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 40px rgba(212,175,55,0.6)); }
         @keyframes rotateOm { 0%{ transform:rotateY(0deg) rotateX(10deg); } 50%{ transform:rotateY(180deg) rotateX(20deg); } 100%{ transform:rotateY(360deg) rotateX(10deg); } }
         .om-3d .om-face { position:absolute; width:140px; height:140px; display:flex; align-items:center; justify-content:center; font-size:100px; font-weight:900; color:var(--gold); backface-visibility:hidden; text-shadow:0 0 30px rgba(212,175,55,0.5); font-family:'Times New Roman',serif; background:rgba(10,10,10,0.3); border-radius:20px; border:1px solid rgba(212,175,55,0.2); }
@@ -33,14 +34,17 @@
         .wisdom-tagline { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); font-size:0.9rem; color:var(--gold); letter-spacing:4px; text-transform:uppercase; opacity:0.8; white-space:nowrap; text-shadow:0 0 20px rgba(212,175,55,0.3); }
         .diya { display:inline-block; font-size:3rem; animation:glow 2s ease-in-out infinite alternate; line-height:1; }
         @keyframes glow { 0%{ text-shadow:0 0 5px #d4a853,0 0 10px #d4a853,0 0 20px #f0d078; } 100%{ text-shadow:0 0 10px #f4d03f,0 0 20px #f4d03f,0 0 40px #d4a853,0 0 60px #b8960f; } }
+
         .container { position:relative; z-index:1; width:100%; max-width:820px; margin:0 auto; padding:0 16px; display:flex; flex-direction:column; min-height:100vh; }
-        .header { text-align:center; padding:16px 0 12px; border-bottom:1px solid var(--border); margin-bottom:16px; position:relative; }
+
+        .header { text-align:center; padding:12px 0 12px; border-bottom:1px solid var(--border); margin-bottom:12px; position:relative; }
         .brand-name { font-size:2rem; font-weight:900; background:linear-gradient(135deg,#f4d03f,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
         .version-badge { font-size:0.6rem; color:var(--text-muted); background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
         .premium-badge { display:none; background:#d4af37; color:#000; font-size:0.65rem; font-weight:800; padding:2px 12px; border-radius:20px; margin-left:8px; vertical-align:middle; }
         .enterprise-badge { display:none; background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; font-size:0.65rem; font-weight:800; padding:2px 12px; border-radius:20px; margin-left:8px; vertical-align:middle; box-shadow:0 0 20px rgba(212,175,55,0.3); }
-        .tagline { font-size:0.85rem; color:#aaa; margin:6px 0 2px; }
+        .tagline { font-size:0.85rem; color:#aaa; margin:4px 0 2px; }
         .header-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:8px; }
+
         .btn { padding:7px 16px; border-radius:40px; font-weight:600; font-size:0.7rem; cursor:pointer; transition:all 0.3s; border:none; display:inline-flex; align-items:center; gap:5px; text-decoration:none; }
         .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.15); color:#ccc; }
         .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
@@ -49,6 +53,7 @@
         .btn-enterprise { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; font-weight:700; box-shadow:0 0 20px rgba(124,58,237,0.3); }
         .btn-enterprise:hover { transform:translateY(-2px); box-shadow:0 0 30px rgba(124,58,237,0.5); }
         .btn-sm { padding:4px 12px; font-size:0.65rem; }
+
         .settings-btn { background:none; border:none; color:#aaa; font-size:1.1rem; cursor:pointer; transition:0.3s; padding:4px 8px; border-radius:4px; }
         .settings-btn:hover { color:var(--gold); background:var(--gold-dim); }
         .settings-panel { display:none; background:#1a1a1a; border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin:10px auto 0; max-width:450px; text-align:left; box-shadow:0 10px 30px rgba(0,0,0,0.6); }
@@ -60,6 +65,7 @@
         .settings-panel .settings-links a { color:var(--gold); cursor:pointer; font-size:0.75rem; text-decoration:underline; }
         .settings-panel .settings-links a:hover { color:#fff; }
         .settings-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
+
         .agent-showcase { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:8px; margin:12px 0 16px; }
         .agent-card { background:rgba(20,20,20,0.6); border:1px solid rgba(212,175,55,0.1); border-radius:12px; padding:12px 10px; text-align:center; font-size:0.65rem; transition:0.3s; cursor:pointer; position:relative; }
         .agent-card:hover { border-color:var(--gold); background:rgba(212,175,55,0.06); transform:translateY(-2px); }
@@ -70,12 +76,17 @@
         .agent-card .agent-edit-btn { position:absolute; bottom:4px; right:4px; background:none; border:none; color:var(--text-muted); font-size:0.6rem; cursor:pointer; opacity:0; transition:0.3s; }
         .agent-card:hover .agent-edit-btn { opacity:1; }
         .agent-card .agent-edit-btn:hover { color:var(--gold); }
+
         .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.08); border-radius:16px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px); box-shadow:0 10px 40px rgba(0,0,0,0.4); }
         .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.95rem; font-family:var(--font); resize:vertical; min-height:60px; outline:none; margin-bottom:12px; line-height:1.6; }
         .query-input::placeholder { color:#555; }
         .input-tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
         .tool-btn { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#bbb; padding:6px 14px; border-radius:30px; font-size:0.7rem; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; gap:4px; }
         .tool-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+        .tool-btn.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+        .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); border-radius:30px; padding:4px 12px 4px 8px; font-size:0.65rem; cursor:pointer; transition:0.3s; }
+        .web-toggle-label:hover { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3); }
+        .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:4px; width:14px; height:14px; cursor:pointer; }
         .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:8px 20px; border-radius:30px; font-weight:700; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; box-shadow:0 0 20px rgba(212,175,55,0.3); }
         .send-btn:hover { transform:scale(1.05); box-shadow:0 0 35px rgba(212,175,55,0.5); }
         .response-card { background:rgba(20,20,20,0.7); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:16px; margin-bottom:14px; display:none; white-space:pre-wrap; font-size:0.9rem; line-height:1.7; max-height:400px; overflow-y:auto; color:#ddd; backdrop-filter:blur(10px); }
@@ -88,6 +99,8 @@
         .file-preview .remove { cursor:pointer; color:#aaa; }
         .file-preview .remove:hover { color:#e74c3c; }
         .status-text { font-size:0.7rem; margin-top:6px; color:var(--text-muted); }
+        .web-search-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.2); color:#34d399; padding:2px 10px; border-radius:20px; font-size:0.6rem; }
+
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(12px); z-index:999; display:none; align-items:center; justify-content:center; padding:16px; }
         .modal-overlay.active { display:flex; }
         .modal-content { background:#1a1a1a; border:1px solid rgba(212,175,55,0.1); border-radius:20px; padding:24px; max-width:650px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,0.8); }
@@ -96,25 +109,29 @@
         .modal-content .close-btn:hover { color:#fff; }
         .modal-content p, .modal-content li { color:#ccc; line-height:1.6; margin-bottom:6px; }
         .modal-content ul { padding-left:20px; }
-        .modal-content a { color:var(--gold); text-decoration:underline; }
+        .modal-content a { color:var(--gold); text-decoration:underline; cursor:pointer; }
+        .modal-content a:hover { color:#fff; }
         .modal-content input, .modal-content textarea, .modal-content select { background:#222; border:1px solid #444; color:#fff; border-radius:6px; padding:8px 12px; width:100%; font-size:0.85rem; margin-bottom:8px; }
         .modal-content textarea { min-height:80px; resize:vertical; }
         .modal-content .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
+
         .footer { margin-top:auto; padding:16px 0 12px; border-top:1px solid var(--border); text-align:center; font-size:0.7rem; color:#777; }
         .footer-links { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-bottom:8px; }
         .footer-links a { color:#aaa; cursor:pointer; transition:color 0.3s; text-decoration:none; font-size:0.7rem; }
         .footer-links a:hover { color:var(--gold); }
         .footer .soc2-badge { display:inline-block; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#34d399; padding:2px 12px; border-radius:12px; font-size:0.6rem; margin-top:4px; }
         .copyright { margin-top:6px; font-size:0.65rem; }
+
         .premium-unlock-message { background:rgba(212,175,55,0.12); border:1px solid var(--gold); border-radius:10px; padding:12px; margin:8px 0; text-align:center; color:var(--gold); display:none; }
         .premium-unlock-message strong { color:#fff; }
-        .collab-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; margin:4px 0 8px; }
-        .collab-bar input { background:#222; border:1px solid #444; color:#fff; border-radius:6px; padding:4px 12px; font-size:0.75rem; flex:1; min-width:150px; }
-        .analytics-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin:12px 0; }
-        .analytics-card { background:rgba(20,20,20,0.6); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
-        .analytics-card .number { font-size:1.6rem; font-weight:800; color:var(--gold); }
-        .analytics-card .label { font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+
+        .benefits-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+        .benefit-card { background:rgba(20,20,20,0.4); border:1px solid rgba(16,185,129,0.1); border-radius:8px; padding:10px; text-align:center; }
+        .benefit-card i { color:#34d399; font-size:1.2rem; margin-bottom:4px; }
+        .benefit-card .benefit-title { color:#fff; font-size:0.75rem; font-weight:600; }
+        .benefit-card .benefit-desc { color:#999; font-size:0.6rem; }
         @media (max-width:480px) {
+            .benefits-grid { grid-template-columns:1fr; }
             .brand-name { font-size:1.3rem; }
             .diya { font-size:2.2rem; }
             .om-wrapper { height:160px; }
@@ -133,9 +150,70 @@
             .ring2 { width:180px; height:180px; top:-40px; left:-40px; }
             .ring3 { width:220px; height:220px; top:-60px; left:-60px; }
         }
+        @media (max-width:600px) {
+            .input-tools .tool-btn { font-size:0.6rem; padding:4px 10px; }
+            .send-btn { font-size:0.7rem; padding:6px 14px; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- ============================================================= -->
+    <!--  LEGAL NOTICE – IN CODE ONLY (NOT DISPLAYED ON WEBSITE)       -->
+    <!--  Full legal terms for compliance, hidden from UI.             -->
+    <!-- ============================================================= -->
+    <!--
+    ═══════════════════════════════════════════════════════════════════════
+    LEXSARTHI ALPHA v5.0 – LEGAL NOTICE (for compliance)
+
+    1.  AI‑Generated Content Disclaimer
+        LexSarthi is an AI‑assisted legal research and drafting tool.
+        All responses are generated by artificial intelligence and are
+        provided for informational purposes only. They do not constitute
+        legal advice, and should not be relied upon as such.
+
+    2.  No Attorney‑Client Relationship
+        Use of LexSarthi does not create an attorney‑client relationship
+        between you and THE ADVOCACY – A LAW FIRM or any of its
+        representatives.
+
+    3.  User Responsibility
+        You are solely responsible for verifying the accuracy, completeness,
+        and applicability of any information provided by LexSarthi.
+        Always consult a qualified legal professional before making any
+        legal decisions.
+
+    4.  Zero Retention Policy
+        All queries, responses, and uploaded files are automatically
+        deleted from our systems within 24 hours. We do not retain any
+        user data for training or any other purpose.
+
+    5.  Data Security
+        All data transmitted to LexSarthi is encrypted using industry‑
+        standard TLS. Our infrastructure is hosted on secure cloud
+        providers with SOC2 compliance in progress.
+
+    6.  Third‑Party Services
+        LexSarthi may integrate with third‑party services (e.g., Razorpay
+        for payments, web search engines). These services have their own
+        terms and privacy policies.
+
+    7.  Governing Law
+        These terms shall be governed by and construed in accordance
+        with the laws of India. Any disputes shall be subject to the
+        exclusive jurisdiction of the courts of India.
+
+    8.  Changes to Terms
+        We reserve the right to update these terms at any time. Continued
+        use of LexSarthi constitutes acceptance of the updated terms.
+
+    9.  Contact
+        For any legal or privacy concerns, please contact:
+        counsel@advocacyalawfrim.in
+
+    Last Updated: 26 June 2026
+    ═══════════════════════════════════════════════════════════════════════
+    -->
 
     <!-- STARFIELD -->
     <div class="stars" id="starsContainer"></div>
@@ -224,6 +302,7 @@
                     <a onclick="openModal('privacyModal')">🔒 Privacy</a>
                     <a onclick="openModal('aboutModal')">ℹ️ About</a>
                     <a onclick="openModal('complianceModal')">✅ SOC2</a>
+                    <a onclick="openModal('webSearchModal')">🌐 Web Search</a>
                 </div>
                 <div class="lang-note">⚡ Preferences saved locally</div>
             </div>
@@ -232,14 +311,6 @@
         <!-- Premium Message -->
         <div id="premiumMessage" class="premium-unlock-message">
             ⭐ <strong>Enterprise Access Unlocked!</strong> You now have full access to all 220+ agents and enterprise features <strong>forever</strong>.
-        </div>
-
-        <!-- Collaboration Bar (Optional) -->
-        <div class="collab-bar" id="collabBar">
-            <button class="btn btn-outline btn-sm" onclick="createSession()">🔗 Create Session</button>
-            <input type="text" id="sessionInput" placeholder="Enter session ID to join..." />
-            <button class="btn btn-outline btn-sm" onclick="joinSession()">Join</button>
-            <span id="sessionStatus" style="font-size:0.65rem; color:var(--text-muted);"></span>
         </div>
 
         <!-- AGENT SHOWCASE -->
@@ -276,10 +347,10 @@
                     </p>
                     <p style="color:#aaa; font-size:0.85rem;">
                         <strong style="color:#fff;">How to begin:</strong>
-                        Click <strong style="color:var(--gold);">Login</strong> (use <code style="background:#222; padding:2px 6px; border-radius:4px; color:var(--gold);">counsel</code> / <code style="background:#222; padding:2px 6px; border-radius:4px; color:var(--gold);">Password123!</code> or register) and ask anything – upload documents, use voice, or toggle web search.
+                        Click <strong style="color:var(--gold);">Login</strong> (use <code style="background:#222; padding:2px 6px; border-radius:4px; color:var(--gold);">counsel</code> / <code style="background:#222; padding:2px 6px; border-radius:4px; color:var(--gold);">Password123!</code> or register) and ask anything – upload documents, use voice, or toggle <span class="web-search-badge"><i class="fas fa-globe"></i> Web Search</span>.
                     </p>
                     <p style="color:var(--gold); font-style:italic; margin-top:10px;">🔱 May your journey be blessed with clarity and insight.</p>
-                    <p style="font-size:0.6rem; color:#555; margin-top:6px;">v5.0 – Enterprise Ready · SOC2 In Progress</p>
+                    <p style="font-size:0.6rem; color:#555; margin-top:6px;">v5.0 – Enterprise Ready · SOC2 In Progress · Zero‑Retention</p>
                 </div>
             </div>
         </div>
@@ -291,8 +362,9 @@
                 <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf" hidden onchange="handleFileUpload(this,'pdf')"></label>
                 <button class="tool-btn" id="voiceBtn" onclick="toggleVoice()"><i class="fas fa-microphone"></i> Voice</button>
                 <label class="tool-btn"><i class="fas fa-image"></i> Image<input type="file" id="imageUpload" accept="image/*" hidden onchange="handleFileUpload(this,'image')"></label>
-                <label class="tool-btn" style="display:flex; align-items:center; gap:4px;">
-                    <input type="checkbox" id="webSearchToggle" style="accent-color:var(--gold); margin:0; width:14px; height:14px;"> Web
+                <label class="web-toggle-label">
+                    <input type="checkbox" id="webSearchToggle" checked />
+                    <i class="fas fa-globe"></i> Web
                 </label>
                 <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Send</button>
             </div>
@@ -316,15 +388,16 @@
         <!-- FOOTER -->
         <div class="footer">
             <div class="footer-links">
-                <a onclick="openModal('termsModal')">Terms of Use</a>
-                <a onclick="openModal('privacyModal')">Privacy Policy</a>
-                <a onclick="openModal('aboutModal')">About Alpha</a>
+                <a onclick="openModal('termsModal')">Terms</a>
+                <a onclick="openModal('privacyModal')">Privacy</a>
+                <a onclick="openModal('aboutModal')">About</a>
                 <a onclick="toggleHistory()">History</a>
                 <a onclick="showPayment()">Plans</a>
+                <a onclick="openModal('webSearchModal')">🌐 Web Search</a>
                 <a onclick="openModal('complianceModal')">✅ SOC2</a>
             </div>
             <div class="soc2-badge">🔒 SOC2 In Progress · Privacy First</div>
-            <div class="copyright">© 2026 LexSarthi Technology | Powered by THE ADVOCACY - A LAW FIRM | v5.0</div>
+            <div class="copyright">© 2026 LexSarthi Technology | Powered by THE ADVOCACY – A LAW FIRM | v5.0</div>
         </div>
 
     </div>
@@ -381,24 +454,21 @@
         </div>
     </div>
 
-    <!-- Payment with Plans -->
+    <!-- Payment -->
     <div class="modal-overlay" id="paymentModal">
         <div class="modal-content" style="text-align:center;">
             <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
             <h3>💳 Choose Your Plan</h3>
-            <div id="paymentOptions" style="margin: 12px 0; text-align:left;">
-                <!-- Lifetime option -->
+            <div id="paymentOptions" style="margin:12px 0; text-align:left;">
                 <div id="lifetimeOption" style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); border-radius:8px; padding:12px; margin-bottom:8px; cursor:pointer;" onclick="selectPaymentPlan('lifetime')">
                     <strong>₹2 Lifetime</strong> <span style="font-size:0.7rem; color:#888;">(limited to first 1000 users)</span>
                     <span id="lifetimeCount" style="float:right; font-size:0.7rem; color:#666;"></span>
                 </div>
-                <!-- Premium Monthly -->
                 <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:12px; margin-bottom:8px; cursor:pointer;" onclick="selectPaymentPlan('premium_monthly')">
                     <strong>₹102/month</strong> <span style="font-size:0.7rem; color:#888;">Premium – unlimited queries, custom agents, analytics</span>
                 </div>
-                <!-- Enterprise Monthly -->
                 <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:8px; padding:12px; cursor:pointer;" onclick="selectPaymentPlan('enterprise_monthly')">
-                    <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – all premium + API, priority support, collaboration</span>
+                    <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – all premium + API, priority support</span>
                 </div>
             </div>
             <input type="hidden" id="paymentPlan" value="lifetime" />
@@ -407,20 +477,39 @@
         </div>
     </div>
 
-    <!-- Collaboration Modal -->
-    <div class="modal-overlay" id="collabModal">
+    <!-- Web Search Benefits Modal (no branding) -->
+    <div class="modal-overlay" id="webSearchModal">
         <div class="modal-content">
-            <button class="close-btn" onclick="closeModal('collabModal')">&times;</button>
-            <h3>🤝 Collaboration</h3>
-            <p>Share your session link with others to collaborate in real-time.</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
-                <input id="collabLink" type="text" readonly style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:6px;" />
-                <button class="btn btn-gold btn-sm" onclick="copyCollabLink()">📋 Copy</button>
+            <button class="close-btn" onclick="closeModal('webSearchModal')">&times;</button>
+            <h3>🌐 Web Search – Enhanced Answers</h3>
+            <p style="color:#aaa; margin-bottom:12px;">When enabled, LexSarthi fetches real‑time web results to complement AI‑generated responses.</p>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <div class="benefit-title">🔒 Private & Anonymous</div>
+                    <div class="benefit-desc">No tracking, no profiling – your search activity is not stored or shared.</div>
+                </div>
+                <div class="benefit-card">
+                    <i class="fas fa-ban"></i>
+                    <div class="benefit-title">🚫 Unbiased Results</div>
+                    <div class="benefit-desc">Get diverse perspectives without algorithmic filtering based on your history.</div>
+                </div>
+                <div class="benefit-card">
+                    <i class="fas fa-globe-asia"></i>
+                    <div class="benefit-title">🇮🇳 Indian Context</div>
+                    <div class="benefit-desc">Search respects your locale and returns relevant Indian legal sources.</div>
+                </div>
+                <div class="benefit-card">
+                    <i class="fas fa-bolt"></i>
+                    <div class="benefit-title">⚡ Fast & Free</div>
+                    <div class="benefit-desc">Unlimited web queries included in every plan at no extra cost.</div>
+                </div>
             </div>
-            <div id="collabUsers" style="margin-top:10px; font-size:0.8rem; color:#aaa;"></div>
+            <p style="font-size:0.75rem; color:#666; margin-top:8px; text-align:center;">
+                <i class="fas fa-info-circle"></i> Toggle Web Search in the input bar. Results are combined with AI for enhanced accuracy.
+            </p>
             <div class="modal-actions">
-                <button class="btn btn-outline btn-sm" onclick="closeModal('collabModal')">Close</button>
-                <button class="btn btn-outline btn-sm" onclick="createSession()">🔄 New Session</button>
+                <button class="btn btn-gold btn-sm" onclick="closeModal('webSearchModal')">Close</button>
             </div>
         </div>
     </div>
@@ -431,17 +520,29 @@
             <button class="close-btn" onclick="closeModal('analyticsModal')">&times;</button>
             <h3>📊 Analytics Dashboard</h3>
             <div id="analyticsContent">
-                <div class="analytics-grid" id="analyticsStats">
-                    <div class="analytics-card"><div class="number" id="analyticsTotal">-</div><div class="label">Total Queries</div></div>
-                    <div class="analytics-card"><div class="number" id="analyticsAgents">-</div><div class="label">Agents Used</div></div>
-                    <div class="analytics-card"><div class="number" id="analyticsUsers">-</div><div class="label">Active Users (7d)</div></div>
-                    <div class="analytics-card"><div class="number" id="analyticsModels">-</div><div class="label">Models Used</div></div>
+                <div class="analytics-grid" id="analyticsStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:12px 0;">
+                    <div class="analytics-card" style="background:rgba(20,20,20,0.6); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
+                        <div class="number" id="analyticsTotal" style="font-size:1.6rem; font-weight:800; color:var(--gold);">-</div>
+                        <div class="label" style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Total Queries</div>
+                    </div>
+                    <div class="analytics-card" style="background:rgba(20,20,20,0.6); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
+                        <div class="number" id="analyticsAgents" style="font-size:1.6rem; font-weight:800; color:var(--gold);">-</div>
+                        <div class="label" style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Agents Used</div>
+                    </div>
+                    <div class="analytics-card" style="background:rgba(20,20,20,0.6); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
+                        <div class="number" id="analyticsUsers" style="font-size:1.6rem; font-weight:800; color:var(--gold);">-</div>
+                        <div class="label" style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Active Users (7d)</div>
+                    </div>
+                    <div class="analytics-card" style="background:rgba(20,20,20,0.6); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
+                        <div class="number" id="analyticsModels" style="font-size:1.6rem; font-weight:800; color:var(--gold);">-</div>
+                        <div class="label" style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Models Used</div>
+                    </div>
                 </div>
                 <div id="analyticsDetails" style="font-size:0.8rem; color:#aaa;"></div>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-outline btn-sm" onclick="closeModal('analyticsModal')">Close</button>
-                <button class="btn btn-outline btn-sm" onclick="refreshAnalytics()">🔄 Refresh</button>
+                <button class="btn btn-gold btn-sm" onclick="refreshAnalytics()">🔄 Refresh</button>
             </div>
         </div>
     </div>
@@ -477,8 +578,8 @@
             <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
             <h3>🔱 About LexSarthi Alpha v5.0</h3>
             <p>India's first AI‑native Universal OS – 220 agents, 10 verifiers, zero‑retention.</p>
-            <p><strong>Features:</strong> Agent Customisation · Enterprise Tier · Analytics · API · Model Switching · Collaboration · SOC2</p>
-            <p>Built with ❤️ by THE ADVOCACY - A LAW FIRM.</p>
+            <p><strong>Features:</strong> Agent Customisation · Enterprise Tier · Analytics · API · Model Switching · SOC2</p>
+            <p>Built with ❤️ by THE ADVOCACY – A LAW FIRM.</p>
         </div>
     </div>
     <div class="modal-overlay" id="complianceModal">
@@ -529,7 +630,9 @@
         </div>
     </div>
 
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ============================================================= -->
+    <!--  JAVASCRIPT (unchanged logic)                                 -->
+    <!-- ============================================================= -->
     <script>
         // --- STARS ---
         (function createStars() {
@@ -561,10 +664,9 @@
         let allAgents = [];
         let selectedAgentId = null;
         let feedbackRating = 0;
-        let currentSessionId = localStorage.getItem("lex_session") || null;
         let selectedPlan = 'lifetime';
 
-        // --- SAMPLE AGENTS (fallback) ---
+        // --- SAMPLE AGENTS ---
         const sampleAgents = [
             { id: "agent_201", name: "Equity Research Analyst", category: "Quantitative Finance", icon: "fa-chart-line",
                 desc: "Deep fundamental analysis & valuation", prompt: "You are a senior equity research analyst." },
@@ -830,15 +932,21 @@
         function selectPaymentPlan(plan) {
             selectedPlan = plan;
             document.getElementById('paymentPlan').value = plan;
-            // Highlight selection
-            document.querySelectorAll('#paymentOptions > div').forEach(el => {
+            const options = document.querySelectorAll('#paymentOptions > div');
+            options.forEach(el => {
                 el.style.borderColor = 'rgba(255,255,255,0.1)';
                 el.style.background = 'rgba(255,255,255,0.02)';
             });
-            const el = document.querySelector(`#paymentOptions > div:has(strong:contains('${plan === 'lifetime' ? '₹2 Lifetime' : plan === 'premium_monthly' ? '₹102/month' : '₹1011/month'}')`) || document.querySelector(`#paymentOptions > div:last-child`);
-            if (el) {
-                el.style.borderColor = 'var(--gold)';
-                el.style.background = 'rgba(212,175,55,0.08)';
+            const lifetimeOpt = document.getElementById('lifetimeOption');
+            if (plan === 'lifetime' && lifetimeOpt.style.opacity !== '0.5') {
+                lifetimeOpt.style.borderColor = 'var(--gold)';
+                lifetimeOpt.style.background = 'rgba(212,175,55,0.08)';
+            } else if (plan === 'premium_monthly') {
+                options[1].style.borderColor = 'var(--gold)';
+                options[1].style.background = 'rgba(212,175,55,0.08)';
+            } else if (plan === 'enterprise_monthly') {
+                options[2].style.borderColor = 'var(--gold)';
+                options[2].style.background = 'rgba(212,175,55,0.08)';
             }
         }
 
@@ -868,7 +976,6 @@
             if (!JWT_TOKEN) { alert('Please login first.');
                 showLogin(); return; }
             checkLifetimeAvailability();
-            // Default select lifetime if available
             const lifetimeOption = document.getElementById('lifetimeOption');
             if (lifetimeOption.style.opacity !== '0.5') {
                 selectPaymentPlan('lifetime');
@@ -994,12 +1101,12 @@
             const formData = new FormData();
             formData.append('query', query || 'Analyze uploaded document');
             if (uploadedFile) formData.append('files', uploadedFile);
-            formData.append('search_web', document.getElementById('webSearchToggle').checked);
+            const webSearch = document.getElementById('webSearchToggle').checked;
+            formData.append('search_web', webSearch ? 'yes' : 'off');
             const langPref = localStorage.getItem('alpha_lang');
             if (langPref && langPref !== 'auto') formData.append('lang', langPref);
             const modelPref = localStorage.getItem('alpha_model') || 'Groq';
             formData.append('model', modelPref);
-            if (currentSessionId) formData.append('session_id', currentSessionId);
 
             try {
                 const res = await fetch(`${API_BASE}/ask`, {
@@ -1011,12 +1118,20 @@
                 if (res.ok) {
                     currentResponseText = data.response;
                     currentQueryId = data.query_id || '';
-                    document.getElementById('responseContent').innerHTML = data.response.replace(/\n/g, '<br>');
+                    let responseHtml = data.response.replace(/\n/g, '<br>');
+                    if (data.web_results && data.web_results.length) {
+                        responseHtml += '<br><br><strong>🌐 Web Results:</strong><ul>';
+                        data.web_results.slice(0, 5).forEach(r => {
+                            responseHtml += `<li><a href="${r.url}" target="_blank" style="color:var(--gold);">${r.title}</a> — ${r.snippet}</li>`;
+                        });
+                        responseHtml += '</ul>';
+                    }
+                    document.getElementById('responseContent').innerHTML = responseHtml;
                     document.getElementById('responseArea').classList.add('active');
                     const welcome = document.getElementById('defaultWelcome');
                     if (welcome) welcome.style.display = 'none';
                     document.getElementById('inputStatus').textContent =
-                    `✅ Alpha response ready (${data.model || 'unknown'})`;
+                    `✅ Alpha response ready (${data.model || 'unknown'})${webSearch ? ' · Web search enabled' : ''}`;
                     queryHistory.push({ query: query || 'File', response: data.response.substring(0, 200),
                         timestamp: new Date().toISOString() });
                     if (queryHistory.length > 50) queryHistory = queryHistory.slice(-50);
@@ -1205,65 +1320,13 @@
             } else {
                 container.innerHTML = queryHistory.slice().reverse().map(item =>
                     `<div style="margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:6px;">
-                        <strong>${item.query}</strong><br>
-                        <small style="color:#666;">${new Date(item.timestamp).toLocaleString()}</small>
-                        <div style="font-size:0.8rem;color:#999;max-height:60px;overflow:hidden;">${item.response}</div>
-                    </div>`
+                            <strong>${item.query}</strong><br>
+                            <small style="color:#666;">${new Date(item.timestamp).toLocaleString()}</small>
+                            <div style="font-size:0.8rem;color:#999;max-height:60px;overflow:hidden;">${item.response}</div>
+                        </div>`
                 ).join('');
             }
             openModal('historyModal');
-        }
-
-        // --- COLLABORATION ---
-        async function createSession() {
-            if (!JWT_TOKEN) { alert('Please login first.');
-                showLogin(); return; }
-            try {
-                const res = await fetch(`${API_BASE}/collab/session`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    currentSessionId = data.session_id;
-                    localStorage.setItem('lex_session', currentSessionId);
-                    document.getElementById('sessionStatus').textContent = `✅ Session: ${currentSessionId.slice(0,8)}...`;
-                    document.getElementById('collabLink').value = window.location.href.split('?')[0] + '?session=' +
-                        currentSessionId;
-                    alert('Session created! Share the link.');
-                } else {
-                    alert('Failed to create session.');
-                }
-            } catch (e) { alert('Network error'); }
-        }
-
-        async function joinSession() {
-            const sessionId = document.getElementById('sessionInput').value.trim();
-            if (!sessionId) { alert('Enter a session ID.'); return; }
-            if (!JWT_TOKEN) { alert('Please login first.');
-                showLogin(); return; }
-            try {
-                const res = await fetch(`${API_BASE}/collab/join?session_id=${sessionId}`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
-                });
-                if (res.ok) {
-                    currentSessionId = sessionId;
-                    localStorage.setItem('lex_session', currentSessionId);
-                    document.getElementById('sessionStatus').textContent = `✅ Joined: ${sessionId.slice(0,8)}...`;
-                    alert('Joined session!');
-                } else {
-                    const err = await res.json();
-                    alert('Failed to join: ' + (err.detail || 'Unknown error'));
-                }
-            } catch (e) { alert('Network error'); }
-        }
-
-        function copyCollabLink() {
-            const link = document.getElementById('collabLink');
-            link.select();
-            document.execCommand('copy');
-            alert('Link copied!');
         }
 
         // --- ANALYTICS ---
@@ -1307,24 +1370,6 @@
             }
         }
 
-        // --- SESSION CHECK ON LOAD ---
-        (function checkSession() {
-            const params = new URLSearchParams(window.location.search);
-            const session = params.get('session');
-            if (session) {
-                currentSessionId = session;
-                localStorage.setItem('lex_session', session);
-                document.getElementById('sessionStatus').textContent = `📎 Session: ${session.slice(0,8)}...`;
-                document.getElementById('sessionInput').value = session;
-            } else {
-                const stored = localStorage.getItem('lex_session');
-                if (stored) {
-                    currentSessionId = stored;
-                    document.getElementById('sessionStatus').textContent = `📎 Session: ${stored.slice(0,8)}...`;
-                }
-            }
-        })();
-
         // --- KEYBOARD SHORTCUT ---
         document.getElementById('queryInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault();
@@ -1343,7 +1388,6 @@
                 updateAgentDisplay();
             }
             document.getElementById('responseArea').classList.add('active');
-            // Pre-select lifetime if available
             checkLifetimeAvailability();
         });
     </script>
