@@ -178,7 +178,7 @@ class QueryRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
 
 class PaymentCreate(BaseModel):
-    tier: str  # "premium" or "enterprise"
+    tier: str  # "premium" or "enterprise" or "lifetime"
 
 class ReferralCreate(BaseModel):
     code: str
@@ -799,7 +799,7 @@ async def create_order(
     payment_data: PaymentCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}
+    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}  # ₹2 in paise
     if payment_data.tier not in amount_map:
         raise HTTPException(status_code=400, detail="Invalid tier")
     amount = amount_map[payment_data.tier]
@@ -817,7 +817,7 @@ async def create_order(
             status="created"
         )
     )
-    return {"order_id": order["id"], "amount": amount, "currency": "INR"}
+    return {"order_id": order["id"], "amount": amount, "currency": "INR", "razorpay_key": RAZORPAY_KEY_ID}
 
 @app.post("/verify-payment")
 async def verify_payment(
