@@ -15,18 +15,22 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 from enum import Enum
+import io
+import random
+import string
 
 # ─── Core FastAPI ─────────────────────────────────────────────────────
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, EmailStr, Field
 import uvicorn
 
 # ─── Database ────────────────────────────────────────────────────────
 import asyncpg
 from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey
 from sqlalchemy.sql import func, select, insert, update, delete
 
 # ─── Authentication ─────────────────────────────────────────────────
@@ -47,13 +51,13 @@ import speech_recognition as sr
 
 # ─── Web Search ──────────────────────────────────────────────────────
 import httpx
-from bs4 import BeautifulSoup
+# BeautifulSoup is not actually used, but kept for future HTML parsing
+# from bs4 import BeautifulSoup
 
 # ─── Payments (Razorpay) ──────────────────────────────────────────
 import razorpay
 
 # ─── Agents & Verifiers ─────────────────────────────────────────────
-# (We'll simulate them with a dictionary – you can replace with your actual AI logic)
 from typing import Callable, Awaitable
 
 # ─── Rate Limiting ──────────────────────────────────────────────────
@@ -82,7 +86,7 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # e.g., SerpAPI
 
 # ─── Database Setup ─────────────────────────────────────────────────
-database = Database(DATABASE_URL)
+database = Database(DATABASE_URL, min_size=1, max_size=10)
 metadata = MetaData()
 
 # ─── SQLAlchemy Table Definitions ──────────────────────────────────
@@ -112,8 +116,7 @@ queries = Table(
     Column("user_id", Integer, index=True),
     Column("query", Text),
     Column("response", Text),
-    # model_used removed to fix the error – we'll log it in metadata if needed
-    Column("metadata", JSON, nullable=True),  # store extra info like agent_id, verifier_id
+    Column("metadata", JSON, nullable=True),  # store agent, verifier, etc.
     Column("created_at", DateTime, server_default=func.now()),
     Column("expires_at", DateTime),  # for 24h auto-delete
 )
@@ -130,6 +133,31 @@ payments = Table(
     Column("currency", String(3), server_default="INR"),
     Column("tier", String(20)),
     Column("status", String(20), server_default="created"),  # created, paid, failed
+    Column("created_at", DateTime, server_default=func.now()),
+)
+
+events = Table(
+    "events",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, nullable=True),
+    Column("session_id", String(64)),
+    Column("event_type", String(50)),
+    Column("event_data", JSON, nullable=True),
+    Column("ip_address", String(45), nullable=True),
+    Column("user_agent", String(255), nullable=True),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("expires_at", DateTime, nullable=True),  # optional auto-delete
+)
+
+referrals = Table(
+    "referrals",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("referrer_id", Integer, ForeignKey("users.id")),
+    Column("referee_id", Integer, ForeignKey("users.id"), nullable=True),
+    Column("code", String(20), unique=True),
+    Column("used", Boolean, server_default="false"),
     Column("created_at", DateTime, server_default=func.now()),
 )
 
@@ -151,15 +179,13 @@ class Token(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str
-    context: Optional[Dict[str, Any]] = None  # optional metadata
-
-class QueryResponse(BaseModel):
-    response: str
-    agent_used: Optional[str] = None
-    verifier_used: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
 
 class PaymentCreate(BaseModel):
     tier: str  # "premium" or "enterprise"
+
+class ReferralCreate(BaseModel):
+    code: str
 
 # ─── Password Hashing ──────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -192,12 +218,19 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    # Fetch user from DB
     query = users.select().where(users.c.id == int(user_id))
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
+
+async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    if credentials is None:
+        return None
+    try:
+        return await get_current_user(credentials)
+    except:
+        return None
 
 # ─── Rate Limiter ──────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
@@ -205,14 +238,15 @@ app = FastAPI(title="LexSarthi Alpha v5.0", version="5.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ─── CORS ───────────────────────────────────────────────────────────
+# ─── Middleware ──────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, restrict to your frontend domain
+    allow_origins=["*"],  # restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── Lifespan Events ──────────────────────────────────────────────
 @asynccontextmanager
@@ -220,9 +254,9 @@ async def lifespan(app: FastAPI):
     # Startup
     await database.connect()
     logger.info("Database connected")
-    # Create tables if not exist (optional)
-    # await create_tables()
-    # Start background scheduler for auto-delete
+    # Create tables if needed (idempotent)
+    await create_tables()
+    # Start scheduler
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
     scheduler.start()
@@ -236,8 +270,7 @@ app.router.lifespan_context = lifespan
 
 # ─── Helper Functions ──────────────────────────────────────────────
 async def create_tables():
-    """Create tables if they don't exist (for first run)"""
-    # Using raw SQL for simplicity
+    """Create tables if they don't exist."""
     queries_to_create = [
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -281,16 +314,44 @@ async def create_tables():
             status VARCHAR(20) DEFAULT 'created',
             created_at TIMESTAMP DEFAULT NOW()
         );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS events (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            session_id VARCHAR(64),
+            event_type VARCHAR(50),
+            event_data JSONB,
+            ip_address VARCHAR(45),
+            user_agent VARCHAR(255),
+            created_at TIMESTAMP DEFAULT NOW(),
+            expires_at TIMESTAMP
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS referrals (
+            id SERIAL PRIMARY KEY,
+            referrer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            referee_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            code VARCHAR(20) UNIQUE,
+            used BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
         """
     ]
     for stmt in queries_to_create:
-        await database.execute(stmt)
+        try:
+            await database.execute(stmt)
+        except Exception as e:
+            logger.warning(f"Could not create table: {e}")
 
 async def delete_expired_queries():
-    """Delete queries older than 24 hours (zero retention)"""
     cutoff = datetime.now() - timedelta(hours=24)
     await database.execute(queries.delete().where(queries.c.created_at < cutoff))
-    logger.info(f"Deleted expired queries older than {cutoff}")
+    # Also delete old events (optional)
+    cutoff_events = datetime.now() - timedelta(days=30)
+    await database.execute(events.delete().where(events.c.created_at < cutoff_events))
+    logger.info(f"Deleted expired data older than 24h (queries) and 30d (events)")
 
 async def get_user_by_username(username: str):
     query = users.select().where(users.c.username == username)
@@ -315,13 +376,10 @@ async def create_user(user_data: UserCreate):
     return user_id
 
 async def increment_query_count(user_id: int):
-    """Increment daily query count and reset if needed"""
-    # Get user's last reset
     user = await database.fetch_one(users.select().where(users.c.id == user_id))
     last_reset = user["last_query_reset"]
     now = datetime.now()
     if now.date() > last_reset.date():
-        # Reset count
         await database.execute(
             users.update().where(users.c.id == user_id).values(
                 queries_used_today=1,
@@ -330,43 +388,34 @@ async def increment_query_count(user_id: int):
         )
         return 1
     else:
-        # Increment
         await database.execute(
             users.update().where(users.c.id == user_id).values(
                 queries_used_today=users.c.queries_used_today + 1
             )
         )
-        # return current count after increment
         updated = await database.fetch_one(users.select().where(users.c.id == user_id))
         return updated["queries_used_today"]
 
 async def check_query_limit(user_id: int) -> bool:
-    """Return True if user can make a query, else False"""
     user = await database.fetch_one(users.select().where(users.c.id == user_id))
     if user["tier"] in ("premium", "enterprise", "lifetime"):
         return True
-    # Free tier: 10 queries per day
-    # Reset check
     last_reset = user["last_query_reset"]
     now = datetime.now()
     if now.date() > last_reset.date():
-        # Reset automatically in increment_query_count
-        pass
+        return True  # will be reset on next increment
     used = user["queries_used_today"]
     return used < 10
 
-# ─── Agent System (220 specialized agents) ────────────────────────
-# In real implementation, this would call your LLM or specialized services.
-# For demonstration, we return static responses.
+# ─── Agent System ────────────────────────────────────────────────────
 AGENT_MAP = {
     "contract_review": "Analyzes contracts for risks and compliance.",
     "legal_research": "Finds relevant case laws and statutes.",
     "drafting": "Generates legal documents from templates.",
     "due_diligence": "Checks regulatory and legal compliance.",
     "ip_search": "Searches for patents and trademarks.",
-    # ... add 215 more agents
 }
-# For simplicity, we'll use a default agent that routes based on keywords.
+
 def route_agent(query: str) -> str:
     query_lower = query.lower()
     if "contract" in query_lower or "agreement" in query_lower:
@@ -382,8 +431,6 @@ def route_agent(query: str) -> str:
     return "general"
 
 async def execute_agent(agent_name: str, query: str) -> str:
-    """Simulate agent execution. Replace with actual AI calls."""
-    # For demo, we return a canned response.
     responses = {
         "contract_review": "This contract has potential risks in clause 5 (indemnity) and clause 12 (termination). Consider limiting liability.",
         "legal_research": "Under Section 138 of the Negotiable Instruments Act, the cheque must be presented within 6 months.",
@@ -394,24 +441,29 @@ async def execute_agent(agent_name: str, query: str) -> str:
     }
     return responses.get(agent_name, "I'm processing your request. Please hold on.")
 
-# ─── Verifier System (10 verifiers) ──────────────────────────────
+# ─── Verifier System ──────────────────────────────────────────────
 VERIFIER_MAP = {
     "fact_check": "Verifies factual claims against known databases.",
     "legal_citation": "Checks if cited laws are correct and current.",
     "compliance": "Validates regulatory compliance.",
-    # ... more
 }
 async def verify_response(agent_response: str, context: dict) -> tuple[str, str]:
-    """Run the response through 10 verifiers and return verified response."""
-    # Simulate verification
     return agent_response, "fact_check"
 
 # ─── File Processing ──────────────────────────────────────────────
 async def process_uploaded_file(file: UploadFile) -> str:
-    """Extract text from PDF, DOCX, or image (OCR)."""
     content = await file.read()
-    file_type = puremagic.from_string(content, mime=True)[0]
-    
+    try:
+        file_type = puremagic.from_string(content, mime=True)[0]
+    except:
+        ext = os.path.splitext(file.filename)[1].lower()
+        file_type = {
+            '.pdf': 'application/pdf',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+        }.get(ext, 'application/octet-stream')
     if file_type == "application/pdf":
         pdf = PyPDF2.PdfReader(io.BytesIO(content))
         text = " ".join([page.extract_text() for page in pdf.pages])
@@ -429,7 +481,6 @@ async def process_uploaded_file(file: UploadFile) -> str:
 
 # ─── Voice Transcription ──────────────────────────────────────────
 async def transcribe_audio(audio_bytes: bytes) -> str:
-    """Transcribe speech using Google Speech Recognition (or better)."""
     recognizer = sr.Recognizer()
     with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
         audio = recognizer.record(source)
@@ -441,10 +492,8 @@ async def transcribe_audio(audio_bytes: bytes) -> str:
 
 # ─── Web Search ──────────────────────────────────────────────────
 async def web_search(query: str) -> str:
-    """Perform a web search and return summarized results."""
     if not WEB_SEARCH_API_KEY:
         return "Web search is not configured."
-    # Example using SerpAPI
     async with httpx.AsyncClient() as client:
         url = "https://serpapi.com/search"
         params = {
@@ -455,7 +504,6 @@ async def web_search(query: str) -> str:
         }
         resp = await client.get(url, params=params)
         data = resp.json()
-        # Extract organic results snippets
         organic = data.get("organic_results", [])
         snippets = [r.get("snippet", "") for r in organic[:3]]
         return " ".join(snippets) if snippets else "No results found."
@@ -466,30 +514,11 @@ async def web_search(query: str) -> str:
 async def root():
     return {"message": "LexSarthi Alpha v5.0 – Legal AI OS", "status": "operational"}
 
-@app.post("/register", response_model=Token)
-async def register(user: UserCreate):
-    # Check if user exists
-    if await get_user_by_username(user.username):
-        raise HTTPException(status_code=400, detail="Username already taken")
-    if await get_user_by_email(user.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user_id = await create_user(user)
-    # Generate JWT
-    token = create_access_token({"sub": str(user_id)})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user_id,
-            "username": user.username,
-            "email": user.email,
-            "full_name": user.full_name,
-            "tier": "free"
-        }
-    }
+# ─── Authentication Router ──────────────────────────────────────
+from fastapi import APIRouter
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@app.post("/login", response_model=Token)
+@auth_router.post("/login", response_model=Token)
 async def login(user_login: UserLogin):
     user = await get_user_by_username(user_login.username)
     if not user or not verify_password(user_login.password, user["password_hash"]):
@@ -508,40 +537,66 @@ async def login(user_login: UserLogin):
         }
     }
 
-@app.get("/me")
+@auth_router.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
+app.include_router(auth_router)
+
+# Also keep the old /login and /me for backward compatibility
+@app.post("/login", response_model=Token)
+async def login_old(user_login: UserLogin):
+    return await login(user_login)
+
+@app.get("/me")
+async def get_me_old(current_user: dict = Depends(get_current_user)):
+    return current_user
+
+# ─── Registration ──────────────────────────────────────────────
+@app.post("/register", response_model=Token)
+async def register(user: UserCreate):
+    if await get_user_by_username(user.username):
+        raise HTTPException(status_code=400, detail="Username already taken")
+    if await get_user_by_email(user.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user_id = await create_user(user)
+    token = create_access_token({"sub": str(user_id)})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_id,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "tier": "free"
+        }
+    }
+
+# ─── Lifetime Count ────────────────────────────────────────────
+@app.get("/lifetime-count")
+async def get_lifetime_count():
+    query = "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
+    result = await database.fetch_one(query)
+    count = result["count"] if result else 0
+    return {"count": count, "message": f"{count} out of 1000 lifetime slots filled!"}
+
+# ─── Main Query ────────────────────────────────────────────────
 @app.post("/ask")
-@limiter.limit("30/minute")  # protect against abuse
+@limiter.limit("30/minute")
 async def ask(
     request: Request,
     query_req: QueryRequest,
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
 ):
-    """Main endpoint for querying the AI."""
     user_id = current_user["id"]
-    
-    # Check query limit
     if not await check_query_limit(user_id):
         raise HTTPException(status_code=429, detail="Free limit reached. Upgrade to Premium.")
-    
-    # Increment query count
     await increment_query_count(user_id)
-    
-    # Route to appropriate agent
     agent_name = route_agent(query_req.query)
-    agent_description = AGENT_MAP.get(agent_name, "General assistant")
-    
-    # Execute agent (replace with actual LLM call)
     response_text = await execute_agent(agent_name, query_req.query)
-    
-    # Run verifiers
     verified_text, verifier_name = await verify_response(response_text, query_req.context or {})
-    
-    # Save query to database (WITHOUT model_used to fix error)
-    # We store metadata (agent, verifier) in a JSON column
     metadata = {
         "agent": agent_name,
         "verifier": verifier_name,
@@ -556,14 +611,11 @@ async def ask(
         expires_at=expires_at
     )
     await database.execute(query)
-    
-    # Schedule auto-delete (already handled by scheduler)
-    
     return {
         "response": verified_text,
         "agent_used": agent_name,
         "verifier_used": verifier_name,
-        "query_id": None  # We can return id if needed
+        "query_id": None
     }
 
 # ─── File Upload ──────────────────────────────────────────────────
@@ -572,7 +624,6 @@ async def upload_file(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Upload a document and extract text."""
     try:
         text = await process_uploaded_file(file)
         return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
@@ -585,7 +636,6 @@ async def transcribe_audio_endpoint(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Transcribe an audio file (speech to text)."""
     content = await file.read()
     text = await transcribe_audio(content)
     return {"transcription": text}
@@ -596,11 +646,10 @@ async def search(
     query: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Perform a web search and return snippets."""
     results = await web_search(query)
     return {"results": results}
 
-# ─── Razorpay Payment Endpoints ──────────────────────────────────
+# ─── Razorpay Payment ──────────────────────────────────────────
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 @app.post("/create-order")
@@ -608,8 +657,7 @@ async def create_order(
     payment_data: PaymentCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create a Razorpay order for subscription."""
-    amount_map = {"premium": 10200, "enterprise": 101100}  # in paise
+    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}  # 200 paise = ₹2
     if payment_data.tier not in amount_map:
         raise HTTPException(status_code=400, detail="Invalid tier")
     amount = amount_map[payment_data.tier]
@@ -618,7 +666,6 @@ async def create_order(
         "currency": "INR",
         "payment_capture": 1
     })
-    # Save order in DB
     await database.execute(
         payments.insert().values(
             user_id=current_user["id"],
@@ -637,7 +684,6 @@ async def verify_payment(
     razorpay_signature: str = Form(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Verify payment and upgrade user."""
     params_dict = {
         "razorpay_order_id": razorpay_order_id,
         "razorpay_payment_id": razorpay_payment_id,
@@ -645,7 +691,6 @@ async def verify_payment(
     }
     try:
         client.utility.verify_payment_signature(params_dict)
-        # Update payment status
         await database.execute(
             payments.update().where(payments.c.razorpay_order_id == razorpay_order_id).values(
                 razorpay_payment_id=razorpay_payment_id,
@@ -653,12 +698,10 @@ async def verify_payment(
                 status="paid"
             )
         )
-        # Get tier from payment
         payment = await database.fetch_one(
             payments.select().where(payments.c.razorpay_order_id == razorpay_order_id)
         )
         tier = payment["tier"]
-        # Update user tier
         await database.execute(
             users.update().where(users.c.id == current_user["id"]).values(
                 tier=tier,
@@ -669,7 +712,125 @@ async def verify_payment(
     except:
         raise HTTPException(status_code=400, detail="Payment verification failed")
 
-# ─── Admin / Health ──────────────────────────────────────────────
+# ─── Analytics Tracking ──────────────────────────────────────────
+@app.post("/track")
+async def track_event(
+    request: Request,
+    event_type: str,
+    event_data: Optional[dict] = None,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    session_id = request.headers.get("X-Session-ID") or str(uuid.uuid4())
+    ip = request.client.host
+    user_agent = request.headers.get("user-agent")
+    query = events.insert().values(
+        user_id=current_user["id"] if current_user else None,
+        session_id=session_id,
+        event_type=event_type,
+        event_data=event_data or {},
+        ip_address=ip,
+        user_agent=user_agent,
+        expires_at=datetime.now() + timedelta(days=30)
+    )
+    await database.execute(query)
+    return {"status": "ok"}
+
+# ─── Referral System ─────────────────────────────────────────────
+@app.post("/referral/generate")
+async def generate_referral(
+    current_user: dict = Depends(get_current_user)
+):
+    # Check if user already has a code
+    existing = await database.fetch_one(
+        referrals.select().where(referrals.c.referrer_id == current_user["id"])
+    )
+    if existing:
+        return {"code": existing["code"]}
+    # Generate unique code
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    while True:
+        existing_code = await database.fetch_one(
+            referrals.select().where(referrals.c.code == code)
+        )
+        if not existing_code:
+            break
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    await database.execute(
+        referrals.insert().values(
+            referrer_id=current_user["id"],
+            code=code,
+            used=False
+        )
+    )
+    return {"code": code}
+
+@app.post("/referral/use")
+async def use_referral(
+    referral_data: ReferralCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    # Check if code exists and is unused
+    ref = await database.fetch_one(
+        referrals.select().where(referrals.c.code == referral_data.code)
+    )
+    if not ref:
+        raise HTTPException(status_code=404, detail="Invalid referral code")
+    if ref["used"]:
+        raise HTTPException(status_code=400, detail="Referral code already used")
+    if ref["referrer_id"] == current_user["id"]:
+        raise HTTPException(status_code=400, detail="You cannot use your own referral code")
+    # Mark as used
+    await database.execute(
+        referrals.update().where(referrals.c.id == ref["id"]).values(
+            referee_id=current_user["id"],
+            used=True
+        )
+    )
+    # Reward referrer with +5 extra queries (maybe store in preferences or a separate table)
+    # We'll just increase their quota by adding a bonus in preferences
+    referrer = await database.fetch_one(users.select().where(users.c.id == ref["referrer_id"]))
+    prefs = referrer["preferences"] or {}
+    bonus = prefs.get("bonus_queries", 0) + 5
+    prefs["bonus_queries"] = bonus
+    await database.execute(
+        users.update().where(users.c.id == ref["referrer_id"]).values(preferences=prefs)
+    )
+    # Also give +3 to new user
+    new_prefs = current_user["preferences"] or {}
+    new_bonus = new_prefs.get("bonus_queries", 0) + 3
+    new_prefs["bonus_queries"] = new_bonus
+    await database.execute(
+        users.update().where(users.c.id == current_user["id"]).values(preferences=new_prefs)
+    )
+    return {"status": "success", "message": "Referral applied! You got 3 bonus queries."}
+
+# ─── Admin Stats (protected) ─────────────────────────────────────
+@app.get("/admin/stats")
+async def admin_stats(
+    api_key: str,
+    current_user: dict = Depends(get_current_user)
+):
+    # Only allow if user has tier 'enterprise' or is superadmin (you can add a flag)
+    if current_user["tier"] not in ("enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    # Get counts
+    total_users = await database.fetch_one("SELECT COUNT(*) as count FROM users")
+    total_queries = await database.fetch_one("SELECT COUNT(*) as count FROM queries")
+    dau = await database.fetch_one(
+        "SELECT COUNT(DISTINCT user_id) as dau FROM queries WHERE created_at > NOW() - INTERVAL '1 day'"
+    )
+    paid_users = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM users WHERE tier IN ('premium','enterprise','lifetime')"
+    )
+    return {
+        "total_users": total_users["count"],
+        "total_queries": total_queries["count"],
+        "daily_active_users": dau["dau"] or 0,
+        "paid_users": paid_users["count"],
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ─── Health ──────────────────────────────────────────────────────
 @app.get("/health")
 async def health_check():
     try:
@@ -680,4 +841,4 @@ async def health_check():
 
 # ─── Run ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
