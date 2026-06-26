@@ -22,3 +22,4 @@ asyncpg==0.29.0
 redis==5.0.1
 ddgs>=9.0.0
 python-magic==0.4.27   # <-- added 
+puremagic==1.12
