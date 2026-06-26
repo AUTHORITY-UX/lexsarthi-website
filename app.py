@@ -410,7 +410,7 @@ async def verify_response(agent_response: str, context: dict) -> tuple[str, str]
 async def process_uploaded_file(file: UploadFile) -> str:
     """Extract text from PDF, DOCX, or image (OCR)."""
     content = await file.read()
-    file_type = magic.from_buffer(content, mime=True)
+    file_type = puremagic.from_string(content, mime=True)[0]
     
     if file_type == "application/pdf":
         pdf = PyPDF2.PdfReader(io.BytesIO(content))
