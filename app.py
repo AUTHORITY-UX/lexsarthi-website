@@ -271,6 +271,33 @@ async def migrate_database():
         except Exception as e:
             logger.info(f"Migration skipped (already applied): {e}")
 
+# ─── Ensure Test User ──────────────────────────────────────────────
+async def ensure_test_user():
+    """Create or update the test user 'counsel' with known password."""
+    hashed = hash_password("Password123!")
+    existing = await get_user_by_username("counsel")
+    if existing:
+        # Update password to known hash (in case it was changed)
+        await database.execute(
+            users.update().where(users.c.username == "counsel").values(
+                password_hash=hashed
+            )
+        )
+        logger.info("Updated password for test user 'counsel'.")
+    else:
+        # Insert new user
+        query = users.insert().values(
+            username="counsel",
+            email="counsel@advocacyalawfrim.in",
+            password_hash=hashed,
+            full_name="Counsel User",
+            tier="free",
+            queries_used_today=0,
+            last_query_reset=datetime.now()
+        )
+        await database.execute(query)
+        logger.info("Created test user 'counsel'.")
+
 # ─── Lifespan Events ──────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -281,6 +308,8 @@ async def lifespan(app: FastAPI):
     await migrate_database()
     # Create tables if they don't exist (idempotent)
     await create_tables()
+    # Ensure test user exists
+    await ensure_test_user()
     # Start scheduler
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
@@ -551,8 +580,13 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/login", response_model=Token)
 async def login(user_login: UserLogin):
+    logger.info(f"Login attempt for username: {user_login.username}")
     user = await get_user_by_username(user_login.username)
-    if not user or not verify_password(user_login.password, user["password_hash"]):
+    if not user:
+        logger.warning(f"User {user_login.username} not found")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(user_login.password, user["password_hash"]):
+        logger.warning(f"Password verification failed for {user_login.username}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     # Ensure sub is integer ID as string
     token = create_access_token({"sub": str(user["id"])})
