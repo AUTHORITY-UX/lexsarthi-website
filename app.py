@@ -85,7 +85,7 @@ WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # optional
 database = Database(DATABASE_URL, min_size=1, max_size=10)
 metadata = MetaData()
 
-# ─── SQLAlchemy Table Definitions (for ORM usage) ──────────────────
+# ─── SQLAlchemy Table Definitions ──────────────────────────────────
 users = Table(
     "users",
     metadata,
@@ -255,7 +255,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 async def migrate_database():
     """Add missing columns to existing tables."""
     migrations = [
-        # Users table – add columns if missing
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB;",
@@ -263,7 +263,6 @@ async def migrate_database():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS queries_used_today INTEGER DEFAULT 0;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_query_reset TIMESTAMP DEFAULT NOW();",
-        # Payments table – add tier if missing
         "ALTER TABLE payments ADD COLUMN IF NOT EXISTS tier VARCHAR(20);",
     ]
     for stmt in migrations:
