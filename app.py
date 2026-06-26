@@ -51,7 +51,6 @@ import speech_recognition as sr
 
 # ─── Web Search ──────────────────────────────────────────────────────
 import httpx
-# BeautifulSoup not used; kept for future
 
 # ─── Payments (Razorpay) ──────────────────────────────────────────
 import razorpay
@@ -580,15 +579,22 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/login", response_model=Token)
 async def login(user_login: UserLogin):
-    logger.info(f"Login attempt for username: {user_login.username}")
-    user = await get_user_by_username(user_login.username)
+    logger.info(f"Login attempt with: {user_login.username}")
+    user = None
+    # Check if input looks like an email
+    if '@' in user_login.username:
+        user = await get_user_by_email(user_login.username)
+        if not user:
+            logger.warning(f"Email not found: {user_login.username}")
+    else:
+        user = await get_user_by_username(user_login.username)
+        if not user:
+            logger.warning(f"Username not found: {user_login.username}")
     if not user:
-        logger.warning(f"User {user_login.username} not found")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not verify_password(user_login.password, user["password_hash"]):
-        logger.warning(f"Password verification failed for {user_login.username}")
+        logger.warning(f"Password verification failed for {user['username']}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    # Ensure sub is integer ID as string
     token = create_access_token({"sub": str(user["id"])})
     return {
         "access_token": token,
