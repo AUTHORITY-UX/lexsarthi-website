@@ -6,6 +6,7 @@ cryptography==41.0.7
 python-dotenv==1.0.0
 email-validator==2.1.0
 passlib==1.7.4
+bcrypt==4.0.1
 razorpay==1.4.2
 httpx==0.25.1
 aiofiles==23.2.1
@@ -16,12 +17,12 @@ Pillow==10.1.0
 pytesseract==0.3.10
 pydantic==2.5.0
 typing-extensions==4.8.0
-bcrypt==4.0.1
 databases[asyncpg]==0.8.0
 asyncpg==0.29.0
 redis==5.0.1
 ddgs>=9.0.0
-python-magic==0.4.27   # <-- added 
 puremagic==1.12
-SpeechRecognition==3.10.0   # <-- ADD THIS
+SpeechRecognition==3.10.0
 beautifulsoup4==4.12.2
+slowapi==0.1.9            # <-- NEW
+apscheduler==3.10.4       # <-- NEW
