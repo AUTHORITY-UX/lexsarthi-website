@@ -253,6 +253,7 @@
                 <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
                 <button class="btn btn-gold btn-sm" onclick="showPayment()">💳 Plans</button>
                 <button class="btn btn-enterprise btn-sm" onclick="showPayment('enterprise')">🏢 Enterprise</button>
+                <button class="btn btn-outline btn-sm" onclick="showMyUsage()">📊 My Usage</button>
                 <button id="analyticsBtn" class="btn btn-outline btn-sm" onclick="showAnalytics()" style="display:none;">📊 Analytics</button>
             </div>
 
@@ -477,7 +478,22 @@
         </div>
     </div>
 
-    <!-- Web Search Benefits Modal (no branding) -->
+    <!-- My Usage Modal -->
+    <div class="modal-overlay" id="myUsageModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('myUsageModal')">&times;</button>
+            <h3>📊 My Usage</h3>
+            <div id="myUsageContent">
+                <p>Loading...</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-gold btn-sm" onclick="closeModal('myUsageModal')">Close</button>
+                <button class="btn btn-outline btn-sm" onclick="fetchMyUsage()">🔄 Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Web Search Benefits Modal -->
     <div class="modal-overlay" id="webSearchModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('webSearchModal')">&times;</button>
@@ -514,7 +530,7 @@
         </div>
     </div>
 
-    <!-- Analytics -->
+    <!-- Analytics (Enterprise) -->
     <div class="modal-overlay" id="analyticsModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('analyticsModal')">&times;</button>
@@ -631,7 +647,7 @@
     </div>
 
     <!-- ============================================================= -->
-    <!--  JAVASCRIPT (unchanged logic)                                 -->
+    <!--  JAVASCRIPT                                                   -->
     <!-- ============================================================= -->
     <script>
         // --- STARS ---
@@ -956,7 +972,7 @@
                 const res = await fetch(`${API_BASE}/lifetime-count`);
                 if (res.ok) {
                     const data = await res.json();
-                    const remaining = data.limit - data.count;
+                    const remaining = data.remaining || 0;
                     document.getElementById('lifetimeCount').textContent = `(${remaining > 0 ? remaining + ' left' : 'FULL'})`;
                     if (data.count >= data.limit) {
                         document.getElementById('lifetimeOption').style.opacity = '0.5';
@@ -989,6 +1005,52 @@
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('active');
         });
+
+        // --- MY USAGE ---
+        async function showMyUsage() {
+            if (!JWT_TOKEN) {
+                alert('Please login first.');
+                showLogin();
+                return;
+            }
+            openModal('myUsageModal');
+            await fetchMyUsage();
+        }
+
+        async function fetchMyUsage() {
+            const container = document.getElementById('myUsageContent');
+            container.innerHTML = 'Loading...';
+            try {
+                const res = await fetch(`${API_BASE}/my-usage`, {
+                    headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    let html = `
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
+                            <div style="background:rgba(20,20,20,0.6); padding:12px; border-radius:8px; text-align:center;">
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--gold);">${data.total_queries}</div>
+                                <div style="font-size:0.65rem; color:var(--text-muted);">Total Queries</div>
+                            </div>
+                            <div style="background:rgba(20,20,20,0.6); padding:12px; border-radius:8px; text-align:center;">
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--gold);">${data.queries_today}</div>
+                                <div style="font-size:0.65rem; color:var(--text-muted);">Today</div>
+                            </div>
+                        </div>
+                        <p><strong>Agents Used:</strong> ${data.agents_used.length ? data.agents_used.join(', ') : 'None yet'}</p>
+                        <p style="margin-top:8px;"><strong>Recent Queries:</strong></p>
+                        <ul style="font-size:0.8rem; color:#aaa; max-height:150px; overflow-y:auto;">
+                            ${data.recent_queries.map(q => `<li>${new Date(q.timestamp).toLocaleString()} — ${q.query}</li>`).join('')}
+                        </ul>
+                    `;
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p>Failed to load usage data.</p>';
+                }
+            } catch (e) {
+                container.innerHTML = '<p>Network error.</p>';
+            }
+        }
 
         // --- AUTH ---
         async function handleLogin() {
@@ -1329,7 +1391,7 @@
             openModal('historyModal');
         }
 
-        // --- ANALYTICS ---
+        // --- ANALYTICS (Enterprise) ---
         async function showAnalytics() {
             if (!isEnterprise) { alert('Enterprise tier required for analytics.'); return; }
             openModal('analyticsModal');
@@ -1338,29 +1400,22 @@
 
         async function refreshAnalytics() {
             try {
-                const res = await fetch(`${API_BASE}/analytics`, {
+                const res = await fetch(`${API_BASE}/admin/stats`, {
                     headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
                 });
                 if (res.ok) {
                     const data = await res.json();
                     document.getElementById('analyticsTotal').textContent = data.total_queries || '0';
-                    document.getElementById('analyticsAgents').textContent = data.agent_usage ? data.agent_usage.length : '0';
-                    document.getElementById('analyticsUsers').textContent = data.daily_active_users ? data.daily_active_users
-                        .reduce((s, d) => s + d.users, 0) : '0';
-                    document.getElementById('analyticsModels').textContent = data.model_usage ? data.model_usage.length : '0';
-                    let details = '<p><strong>Popular Queries:</strong></p><ul>';
-                    if (data.popular_queries) {
-                        data.popular_queries.slice(0, 5).forEach(q => {
-                            details += `<li>${q.query} (${q.count})</li>`;
-                        });
-                    }
-                    details += '</ul><p><strong>Agent Usage:</strong></p><ul>';
-                    if (data.agent_usage) {
-                        data.agent_usage.slice(0, 5).forEach(a => {
-                            details += `<li>${a.agent_id || 'unknown'}: ${a.count}</li>`;
-                        });
-                    }
-                    details += '</ul><p><strong>Revenue:</strong><br>Lifetime: ${data.revenue.lifetime_users}<br>Premium Monthly: ${data.revenue.premium_monthly}<br>Enterprise Monthly: ${data.revenue.enterprise_monthly}</p>';
+                    document.getElementById('analyticsAgents').textContent = data.total_queries > 0 ? '•' : '0'; // placeholder
+                    document.getElementById('analyticsUsers').textContent = data.daily_active_users || '0';
+                    document.getElementById('analyticsModels').textContent = data.total_queries > 0 ? '•' : '0';
+                    let details = `
+                        <p><strong>Total Users:</strong> ${data.total_users}</p>
+                        <p><strong>Paid Users:</strong> ${data.paid_users}</p>
+                        <p><strong>Daily Active Users:</strong> ${data.daily_active_users}</p>
+                        <p><strong>Total Queries:</strong> ${data.total_queries}</p>
+                        <p><small>Last updated: ${new Date(data.timestamp).toLocaleString()}</small></p>
+                    `;
                     document.getElementById('analyticsDetails').innerHTML = details;
                 } else {
                     document.getElementById('analyticsContent').innerHTML = '<p>Failed to load analytics.</p>';
