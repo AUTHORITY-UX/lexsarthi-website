@@ -24,3 +24,4 @@ ddgs>=9.0.0
 python-magic==0.4.27   # <-- added 
 puremagic==1.12
 SpeechRecognition==3.10.0   # <-- ADD THIS
+beautifulsoup4==4.12.2
