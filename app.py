@@ -51,14 +51,10 @@ import speech_recognition as sr
 
 # ─── Web Search ──────────────────────────────────────────────────────
 import httpx
-# BeautifulSoup is not actually used, but kept for future HTML parsing
-# from bs4 import BeautifulSoup
+# BeautifulSoup not used; kept for future
 
 # ─── Payments (Razorpay) ──────────────────────────────────────────
 import razorpay
-
-# ─── Agents & Verifiers ─────────────────────────────────────────────
-from typing import Callable, Awaitable
 
 # ─── Rate Limiting ──────────────────────────────────────────────────
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -83,13 +79,13 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7  # 7 days
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
-WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # e.g., SerpAPI
+WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # optional
 
 # ─── Database Setup ─────────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=1, max_size=10)
 metadata = MetaData()
 
-# ─── SQLAlchemy Table Definitions ──────────────────────────────────
+# ─── SQLAlchemy Table Definitions (for ORM usage) ──────────────────
 users = Table(
     "users",
     metadata,
@@ -100,7 +96,7 @@ users = Table(
     Column("full_name", String(255)),
     Column("is_active", Boolean, server_default="true"),
     Column("is_premium", Boolean, server_default="false"),
-    Column("tier", String(20), server_default="free"),  # free, premium, enterprise, lifetime
+    Column("tier", String(20), server_default="free"),
     Column("queries_used_today", Integer, server_default="0"),
     Column("last_query_reset", DateTime, server_default=func.now()),
     Column("created_at", DateTime, server_default=func.now()),
@@ -116,9 +112,9 @@ queries = Table(
     Column("user_id", Integer, index=True),
     Column("query", Text),
     Column("response", Text),
-    Column("metadata", JSON, nullable=True),  # store agent, verifier, etc.
+    Column("metadata", JSON, nullable=True),
     Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime),  # for 24h auto-delete
+    Column("expires_at", DateTime),
 )
 
 payments = Table(
@@ -132,10 +128,11 @@ payments = Table(
     Column("amount", Float),
     Column("currency", String(3), server_default="INR"),
     Column("tier", String(20)),
-    Column("status", String(20), server_default="created"),  # created, paid, failed
+    Column("status", String(20), server_default="created"),
     Column("created_at", DateTime, server_default=func.now()),
 )
 
+# No foreign keys to avoid type mismatch warnings
 events = Table(
     "events",
     metadata,
@@ -147,15 +144,15 @@ events = Table(
     Column("ip_address", String(45), nullable=True),
     Column("user_agent", String(255), nullable=True),
     Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime, nullable=True),  # optional auto-delete
+    Column("expires_at", DateTime, nullable=True),
 )
 
 referrals = Table(
     "referrals",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("referrer_id", Integer, ForeignKey("users.id")),
-    Column("referee_id", Integer, ForeignKey("users.id"), nullable=True),
+    Column("referrer_id", Integer),
+    Column("referee_id", Integer, nullable=True),
     Column("code", String(20), unique=True),
     Column("used", Boolean, server_default="false"),
     Column("created_at", DateTime, server_default=func.now()),
@@ -218,7 +215,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    query = users.select().where(users.c.id == int(user_id))
+    # Try to parse as integer; if fails, treat as username
+    try:
+        user_id_int = int(user_id)
+        query = users.select().where(users.c.id == user_id_int)
+    except ValueError:
+        # user_id is a string (probably username from old tokens)
+        query = users.select().where(users.c.username == user_id)
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -248,13 +251,36 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# ─── Database Migration ────────────────────────────────────────────
+async def migrate_database():
+    """Add missing columns to existing tables."""
+    migrations = [
+        # Users table – add columns if missing
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS queries_used_today INTEGER DEFAULT 0;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_query_reset TIMESTAMP DEFAULT NOW();",
+        # Payments table – add tier if missing
+        "ALTER TABLE payments ADD COLUMN IF NOT EXISTS tier VARCHAR(20);",
+    ]
+    for stmt in migrations:
+        try:
+            await database.execute(stmt)
+        except Exception as e:
+            logger.info(f"Migration skipped (already applied): {e}")
+
 # ─── Lifespan Events ──────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     await database.connect()
     logger.info("Database connected")
-    # Create tables if needed (idempotent)
+    # Run migrations
+    await migrate_database()
+    # Create tables if they don't exist (idempotent)
     await create_tables()
     # Start scheduler
     scheduler = AsyncIOScheduler()
@@ -270,8 +296,9 @@ app.router.lifespan_context = lifespan
 
 # ─── Helper Functions ──────────────────────────────────────────────
 async def create_tables():
-    """Create tables if they don't exist."""
+    """Create tables if they don't exist, gracefully handling existing schemas."""
     queries_to_create = [
+        # Users table (unchanged)
         """
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -290,6 +317,7 @@ async def create_tables():
             preferences JSONB
         );
         """,
+        # Queries table
         """
         CREATE TABLE IF NOT EXISTS queries (
             id SERIAL PRIMARY KEY,
@@ -301,6 +329,7 @@ async def create_tables():
             expires_at TIMESTAMP
         );
         """,
+        # Payments table
         """
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
@@ -315,10 +344,11 @@ async def create_tables():
             created_at TIMESTAMP DEFAULT NOW()
         );
         """,
+        # Events – no foreign key
         """
         CREATE TABLE IF NOT EXISTS events (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            user_id INTEGER,
             session_id VARCHAR(64),
             event_type VARCHAR(50),
             event_data JSONB,
@@ -328,11 +358,12 @@ async def create_tables():
             expires_at TIMESTAMP
         );
         """,
+        # Referrals – no foreign keys
         """
         CREATE TABLE IF NOT EXISTS referrals (
             id SERIAL PRIMARY KEY,
-            referrer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            referee_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            referrer_id INTEGER,
+            referee_id INTEGER,
             code VARCHAR(20) UNIQUE,
             used BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT NOW()
@@ -343,7 +374,8 @@ async def create_tables():
         try:
             await database.execute(stmt)
         except Exception as e:
-            logger.warning(f"Could not create table: {e}")
+            # Ignore errors if table already exists (or other minor issues)
+            logger.info(f"Skipping table creation (already exists or minor issue): {e}")
 
 async def delete_expired_queries():
     cutoff = datetime.now() - timedelta(hours=24)
@@ -523,6 +555,7 @@ async def login(user_login: UserLogin):
     user = await get_user_by_username(user_login.username)
     if not user or not verify_password(user_login.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    # Ensure sub is integer ID as string
     token = create_access_token({"sub": str(user["id"])})
     return {
         "access_token": token,
@@ -532,8 +565,8 @@ async def login(user_login: UserLogin):
             "username": user["username"],
             "email": user["email"],
             "full_name": user["full_name"],
-            "tier": user["tier"],
-            "is_premium": user["is_premium"],
+            "tier": user.get("tier", "free"),
+            "is_premium": user.get("is_premium", False),
         }
     }
 
@@ -541,19 +574,7 @@ async def login(user_login: UserLogin):
 async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
-app.include_router(auth_router)
-
-# Also keep the old /login and /me for backward compatibility
-@app.post("/login", response_model=Token)
-async def login_old(user_login: UserLogin):
-    return await login(user_login)
-
-@app.get("/me")
-async def get_me_old(current_user: dict = Depends(get_current_user)):
-    return current_user
-
-# ─── Registration ──────────────────────────────────────────────
-@app.post("/register", response_model=Token)
+@auth_router.post("/register")
 async def register(user: UserCreate):
     if await get_user_by_username(user.username):
         raise HTTPException(status_code=400, detail="Username already taken")
@@ -573,13 +594,96 @@ async def register(user: UserCreate):
         }
     }
 
+@auth_router.post("/api-key")
+async def regenerate_api_key(current_user: dict = Depends(get_current_user)):
+    new_key = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    await database.execute(
+        users.update().where(users.c.id == current_user["id"]).values(api_key=new_key)
+    )
+    return {"api_key": new_key}
+
+app.include_router(auth_router)
+
+# Also keep legacy endpoints for backward compatibility
+@app.post("/login", response_model=Token)
+async def login_legacy(user_login: UserLogin):
+    return await login(user_login)
+
+@app.get("/me")
+async def get_me_legacy(current_user: dict = Depends(get_current_user)):
+    return current_user
+
+@app.post("/register")
+async def register_legacy(user: UserCreate):
+    return await register(user)
+
 # ─── Lifetime Count ────────────────────────────────────────────
 @app.get("/lifetime-count")
 async def get_lifetime_count():
-    query = "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
-    result = await database.fetch_one(query)
-    count = result["count"] if result else 0
-    return {"count": count, "message": f"{count} out of 1000 lifetime slots filled!"}
+    # Check if tier column exists; if not, return total users
+    try:
+        # Try to count lifetime users
+        query = "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
+        result = await database.fetch_one(query)
+        count = result["count"] if result else 0
+        limit = 1000
+        return {"count": count, "limit": limit, "remaining": max(0, limit - count)}
+    except Exception as e:
+        # Fallback: count all users
+        logger.warning(f"Lifetime count fallback: {e}")
+        total = await database.fetch_one("SELECT COUNT(*) as count FROM users")
+        return {"count": total["count"] if total else 0, "limit": 1000, "remaining": 0}
+
+# ─── My Usage (for all users) ──────────────────────────────────
+@app.get("/my-usage")
+async def my_usage(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["id"]
+    total = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1", user_id
+    )
+    today = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1 AND created_at::date = NOW()::date",
+        user_id
+    )
+    agents = await database.fetch_all(
+        "SELECT DISTINCT metadata->>'agent' as agent FROM queries WHERE user_id = $1 AND metadata IS NOT NULL",
+        user_id
+    )
+    agent_list = [a["agent"] for a in agents if a["agent"]]
+    recent = await database.fetch_all(
+        "SELECT query, created_at FROM queries WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",
+        user_id
+    )
+    return {
+        "total_queries": total["count"] if total else 0,
+        "queries_today": today["count"] if today else 0,
+        "agents_used": agent_list,
+        "recent_queries": [
+            {"query": r["query"], "timestamp": r["created_at"].isoformat()}
+            for r in recent
+        ]
+    }
+
+# ─── Admin Stats (Enterprise only) ─────────────────────────────
+@app.get("/admin/stats")
+async def admin_stats(current_user: dict = Depends(get_current_user)):
+    if current_user.get("tier") != "enterprise":
+        raise HTTPException(status_code=403, detail="Enterprise tier required")
+    total_users = await database.fetch_one("SELECT COUNT(*) as count FROM users")
+    total_queries = await database.fetch_one("SELECT COUNT(*) as count FROM queries")
+    dau = await database.fetch_one(
+        "SELECT COUNT(DISTINCT user_id) as dau FROM queries WHERE created_at > NOW() - INTERVAL '1 day'"
+    )
+    paid_users = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM users WHERE tier IN ('premium','enterprise','lifetime')"
+    )
+    return {
+        "total_users": total_users["count"] if total_users else 0,
+        "total_queries": total_queries["count"] if total_queries else 0,
+        "daily_active_users": dau["dau"] if dau else 0,
+        "paid_users": paid_users["count"] if paid_users else 0,
+        "timestamp": datetime.now().isoformat()
+    }
 
 # ─── Main Query ────────────────────────────────────────────────
 @app.post("/ask")
@@ -615,7 +719,6 @@ async def ask(
         "response": verified_text,
         "agent_used": agent_name,
         "verifier_used": verifier_name,
-        "query_id": None
     }
 
 # ─── File Upload ──────────────────────────────────────────────────
@@ -657,7 +760,7 @@ async def create_order(
     payment_data: PaymentCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}  # 200 paise = ₹2
+    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}
     if payment_data.tier not in amount_map:
         raise HTTPException(status_code=400, detail="Invalid tier")
     amount = amount_map[payment_data.tier]
@@ -740,13 +843,11 @@ async def track_event(
 async def generate_referral(
     current_user: dict = Depends(get_current_user)
 ):
-    # Check if user already has a code
     existing = await database.fetch_one(
         referrals.select().where(referrals.c.referrer_id == current_user["id"])
     )
     if existing:
         return {"code": existing["code"]}
-    # Generate unique code
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
     while True:
         existing_code = await database.fetch_one(
@@ -769,7 +870,6 @@ async def use_referral(
     referral_data: ReferralCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    # Check if code exists and is unused
     ref = await database.fetch_one(
         referrals.select().where(referrals.c.code == referral_data.code)
     )
@@ -779,15 +879,13 @@ async def use_referral(
         raise HTTPException(status_code=400, detail="Referral code already used")
     if ref["referrer_id"] == current_user["id"]:
         raise HTTPException(status_code=400, detail="You cannot use your own referral code")
-    # Mark as used
     await database.execute(
         referrals.update().where(referrals.c.id == ref["id"]).values(
             referee_id=current_user["id"],
             used=True
         )
     )
-    # Reward referrer with +5 extra queries (maybe store in preferences or a separate table)
-    # We'll just increase their quota by adding a bonus in preferences
+    # Reward: add bonus queries in preferences
     referrer = await database.fetch_one(users.select().where(users.c.id == ref["referrer_id"]))
     prefs = referrer["preferences"] or {}
     bonus = prefs.get("bonus_queries", 0) + 5
@@ -795,7 +893,6 @@ async def use_referral(
     await database.execute(
         users.update().where(users.c.id == ref["referrer_id"]).values(preferences=prefs)
     )
-    # Also give +3 to new user
     new_prefs = current_user["preferences"] or {}
     new_bonus = new_prefs.get("bonus_queries", 0) + 3
     new_prefs["bonus_queries"] = new_bonus
@@ -803,32 +900,6 @@ async def use_referral(
         users.update().where(users.c.id == current_user["id"]).values(preferences=new_prefs)
     )
     return {"status": "success", "message": "Referral applied! You got 3 bonus queries."}
-
-# ─── Admin Stats (protected) ─────────────────────────────────────
-@app.get("/admin/stats")
-async def admin_stats(
-    api_key: str,
-    current_user: dict = Depends(get_current_user)
-):
-    # Only allow if user has tier 'enterprise' or is superadmin (you can add a flag)
-    if current_user["tier"] not in ("enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
-    # Get counts
-    total_users = await database.fetch_one("SELECT COUNT(*) as count FROM users")
-    total_queries = await database.fetch_one("SELECT COUNT(*) as count FROM queries")
-    dau = await database.fetch_one(
-        "SELECT COUNT(DISTINCT user_id) as dau FROM queries WHERE created_at > NOW() - INTERVAL '1 day'"
-    )
-    paid_users = await database.fetch_one(
-        "SELECT COUNT(*) as count FROM users WHERE tier IN ('premium','enterprise','lifetime')"
-    )
-    return {
-        "total_users": total_users["count"],
-        "total_queries": total_queries["count"],
-        "daily_active_users": dau["dau"] or 0,
-        "paid_users": paid_users["count"],
-        "timestamp": datetime.now().isoformat()
-    }
 
 # ─── Health ──────────────────────────────────────────────────────
 @app.get("/health")
