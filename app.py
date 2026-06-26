@@ -35,7 +35,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 
 # ─── File / Image / PDF ─────────────────────────────────────────────
-import magic
+import puremagic
 import PyPDF2
 import docx
 from PIL import Image
