@@ -1,5 +1,5 @@
 # ===================================================================
-# LEXSARTHI ALPHA v5.0 – PRODUCTION (NO MOCK)
+# LEXSARTHI ALPHA v5.0 – FINAL PRODUCTION BACKEND
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM (Proprietor: Upmanyu Kumar)
 # ===================================================================
@@ -183,7 +183,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    # Look up the user in the database – no mock
     query = users.select().where(users.c.id == user_id)
     user = await database.fetch_one(query)
     if not user:
@@ -490,6 +489,12 @@ async def lifespan(app: FastAPI):
     logger.info("Database connected")
     await migrate_database()
     await create_tables()
+    
+    # 🔥 Reconnect to clear prepared statement cache
+    await database.disconnect()
+    await database.connect()
+    logger.info("Reconnected after table creation")
+    
     await ensure_test_user()
     load_pdfs()
     scheduler = AsyncIOScheduler()
@@ -498,6 +503,7 @@ async def lifespan(app: FastAPI):
     logger.info("Scheduler started")
     yield
     await database.disconnect()
+    logger.info("Database disconnected")
 
 app.router.lifespan_context = lifespan
 
