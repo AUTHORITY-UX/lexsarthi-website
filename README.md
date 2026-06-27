@@ -90,4 +90,4 @@ LexSarthi Alpha v5.0 is a fully‑functional, production‑ready AI platform tha
 
 ---
 
-## 📁 Repository Structure
+## 📁 Repository Structure 
