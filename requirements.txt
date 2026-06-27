@@ -26,3 +26,4 @@ SpeechRecognition==3.10.0
 beautifulsoup4==4.12.2
 slowapi==0.1.9            # <-- NEW
 apscheduler==3.10.4       # <-- NEW
+sentence-transformers==2.2.2
