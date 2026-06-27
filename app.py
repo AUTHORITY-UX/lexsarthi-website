@@ -357,7 +357,6 @@ async def execute_agent(agent: dict, query: str, context: str = "") -> str:
 
 # ─── Database Pool Reset ──────────────────────────────────────
 async def reset_database_pool():
-    """Destroy and recreate the database connection pool to clear cached statements."""
     global database
     await database.disconnect()
     database = Database(DATABASE_URL, min_size=5, max_size=20)
@@ -458,6 +457,17 @@ async def create_tables():
         except Exception as e:
             logger.info(f"Skipping table creation: {e}")
 
+# ─── ensure_test_user – no SELECT, only INSERT/UPDATE ──────────
+async def ensure_test_user():
+    hashed = hash_password("Password123!")
+    query = """
+    INSERT INTO users (id, username, email, password_hash, full_name, tier, queries_used_today, last_query_reset, created_at, updated_at)
+    VALUES (gen_random_uuid()::text, 'counsel', 'counsel@advocacyalawfrim.in', $1, 'Counsel User', 'free', 0, NOW(), NOW(), NOW())
+    ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+    """
+    await database.execute(query, hashed)
+    logger.info("Test user 'counsel' ensured (upsert).")
+
 async def get_user_by_username(username: str):
     query = users.select().where(users.c.username == username)
     return await database.fetch_one(query)
@@ -472,26 +482,6 @@ async def delete_expired_queries():
     cutoff_events = datetime.now() - timedelta(days=30)
     await database.execute(events.delete().where(events.c.created_at < cutoff_events))
 
-async def ensure_test_user():
-    hashed = hash_password("Password123!")
-    existing = await get_user_by_username("counsel")
-    if not existing:
-        new_id = str(uuid.uuid4())
-        query = users.insert().values(
-            id=new_id,
-            username="counsel",
-            email="counsel@advocacyalawfrim.in",
-            password_hash=hashed,
-            full_name="Counsel User",
-            tier="free",
-            queries_used_today=0,
-            last_query_reset=datetime.now()
-        )
-        await database.execute(query)
-        logger.info(f"Created test user 'counsel' with ID {new_id}.")
-    else:
-        logger.info("Test user 'counsel' already exists.")
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initial connect
@@ -502,11 +492,12 @@ async def lifespan(app: FastAPI):
     await migrate_database()
     await create_tables()
     
-    # 🔥 COMPLETE POOL RESET – clears all cached statements
+    # Reset pool to clear cached statements
     await reset_database_pool()
     
-    # Now ensure test user
+    # Ensure test user (using raw SQL, no prepared statement cache)
     await ensure_test_user()
+    
     load_pdfs()
     
     scheduler = AsyncIOScheduler()
