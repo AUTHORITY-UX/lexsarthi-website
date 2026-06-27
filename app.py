@@ -17,7 +17,7 @@ from pydantic import BaseModel, EmailStr
 import uvicorn
 
 from databases import Database
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, text
 from sqlalchemy.sql import func, select, insert, update, delete
 
 import jwt
@@ -457,15 +457,15 @@ async def create_tables():
         except Exception as e:
             logger.info(f"Skipping table creation: {e}")
 
-# ─── ensure_test_user – no SELECT, only INSERT/UPDATE ──────────
+# ─── ensure_test_user – correct parameters ──────────────────────
 async def ensure_test_user():
     hashed = hash_password("Password123!")
-    query = """
+    query = text("""
     INSERT INTO users (id, username, email, password_hash, full_name, tier, queries_used_today, last_query_reset, created_at, updated_at)
-    VALUES (gen_random_uuid()::text, 'counsel', 'counsel@advocacyalawfrim.in', $1, 'Counsel User', 'free', 0, NOW(), NOW(), NOW())
+    VALUES (gen_random_uuid()::text, 'counsel', 'counsel@advocacyalawfrim.in', :hashed, 'Counsel User', 'free', 0, NOW(), NOW(), NOW())
     ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash;
-    """
-    await database.execute(query, hashed)
+    """)
+    await database.execute(query, {"hashed": hashed})
     logger.info("Test user 'counsel' ensured (upsert).")
 
 async def get_user_by_username(username: str):
