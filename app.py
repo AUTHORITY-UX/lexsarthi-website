@@ -58,7 +58,7 @@ metadata = MetaData()
 users = Table(
     "users",
     metadata,
-    Column("id", String, primary_key=True),  # UUID as string
+    Column("id", String, primary_key=True),
     Column("email", String(255), unique=True, index=True),
     Column("username", String(100), unique=True),
     Column("password_hash", String(255)),
@@ -355,6 +355,15 @@ async def execute_agent(agent: dict, query: str, context: str = "") -> str:
         logger.error(f"Groq error: {e}")
         return f"LLM error: {e}"
 
+# ─── Database Pool Reset ──────────────────────────────────────
+async def reset_database_pool():
+    """Destroy and recreate the database connection pool to clear cached statements."""
+    global database
+    await database.disconnect()
+    database = Database(DATABASE_URL, min_size=5, max_size=20)
+    await database.connect()
+    logger.info("Database pool recreated - cache cleared")
+
 # ─── Lifespan ──────────────────────────────────────────────────
 async def migrate_database():
     migrations = [
@@ -485,18 +494,21 @@ async def ensure_test_user():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initial connect
     await database.connect()
     logger.info("Database connected")
+    
+    # Run migrations and create tables
     await migrate_database()
     await create_tables()
     
-    # 🔥 Reconnect to clear prepared statement cache
-    await database.disconnect()
-    await database.connect()
-    logger.info("Reconnected after table creation")
+    # 🔥 COMPLETE POOL RESET – clears all cached statements
+    await reset_database_pool()
     
+    # Now ensure test user
     await ensure_test_user()
     load_pdfs()
+    
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
     scheduler.start()
@@ -661,7 +673,6 @@ async def ask(query_req: QueryRequest, current_user: dict = Depends(get_current_
     context = search_pdfs(query_req.query)
     response_text = await execute_agent(agent, query_req.query, context)
 
-    # Save to DB (if possible)
     try:
         expires_at = datetime.now() + timedelta(hours=24)
         query = queries.insert().values(
@@ -686,20 +697,60 @@ async def ask(query_req: QueryRequest, current_user: dict = Depends(get_current_
 async def upload_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     try:
         content = await file.read()
-        # Simple text extraction (placeholder)
-        return {"filename": file.filename, "extracted_text": "Text extracted (demo)"}
+        try:
+            file_type = puremagic.from_string(content, mime=True)[0]
+        except:
+            ext = os.path.splitext(file.filename)[1].lower()
+            file_type = {
+                '.pdf': 'application/pdf',
+                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+            }.get(ext, 'application/octet-stream')
+        if file_type == "application/pdf":
+            pdf = PyPDF2.PdfReader(io.BytesIO(content))
+            text = " ".join([page.extract_text() for page in pdf.pages])
+            return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
+        elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            doc = docx.Document(io.BytesIO(content))
+            text = " ".join([para.text for para in doc.paragraphs])
+            return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
+        elif file_type.startswith("image/"):
+            img = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(img)
+            return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
+        else:
+            return {"filename": file.filename, "extracted_text": "Unsupported file type."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # ─── Voice Transcription ──────────────────────────────────────────
 @app.post("/transcribe")
 async def transcribe_audio_endpoint(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
-    return {"transcription": "Voice transcription (demo)"}
+    content = await file.read()
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(io.BytesIO(content)) as source:
+        audio = recognizer.record(source)
+    try:
+        text = recognizer.recognize_google(audio, language="en-IN")
+        return {"transcription": text}
+    except:
+        return {"transcription": "Could not transcribe audio."}
 
 # ─── Web Search ────────────────────────────────────────────────────
 @app.post("/search")
 async def search(query: str, current_user: dict = Depends(get_current_user)):
-    return {"results": "Web search (demo)"}
+    if not os.getenv("WEB_SEARCH_API_KEY"):
+        return {"results": "Web search not configured."}
+    async with httpx.AsyncClient() as client:
+        url = "https://serpapi.com/search"
+        params = {"q": query, "api_key": os.getenv("WEB_SEARCH_API_KEY"), "hl": "en", "gl": "in"}
+        resp = await client.get(url, params=params)
+        data = resp.json()
+        organic = data.get("organic_results", [])
+        snippets = [r.get("snippet", "") for r in organic[:3]]
+        return {"results": snippets}
 
 # ─── Razorpay ──────────────────────────────────────────────────
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
