@@ -78,7 +78,7 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7  # 7 days
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
-WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # optional
+WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")
 
 # ─── Database Setup ─────────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=1, max_size=10)
@@ -131,7 +131,6 @@ payments = Table(
     Column("created_at", DateTime, server_default=func.now()),
 )
 
-# No foreign keys to avoid type mismatch warnings
 events = Table(
     "events",
     metadata,
@@ -178,7 +177,7 @@ class QueryRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
 
 class PaymentCreate(BaseModel):
-    tier: str  # "premium" or "enterprise" or "lifetime"
+    tier: str
 
 class ReferralCreate(BaseModel):
     code: str
@@ -214,12 +213,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    # Try to parse as integer; if fails, treat as username
     try:
         user_id_int = int(user_id)
         query = users.select().where(users.c.id == user_id_int)
     except ValueError:
-        # user_id is a string (probably username from old tokens)
         query = users.select().where(users.c.username == user_id)
     user = await database.fetch_one(query)
     if not user:
@@ -243,7 +240,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ─── Middleware ──────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -252,7 +249,6 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── Database Migration ────────────────────────────────────────────
 async def migrate_database():
-    """Add missing columns to existing tables."""
     migrations = [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
@@ -268,15 +264,13 @@ async def migrate_database():
         try:
             await database.execute(stmt)
         except Exception as e:
-            logger.info(f"Migration skipped (already applied): {e}")
+            logger.info(f"Migration skipped: {e}")
 
 # ─── Ensure Test User ──────────────────────────────────────────────
 async def ensure_test_user():
-    """Create or update the test user 'counsel' with known password."""
     hashed = hash_password("Password123!")
     existing = await get_user_by_username("counsel")
     if existing:
-        # Update password to known hash (in case it was changed)
         await database.execute(
             users.update().where(users.c.username == "counsel").values(
                 password_hash=hashed
@@ -284,7 +278,6 @@ async def ensure_test_user():
         )
         logger.info("Updated password for test user 'counsel'.")
     else:
-        # Insert new user
         query = users.insert().values(
             username="counsel",
             email="counsel@advocacyalawfrim.in",
@@ -300,22 +293,16 @@ async def ensure_test_user():
 # ─── Lifespan Events ──────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     await database.connect()
     logger.info("Database connected")
-    # Run migrations
     await migrate_database()
-    # Create tables if they don't exist (idempotent)
     await create_tables()
-    # Ensure test user exists
     await ensure_test_user()
-    # Start scheduler
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
     scheduler.start()
     logger.info("Scheduler started for auto-delete")
     yield
-    # Shutdown
     await database.disconnect()
     logger.info("Database disconnected")
 
@@ -323,9 +310,7 @@ app.router.lifespan_context = lifespan
 
 # ─── Helper Functions ──────────────────────────────────────────────
 async def create_tables():
-    """Create tables if they don't exist, gracefully handling existing schemas."""
     queries_to_create = [
-        # Users table (unchanged)
         """
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -344,7 +329,6 @@ async def create_tables():
             preferences JSONB
         );
         """,
-        # Queries table
         """
         CREATE TABLE IF NOT EXISTS queries (
             id SERIAL PRIMARY KEY,
@@ -356,7 +340,6 @@ async def create_tables():
             expires_at TIMESTAMP
         );
         """,
-        # Payments table
         """
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
@@ -371,7 +354,6 @@ async def create_tables():
             created_at TIMESTAMP DEFAULT NOW()
         );
         """,
-        # Events – no foreign key
         """
         CREATE TABLE IF NOT EXISTS events (
             id SERIAL PRIMARY KEY,
@@ -385,7 +367,6 @@ async def create_tables():
             expires_at TIMESTAMP
         );
         """,
-        # Referrals – no foreign keys
         """
         CREATE TABLE IF NOT EXISTS referrals (
             id SERIAL PRIMARY KEY,
@@ -401,16 +382,14 @@ async def create_tables():
         try:
             await database.execute(stmt)
         except Exception as e:
-            # Ignore errors if table already exists (or other minor issues)
-            logger.info(f"Skipping table creation (already exists or minor issue): {e}")
+            logger.info(f"Skipping table creation: {e}")
 
 async def delete_expired_queries():
     cutoff = datetime.now() - timedelta(hours=24)
     await database.execute(queries.delete().where(queries.c.created_at < cutoff))
-    # Also delete old events (optional)
     cutoff_events = datetime.now() - timedelta(days=30)
     await database.execute(events.delete().where(events.c.created_at < cutoff_events))
-    logger.info(f"Deleted expired data older than 24h (queries) and 30d (events)")
+    logger.info("Deleted expired data.")
 
 async def get_user_by_username(username: str):
     query = users.select().where(users.c.username == username)
@@ -462,7 +441,7 @@ async def check_query_limit(user_id: int) -> bool:
     last_reset = user["last_query_reset"]
     now = datetime.now()
     if now.date() > last_reset.date():
-        return True  # will be reset on next increment
+        return True
     used = user["queries_used_today"]
     return used < 10
 
@@ -581,7 +560,6 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def login(user_login: UserLogin):
     logger.info(f"Login attempt with: {user_login.username}")
     user = None
-    # Check if input looks like an email
     if '@' in user_login.username:
         user = await get_user_by_email(user_login.username)
         if not user:
@@ -643,7 +621,7 @@ async def regenerate_api_key(current_user: dict = Depends(get_current_user)):
 
 app.include_router(auth_router)
 
-# Also keep legacy endpoints for backward compatibility
+# Legacy endpoints
 @app.post("/login", response_model=Token)
 async def login_legacy(user_login: UserLogin):
     return await login(user_login)
@@ -659,21 +637,18 @@ async def register_legacy(user: UserCreate):
 # ─── Lifetime Count ────────────────────────────────────────────
 @app.get("/lifetime-count")
 async def get_lifetime_count():
-    # Check if tier column exists; if not, return total users
     try:
-        # Try to count lifetime users
         query = "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
         result = await database.fetch_one(query)
         count = result["count"] if result else 0
         limit = 1000
         return {"count": count, "limit": limit, "remaining": max(0, limit - count)}
     except Exception as e:
-        # Fallback: count all users
         logger.warning(f"Lifetime count fallback: {e}")
         total = await database.fetch_one("SELECT COUNT(*) as count FROM users")
         return {"count": total["count"] if total else 0, "limit": 1000, "remaining": 0}
 
-# ─── My Usage (for all users) ──────────────────────────────────
+# ─── My Usage ──────────────────────────────────────────────────
 @app.get("/my-usage")
 async def my_usage(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
@@ -703,7 +678,7 @@ async def my_usage(current_user: dict = Depends(get_current_user)):
         ]
     }
 
-# ─── Admin Stats (Enterprise only) ─────────────────────────────
+# ─── Admin Stats ─────────────────────────────────────────────
 @app.get("/admin/stats")
 async def admin_stats(current_user: dict = Depends(get_current_user)):
     if current_user.get("tier") != "enterprise":
@@ -799,7 +774,7 @@ async def create_order(
     payment_data: PaymentCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}  # ₹2 in paise
+    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}
     if payment_data.tier not in amount_map:
         raise HTTPException(status_code=400, detail="Invalid tier")
     amount = amount_map[payment_data.tier]
@@ -924,7 +899,6 @@ async def use_referral(
             used=True
         )
     )
-    # Reward: add bonus queries in preferences
     referrer = await database.fetch_one(users.select().where(users.c.id == ref["referrer_id"]))
     prefs = referrer["preferences"] or {}
     bonus = prefs.get("bonus_queries", 0) + 5
