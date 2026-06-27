@@ -558,34 +558,43 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/login", response_model=Token)
 async def login(user_login: UserLogin):
-    logger.info(f"Login attempt with: {user_login.username}")
-    user = None
-    if '@' in user_login.username:
-        user = await get_user_by_email(user_login.username)
-        if not user:
-            logger.warning(f"Email not found: {user_login.username}")
-    else:
-        user = await get_user_by_username(user_login.username)
-        if not user:
-            logger.warning(f"Username not found: {user_login.username}")
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    if not verify_password(user_login.password, user["password_hash"]):
-        logger.warning(f"Password verification failed for {user['username']}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": str(user["id"])})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user["id"],
-            "username": user["username"],
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "tier": user.get("tier", "free"),
-            "is_premium": user.get("is_premium", False),
+    try:
+        logger.info(f"Login attempt with: {user_login.username}")
+        user = None
+        if '@' in user_login.username:
+            user = await get_user_by_email(user_login.username)
+            if user is None:
+                logger.warning(f"Email not found: {user_login.username}")
+        else:
+            user = await get_user_by_username(user_login.username)
+            if user is None:
+                logger.warning(f"Username not found: {user_login.username}")
+
+        if user is None:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        if not verify_password(user_login.password, user["password_hash"]):
+            logger.warning(f"Password verification failed for {user['username']}")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        token = create_access_token({"sub": str(user["id"])})
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "full_name": user["full_name"],
+                "tier": user.get("tier", "free"),
+                "is_premium": user.get("is_premium", False),
+            }
         }
-    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected login error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error during login")
 
 @auth_router.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
@@ -621,7 +630,7 @@ async def regenerate_api_key(current_user: dict = Depends(get_current_user)):
 
 app.include_router(auth_router)
 
-# Legacy endpoints
+# ─── Legacy Endpoints ──────────────────────────────────────────
 @app.post("/login", response_model=Token)
 async def login_legacy(user_login: UserLogin):
     return await login(user_login)
