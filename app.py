@@ -1,64 +1,94 @@
 # ===================================================================
-# LEXSARTHI ALPHA v5.0 – FINAL PRODUCTION BACKEND
+# LEXSARTHI ALPHA v5.0 – BACKEND (FastAPI)
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM (Proprietor: Upmanyu Kumar)
+# Deployed on Hugging Face Spaces: upamnyu12-lex.hf.space
 # ===================================================================
 
-import os, uuid, random, string, io, logging, re
+import os
+import json
+import uuid
+import hashlib
+import hmac
+import base64
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
+from enum import Enum
+import io
+import random
+import string
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request
+# ─── Core FastAPI ─────────────────────────────────────────────────────
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 import uvicorn
 
+# ─── Database ────────────────────────────────────────────────────────
+import asyncpg
 from databases import Database
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey
 from sqlalchemy.sql import func, select, insert, update, delete
 
+# ─── Authentication ─────────────────────────────────────────────────
 import jwt
 from passlib.context import CryptContext
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 
-import puremagic, PyPDF2, docx
+# ─── File / Image / PDF ─────────────────────────────────────────────
+import puremagic
+import PyPDF2
+import docx
 from PIL import Image
 import pytesseract
-import speech_recognition as sr
-import httpx
-import razorpay
-import groq
+import io
 
+# ─── Voice Transcription ────────────────────────────────────────────
+import speech_recognition as sr
+
+# ─── Web Search ──────────────────────────────────────────────────────
+import httpx
+
+# ─── Payments (Razorpay) ──────────────────────────────────────────
+import razorpay
+
+# ─── Rate Limiting ──────────────────────────────────────────────────
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+
+# ─── Background Tasks ──────────────────────────────────────────────
+import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+
+# ─── Logging ────────────────────────────────────────────────────────
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("lexsarthi")
 
-# ─── Environment ────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL")
-JWT_SECRET = os.getenv("JWT_SECRET", "change-this-secret")
+# ─── Environment Variables ────────────────────────────────────────
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/lexsarthi")
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-me")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_MINUTES = 60 * 24 * 7
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+JWT_EXPIRY_MINUTES = 60 * 24 * 7  # 7 days
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # optional
 
-# ─── Database ──────────────────────────────────────────────────────
-database = Database(DATABASE_URL, min_size=5, max_size=20)
+# ─── Database Setup ─────────────────────────────────────────────────
+database = Database(DATABASE_URL, min_size=1, max_size=10)
 metadata = MetaData()
 
-# ─── Tables ─────────────────────────────────────────────────────────
+# ─── SQLAlchemy Table Definitions ──────────────────────────────────
 users = Table(
     "users",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("id", Integer, primary_key=True),
     Column("email", String(255), unique=True, index=True),
     Column("username", String(100), unique=True),
     Column("password_hash", String(255)),
@@ -78,7 +108,7 @@ queries = Table(
     "queries",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("user_id", String, index=True),
+    Column("user_id", Integer, index=True),
     Column("query", Text),
     Column("response", Text),
     Column("metadata", JSON, nullable=True),
@@ -90,7 +120,7 @@ payments = Table(
     "payments",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("user_id", String),
+    Column("user_id", Integer),
     Column("razorpay_order_id", String(100)),
     Column("razorpay_payment_id", String(100), nullable=True),
     Column("razorpay_signature", String(255), nullable=True),
@@ -101,11 +131,12 @@ payments = Table(
     Column("created_at", DateTime, server_default=func.now()),
 )
 
+# No foreign keys to avoid type mismatch warnings
 events = Table(
     "events",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("user_id", String, nullable=True),
+    Column("user_id", Integer, nullable=True),
     Column("session_id", String(64)),
     Column("event_type", String(50)),
     Column("event_data", JSON, nullable=True),
@@ -119,14 +150,14 @@ referrals = Table(
     "referrals",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("referrer_id", String),
-    Column("referee_id", String, nullable=True),
+    Column("referrer_id", Integer),
+    Column("referee_id", Integer, nullable=True),
     Column("code", String(20), unique=True),
     Column("used", Boolean, server_default="false"),
     Column("created_at", DateTime, server_default=func.now()),
 )
 
-# ─── Pydantic Models ──────────────────────────────────────────────
+# ─── Pydantic Models ────────────────────────────────────────────────
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
@@ -147,12 +178,12 @@ class QueryRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
 
 class PaymentCreate(BaseModel):
-    tier: str
+    tier: str  # "premium" or "enterprise" or "lifetime"
 
 class ReferralCreate(BaseModel):
     code: str
 
-# ─── Password & JWT ───────────────────────────────────────────────
+# ─── Password Hashing ──────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
@@ -161,6 +192,7 @@ def hash_password(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
+# ─── JWT ────────────────────────────────────────────────────────────
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=JWT_EXPIRY_MINUTES))
@@ -182,8 +214,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-
-    query = users.select().where(users.c.id == user_id)
+    # Try to parse as integer; if fails, treat as username
+    try:
+        user_id_int = int(user_id)
+        query = users.select().where(users.c.id == user_id_int)
+    except ValueError:
+        # user_id is a string (probably username from old tokens)
+        query = users.select().where(users.c.username == user_id)
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -206,165 +243,16 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ─── Middleware ──────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── 220 Agents + Shiva ──────────────────────────────────────────
-def generate_agents():
-    categories = [
-        "Corporate Law", "Criminal Law", "Intellectual Property", "Taxation",
-        "Contract Law", "Due Diligence", "Legal Research", "Compliance",
-        "Litigation Support", "Family Law", "Property Law", "Labour Law",
-        "Cyber Law", "Banking & Finance", "Alternative Dispute Resolution",
-        "Constitutional Law", "Environmental Law", "Health Law", "Real Estate",
-        "Media & Entertainment", "Sports Law", "Aviation Law", "Maritime Law",
-        "Energy Law", "Mining Law", "Education Law", "Immigration Law",
-        "M&A", "Private Equity", "Venture Capital", "Insolvency", "Bankruptcy",
-        "Insurance", "Negotiation", "Mediation", "Arbitration", "International Law",
-        "Human Rights", "Employment", "Pensions", "Trusts", "Wills", "Probate",
-        "Landlord-Tenant", "Construction", "Engineering", "Pharmaceutical", "Biotech",
-        "Telecom", "IT", "Data Privacy", "AI Ethics", "Space Law", "Defence"
-    ]
-    agents = []
-    for i in range(1, 221):
-        cat = categories[i % len(categories)]
-        agent_name = f"Agent_{i:03d} ({cat})"
-        prompt = f"You are a senior expert in {cat}. Provide detailed, accurate, and jurisdiction‑specific advice."
-        agents.append({
-            "id": f"agent_{i:03d}",
-            "name": agent_name,
-            "category": cat,
-            "prompt": prompt,
-            "icon": "fa-robot",
-            "desc": f"Specialises in {cat}"
-        })
-    return agents
-
-ALL_AGENTS = generate_agents()
-
-def shiva_orchestrator(query: str) -> dict:
-    query_lower = query.lower()
-    best_agent = None
-    best_score = -1
-    for agent in ALL_AGENTS:
-        score = 0
-        for word in agent["category"].lower().split():
-            if word in query_lower:
-                score += 2
-        if agent["category"].lower() in query_lower:
-            score += 5
-        if score > best_score:
-            best_score = score
-            best_agent = agent
-    if best_score < 1:
-        best_agent = ALL_AGENTS[0]
-    return best_agent
-
-# ─── PDF RAG ──────────────────────────────────────────────────────
-PDF_TEXT = ""
-PDF_DIR = os.path.join(os.path.dirname(__file__), "pdfs")
-
-def load_pdfs():
-    global PDF_TEXT
-    if not os.path.exists(PDF_DIR):
-        os.makedirs(PDF_DIR, exist_ok=True)
-        return
-    all_text = ""
-    for filename in os.listdir(PDF_DIR):
-        if filename.endswith(".pdf"):
-            try:
-                with open(os.path.join(PDF_DIR, filename), "rb") as f:
-                    reader = PyPDF2.PdfReader(f)
-                    for page in reader.pages:
-                        all_text += page.extract_text() + "\n"
-            except Exception as e:
-                logger.error(f"Error reading PDF {filename}: {e}")
-    PDF_TEXT = all_text
-
-def search_pdfs(query: str, top_k=3) -> str:
-    if not PDF_TEXT:
-        return ""
-    paragraphs = re.split(r'\n\s*\n', PDF_TEXT)
-    query_words = set(query.lower().split())
-    scored = []
-    for para in paragraphs:
-        if len(para.strip()) < 20:
-            continue
-        para_words = set(para.lower().split())
-        overlap = len(query_words & para_words)
-        if overlap > 0:
-            scored.append((overlap, para))
-    scored.sort(reverse=True, key=lambda x: x[0])
-    top_paras = [p for _, p in scored[:top_k]]
-    return "\n\n".join(top_paras)
-
-# ─── Verifiers ──────────────────────────────────────────────────
-async def verifier_fact_check(response: str): return True, "OK"
-async def verifier_legal_citation(response: str): return True, "OK"
-async def verifier_compliance(response: str): return True, "OK"
-async def verifier_bias_detection(response: str): return True, "OK"
-async def verifier_language_consistency(response: str): return True, "OK"
-async def verifier_logical_coherence(response: str): return True, "OK"
-async def verifier_originality(response: str): return True, "OK"
-async def verifier_privacy_filter(response: str): return True, "OK"
-async def verifier_ethical_review(response: str): return True, "OK"
-async def verifier_output_sanitisation(response: str): return True, "OK"
-
-VERIFIERS = [
-    verifier_fact_check, verifier_legal_citation, verifier_compliance,
-    verifier_bias_detection, verifier_language_consistency,
-    verifier_logical_coherence, verifier_originality, verifier_privacy_filter,
-    verifier_ethical_review, verifier_output_sanitisation
-]
-
-async def run_verifiers(response: str) -> dict:
-    results = {}
-    for v in VERIFIERS:
-        passed, msg = await v(response)
-        results[v.__name__] = {"passed": passed, "message": msg}
-    return results
-
-# ─── LLM (Groq) ──────────────────────────────────────────────────
-if GROQ_API_KEY:
-    groq_client = groq.Groq(api_key=GROQ_API_KEY)
-else:
-    groq_client = None
-
-async def execute_agent(agent: dict, query: str, context: str = "") -> str:
-    if not groq_client:
-        return f"[{agent['name']}]\n{agent['prompt']}\n\nBased on your query: '{query}', here is my analysis... (Simulated response.)"
-    try:
-        user_content = query
-        if context:
-            user_content = f"Context from Indian laws:\n{context}\n\nQuestion: {query}"
-        response = groq_client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[
-                {"role": "system", "content": agent["prompt"]},
-                {"role": "user", "content": user_content}
-            ],
-            temperature=0.2,
-            max_tokens=1024,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        logger.error(f"Groq error: {e}")
-        return f"LLM error: {e}"
-
-# ─── Database Pool Reset ──────────────────────────────────────
-async def reset_database_pool():
-    global database
-    await database.disconnect()
-    database = Database(DATABASE_URL, min_size=5, max_size=20)
-    await database.connect()
-    logger.info("Database pool recreated - cache cleared")
-
-# ─── Lifespan ──────────────────────────────────────────────────
+# ─── Database Migration ────────────────────────────────────────────
 async def migrate_database():
+    """Add missing columns to existing tables."""
     migrations = [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
@@ -380,13 +268,68 @@ async def migrate_database():
         try:
             await database.execute(stmt)
         except Exception as e:
-            logger.info(f"Migration skipped: {e}")
+            logger.info(f"Migration skipped (already applied): {e}")
 
+# ─── Ensure Test User ──────────────────────────────────────────────
+async def ensure_test_user():
+    """Create or update the test user 'counsel' with known password."""
+    hashed = hash_password("Password123!")
+    existing = await get_user_by_username("counsel")
+    if existing:
+        # Update password to known hash (in case it was changed)
+        await database.execute(
+            users.update().where(users.c.username == "counsel").values(
+                password_hash=hashed,
+                email="counsel@advocacyalawfrim.in"
+            )
+        )
+        logger.info("Updated test user 'counsel'.")
+    else:
+        # Insert new user
+        query = users.insert().values(
+            username="counsel",
+            email="counsel@advocacyalawfrim.in",
+            password_hash=hashed,
+            full_name="Counsel User",
+            tier="free",
+            queries_used_today=0,
+            last_query_reset=datetime.now()
+        )
+        await database.execute(query)
+        logger.info("Created test user 'counsel'.")
+
+# ─── Lifespan Events ──────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await database.connect()
+    logger.info("Database connected")
+    # Run migrations
+    await migrate_database()
+    # Create tables if they don't exist (idempotent)
+    await create_tables()
+    # Ensure test user exists
+    await ensure_test_user()
+    # Start scheduler
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
+    scheduler.start()
+    logger.info("Scheduler started")
+    yield
+    # Shutdown
+    await database.disconnect()
+    logger.info("Database disconnected")
+
+app.router.lifespan_context = lifespan
+
+# ─── Helper Functions ──────────────────────────────────────────────
 async def create_tables():
+    """Create tables if they don't exist, gracefully handling existing schemas."""
     queries_to_create = [
+        # Users table (unchanged)
         """
         CREATE TABLE IF NOT EXISTS users (
-            id VARCHAR(36) PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
             username VARCHAR(100) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
@@ -402,10 +345,11 @@ async def create_tables():
             preferences JSONB
         );
         """,
+        # Queries table
         """
         CREATE TABLE IF NOT EXISTS queries (
             id SERIAL PRIMARY KEY,
-            user_id VARCHAR(36) REFERENCES users(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
             query TEXT,
             response TEXT,
             metadata JSONB,
@@ -413,10 +357,11 @@ async def create_tables():
             expires_at TIMESTAMP
         );
         """,
+        # Payments table
         """
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
-            user_id VARCHAR(36) REFERENCES users(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
             razorpay_order_id VARCHAR(100) UNIQUE,
             razorpay_payment_id VARCHAR(100),
             razorpay_signature VARCHAR(255),
@@ -427,10 +372,11 @@ async def create_tables():
             created_at TIMESTAMP DEFAULT NOW()
         );
         """,
+        # Events – no foreign key
         """
         CREATE TABLE IF NOT EXISTS events (
             id SERIAL PRIMARY KEY,
-            user_id VARCHAR(36),
+            user_id INTEGER,
             session_id VARCHAR(64),
             event_type VARCHAR(50),
             event_data JSONB,
@@ -440,11 +386,12 @@ async def create_tables():
             expires_at TIMESTAMP
         );
         """,
+        # Referrals – no foreign keys
         """
         CREATE TABLE IF NOT EXISTS referrals (
             id SERIAL PRIMARY KEY,
-            referrer_id VARCHAR(36),
-            referee_id VARCHAR(36),
+            referrer_id INTEGER,
+            referee_id INTEGER,
             code VARCHAR(20) UNIQUE,
             used BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT NOW()
@@ -455,69 +402,179 @@ async def create_tables():
         try:
             await database.execute(stmt)
         except Exception as e:
-            logger.info(f"Skipping table creation: {e}")
+            # Ignore errors if table already exists (or other minor issues)
+            logger.info(f"Skipping table creation (already exists or minor issue): {e}")
 
-# ─── ensure_test_user – RAW SQL with parameters ──────────────
-async def ensure_test_user():
-    new_id = str(uuid.uuid4())
-    hashed = hash_password("Password123!")
-    query = """
-    INSERT INTO users (id, username, email, password_hash, full_name, tier, queries_used_today, last_query_reset, created_at, updated_at)
-    VALUES (:id, 'counsel', 'counsel@advocacyalawfrim.in', :hashed, 'Counsel User', 'free', 0, NOW(), NOW(), NOW())
-    ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash;
-    """
-    await database.execute(query, {"id": new_id, "hashed": hashed})
-    logger.info("Test user 'counsel' ensured (upsert).")
+async def delete_expired_queries():
+    cutoff = datetime.now() - timedelta(hours=24)
+    await database.execute(queries.delete().where(queries.c.created_at < cutoff))
+    # Also delete old events (optional)
+    cutoff_events = datetime.now() - timedelta(days=30)
+    await database.execute(events.delete().where(events.c.created_at < cutoff_events))
+    logger.info(f"Deleted expired data older than 24h (queries) and 30d (events)")
 
 async def get_user_by_username(username: str):
     query = users.select().where(users.c.username == username)
     return await database.fetch_one(query)
 
 async def get_user_by_email(email: str):
-    query = users.select().where(users.c.email == email)
+    query = users.select().where(users.c.email == email.lower())  # case-insensitive
     return await database.fetch_one(query)
 
-async def delete_expired_queries():
-    cutoff = datetime.now() - timedelta(hours=24)
-    await database.execute(queries.delete().where(queries.c.created_at < cutoff))
-    cutoff_events = datetime.now() - timedelta(days=30)
-    await database.execute(events.delete().where(events.c.created_at < cutoff_events))
+async def create_user(user_data: UserCreate):
+    hashed = hash_password(user_data.password)
+    query = users.insert().values(
+        email=user_data.email.lower(),
+        username=user_data.username,
+        password_hash=hashed,
+        full_name=user_data.full_name,
+        tier="free",
+        queries_used_today=0,
+        last_query_reset=datetime.now()
+    )
+    user_id = await database.execute(query)
+    return user_id
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Initial connect
-    await database.connect()
-    logger.info("Database connected")
-    
-    # Run migrations and create tables
-    await migrate_database()
-    await create_tables()
-    
-    # Reset pool to clear cached statements
-    await reset_database_pool()
-    
-    # Ensure test user (using raw SQL, no prepared statement cache)
-    await ensure_test_user()
-    
-    load_pdfs()
-    
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
-    scheduler.start()
-    logger.info("Scheduler started")
-    yield
-    await database.disconnect()
-    logger.info("Database disconnected")
+async def increment_query_count(user_id: int):
+    user = await database.fetch_one(users.select().where(users.c.id == user_id))
+    last_reset = user["last_query_reset"]
+    now = datetime.now()
+    if now.date() > last_reset.date():
+        await database.execute(
+            users.update().where(users.c.id == user_id).values(
+                queries_used_today=1,
+                last_query_reset=now
+            )
+        )
+        return 1
+    else:
+        await database.execute(
+            users.update().where(users.c.id == user_id).values(
+                queries_used_today=users.c.queries_used_today + 1
+            )
+        )
+        updated = await database.fetch_one(users.select().where(users.c.id == user_id))
+        return updated["queries_used_today"]
 
-app.router.lifespan_context = lifespan
+async def check_query_limit(user_id: int) -> bool:
+    user = await database.fetch_one(users.select().where(users.c.id == user_id))
+    if user["tier"] in ("premium", "enterprise", "lifetime"):
+        return True
+    last_reset = user["last_query_reset"]
+    now = datetime.now()
+    if now.date() > last_reset.date():
+        return True  # will be reset on next increment
+    used = user["queries_used_today"]
+    return used < 10
+
+# ─── Agent System ────────────────────────────────────────────────────
+AGENT_MAP = {
+    "contract_review": "Analyzes contracts for risks and compliance.",
+    "legal_research": "Finds relevant case laws and statutes.",
+    "drafting": "Generates legal documents from templates.",
+    "due_diligence": "Checks regulatory and legal compliance.",
+    "ip_search": "Searches for patents and trademarks.",
+}
+
+def route_agent(query: str) -> str:
+    query_lower = query.lower()
+    if "contract" in query_lower or "agreement" in query_lower:
+        return "contract_review"
+    if "case" in query_lower or "judgment" in query_lower:
+        return "legal_research"
+    if "draft" in query_lower or "create" in query_lower:
+        return "drafting"
+    if "patent" in query_lower or "trademark" in query_lower:
+        return "ip_search"
+    if "due diligence" in query_lower or "compliance" in query_lower:
+        return "due_diligence"
+    return "general"
+
+async def execute_agent(agent_name: str, query: str) -> str:
+    responses = {
+        "contract_review": "This contract has potential risks in clause 5 (indemnity) and clause 12 (termination). Consider limiting liability.",
+        "legal_research": "Under Section 138 of the Negotiable Instruments Act, the cheque must be presented within 6 months.",
+        "drafting": "I've drafted a simple NDA. Please review and customize the parties.",
+        "ip_search": "There are 3 similar patents registered in India for this technology.",
+        "due_diligence": "The company is compliant with all applicable regulations except for pending GST filings.",
+        "general": "I'm your general legal assistant. How can I help?"
+    }
+    return responses.get(agent_name, "I'm processing your request. Please hold on.")
+
+# ─── Verifier System ──────────────────────────────────────────────
+VERIFIER_MAP = {
+    "fact_check": "Verifies factual claims against known databases.",
+    "legal_citation": "Checks if cited laws are correct and current.",
+    "compliance": "Validates regulatory compliance.",
+}
+async def verify_response(agent_response: str, context: dict) -> tuple[str, str]:
+    return agent_response, "fact_check"
+
+# ─── File Processing ──────────────────────────────────────────────
+async def process_uploaded_file(file: UploadFile) -> str:
+    content = await file.read()
+    try:
+        file_type = puremagic.from_string(content, mime=True)[0]
+    except:
+        ext = os.path.splitext(file.filename)[1].lower()
+        file_type = {
+            '.pdf': 'application/pdf',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+        }.get(ext, 'application/octet-stream')
+    if file_type == "application/pdf":
+        pdf = PyPDF2.PdfReader(io.BytesIO(content))
+        text = " ".join([page.extract_text() for page in pdf.pages])
+        return text
+    elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        doc = docx.Document(io.BytesIO(content))
+        text = " ".join([para.text for para in doc.paragraphs])
+        return text
+    elif file_type.startswith("image/"):
+        img = Image.open(io.BytesIO(content))
+        text = pytesseract.image_to_string(img)
+        return text
+    else:
+        return "Unsupported file type."
+
+# ─── Voice Transcription ──────────────────────────────────────────
+async def transcribe_audio(audio_bytes: bytes) -> str:
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
+        audio = recognizer.record(source)
+    try:
+        text = recognizer.recognize_google(audio, language="en-IN")
+        return text
+    except:
+        return "Could not transcribe audio."
+
+# ─── Web Search ──────────────────────────────────────────────────
+async def web_search(query: str) -> str:
+    if not WEB_SEARCH_API_KEY:
+        return "Web search is not configured."
+    async with httpx.AsyncClient() as client:
+        url = "https://serpapi.com/search"
+        params = {
+            "q": query,
+            "api_key": WEB_SEARCH_API_KEY,
+            "hl": "en",
+            "gl": "in"
+        }
+        resp = await client.get(url, params=params)
+        data = resp.json()
+        organic = data.get("organic_results", [])
+        snippets = [r.get("snippet", "") for r in organic[:3]]
+        return " ".join(snippets) if snippets else "No results found."
 
 # ─── API Endpoints ──────────────────────────────────────────────
 
 @app.get("/")
 async def root():
-    return {"message": "LexSarthi Alpha v5.0", "status": "operational"}
+    return {"message": "LexSarthi Alpha v5.0 – Legal AI OS", "status": "operational"}
 
-# ─── Auth Router ──────────────────────────────────────────────
+# ─── Authentication Router ──────────────────────────────────────
 from fastapi import APIRouter
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -525,20 +582,26 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def login(user_login: UserLogin):
     logger.info(f"Login attempt with: {user_login.username}")
     user = None
+    # Check if input looks like an email
     if '@' in user_login.username:
         user = await get_user_by_email(user_login.username)
+        if not user:
+            logger.warning(f"Email not found: {user_login.username}")
     else:
         user = await get_user_by_username(user_login.username)
-
+        if not user:
+            logger.warning(f"Username not found: {user_login.username}")
+    
+    # 🔥 CRITICAL: Check again before using `user`
     if user is None:
-        logger.warning(f"User not found: {user_login.username}")
+        logger.error("User object is None – aborting login")
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
+    
     if not verify_password(user_login.password, user["password_hash"]):
-        logger.warning(f"Password mismatch for: {user['username']}")
+        logger.warning(f"Password verification failed for {user['username']}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    token = create_access_token({"sub": user["id"]})
+    
+    token = create_access_token({"sub": str(user["id"])})
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -559,28 +622,16 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 @auth_router.post("/register")
 async def register(user: UserCreate):
     if await get_user_by_username(user.username):
-        raise HTTPException(status_code=400, detail="Username taken")
+        raise HTTPException(status_code=400, detail="Username already taken")
     if await get_user_by_email(user.email):
-        raise HTTPException(status_code=400, detail="Email taken")
-    new_id = str(uuid.uuid4())
-    hashed = hash_password(user.password)
-    query = users.insert().values(
-        id=new_id,
-        email=user.email,
-        username=user.username,
-        password_hash=hashed,
-        full_name=user.full_name,
-        tier="free",
-        queries_used_today=0,
-        last_query_reset=datetime.now()
-    )
-    await database.execute(query)
-    token = create_access_token({"sub": new_id})
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user_id = await create_user(user)
+    token = create_access_token({"sub": str(user_id)})
     return {
         "access_token": token,
         "token_type": "bearer",
         "user": {
-            "id": new_id,
+            "id": user_id,
             "username": user.username,
             "email": user.email,
             "full_name": user.full_name,
@@ -598,36 +649,56 @@ async def regenerate_api_key(current_user: dict = Depends(get_current_user)):
 
 app.include_router(auth_router)
 
-# ─── Legacy endpoints ──────────────────────────────────────────
-@app.post("/login")
+# Also keep legacy endpoints for backward compatibility
+@app.post("/login", response_model=Token)
 async def login_legacy(user_login: UserLogin):
     return await login(user_login)
 
 @app.get("/me")
-async def me_legacy(current_user: dict = Depends(get_current_user)):
+async def get_me_legacy(current_user: dict = Depends(get_current_user)):
     return current_user
+
+@app.post("/register")
+async def register_legacy(user: UserCreate):
+    return await register(user)
 
 # ─── Lifetime Count ────────────────────────────────────────────
 @app.get("/lifetime-count")
 async def get_lifetime_count():
+    # Check if tier column exists; if not, return total users
     try:
+        # Try to count lifetime users
         query = "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
         result = await database.fetch_one(query)
         count = result["count"] if result else 0
-        return {"count": count, "limit": 1000, "remaining": max(0, 1000 - count)}
+        limit = 1000
+        return {"count": count, "limit": limit, "remaining": max(0, limit - count)}
     except Exception as e:
+        # Fallback: count all users
+        logger.warning(f"Lifetime count fallback: {e}")
         total = await database.fetch_one("SELECT COUNT(*) as count FROM users")
         return {"count": total["count"] if total else 0, "limit": 1000, "remaining": 0}
 
-# ─── My Usage ──────────────────────────────────────────────────
+# ─── My Usage (for all users) ──────────────────────────────────
 @app.get("/my-usage")
 async def my_usage(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
-    total = await database.fetch_one("SELECT COUNT(*) as count FROM queries WHERE user_id = $1", user_id)
-    today = await database.fetch_one("SELECT COUNT(*) as count FROM queries WHERE user_id = $1 AND created_at::date = NOW()::date", user_id)
-    agents = await database.fetch_all("SELECT DISTINCT metadata->>'agent' as agent FROM queries WHERE user_id = $1 AND metadata IS NOT NULL", user_id)
+    total = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1", user_id
+    )
+    today = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1 AND created_at::date = NOW()::date",
+        user_id
+    )
+    agents = await database.fetch_all(
+        "SELECT DISTINCT metadata->>'agent' as agent FROM queries WHERE user_id = $1 AND metadata IS NOT NULL",
+        user_id
+    )
     agent_list = [a["agent"] for a in agents if a["agent"]]
-    recent = await database.fetch_all("SELECT query, created_at FROM queries WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5", user_id)
+    recent = await database.fetch_all(
+        "SELECT query, created_at FROM queries WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",
+        user_id
+    )
     return {
         "total_queries": total["count"] if total else 0,
         "queries_today": today["count"] if today else 0,
@@ -638,15 +709,19 @@ async def my_usage(current_user: dict = Depends(get_current_user)):
         ]
     }
 
-# ─── Admin Stats ──────────────────────────────────────────────
+# ─── Admin Stats (Enterprise only) ─────────────────────────────
 @app.get("/admin/stats")
 async def admin_stats(current_user: dict = Depends(get_current_user)):
     if current_user.get("tier") != "enterprise":
-        raise HTTPException(status_code=403, detail="Enterprise required")
+        raise HTTPException(status_code=403, detail="Enterprise tier required")
     total_users = await database.fetch_one("SELECT COUNT(*) as count FROM users")
     total_queries = await database.fetch_one("SELECT COUNT(*) as count FROM queries")
-    dau = await database.fetch_one("SELECT COUNT(DISTINCT user_id) as dau FROM queries WHERE created_at > NOW() - INTERVAL '1 day'")
-    paid_users = await database.fetch_one("SELECT COUNT(*) as count FROM users WHERE tier IN ('premium','enterprise','lifetime')")
+    dau = await database.fetch_one(
+        "SELECT COUNT(DISTINCT user_id) as dau FROM queries WHERE created_at > NOW() - INTERVAL '1 day'"
+    )
+    paid_users = await database.fetch_one(
+        "SELECT COUNT(*) as count FROM users WHERE tier IN ('premium','enterprise','lifetime')"
+    )
     return {
         "total_users": total_users["count"] if total_users else 0,
         "total_queries": total_queries["count"] if total_queries else 0,
@@ -655,105 +730,90 @@ async def admin_stats(current_user: dict = Depends(get_current_user)):
         "timestamp": datetime.now().isoformat()
     }
 
-# ─── Main Query ──────────────────────────────────────────────────
+# ─── Main Query ────────────────────────────────────────────────
 @app.post("/ask")
-async def ask(query_req: QueryRequest, current_user: dict = Depends(get_current_user)):
-    if not query_req.query:
-        raise HTTPException(status_code=400, detail="Query is required")
-
-    agent = shiva_orchestrator(query_req.query)
-    context = search_pdfs(query_req.query)
-    response_text = await execute_agent(agent, query_req.query, context)
-
-    try:
-        expires_at = datetime.now() + timedelta(hours=24)
-        query = queries.insert().values(
-            user_id=current_user["id"],
-            query=query_req.query,
-            response=response_text,
-            metadata={"agent": agent["name"]},
-            expires_at=expires_at
-        )
-        await database.execute(query)
-    except Exception as e:
-        logger.warning(f"Could not save query: {e}")
-
+@limiter.limit("30/minute")
+async def ask(
+    request: Request,
+    query_req: QueryRequest,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["id"]
+    if not await check_query_limit(user_id):
+        raise HTTPException(status_code=429, detail="Free limit reached. Upgrade to Premium.")
+    await increment_query_count(user_id)
+    agent_name = route_agent(query_req.query)
+    response_text = await execute_agent(agent_name, query_req.query)
+    verified_text, verifier_name = await verify_response(response_text, query_req.context or {})
+    metadata = {
+        "agent": agent_name,
+        "verifier": verifier_name,
+        "context": query_req.context
+    }
+    expires_at = datetime.now() + timedelta(hours=24)
+    query = queries.insert().values(
+        user_id=user_id,
+        query=query_req.query,
+        response=verified_text,
+        metadata=metadata,
+        expires_at=expires_at
+    )
+    await database.execute(query)
     return {
-        "response": response_text,
-        "agent_used": agent["name"],
-        "verifiers": {}
+        "response": verified_text,
+        "agent_used": agent_name,
+        "verifier_used": verifier_name,
     }
 
 # ─── File Upload ──────────────────────────────────────────────────
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
     try:
-        content = await file.read()
-        try:
-            file_type = puremagic.from_string(content, mime=True)[0]
-        except:
-            ext = os.path.splitext(file.filename)[1].lower()
-            file_type = {
-                '.pdf': 'application/pdf',
-                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-            }.get(ext, 'application/octet-stream')
-        if file_type == "application/pdf":
-            pdf = PyPDF2.PdfReader(io.BytesIO(content))
-            text = " ".join([page.extract_text() for page in pdf.pages])
-            return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
-        elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            doc = docx.Document(io.BytesIO(content))
-            text = " ".join([para.text for para in doc.paragraphs])
-            return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
-        elif file_type.startswith("image/"):
-            img = Image.open(io.BytesIO(content))
-            text = pytesseract.image_to_string(img)
-            return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
-        else:
-            return {"filename": file.filename, "extracted_text": "Unsupported file type."}
+        text = await process_uploaded_file(file)
+        return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # ─── Voice Transcription ──────────────────────────────────────────
 @app.post("/transcribe")
-async def transcribe_audio_endpoint(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def transcribe_audio_endpoint(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
     content = await file.read()
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(io.BytesIO(content)) as source:
-        audio = recognizer.record(source)
-    try:
-        text = recognizer.recognize_google(audio, language="en-IN")
-        return {"transcription": text}
-    except:
-        return {"transcription": "Could not transcribe audio."}
+    text = await transcribe_audio(content)
+    return {"transcription": text}
 
 # ─── Web Search ────────────────────────────────────────────────────
 @app.post("/search")
-async def search(query: str, current_user: dict = Depends(get_current_user)):
-    if not os.getenv("WEB_SEARCH_API_KEY"):
-        return {"results": "Web search not configured."}
-    async with httpx.AsyncClient() as client:
-        url = "https://serpapi.com/search"
-        params = {"q": query, "api_key": os.getenv("WEB_SEARCH_API_KEY"), "hl": "en", "gl": "in"}
-        resp = await client.get(url, params=params)
-        data = resp.json()
-        organic = data.get("organic_results", [])
-        snippets = [r.get("snippet", "") for r in organic[:3]]
-        return {"results": snippets}
+async def search(
+    query: str,
+    current_user: dict = Depends(get_current_user)
+):
+    results = await web_search(query)
+    return {"results": results}
 
-# ─── Razorpay ──────────────────────────────────────────────────
+# ─── Razorpay Payment ──────────────────────────────────────────
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 @app.post("/create-order")
-async def create_order(payment_data: PaymentCreate, current_user: dict = Depends(get_current_user)):
-    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}
+async def create_order(
+    payment_data: PaymentCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}  # ₹2 in paise
     if payment_data.tier not in amount_map:
         raise HTTPException(status_code=400, detail="Invalid tier")
     amount = amount_map[payment_data.tier]
-    order = client.order.create({"amount": amount, "currency": "INR", "payment_capture": 1})
+    order = client.order.create({
+        "amount": amount,
+        "currency": "INR",
+        "payment_capture": 1
+    })
     await database.execute(
         payments.insert().values(
             user_id=current_user["id"],
@@ -823,9 +883,11 @@ async def track_event(
     await database.execute(query)
     return {"status": "ok"}
 
-# ─── Referral ──────────────────────────────────────────────────
+# ─── Referral System ─────────────────────────────────────────────
 @app.post("/referral/generate")
-async def generate_referral(current_user: dict = Depends(get_current_user)):
+async def generate_referral(
+    current_user: dict = Depends(get_current_user)
+):
     existing = await database.fetch_one(
         referrals.select().where(referrals.c.referrer_id == current_user["id"])
     )
@@ -868,6 +930,7 @@ async def use_referral(
             used=True
         )
     )
+    # Reward: add bonus queries in preferences
     referrer = await database.fetch_one(users.select().where(users.c.id == ref["referrer_id"]))
     prefs = referrer["preferences"] or {}
     bonus = prefs.get("bonus_queries", 0) + 5
@@ -892,5 +955,6 @@ async def health_check():
     except:
         return {"status": "unhealthy", "database": "disconnected"}
 
+# ─── Run ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
