@@ -285,17 +285,14 @@ async def ensure_test_user():
         )
         logger.info("Updated test user 'counsel'.")
     else:
-        # Insert new user
-        query = users.insert().values(
-            username="counsel",
-            email="counsel@advocacyalawfrim.in",
-            password_hash=hashed,
-            full_name="Counsel User",
-            tier="free",
-            queries_used_today=0,
-            last_query_reset=datetime.now()
+        # Insert new user using raw SQL to guarantee id generation
+        await database.execute(
+            """
+            INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """,
+            "counsel", "counsel@advocacyalawfrim.in", hashed, "Counsel User", "free", 0, datetime.now()
         )
-        await database.execute(query)
         logger.info("Created test user 'counsel'.")
 
 # ─── Lifespan Events ──────────────────────────────────────────────
@@ -423,16 +420,22 @@ async def get_user_by_email(email: str):
 
 async def create_user(user_data: UserCreate):
     hashed = hash_password(user_data.password)
-    query = users.insert().values(
-        email=user_data.email.lower(),
-        username=user_data.username,
-        password_hash=hashed,
-        full_name=user_data.full_name,
-        tier="free",
-        queries_used_today=0,
-        last_query_reset=datetime.now()
+    # Use raw SQL with RETURNING to get the inserted id
+    query = """
+        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
+    """
+    user_id = await database.fetch_val(
+        query,
+        user_data.username,
+        user_data.email.lower(),
+        hashed,
+        user_data.full_name,
+        "free",
+        0,
+        datetime.now()
     )
-    user_id = await database.execute(query)
     return user_id
 
 async def increment_query_count(user_id: int):
