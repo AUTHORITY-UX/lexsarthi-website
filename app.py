@@ -30,7 +30,7 @@ import uvicorn
 # ─── Database ────────────────────────────────────────────────────────
 import asyncpg
 from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey, text
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey
 from sqlalchemy.sql import func, select, insert, update, delete
 
 # ─── Authentication ─────────────────────────────────────────────────
@@ -279,26 +279,18 @@ async def ensure_test_user():
     if existing:
         # Delete the existing user completely to avoid any stale hash issues
         await database.execute(
-            text("DELETE FROM users WHERE username = :username"),
-            {"username": "counsel"}
+            "DELETE FROM users WHERE username = $1",
+            ("counsel",)
         )
         logger.info("Removed stale test user 'counsel'.")
     
-    # Insert fresh user with correct password
+    # Insert fresh user with correct password – raw SQL with placeholders
     await database.execute(
-        text("""
-            INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
-            VALUES (:username, :email, :password_hash, :full_name, :tier, :queries_used_today, :last_query_reset)
-        """),
-        {
-            "username": "counsel",
-            "email": "counsel@advocacyalawfrim.in",
-            "password_hash": hashed,
-            "full_name": "Counsel User",
-            "tier": "free",
-            "queries_used_today": 0,
-            "last_query_reset": datetime.now()
-        }
+        """
+        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        """,
+        ("counsel", "counsel@advocacyalawfrim.in", hashed, "Counsel User", "free", 0, datetime.now())
     )
     logger.info("Created fresh test user 'counsel' with password 'Password123!'.")
 
@@ -427,22 +419,14 @@ async def get_user_by_email(email: str):
 
 async def create_user(user_data: UserCreate):
     hashed = hash_password(user_data.password)
-    query = text("""
-        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
-        VALUES (:username, :email, :password_hash, :full_name, :tier, :queries_used_today, :last_query_reset)
-        RETURNING id
-    """)
+    # Use raw SQL with RETURNING to get the inserted id – raw string, tuple values
     user_id = await database.fetch_val(
-        query,
-        {
-            "username": user_data.username,
-            "email": user_data.email.lower(),
-            "password_hash": hashed,
-            "full_name": user_data.full_name,
-            "tier": "free",
-            "queries_used_today": 0,
-            "last_query_reset": datetime.now()
-        }
+        """
+        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
+        """,
+        (user_data.username, user_data.email.lower(), hashed, user_data.full_name, "free", 0, datetime.now())
     )
     return user_id
 
@@ -675,11 +659,11 @@ async def register_legacy(user: UserCreate):
 # ─── Lifetime Count ────────────────────────────────────────────
 @app.get("/lifetime-count")
 async def get_lifetime_count():
-    # Check if tier column exists; if not, return total users
     try:
-        # Try to count lifetime users
-        query = "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
-        result = await database.fetch_one(query)
+        # Count lifetime users
+        result = await database.fetch_one(
+            "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
+        )
         count = result["count"] if result else 0
         limit = 1000
         return {"count": count, "limit": limit, "remaining": max(0, limit - count)}
@@ -694,21 +678,21 @@ async def get_lifetime_count():
 async def my_usage(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     total = await database.fetch_one(
-        text("SELECT COUNT(*) as count FROM queries WHERE user_id = :user_id"),
-        {"user_id": user_id}
+        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1",
+        (user_id,)
     )
     today = await database.fetch_one(
-        text("SELECT COUNT(*) as count FROM queries WHERE user_id = :user_id AND created_at::date = NOW()::date"),
-        {"user_id": user_id}
+        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1 AND created_at::date = NOW()::date",
+        (user_id,)
     )
     agents = await database.fetch_all(
-        text("SELECT DISTINCT metadata->>'agent' as agent FROM queries WHERE user_id = :user_id AND metadata IS NOT NULL"),
-        {"user_id": user_id}
+        "SELECT DISTINCT metadata->>'agent' as agent FROM queries WHERE user_id = $1 AND metadata IS NOT NULL",
+        (user_id,)
     )
     agent_list = [a["agent"] for a in agents if a["agent"]]
     recent = await database.fetch_all(
-        text("SELECT query, created_at FROM queries WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 5"),
-        {"user_id": user_id}
+        "SELECT query, created_at FROM queries WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",
+        (user_id,)
     )
     return {
         "total_queries": total["count"] if total else 0,
