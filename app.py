@@ -272,28 +272,26 @@ async def migrate_database():
 
 # ─── Ensure Test User ──────────────────────────────────────────────
 async def ensure_test_user():
-    """Create or update the test user 'counsel' with known password."""
+    """Force‑create or reset the test user 'counsel' with known password."""
     hashed = hash_password("Password123!")
     existing = await get_user_by_username("counsel")
+    
     if existing:
-        # Update password to known hash (in case it was changed)
+        # Delete the existing user completely to avoid any stale hash issues
         await database.execute(
-            users.update().where(users.c.username == "counsel").values(
-                password_hash=hashed,
-                email="counsel@advocacyalawfrim.in"
-            )
+            "DELETE FROM users WHERE username = 'counsel'"
         )
-        logger.info("Updated test user 'counsel'.")
-    else:
-        # Insert new user using raw SQL to guarantee id generation
-        await database.execute(
-            """
-            INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            """,
-            "counsel", "counsel@advocacyalawfrim.in", hashed, "Counsel User", "free", 0, datetime.now()
-        )
-        logger.info("Created test user 'counsel'.")
+        logger.info("Removed stale test user 'counsel'.")
+    
+    # Insert fresh user with correct password
+    await database.execute(
+        """
+        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        """,
+        "counsel", "counsel@advocacyalawfrim.in", hashed, "Counsel User", "free", 0, datetime.now()
+    )
+    logger.info("Created fresh test user 'counsel' with password 'Password123!'.")
 
 # ─── Lifespan Events ──────────────────────────────────────────────
 @asynccontextmanager
@@ -595,7 +593,6 @@ async def login(user_login: UserLogin):
         if not user:
             logger.warning(f"Username not found: {user_login.username}")
     
-    # 🔥 CRITICAL: Check again before using `user`
     if user is None:
         logger.error("User object is None – aborting login")
         raise HTTPException(status_code=401, detail="Invalid credentials")
