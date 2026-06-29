@@ -30,8 +30,8 @@ import uvicorn
 # ─── Database ────────────────────────────────────────────────────────
 import asyncpg
 from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey
-from sqlalchemy.sql import func, select, insert, update, delete
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey, func, select, insert, update, delete
+from sqlalchemy.sql import text  # only for raw SQL if needed
 
 # ─── Authentication ─────────────────────────────────────────────────
 import jwt
@@ -277,21 +277,21 @@ async def ensure_test_user():
     existing = await get_user_by_username("counsel")
     
     if existing:
-        # Delete the existing user completely to avoid any stale hash issues
-        await database.execute(
-            "DELETE FROM users WHERE username = $1",
-            ("counsel",)
-        )
+        # Delete using SQLAlchemy Core delete()
+        await database.execute(users.delete().where(users.c.username == "counsel"))
         logger.info("Removed stale test user 'counsel'.")
     
-    # Insert fresh user with correct password – raw SQL with placeholders
-    await database.execute(
-        """
-        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        """,
-        ("counsel", "counsel@advocacyalawfrim.in", hashed, "Counsel User", "free", 0, datetime.now())
+    # Insert using SQLAlchemy Core insert()
+    stmt = users.insert().values(
+        username="counsel",
+        email="counsel@advocacyalawfrim.in",
+        password_hash=hashed,
+        full_name="Counsel User",
+        tier="free",
+        queries_used_today=0,
+        last_query_reset=datetime.now()
     )
+    await database.execute(stmt)
     logger.info("Created fresh test user 'counsel' with password 'Password123!'.")
 
 # ─── Lifespan Events ──────────────────────────────────────────────
@@ -419,15 +419,17 @@ async def get_user_by_email(email: str):
 
 async def create_user(user_data: UserCreate):
     hashed = hash_password(user_data.password)
-    # Use raw SQL with RETURNING to get the inserted id – raw string, tuple values
-    user_id = await database.fetch_val(
-        """
-        INSERT INTO users (username, email, password_hash, full_name, tier, queries_used_today, last_query_reset)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id
-        """,
-        (user_data.username, user_data.email.lower(), hashed, user_data.full_name, "free", 0, datetime.now())
-    )
+    # Use insert() with returning() to get the new id
+    stmt = users.insert().values(
+        username=user_data.username,
+        email=user_data.email.lower(),
+        password_hash=hashed,
+        full_name=user_data.full_name,
+        tier="free",
+        queries_used_today=0,
+        last_query_reset=datetime.now()
+    ).returning(users.c.id)
+    user_id = await database.fetch_val(stmt)
     return user_id
 
 async def increment_query_count(user_id: int):
@@ -660,43 +662,46 @@ async def register_legacy(user: UserCreate):
 @app.get("/lifetime-count")
 async def get_lifetime_count():
     try:
-        # Count lifetime users
-        result = await database.fetch_one(
-            "SELECT COUNT(*) as count FROM users WHERE tier = 'lifetime'"
-        )
-        count = result["count"] if result else 0
+        # Count lifetime users using SQLAlchemy Core
+        stmt = select(func.count()).select_from(users).where(users.c.tier == "lifetime")
+        count = await database.fetch_val(stmt)
         limit = 1000
-        return {"count": count, "limit": limit, "remaining": max(0, limit - count)}
+        return {"count": count or 0, "limit": limit, "remaining": max(0, limit - (count or 0))}
     except Exception as e:
         # Fallback: count all users
         logger.warning(f"Lifetime count fallback: {e}")
-        total = await database.fetch_one("SELECT COUNT(*) as count FROM users")
-        return {"count": total["count"] if total else 0, "limit": 1000, "remaining": 0}
+        stmt = select(func.count()).select_from(users)
+        total = await database.fetch_val(stmt)
+        return {"count": total or 0, "limit": 1000, "remaining": 0}
 
 # ─── My Usage (for all users) ──────────────────────────────────
 @app.get("/my-usage")
 async def my_usage(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
-    total = await database.fetch_one(
-        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1",
-        (user_id,)
+    # Total queries
+    stmt = select(func.count()).select_from(queries).where(queries.c.user_id == user_id)
+    total = await database.fetch_val(stmt)
+    # Today
+    stmt = select(func.count()).select_from(queries).where(
+        queries.c.user_id == user_id,
+        func.date(queries.c.created_at) == func.current_date()
     )
-    today = await database.fetch_one(
-        "SELECT COUNT(*) as count FROM queries WHERE user_id = $1 AND created_at::date = NOW()::date",
-        (user_id,)
+    today = await database.fetch_val(stmt)
+    # Agents used
+    stmt = select(queries.c.metadata['agent'].distinct()).where(
+        queries.c.user_id == user_id,
+        queries.c.metadata.isnot(None)
     )
-    agents = await database.fetch_all(
-        "SELECT DISTINCT metadata->>'agent' as agent FROM queries WHERE user_id = $1 AND metadata IS NOT NULL",
-        (user_id,)
-    )
-    agent_list = [a["agent"] for a in agents if a["agent"]]
-    recent = await database.fetch_all(
-        "SELECT query, created_at FROM queries WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",
-        (user_id,)
-    )
+    agents = await database.fetch_all(stmt)
+    agent_list = [a[0] for a in agents if a[0]]
+    # Recent queries
+    stmt = select(queries.c.query, queries.c.created_at).where(
+        queries.c.user_id == user_id
+    ).order_by(queries.c.created_at.desc()).limit(5)
+    recent = await database.fetch_all(stmt)
     return {
-        "total_queries": total["count"] if total else 0,
-        "queries_today": today["count"] if today else 0,
+        "total_queries": total or 0,
+        "queries_today": today or 0,
         "agents_used": agent_list,
         "recent_queries": [
             {"query": r["query"], "timestamp": r["created_at"].isoformat()}
@@ -709,19 +714,20 @@ async def my_usage(current_user: dict = Depends(get_current_user)):
 async def admin_stats(current_user: dict = Depends(get_current_user)):
     if current_user.get("tier") != "enterprise":
         raise HTTPException(status_code=403, detail="Enterprise tier required")
-    total_users = await database.fetch_one("SELECT COUNT(*) as count FROM users")
-    total_queries = await database.fetch_one("SELECT COUNT(*) as count FROM queries")
-    dau = await database.fetch_one(
-        "SELECT COUNT(DISTINCT user_id) as dau FROM queries WHERE created_at > NOW() - INTERVAL '1 day'"
+    total_users = await database.fetch_val(select(func.count()).select_from(users))
+    total_queries = await database.fetch_val(select(func.count()).select_from(queries))
+    dau_stmt = select(func.count(func.distinct(queries.c.user_id))).where(
+        queries.c.created_at > func.now() - text("INTERVAL '1 day'")
     )
-    paid_users = await database.fetch_one(
-        "SELECT COUNT(*) as count FROM users WHERE tier IN ('premium','enterprise','lifetime')"
+    dau = await database.fetch_val(dau_stmt)
+    paid_users = await database.fetch_val(
+        select(func.count()).select_from(users).where(users.c.tier.in_(["premium", "enterprise", "lifetime"]))
     )
     return {
-        "total_users": total_users["count"] if total_users else 0,
-        "total_queries": total_queries["count"] if total_queries else 0,
-        "daily_active_users": dau["dau"] if dau else 0,
-        "paid_users": paid_users["count"] if paid_users else 0,
+        "total_users": total_users or 0,
+        "total_queries": total_queries or 0,
+        "daily_active_users": dau or 0,
+        "paid_users": paid_users or 0,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -747,14 +753,14 @@ async def ask(
         "context": query_req.context
     }
     expires_at = datetime.now() + timedelta(hours=24)
-    query = queries.insert().values(
+    stmt = queries.insert().values(
         user_id=user_id,
         query=query_req.query,
         response=verified_text,
         metadata=metadata,
         expires_at=expires_at
     )
-    await database.execute(query)
+    await database.execute(stmt)
     return {
         "response": verified_text,
         "agent_used": agent_name,
@@ -809,15 +815,14 @@ async def create_order(
         "currency": "INR",
         "payment_capture": 1
     })
-    await database.execute(
-        payments.insert().values(
-            user_id=current_user["id"],
-            razorpay_order_id=order["id"],
-            amount=amount/100,
-            tier=payment_data.tier,
-            status="created"
-        )
+    stmt = payments.insert().values(
+        user_id=current_user["id"],
+        razorpay_order_id=order["id"],
+        amount=amount/100,
+        tier=payment_data.tier,
+        status="created"
     )
+    await database.execute(stmt)
     return {"order_id": order["id"], "amount": amount, "currency": "INR", "razorpay_key": RAZORPAY_KEY_ID}
 
 @app.post("/verify-payment")
@@ -834,23 +839,21 @@ async def verify_payment(
     }
     try:
         client.utility.verify_payment_signature(params_dict)
-        await database.execute(
-            payments.update().where(payments.c.razorpay_order_id == razorpay_order_id).values(
-                razorpay_payment_id=razorpay_payment_id,
-                razorpay_signature=razorpay_signature,
-                status="paid"
-            )
+        stmt = payments.update().where(payments.c.razorpay_order_id == razorpay_order_id).values(
+            razorpay_payment_id=razorpay_payment_id,
+            razorpay_signature=razorpay_signature,
+            status="paid"
         )
+        await database.execute(stmt)
         payment = await database.fetch_one(
             payments.select().where(payments.c.razorpay_order_id == razorpay_order_id)
         )
         tier = payment["tier"]
-        await database.execute(
-            users.update().where(users.c.id == current_user["id"]).values(
-                tier=tier,
-                is_premium=True if tier != "free" else False
-            )
+        stmt = users.update().where(users.c.id == current_user["id"]).values(
+            tier=tier,
+            is_premium=True if tier != "free" else False
         )
+        await database.execute(stmt)
         return {"status": "success", "tier": tier}
     except:
         raise HTTPException(status_code=400, detail="Payment verification failed")
@@ -866,7 +869,7 @@ async def track_event(
     session_id = request.headers.get("X-Session-ID") or str(uuid.uuid4())
     ip = request.client.host
     user_agent = request.headers.get("user-agent")
-    query = events.insert().values(
+    stmt = events.insert().values(
         user_id=current_user["id"] if current_user else None,
         session_id=session_id,
         event_type=event_type,
@@ -875,7 +878,7 @@ async def track_event(
         user_agent=user_agent,
         expires_at=datetime.now() + timedelta(days=30)
     )
-    await database.execute(query)
+    await database.execute(stmt)
     return {"status": "ok"}
 
 # ─── Referral System ─────────────────────────────────────────────
@@ -896,13 +899,12 @@ async def generate_referral(
         if not existing_code:
             break
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    await database.execute(
-        referrals.insert().values(
-            referrer_id=current_user["id"],
-            code=code,
-            used=False
-        )
+    stmt = referrals.insert().values(
+        referrer_id=current_user["id"],
+        code=code,
+        used=False
     )
+    await database.execute(stmt)
     return {"code": code}
 
 @app.post("/referral/use")
@@ -919,12 +921,11 @@ async def use_referral(
         raise HTTPException(status_code=400, detail="Referral code already used")
     if ref["referrer_id"] == current_user["id"]:
         raise HTTPException(status_code=400, detail="You cannot use your own referral code")
-    await database.execute(
-        referrals.update().where(referrals.c.id == ref["id"]).values(
-            referee_id=current_user["id"],
-            used=True
-        )
+    stmt = referrals.update().where(referrals.c.id == ref["id"]).values(
+        referee_id=current_user["id"],
+        used=True
     )
+    await database.execute(stmt)
     # Reward: add bonus queries in preferences
     referrer = await database.fetch_one(users.select().where(users.c.id == ref["referrer_id"]))
     prefs = referrer["preferences"] or {}
