@@ -350,19 +350,11 @@ async def increment_query(user_id: int):
 # ─── FILE PROCESSING ────────────────────────────────────────────
 async def process_file(file: UploadFile) -> str:
     content = await file.read()
+    filename = file.filename.lower()
     text = ""
-    file_type = "unknown"
 
-    # Detect MIME type
-    try:
-        file_type = puremagic.from_string(content, mime=True)[0]
-    except:
-        import mimetypes
-        ext = os.path.splitext(file.filename)[1].lower()
-        file_type = mimetypes.types_map.get(ext, "application/octet-stream")
-
-    # --- PDF Processing ---
-    if file_type == "application/pdf":
+    # --- 1. Check file extension (most reliable) ---
+    if filename.endswith('.pdf'):
         try:
             reader = PyPDF2.PdfReader(io.BytesIO(content))
             if len(reader.pages) == 0:
@@ -371,13 +363,78 @@ async def process_file(file: UploadFile) -> str:
                 page_text = page.extract_text()
                 if page_text:
                     text += page_text + "\n"
+            if not text.strip():
+                raise ValueError("PDF extraction returned empty text. The PDF may be scanned or image-based.")
+            return text.strip()
         except Exception as e:
-            # If PyPDF2 fails, try extracting raw text (fallback)
-            try:
-                # Attempt to read as plain text (sometimes PDFs are just text wrappers)
-                text = content.decode('utf-8', errors='ignore')
-            except:
-                raise ValueError(f"PDF extraction failed: {str(e)}")
+            raise ValueError(f"PDF processing failed: {str(e)}")
+
+    elif filename.endswith('.docx'):
+        try:
+            doc = docx.Document(io.BytesIO(content))
+            text = " ".join([p.text for p in doc.paragraphs])
+            if not text.strip():
+                raise ValueError("DOCX extraction returned empty text.")
+            return text.strip()
+        except Exception as e:
+            raise ValueError(f"DOCX processing failed: {str(e)}")
+
+    elif filename.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+        try:
+            img = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(img)
+            if not text.strip():
+                raise ValueError("OCR returned no text. The image might be unclear.")
+            return text.strip()
+        except Exception as e:
+            raise ValueError(f"Image OCR failed: {str(e)}")
+
+    # --- 2. Fallback to puremagic for unknown extensions ---
+    try:
+        import puremagic
+        mime = puremagic.from_string(content, mime=True)[0]
+    except:
+        mime = "application/octet-stream"
+
+    if mime == "application/pdf":
+        try:
+            reader = PyPDF2.PdfReader(io.BytesIO(content))
+            for page in reader.pages:
+                text += page.extract_text() or ""
+            if text.strip():
+                return text.strip()
+        except:
+            pass
+        raise ValueError("The file appears to be a PDF but could not be processed. Try a text-based PDF.")
+    elif "docx" in mime:
+        try:
+            doc = docx.Document(io.BytesIO(content))
+            text = " ".join([p.text for p in doc.paragraphs])
+            if text.strip():
+                return text.strip()
+        except:
+            pass
+        raise ValueError("The file appears to be a DOCX but could not be processed.")
+    elif mime.startswith("image/"):
+        try:
+            img = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(img)
+            if text.strip():
+                return text.strip()
+        except:
+            pass
+        raise ValueError("The file appears to be an image but could not be OCR processed.")
+
+    # --- 3. Last resort: try reading as plain text ---
+    try:
+        text = content.decode('utf-8', errors='ignore')
+        if text.strip():
+            return text.strip()
+    except:
+        pass
+
+    raise ValueError(f"Unsupported or unreadable file: {filename}. Please upload a PDF, DOCX, or image file.")
+        
 
     # --- DOCX Processing ---
     elif "docx" in file_type:
@@ -610,6 +667,43 @@ async def ask(
         raise HTTPException(status_code=429, detail="Free limit reached. Upgrade to Premium.")
     
     combined_query = query
+    
+    # --- HARDENED FILE PROCESSING ---
+    if files:
+        try:
+            file_text = await process_file(files)
+            if not file_text or len(file_text.strip()) < 20:
+                raise HTTPException(status_code=400, detail="File is empty or contains no readable text.")
+            combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
+        except HTTPException as he:
+            # Re-raise HTTP exceptions directly
+            raise he
+        except Exception as e:
+            logger.error(f"File processing error: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
+
+    if search_web.lower() in ("on", "yes"):
+        combined_query += "\n\n--- Web Search Enabled ---"
+
+    await increment_query(current_user["id"])
+    
+    agent_type = route_agent(combined_query, agent_id)
+    agent_name = f"Agent {agent_id}"
+    
+    response_text = await execute_ai(combined_query, model, agent_type, agent_name)
+    
+    expires_at = datetime.now() + timedelta(hours=24)
+    await database.execute(
+        queries.insert().values(
+            user_id=current_user["id"],
+            query=combined_query,
+            response=response_text,
+            metadata={"agent": agent_id, "model": model, "file": bool(files), "agent_type": agent_type},
+            expires_at=expires_at
+        )
+    )
+    
+    return {"response": response_text, "model": model, "agent_used": agent_id}
     
     # --- HARDENED FILE PROCESSING ---
     if files:
