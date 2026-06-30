@@ -1,9 +1,8 @@
 # ===================================================================
-# LEXSARTHI v5.0 – THE FINAL CHARIOT
+# LEXSARTHI v5.0 – COMPLETE BACKEND
 # ===================================================================
-# Owner: THE ADVOCACY – A LAW FIRM (Proprietor: Upmanyu Kumar)
+# Owner: THE ADVOCACY – A LAW FIRM (Upmanyu Kumar)
 # Deployed: upamnyu12-lex.hf.space
-# Launch Date: 12.08.2026 – ॐ नमः शिवाय
 # ===================================================================
 
 import os
@@ -27,7 +26,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 import uvicorn
 
-# ─── RATE LIMITING (Essential for 1M users) ─────────────────────
+# ─── RATE LIMITING ──────────────────────────────────────────────
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -65,8 +64,8 @@ import razorpay
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("lexsarthi")
 
-# ─── ENV VARIABLES ──────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL")
+# ─── ENV VARIABLES (Reads your Neon DB link from Secrets) ──────
+DATABASE_URL = os.getenv("DATABASE_URL")  # <-- THIS is your connection string!
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-change-me")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
@@ -180,7 +179,7 @@ class PaymentCreate(BaseModel):
     tier: str
 
 # ─── SECURITY ────────────────────────────────────────────────────
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")  # <-- FIXED HASHING
 security = HTTPBearer()
 
 def hash_password(password: str) -> str:
@@ -485,7 +484,7 @@ async def execute_ai(query: str, model: str, agent_type: str = "general", agent_
         except Exception as e:
             logger.error(f"OpenRouter error: {e}")
 
-    # 5. Fallback (Graceful Degradation)
+    # 5. Fallback
     return f"""
 ⚠️ **AI Service Unavailable**  
 We are currently experiencing high demand. Your query has been logged.
@@ -559,7 +558,7 @@ async def my_usage(current_user: dict = Depends(get_current_user)):
     return {"total_queries": total, "queries_today": today}
 
 @app.post("/ask")
-@limiter.limit("30/minute")  # Protection for 1M users
+@limiter.limit("30/minute")
 async def ask(
     request: Request,
     query: str = Form(...),
