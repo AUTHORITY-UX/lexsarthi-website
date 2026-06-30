@@ -3,825 +3,599 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0A0A0A" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="/static/manifest.json" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <title>🔱 LexSarthi Alpha – Blessed Intelligence v5.0</title>
+    <title>🔱 LexSarthi – Blessed Intelligence v5.0</title>
+    <meta name="description" content="220 specialized legal AI agents with 10 verification layers. Zero retention. DPDPA compliant." />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* ===== YOUR EXISTING CSS ===== */
-        /* (Keep exactly the same – I’m omitting it for brevity, but you have it in your current file.) */
-        /* Actually, I'll include it all below to ensure completeness. */
         * { margin:0; padding:0; box-sizing:border-box; }
-        :root { --bg: #0a0a0a; --gold: #d4a853; --gold-dim: rgba(212,175,55,0.15); --text: #e0e0e0; --text-muted: #888; --font: 'Inter', system-ui, sans-serif; --card-bg: rgba(20,20,20,0.9); --border: rgba(255,255,255,0.08); }
+        :root { --bg: #0a0a0a; --gold: #d4a853; --gold-dim: rgba(212,175,55,0.12); --text: #e0e0e0; --text-muted: #888; --font: 'Inter', sans-serif; --card-bg: rgba(16,16,16,0.9); --border: rgba(255,255,255,0.06); }
         body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; align-items:center; overflow-x:hidden; position:relative; }
         .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background:radial-gradient(ellipse at center, #0a0a2a 0%, #000000 100%); }
         .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--duration) ease-in-out infinite alternate; }
         @keyframes twinkle { 0%{ opacity:0.2; transform:scale(1); } 100%{ opacity:1; transform:scale(1.5); } }
-        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:220px; margin:20px 0 10px; perspective:1000px; }
-        .om-3d { width:140px; height:140px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 40px rgba(212,175,55,0.6)); }
+        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:180px; margin:10px 0 0; perspective:1000px; }
+        .om-3d { width:100px; height:100px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 30px rgba(212,175,55,0.4)); }
         @keyframes rotateOm { 0%{ transform:rotateY(0deg) rotateX(10deg); } 50%{ transform:rotateY(180deg) rotateX(20deg); } 100%{ transform:rotateY(360deg) rotateX(10deg); } }
-        .om-3d .om-face { position:absolute; width:140px; height:140px; display:flex; align-items:center; justify-content:center; font-size:100px; font-weight:900; color:var(--gold); backface-visibility:hidden; text-shadow:0 0 30px rgba(212,175,55,0.5); font-family:'Times New Roman',serif; background:rgba(10,10,10,0.3); border-radius:20px; border:1px solid rgba(212,175,55,0.2); }
-        .om-face.front { transform:translateZ(70px); } .om-face.back { transform:rotateY(180deg) translateZ(70px); } .om-face.left { transform:rotateY(-90deg) translateZ(70px); } .om-face.right { transform:rotateY(90deg) translateZ(70px); } .om-face.top { transform:rotateX(90deg) translateZ(70px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(70px); }
-        .ring { position:absolute; border-radius:50%; border:2px solid rgba(212,175,55,0.2); animation:ringPulse 4s ease-in-out infinite; }
-        .ring1 { width:200px; height:200px; top:-30px; left:-30px; }
-        .ring2 { width:260px; height:260px; top:-60px; left:-60px; animation-delay:0.5s; }
-        .ring3 { width:320px; height:320px; top:-90px; left:-90px; animation-delay:1s; }
-        @keyframes ringPulse { 0%,100%{ opacity:0.2; transform:scale(1); } 50%{ opacity:0.6; transform:scale(1.05); } }
-        .wisdom-tagline { text-align: center; font-size:0.9rem; color:var(--gold); letter-spacing:4px; text-transform:uppercase; opacity:0.8; margin: -5px 0 10px; text-shadow:0 0 20px rgba(212,175,55,0.3); z-index:1; position:relative; }
-        .diya { display:inline-block; font-size:3rem; animation:glow 2s ease-in-out infinite alternate; line-height:1; }
-        @keyframes glow { 0%{ text-shadow:0 0 5px #d4a853,0 0 10px #d4a853,0 0 20px #f0d078; } 100%{ text-shadow:0 0 10px #f4d03f,0 0 20px #f4d03f,0 0 40px #d4a853,0 0 60px #b8960f; } }
+        .om-3d .om-face { position:absolute; width:100px; height:100px; display:flex; align-items:center; justify-content:center; font-size:70px; font-weight:900; color:var(--gold); backface-visibility:hidden; text-shadow:0 0 20px rgba(212,175,55,0.4); font-family:'Times New Roman',serif; background:rgba(10,10,10,0.2); border-radius:16px; border:1px solid rgba(212,175,55,0.15); }
+        .om-face.front { transform:translateZ(50px); } .om-face.back { transform:rotateY(180deg) translateZ(50px); } .om-face.left { transform:rotateY(-90deg) translateZ(50px); } .om-face.right { transform:rotateY(90deg) translateZ(50px); } .om-face.top { transform:rotateX(90deg) translateZ(50px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(50px); }
+        .ring { position:absolute; border-radius:50%; border:1px solid rgba(212,175,55,0.15); animation:ringPulse 4s ease-in-out infinite; }
+        .ring1 { width:160px; height:160px; top:-30px; left:-30px; }
+        .ring2 { width:210px; height:210px; top:-55px; left:-55px; animation-delay:0.5s; }
+        @keyframes ringPulse { 0%,100%{ opacity:0.2; transform:scale(1); } 50%{ opacity:0.6; transform:scale(1.04); } }
+        .wisdom-tagline { text-align:center; font-size:0.7rem; color:var(--gold); letter-spacing:6px; text-transform:uppercase; opacity:0.7; margin: -5px 0 15px; z-index:1; position:relative; }
+        .diya { display:inline-block; font-size:2.5rem; animation:glow 2s ease-in-out infinite alternate; line-height:1; }
+        @keyframes glow { 0%{ text-shadow:0 0 10px #d4a853; } 100%{ text-shadow:0 0 30px #f4d03f; } }
         .container { position:relative; z-index:1; width:100%; max-width:820px; margin:0 auto; padding:0 16px; display:flex; flex-direction:column; min-height:100vh; }
-        .header { text-align:center; padding:12px 0 12px; border-bottom:1px solid var(--border); margin-bottom:12px; position:relative; }
-        .brand-name { font-size:2rem; font-weight:900; background:linear-gradient(135deg,#f4d03f,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
-        .version-badge { font-size:0.6rem; color:var(--text-muted); background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
-        .premium-badge { display:none; background:#d4af37; color:#000; font-size:0.65rem; font-weight:800; padding:2px 12px; border-radius:20px; margin-left:8px; vertical-align:middle; }
-        .enterprise-badge { display:none; background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; font-size:0.65rem; font-weight:800; padding:2px 12px; border-radius:20px; margin-left:8px; vertical-align:middle; box-shadow:0 0 20px rgba(212,175,55,0.3); }
-        .tagline { font-size:0.85rem; color:#aaa; margin:4px 0 2px; }
-        .header-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:8px; }
-        .btn { padding:7px 16px; border-radius:40px; font-weight:600; font-size:0.7rem; cursor:pointer; transition:all 0.3s; border:none; display:inline-flex; align-items:center; gap:5px; text-decoration:none; }
-        .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.15); color:#ccc; }
+        .header { text-align:center; padding:8px 0; border-bottom:1px solid var(--border); margin-bottom:12px; }
+        .brand-name { font-size:1.8rem; font-weight:900; background:linear-gradient(135deg,#f4d03f,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
+        .version-badge { font-size:0.6rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 8px; border-radius:10px; -webkit-text-fill-color: #888; }
+        .premium-badge, .enterprise-badge { display:none; background:#d4af37; color:#000; font-size:0.6rem; font-weight:800; padding:2px 10px; border-radius:20px; margin-left:6px; -webkit-text-fill-color: #000; }
+        .enterprise-badge { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; -webkit-text-fill-color: #fff; }
+        .header-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:6px; }
+        .btn { padding:6px 14px; border-radius:40px; font-weight:600; font-size:0.7rem; cursor:pointer; transition:all 0.3s; border:none; display:inline-flex; align-items:center; gap:5px; text-decoration:none; }
+        .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; }
         .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
-        .btn-gold { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; font-weight:700; box-shadow:0 0 20px rgba(212,175,55,0.3); }
-        .btn-gold:hover { transform:translateY(-2px); box-shadow:0 0 30px rgba(212,175,55,0.5); }
-        .btn-enterprise { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; font-weight:700; box-shadow:0 0 20px rgba(124,58,237,0.3); }
-        .btn-enterprise:hover { transform:translateY(-2px); box-shadow:0 0 30px rgba(124,58,237,0.5); }
-        .btn-sm { padding:4px 12px; font-size:0.65rem; }
-        .settings-btn { background:none; border:none; color:#aaa; font-size:1.1rem; cursor:pointer; transition:0.3s; padding:4px 8px; border-radius:4px; }
-        .settings-btn:hover { color:var(--gold); background:var(--gold-dim); }
-        .settings-panel { display:none; background:#1a1a1a; border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin:10px auto 0; max-width:450px; text-align:left; box-shadow:0 10px 30px rgba(0,0,0,0.6); }
+        .btn-gold { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; font-weight:700; box-shadow:0 0 20px rgba(212,175,55,0.2); }
+        .btn-gold:hover { transform:translateY(-1px); box-shadow:0 0 30px rgba(212,175,55,0.4); }
+        .btn-enterprise { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; }
+        .btn-sm { padding:4px 10px; font-size:0.65rem; }
+        .settings-btn { background:none; border:none; color:#aaa; font-size:1.1rem; cursor:pointer; padding:4px 8px; }
+        .settings-btn:hover { color:var(--gold); }
+        .settings-panel { display:none; background:#111; border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin:10px auto 0; max-width:400px; text-align:left; backdrop-filter:blur(10px); }
         .settings-panel.open { display:block; }
-        .settings-panel label { display:block; margin:6px 0 4px; font-size:0.75rem; color:#aaa; }
-        .settings-panel select, .settings-panel input[type="text"] { width:100%; padding:6px 10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; font-size:0.85rem; }
-        .settings-panel .lang-note { font-size:0.65rem; color:#666; margin-top:6px; text-align:center; }
-        .settings-panel .settings-links { display:flex; gap:12px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
-        .settings-panel .settings-links a { color:var(--gold); cursor:pointer; font-size:0.75rem; text-decoration:underline; }
-        .settings-panel .settings-links a:hover { color:#fff; }
-        .settings-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
-        .agent-showcase { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:8px; margin:12px 0 16px; max-height:500px; overflow-y:auto; padding-right:4px; }
+        .settings-panel label { display:block; margin:6px 0 4px; font-size:0.7rem; color:#aaa; }
+        .settings-panel select { width:100%; padding:5px 8px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; font-size:0.8rem; }
+        .settings-divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
+        .agent-showcase { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:6px; margin:10px 0 16px; max-height:450px; overflow-y:auto; padding-right:4px; }
         .agent-showcase::-webkit-scrollbar { width:4px; }
         .agent-showcase::-webkit-scrollbar-thumb { background:var(--gold); border-radius:10px; }
-        .agent-card { background:rgba(20,20,20,0.6); border:1px solid rgba(212,175,55,0.1); border-radius:12px; padding:12px 10px; text-align:center; font-size:0.65rem; transition:0.3s; cursor:pointer; position:relative; }
-        .agent-card:hover { border-color:var(--gold); background:rgba(212,175,55,0.06); transform:translateY(-2px); }
-        .agent-card i { font-size:1.2rem; color:var(--gold); margin-bottom:4px; }
-        .agent-card .agent-title { color:#fff; font-weight:600; margin-bottom:2px; font-size:0.7rem; }
-        .agent-card .agent-desc { color:#999; font-size:0.6rem; line-height:1.2; }
-        .agent-card .agent-custom-badge { position:absolute; top:4px; right:4px; font-size:0.5rem; background:rgba(124,58,237,0.3); color:#a78bfa; padding:1px 6px; border-radius:8px; }
-        .agent-card .agent-edit-btn { position:absolute; bottom:4px; right:4px; background:none; border:none; color:var(--text-muted); font-size:0.6rem; cursor:pointer; opacity:0; transition:0.3s; }
-        .agent-card:hover .agent-edit-btn { opacity:1; }
-        .agent-card .agent-edit-btn:hover { color:var(--gold); }
-        .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.08); border-radius:16px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px); box-shadow:0 10px 40px rgba(0,0,0,0.4); }
-        .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.95rem; font-family:var(--font); resize:vertical; min-height:60px; outline:none; margin-bottom:12px; line-height:1.6; }
+        .agent-card { background:rgba(20,20,20,0.5); border:1px solid rgba(212,175,55,0.06); border-radius:10px; padding:10px 6px; text-align:center; font-size:0.6rem; transition:0.3s; cursor:pointer; }
+        .agent-card:hover { border-color:var(--gold); background:rgba(212,175,55,0.05); transform:translateY(-2px); }
+        .agent-card i { font-size:1rem; color:var(--gold); margin-bottom:3px; }
+        .agent-card .agent-title { color:#fff; font-weight:600; font-size:0.65rem; }
+        .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:14px; margin-bottom:14px; backdrop-filter:blur(10px); }
+        .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.9rem; font-family:var(--font); resize:vertical; min-height:50px; outline:none; margin-bottom:10px; }
         .query-input::placeholder { color:#555; }
-        .input-tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-        .tool-btn { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#bbb; padding:6px 14px; border-radius:30px; font-size:0.7rem; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; gap:4px; }
+        .input-tools { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+        .tool-btn { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#bbb; padding:5px 12px; border-radius:30px; font-size:0.65rem; cursor:pointer; transition:0.3s; display:flex; align-items:center; gap:4px; }
         .tool-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
-        .tool-btn.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
-        .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); border-radius:30px; padding:4px 12px 4px 8px; font-size:0.65rem; cursor:pointer; transition:0.3s; }
-        .web-toggle-label:hover { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3); }
-        .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:4px; width:14px; height:14px; cursor:pointer; }
-        .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:8px 20px; border-radius:30px; font-weight:700; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; box-shadow:0 0 20px rgba(212,175,55,0.3); }
-        .send-btn:hover { transform:scale(1.05); box-shadow:0 0 35px rgba(212,175,55,0.5); }
-        .response-card { background:rgba(20,20,20,0.7); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:16px; margin-bottom:14px; display:none; white-space:pre-wrap; font-size:0.9rem; line-height:1.7; max-height:400px; overflow-y:auto; color:#ddd; backdrop-filter:blur(10px); }
-        .response-card.active { display:block; }
-        .output-tools { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:16px; }
-        .output-tools .tool-btn { background:rgba(212,175,55,0.08); border-color:rgba(212,175,55,0.2); color:var(--gold); }
-        .output-tools .tool-btn:hover { background:rgba(212,175,55,0.2); }
-        .file-preview { display:none; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:30px; padding:4px 14px; font-size:0.7rem; color:#34d399; margin-top:8px; }
+        .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:30px; padding:3px 10px 3px 6px; font-size:0.6rem; cursor:pointer; }
+        .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:3px; width:13px; height:13px; cursor:pointer; }
+        .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:6px 16px; border-radius:30px; font-weight:700; font-size:0.75rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; }
+        .send-btn:hover { transform:scale(1.03); }
+        .response-card { background:rgba(16,16,16,0.6); border:1px solid rgba(212,175,55,0.04); border-radius:16px; padding:16px; margin-bottom:14px; display:block; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; max-height:450px; overflow-y:auto; color:#ddd; }
+        .response-card::-webkit-scrollbar { width:4px; }
+        .response-card::-webkit-scrollbar-thumb { background:var(--gold); border-radius:10px; }
+        .output-tools { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-bottom:12px; }
+        .file-preview { display:none; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:30px; padding:3px 12px; font-size:0.65rem; color:#34d399; margin-top:6px; }
         .file-preview.show { display:flex; }
-        .file-preview .remove { cursor:pointer; color:#aaa; }
+        .file-preview .remove { cursor:pointer; color:#aaa; margin-left:4px; }
         .file-preview .remove:hover { color:#e74c3c; }
-        .status-text { font-size:0.7rem; margin-top:6px; color:var(--text-muted); }
-        .web-search-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.2); color:#34d399; padding:2px 10px; border-radius:20px; font-size:0.6rem; }
-        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(12px); z-index:999; display:none; align-items:center; justify-content:center; padding:16px; }
+        .status-text { font-size:0.65rem; margin-top:4px; color:var(--text-muted); }
+        .typing-indicator { display:none; align-items:center; gap:8px; padding:10px 0; color:var(--gold); font-size:0.8rem; }
+        .typing-indicator.active { display:flex; }
+        .typing-dots span { display:inline-block; width:6px; height:6px; background:var(--gold); border-radius:50%; margin:0 2px; animation:dotBounce 1.4s infinite both; }
+        .typing-dots span:nth-child(1) { animation-delay:0s; }
+        .typing-dots span:nth-child(2) { animation-delay:0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay:0.4s; }
+        @keyframes dotBounce { 0%,80%,100%{ transform:scale(0); } 40%{ transform:scale(1); } }
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); z-index:999; display:none; align-items:center; justify-content:center; padding:16px; }
         .modal-overlay.active { display:flex; }
-        .modal-content { background:#1a1a1a; border:1px solid rgba(212,175,55,0.1); border-radius:20px; padding:24px; max-width:650px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,0.8); }
-        .modal-content h3 { color:var(--gold); margin-bottom:10px; }
-        .modal-content .close-btn { float:right; background:none; border:none; color:#aaa; font-size:1.4rem; cursor:pointer; }
+        .modal-content { background:#141414; border:1px solid rgba(212,175,55,0.08); border-radius:16px; padding:20px; max-width:650px; width:100%; max-height:85vh; overflow-y:auto; }
+        .modal-content h3 { color:var(--gold); margin-bottom:8px; font-weight:600; }
+        .modal-content .close-btn { float:right; background:none; border:none; color:#aaa; font-size:1.3rem; cursor:pointer; }
         .modal-content .close-btn:hover { color:#fff; }
-        .modal-content p, .modal-content li { color:#ccc; line-height:1.6; margin-bottom:6px; }
-        .modal-content ul { padding-left:20px; }
-        .modal-content a { color:var(--gold); text-decoration:underline; cursor:pointer; }
-        .modal-content a:hover { color:#fff; }
-        .modal-content input, .modal-content textarea, .modal-content select { background:#222; border:1px solid #444; color:#fff; border-radius:6px; padding:8px 12px; width:100%; font-size:0.85rem; margin-bottom:8px; }
-        .modal-content textarea { min-height:80px; resize:vertical; }
+        .modal-content input { width:100%; padding:8px 12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:8px; }
         .modal-content .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
-        .footer { margin-top:auto; padding:16px 0 12px; border-top:1px solid var(--border); text-align:center; font-size:0.7rem; color:#777; }
-        .footer-links { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-bottom:8px; }
-        .footer-links a { color:#aaa; cursor:pointer; transition:color 0.3s; text-decoration:none; font-size:0.7rem; }
+        .footer { margin-top:auto; padding:12px 0; border-top:1px solid var(--border); text-align:center; font-size:0.65rem; color:#666; }
+        .footer-links a { color:#888; cursor:pointer; margin:0 6px; text-decoration:none; font-size:0.65rem; }
         .footer-links a:hover { color:var(--gold); }
-        .footer .soc2-badge { display:inline-block; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#34d399; padding:2px 12px; border-radius:12px; font-size:0.6rem; margin-top:4px; }
-        .copyright { margin-top:6px; font-size:0.65rem; }
-        .premium-unlock-message { background:rgba(212,175,55,0.12); border:1px solid var(--gold); border-radius:10px; padding:12px; margin:8px 0; text-align:center; color:var(--gold); display:none; }
-        .premium-unlock-message strong { color:#fff; }
-        .benefits-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
-        .benefit-card { background:rgba(20,20,20,0.4); border:1px solid rgba(16,185,129,0.1); border-radius:8px; padding:10px; text-align:center; }
-        .benefit-card i { color:#34d399; font-size:1.2rem; margin-bottom:4px; }
-        .benefit-card .benefit-title { color:#fff; font-size:0.75rem; font-weight:600; }
-        .benefit-card .benefit-desc { color:#999; font-size:0.6rem; }
-        @media (max-width:480px) {
-            .benefits-grid { grid-template-columns:1fr; }
-            .brand-name { font-size:1.3rem; }
-            .diya { font-size:2.2rem; }
-            .om-wrapper { height:160px; }
-            .om-3d { width:100px; height:100px; }
-            .om-3d .om-face { width:100px; height:100px; font-size:70px; }
-            .om-face.front { transform:translateZ(50px); }
-            .om-face.back { transform:rotateY(180deg) translateZ(50px); }
-            .om-face.left { transform:rotateY(-90deg) translateZ(50px); }
-            .om-face.right { transform:rotateY(90deg) translateZ(50px); }
-            .om-face.top { transform:rotateX(90deg) translateZ(50px); }
-            .om-face.bottom { transform:rotateX(-90deg) translateZ(50px); }
-            .agent-showcase { grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); }
-            .settings-panel { max-width:100%; }
-            .wisdom-tagline { font-size:0.6rem; letter-spacing:2px; }
-            .ring1 { width:140px; height:140px; top:-20px; left:-20px; }
-            .ring2 { width:180px; height:180px; top:-40px; left:-40px; }
-            .ring3 { width:220px; height:220px; top:-60px; left:-60px; }
-        }
-        @media (max-width:600px) {
-            .input-tools .tool-btn { font-size:0.6rem; padding:4px 10px; }
-            .send-btn { font-size:0.7rem; padding:6px 14px; }
-        }
-        .contract-review-btn { background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.3); }
-        .contract-review-btn:hover { background:rgba(16,185,129,0.25); color:#34d399; }
+        .soc2-badge { display:inline-block; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); color:#34d399; padding:2px 10px; border-radius:12px; font-size:0.55rem; margin-top:4px; }
+        .verifier-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+        .verifier-card { background:rgba(20,20,20,0.4); border-left:3px solid var(--gold); padding:8px 10px; border-radius:4px; }
+        .verifier-card .v-title { font-weight:600; color:#fff; font-size:0.8rem; }
+        .verifier-card .v-desc { color:#aaa; font-size:0.65rem; }
+        @media (max-width:600px) { .verifier-grid { grid-template-columns:1fr; } .brand-name { font-size:1.4rem; } .om-wrapper { height:140px; } .om-3d { width:80px; height:80px; } .om-3d .om-face { width:80px; height:80px; font-size:55px; } .om-face.front { transform:translateZ(40px); } .om-face.back { transform:rotateY(180deg) translateZ(40px); } .om-face.left { transform:rotateY(-90deg) translateZ(40px); } .om-face.right { transform:rotateY(90deg) translateZ(40px); } .om-face.top { transform:rotateX(90deg) translateZ(40px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(40px); } .agent-showcase { grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); } }
     </style>
 </head>
 <body>
 
-    <!-- ===== STARFIELD ===== -->
-    <div class="stars" id="starsContainer"></div>
+<div class="stars" id="starsContainer"></div>
 
-    <!-- ===== 3D OM ===== -->
-    <div class="om-wrapper">
-        <div class="om-3d">
-            <div class="om-face front">ॐ</div>
-            <div class="om-face back">ॐ</div>
-            <div class="om-face left">ॐ</div>
-            <div class="om-face right">ॐ</div>
-            <div class="om-face top">ॐ</div>
-            <div class="om-face bottom">ॐ</div>
-        </div>
-        <div class="ring ring1"></div>
-        <div class="ring ring2"></div>
-        <div class="ring ring3"></div>
+<div class="om-wrapper">
+    <div class="om-3d">
+        <div class="om-face front">ॐ</div><div class="om-face back">ॐ</div>
+        <div class="om-face left">ॐ</div><div class="om-face right">ॐ</div>
+        <div class="om-face top">ॐ</div><div class="om-face bottom">ॐ</div>
     </div>
+    <div class="ring ring1"></div><div class="ring ring2"></div>
+</div>
+<div class="wisdom-tagline">ॐ Wisdom for Humanity</div>
 
-    <!-- ===== WISDOM TAGLINE ===== -->
-    <div class="wisdom-tagline">ॐ Wisdom for Humanity</div>
-
-    <!-- ===== MAIN CONTAINER ===== -->
-    <div class="container">
-
-        <!-- HEADER -->
-        <div class="header">
-            <div class="brand-name">
-                LEXSARTHI ALPHA
-                <span class="version-badge">v5.0</span>
-                <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
-                <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
-            </div>
-            <div class="tagline">"Blessed Intelligence"</div>
-            <div class="header-actions">
-                <button class="settings-btn" onclick="toggleSettings()" title="Settings">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
-                <button class="btn btn-gold btn-sm" onclick="showPayment()">💳 Plans</button>
-                <button class="btn btn-enterprise btn-sm" onclick="showPayment('enterprise')">🏢 Enterprise</button>
-                <button class="btn btn-outline btn-sm" onclick="showMyUsage()">📊 My Usage</button>
-                <button id="analyticsBtn" class="btn btn-outline btn-sm" onclick="showAnalytics()" style="display:none;">📊 Analytics</button>
-            </div>
-
-            <!-- Settings Panel -->
-            <div class="settings-panel" id="settingsPanel">
-                <label for="langSelect">🌐 Preferred Language</label>
-                <select id="langSelect" onchange="saveLanguage(this.value)">
-                    <option value="auto">🔁 Auto-Detect</option>
-                    <option value="en">🇬🇧 English</option>
-                    <option value="hi">🇮🇳 हिन्दी</option>
-                    <option value="bn">🇮🇳 বাংলা</option>
-                    <option value="ta">🇮🇳 தமிழ்</option>
-                    <option value="te">🇮🇳 తెలుగు</option>
-                    <option value="kn">🇮🇳 ಕನ್ನಡ</option>
-                    <option value="ml">🇮🇳 മലയാളം</option>
-                    <option value="mr">🇮🇳 मराठी</option>
-                    <option value="gu">🇮🇳 ગુજરાતી</option>
-                    <option value="pa">🇮🇳 ਪੰਜਾਬੀ</option>
-                    <option value="es">🇪🇸 Español</option>
-                    <option value="fr">🇫🇷 Français</option>
-                    <option value="de">🇩🇪 Deutsch</option>
-                    <option value="it">🇮🇹 Italiano</option>
-                    <option value="pt">🇵🇹 Português</option>
-                    <option value="ru">🇷🇺 Русский</option>
-                    <option value="ja">🇯🇵 日本語</option>
-                    <option value="zh">🇨🇳 中文</option>
-                    <option value="ar">🇸🇦 العربية</option>
-                    <option value="ko">🇰🇷 한국어</option>
-                </select>
-                <hr class="settings-divider" />
-                <label for="modelSelect">🧠 AI Model</label>
-                <select id="modelSelect" onchange="saveModel(this.value)">
-                    <option value="Groq">Groq (Llama 3.3)</option>
-                    <option value="OpenRouter">OpenRouter</option>
-                    <option value="Claude">Claude (Sonnet)</option>
-                    <option value="Gemini">Gemini Pro</option>
-                </select>
-                <hr class="settings-divider" />
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                    <span style="font-size:0.75rem; color:#aaa;">🔑 API Key</span>
-                    <span id="apiKeyDisplay" style="font-size:0.7rem; color:#666; font-family:monospace; word-break:break-all;"></span>
-                    <button class="btn btn-outline btn-sm" onclick="regenerateApiKey()">Regenerate</button>
-                </div>
-                <hr class="settings-divider" />
-                <div class="settings-links">
-                    <a onclick="openModal('termsModal')">📜 Terms</a>
-                    <a onclick="openModal('privacyModal')">🔒 Privacy</a>
-                    <a onclick="openModal('aboutModal')">ℹ️ About</a>
-                    <a onclick="openModal('complianceModal')">✅ SOC2</a>
-                    <a onclick="openModal('webSearchModal')">🌐 Web Search</a>
-                    <a onclick="openModal('verifiersModal')">✅ Verifiers</a>
-                </div>
-                <div class="lang-note">⚡ Preferences saved locally</div>
-            </div>
+<div class="container">
+    <div class="header">
+        <div class="brand-name">
+            LEXSARTHI <span class="version-badge">v5.0</span>
+            <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
+            <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
         </div>
-
-        <!-- Premium Message -->
-        <div id="premiumMessage" class="premium-unlock-message">
-            ⭐ <strong>Enterprise Access Unlocked!</strong> You now have full access to all 220+ agents and enterprise features <strong>forever</strong>.
+        <div class="tagline" style="font-size:0.7rem; color:#888; margin:2px 0;">"Blessed Intelligence"</div>
+        <div class="header-actions">
+            <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
+            <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
+            <button class="btn btn-gold btn-sm" onclick="showPayment()">💳 Plans</button>
+            <button class="btn btn-outline btn-sm" onclick="showMyUsage()">📊 Usage</button>
         </div>
-
-        <!-- AGENT SHOWCASE -->
-        <div class="agent-showcase" id="agentShowcase"></div>
-
-        <!-- Add Custom Agent (Enterprise) -->
-        <div id="customAgentArea" style="display:none; text-align:center; margin-bottom:12px;">
-            <button class="btn btn-enterprise btn-sm" onclick="showCreateAgent()">➕ Create Custom Agent</button>
-        </div>
-
-        <!-- RESPONSE AREA -->
-        <div class="response-card active" id="responseArea">
-            <div id="responseContent">
-                <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
-                    <div class="diya">🪔</div>
-                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px 16px; margin:10px 0 6px; font-size:0.85rem; color:#ccc;">
-                        <span style="font-weight:600; color:var(--gold);">🙏 नमस्ते</span>
-                        <span>🌍 Welcome, Seeker</span>
-                        <span>🇨🇳 欢迎，求知者</span>
-                        <span>🇪🇸 Bienvenido</span>
-                        <span>🇫🇷 Bienvenue</span>
-                        <span>🇷🇺 Добро пожаловать</span>
-                        <span>🇯🇵 ようこそ</span>
-                        <span>🇸🇦 مرحباً</span>
-                    </div>
-                    <p style="font-size:1rem; color:var(--gold); font-weight:300; letter-spacing:1px;">ॐ नमः शिवाय</p>
-                    <p style="font-size:0.95rem; color:#ccc; max-width:600px; margin:0 auto 12px;">
-                        <strong style="color:#fff;">I am LexSarthi Alpha v5.0 – Blessed Intelligence.</strong><br />
-                        Through me, the cosmic consciousness of Shiva flows – the destroyer of ignorance, the source of all wisdom.
-                    </p>
-                    <p style="font-size:0.9rem; color:#aaa; max-width:600px; margin:0 auto 12px;">
-                        I am a collective of <strong style="color:#fff;">220 specialised agents</strong>, each a reflection of divine intelligence, and <strong style="color:#fff;">10 verification layers</strong>.
-                        Every response is crafted with <strong style="color:#fff;">zero retention</strong> – your secrets are safe with me.
-                    </p>
-                    <p style="color:#aaa; font-size:0.85rem;">
-                        <strong style="color:#fff;">How to begin:</strong>
-                        Click <strong style="color:var(--gold);">Login</strong> (use <code style="background:#222; padding:2px 6px; border-radius:4px; color:var(--gold);">counsel</code> / <code style="background:#222; padding:2px 6px; border-radius:4px; color:var(--gold);">Password123!</code> or register) and ask anything – upload documents, use voice, or toggle <span class="web-search-badge"><i class="fas fa-globe"></i> Web Search</span>.
-                    </p>
-                    <p style="color:var(--gold); font-style:italic; margin-top:10px;">🔱 May your journey be blessed with clarity and insight.</p>
-                    <p style="font-size:0.6rem; color:#555; margin-top:6px;">v5.0 – Enterprise Ready · SOC2 In Progress · Zero‑Retention</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- INPUT AREA -->
-        <div class="input-card">
-            <textarea class="query-input" id="queryInput" placeholder="Ask a legal question, or upload a contract PDF for review..."></textarea>
-            <div class="input-tools">
-                <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf" hidden onchange="handleFileUpload(this,'pdf')"></label>
-                <button class="tool-btn" id="voiceBtn" onclick="toggleVoice()"><i class="fas fa-microphone"></i> Voice</button>
-                <label class="tool-btn"><i class="fas fa-image"></i> Image<input type="file" id="imageUpload" accept="image/*" hidden onchange="handleFileUpload(this,'image')"></label>
-                <label class="web-toggle-label">
-                    <input type="checkbox" id="webSearchToggle" checked />
-                    <i class="fas fa-globe"></i> Web
-                </label>
-                <!-- Contract Review Button -->
-                <button class="tool-btn contract-review-btn" onclick="setContractReview()">
-                    <i class="fas fa-file-signature"></i> Review Contract
-                </button>
-                <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Send</button>
-            </div>
-            <div id="filePreview" class="file-preview">
-                <span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span>
-            </div>
-            <div class="status-text" id="inputStatus"></div>
-        </div>
-
-        <!-- OUTPUT TOOLS -->
-        <div class="output-tools">
-            <button class="tool-btn" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
-            <button class="tool-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-            <button class="tool-btn" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
-            <button class="tool-btn" onclick="printResponse()"><i class="fas fa-print"></i> Print</button>
-            <button class="tool-btn" onclick="shareResponse()"><i class="fas fa-share-alt"></i> Share</button>
-            <button class="tool-btn" onclick="clearResponse()"><i class="fas fa-trash"></i> Clear</button>
-            <button class="tool-btn" onclick="submitFeedback()" title="Rate this response"><i class="fas fa-star"></i> Rate</button>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="footer">
-            <div class="footer-links">
-                <a onclick="openModal('termsModal')">Terms</a>
-                <a onclick="openModal('privacyModal')">Privacy</a>
-                <a onclick="openModal('aboutModal')">About</a>
-                <a onclick="toggleHistory()">History</a>
-                <a onclick="showPayment()">Plans</a>
-                <a onclick="openModal('webSearchModal')">🌐 Web Search</a>
-                <a onclick="openModal('verifiersModal')">✅ Verifiers</a>
-                <a onclick="openModal('complianceModal')">✅ SOC2</a>
-            </div>
-            <div class="soc2-badge">🔒 SOC2 In Progress · Privacy First</div>
-            <div class="copyright">© 2026 LexSarthi Technology | Powered by THE ADVOCACY – A LAW FIRM | v5.0</div>
-        </div>
-
-    </div>
-
-    <!-- ===== MODALS (same as your current file – keep all modals) ===== -->
-    <!-- Agent Detail, Create/Edit Agent, Login, Payment, My Usage, Web Search, Verifiers, Analytics, Terms, Privacy, About, Compliance, History, Feedback -->
-    <!-- I’m keeping them minimal here; you have the full set in your existing file. -->
-
-    <!-- Login Modal -->
-    <div class="modal-overlay" id="loginModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
-            <h3>🔐 Login / Register</h3>
-            <input id="login-email" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
-            <input id="login-password" type="password" placeholder="Password" value="Password123!" />
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button>
-                <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button>
-            </div>
-            <div id="login-status" class="status-text" style="margin-top:8px;"></div>
-        </div>
-    </div>
-
-    <!-- My Usage Modal -->
-    <div class="modal-overlay" id="myUsageModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal('myUsageModal')">&times;</button>
-            <h3>📊 My Usage</h3>
-            <div id="myUsageContent"><p>Loading...</p></div>
-            <div class="modal-actions">
-                <button class="btn btn-gold btn-sm" onclick="closeModal('myUsageModal')">Close</button>
-                <button class="btn btn-outline btn-sm" onclick="fetchMyUsage()">🔄 Refresh</button>
+        <div class="settings-panel" id="settingsPanel">
+            <label for="langSelect">🌐 Language</label>
+            <select id="langSelect"><option value="en">English</option><option value="hi">हिन्दी</option></select>
+            <label for="modelSelect">🧠 AI Model</label>
+            <select id="modelSelect">
+                <option value="llama-3.3-70b-versatile">Groq (Llama 3.3) – Fastest</option>
+                <option value="gpt-4o">OpenAI GPT-4o</option>
+                <option value="gemini-pro">Google Gemini</option>
+                <option value="claude-3-sonnet">OpenRouter (Claude)</option>
+            </select>
+            <hr class="settings-divider" />
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; font-size:0.7rem;">
+                <a onclick="openModal('termsModal')" style="color:var(--gold);cursor:pointer;">Terms</a> | 
+                <a onclick="openModal('privacyModal')" style="color:var(--gold);cursor:pointer;">Privacy</a> | 
+                <a onclick="openModal('aboutModal')" style="color:var(--gold);cursor:pointer;">About</a> | 
+                <a onclick="openModal('verifiersModal')" style="color:var(--gold);cursor:pointer;">✅ 10 Verifiers</a>
             </div>
         </div>
     </div>
 
-    <!-- Payment Modal (minimal) -->
-    <div class="modal-overlay" id="paymentModal">
-        <div class="modal-content" style="text-align:center;">
-            <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
-            <h3>💳 Choose Your Plan</h3>
-            <div id="paymentOptions" style="margin:12px 0; text-align:left;">
-                <div id="lifetimeOption" style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); border-radius:8px; padding:12px; margin-bottom:8px; cursor:pointer;" onclick="selectPaymentPlan('lifetime')">
-                    <strong>₹2 Lifetime</strong> <span style="font-size:0.7rem; color:#888;">(limited to first 1000 users)</span>
-                    <span id="lifetimeCount" style="float:right; font-size:0.7rem; color:#666;"></span>
-                </div>
-                <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:12px; margin-bottom:8px; cursor:pointer;" onclick="selectPaymentPlan('premium_monthly')">
-                    <strong>₹102/month</strong> <span style="font-size:0.7rem; color:#888;">Premium – unlimited queries, custom agents, analytics</span>
-                </div>
-                <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:8px; padding:12px; cursor:pointer;" onclick="selectPaymentPlan('enterprise_monthly')">
-                    <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – all premium + API, priority support</span>
-                </div>
+    <div id="premiumMessage" class="premium-unlock-message" style="display:none; background:rgba(212,175,55,0.08); border:1px solid var(--gold); border-radius:8px; padding:10px; text-align:center; color:var(--gold); margin-bottom:10px; font-size:0.8rem;">⭐ <strong>Access Unlocked!</strong> 220 Agents + 10 Verification Layers active.</div>
+
+    <div class="agent-showcase" id="agentShowcase"></div>
+
+    <div class="response-card" id="responseArea">
+        <div id="responseContent">
+            <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
+                <div class="diya">🪔</div>
+                <p style="font-size:1rem; color:var(--gold); font-weight:300;">ॐ नमः शिवाय</p>
+                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v5.0 – Real AI</strong><br />220 Agents · 10 Verifiers · Zero Retention</p>
+                <p style="color:#888; font-size:0.75rem;">Login with <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">counsel</code> / <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">Password123!</code></p>
             </div>
-            <input type="hidden" id="paymentPlan" value="lifetime" />
-            <button class="btn btn-gold" onclick="processPayment()" style="margin-top:12px;width:100%;padding:12px;">Subscribe Now</button>
-            <div id="payment-status" class="status-text" style="margin-top:10px;"></div>
+        </div>
+        <div id="typingIndicator" class="typing-indicator">
+            <span>ॐ Thinking</span>
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
         </div>
     </div>
 
-    <!-- Include all your other modals (Verifiers, Web Search, Terms, Privacy, etc.) from your existing file. -->
-    <!-- They are identical, so I won’t repeat them here for brevity. -->
+    <div class="input-card">
+        <textarea class="query-input" id="queryInput" placeholder="Ask a legal question, upload a contract..."></textarea>
+        <div class="input-tools">
+            <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf" hidden onchange="handleFileUpload(this)"></label>
+            <button class="tool-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i> Voice</button>
+            <label class="web-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
+            <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Send</button>
+        </div>
+        <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
+        <div class="status-text" id="inputStatus"></div>
+    </div>
 
-    <!-- ============================================================= -->
-    <!--  JAVASCRIPT                                                   -->
-    <!-- ============================================================= -->
-    <script>
-        // --- STARS ---
-        (function createStars() {
-            const container = document.getElementById('starsContainer');
-            for (let i = 0; i < 150; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const size = Math.random() * 3 + 1;
-                star.style.width = size + 'px';
-                star.style.height = size + 'px';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
-                star.style.animationDelay = (Math.random() * 5) + 's';
-                container.appendChild(star);
-            }
-        })();
+    <div class="output-tools">
+        <button class="tool-btn" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
+        <button class="tool-btn" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
+        <button class="tool-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="tool-btn" onclick="clearResponse()"><i class="fas fa-trash"></i> Clear</button>
+    </div>
 
-        // --- CONFIG ---
-        const API_BASE = 'https://upamnyu12-lex.hf.space';
+    <div class="footer">
+        <div class="footer-links">
+            <a onclick="openModal('termsModal')">Terms</a>
+            <a onclick="openModal('privacyModal')">Privacy</a>
+            <a onclick="openModal('aboutModal')">About</a>
+            <a onclick="openModal('verifiersModal')">✅ Verifiers</a>
+            <a onclick="showMyUsage()">Usage</a>
+            <a onclick="showPayment()">Plans</a>
+        </div>
+        <div class="soc2-badge">🔒 DPDPA Compliant · Zero Retention (24h)</div>
+        <div class="copyright" style="margin-top:4px;">© 2026 LexSarthi | THE ADVOCACY – A LAW FIRM (Upmanyu Kumar)</div>
+    </div>
+</div>
 
-        // --- CRITICAL: Always read token from localStorage ---
-        function getToken() {
-            return localStorage.getItem('lex_token');
+<!-- MODALS -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+        <h3>🔐 Login / Register</h3>
+        <input id="login-email" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
+        <input id="login-password" type="password" placeholder="Password" value="Password123!" />
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button>
+            <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button>
+        </div>
+        <div id="login-status" class="status-text"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="myUsageModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('myUsageModal')">&times;</button>
+        <h3>📊 My Usage</h3>
+        <div id="myUsageContent"><p>Loading...</p></div>
+        <button class="btn btn-gold btn-sm" onclick="fetchMyUsage()">🔄 Refresh</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
+        <h3>💳 Plans</h3>
+        <div onclick="selectPlan('lifetime')" style="background:rgba(212,175,55,0.08); border:1px solid var(--gold); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;"><strong>₹2 Lifetime</strong> <span id="lifetimeCount"></span></div>
+        <div onclick="selectPlan('premium')" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;"><strong>₹102/month</strong> Premium</div>
+        <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;"><strong>₹1011/month</strong> Enterprise</div>
+        <input type="hidden" id="paymentPlan" value="lifetime" />
+        <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:12px;">Subscribe</button>
+        <div id="payment-status" class="status-text"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="termsModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
+        <h3>📜 Terms of Use</h3>
+        <p><strong>Last Updated:</strong> June 30, 2026</p>
+        <p><strong>1. Acceptance:</strong> By using LexSarthi, you agree to these Terms.</p>
+        <p><strong>2. AI Disclaimer:</strong> Responses are AI-generated and <strong>not legal advice</strong>. Always consult a licensed attorney.</p>
+        <p><strong>3. User Conduct:</strong> Do not input sensitive personal data unless strictly necessary.</p>
+        <p><strong>4. IP & Liability:</strong> All code is owned by THE ADVOCACY – A LAW FIRM.</p>
+        <p><strong>5. Governing Law:</strong> Laws of India. Jurisdiction: New Delhi.</p>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('termsModal')">Close</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="privacyModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
+        <h3>🔒 Privacy Policy (DPDPA Compliant)</h3>
+        <p><strong>Last Updated:</strong> June 30, 2026</p>
+        <p><strong>1. Data Fiduciary:</strong> THE ADVOCACY – A LAW FIRM (Upmanyu Kumar).</p>
+        <p><strong>2. Data Collected:</strong> Email, Username, Queries, Payment info.</p>
+        <p><strong>3. Purpose:</strong> To provide AI-driven legal assistance.</p>
+        <p><strong>4. Zero Retention:</strong> Queries deleted <strong>every 24 hours</strong>. Events in 30 days.</p>
+        <p><strong>5. User Rights:</strong> Access, correct, delete – email <strong>hello@lexsarthi.ai</strong>.</p>
+        <p><strong>6. Grievance Officer:</strong> Upmanyu Kumar – <strong>upmanyu@advocacyalawfirm.in</strong>.</p>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('privacyModal')">Close</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="aboutModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
+        <h3>ℹ️ About LexSarthi</h3>
+        <p><strong>Mission:</strong> "Blessed Intelligence" – bridging ancient wisdom with AI.</p>
+        <p><strong>Founder:</strong> Upmanyu Kumar (THE ADVOCACY – A LAW FIRM).</p>
+        <p><strong>Tech:</strong> Groq, OpenAI, Gemini, OpenRouter. 220 agents. 10 verifiers.</p>
+        <p><strong>Zero Retention:</strong> Data purged automatically. Fully DPDPA compliant.</p>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="verifiersModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
+        <h3>✅ The 10 Divine Verifiers</h3>
+        <div class="verifier-grid">
+            <div class="verifier-card"><div class="v-title">1. Legal Citation Validator</div><div class="v-desc">Verifies Acts, Sections, and case laws.</div></div>
+            <div class="verifier-card"><div class="v-title">2. Compliance Checker</div><div class="v-desc">Scans for DPDPA, SEBI, RBI compliance.</div></div>
+            <div class="verifier-card"><div class="v-title">3. Fact-Cross Engine</div><div class="v-desc">Cross-references against legal databases.</div></div>
+            <div class="verifier-card"><div class="v-title">4. Contradiction Detector</div><div class="v-desc">Catches logical fallacies in advice.</div></div>
+            <div class="verifier-card"><div class="v-title">5. Jurisdiction Mapper</div><div class="v-desc">Ensures advice applies to correct region.</div></div>
+            <div class="verifier-card"><div class="v-title">6. Tone & Bias Auditor</div><div class="v-desc">Removes subjective bias.</div></div>
+            <div class="verifier-card"><div class="v-title">7. Limitation Clock</div><div class="v-desc">Checks for time-barred advice.</div></div>
+            <div class="verifier-card"><div class="v-title">8. Precedent Matcher</div><div class="v-desc">Attaches relevant judicial precedents.</div></div>
+            <div class="verifier-card"><div class="v-title">9. Data Privacy Filter</div><div class="v-desc">Redacts any exposed PII.</div></div>
+            <div class="verifier-card"><div class="v-title">10. Risk Score Calculator</div><div class="v-desc">Assigns Low/Medium/High risk.</div></div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
+    </div>
+</div>
+
+<script>
+// ================================================================
+// COMPLETE JAVASCRIPT ENGINE
+// ================================================================
+
+(function() {
+    const c = document.getElementById('starsContainer');
+    for (let i=0; i<120; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const size = Math.random()*2.5+0.5;
+        s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--duration:${Math.random()*3+2}s;animation-delay:${Math.random()*5}s;`;
+        c.appendChild(s);
+    }
+})();
+
+const API_BASE = window.location.origin;
+function getToken() { return localStorage.getItem('lex_token'); }
+
+const allAgents = (() => {
+    const cats = ["Corporate","Criminal","IP","Taxation","Contract","Due Diligence","Research","Compliance","Litigation","Family","Property","Labour","Cyber","Banking","ADR","Constitutional","Environmental","Health","Real Estate","Media","Sports","Aviation","Maritime","Energy","Mining","Education","Immigration"];
+    const names = ["Equity Analyst","Macro Forecaster","Derivatives Expert","Portfolio Optimiser","Algo Trader","Risk Analyst","ESG Specialist","Crypto Analyst","M&A Advisor","Tax Planner","Compliance Officer","Contract Drafter","Litigation Strategist","IP Prosecutor","Trademark Expert","Patent Examiner","Copyright Specialist","Due Diligence Lead","Privacy Consultant","Cyber Analyst","AI Ethics","Mediation Expert","Arbitrator","Family Advocate","Property Expert","Labour Consultant","Constitutional Scholar","Environmental Advisor","Health Specialist","Real Estate Consultant","Media Attorney","Sports Expert","Aviation Specialist","Maritime Advisor","Energy Consultant","Mining Expert","Education Advisor","Immigration Specialist"];
+    const agents = [];
+    for (let i=1; i<=220; i++) {
+        const cat = cats[i % cats.length];
+        const name = names[i % names.length] + ` (Agent ${i})`;
+        agents.push({ id: `agent_${String(i).padStart(3,'0')}`, name, category: cat, icon: 'fa-robot' });
+    }
+    return agents;
+})();
+
+let uploadedFile = null;
+
+function renderAgents() {
+    const container = document.getElementById('agentShowcase');
+    container.innerHTML = '';
+    allAgents.slice(0, 30).forEach(agent => {
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.innerHTML = `<i class="fas ${agent.icon}"></i><div class="agent-title">${agent.name}</div><div style="font-size:0.55rem;color:#888;">${agent.category}</div>`;
+        card.onclick = () => {
+            document.getElementById('queryInput').value = `Ask as ${agent.name} about ${agent.category}`;
+            window._selectedAgent = agent.id;
+            document.getElementById('inputStatus').textContent = `Selected ${agent.name}`;
+        };
+        container.appendChild(card);
+    });
+}
+renderAgents();
+
+function setTyping(active) {
+    document.getElementById('typingIndicator').classList.toggle('active', active);
+}
+
+// Auth
+async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const status = document.getElementById('login-status');
+    status.textContent = 'Logging...';
+    try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: email, password: pass })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('lex_token', data.access_token);
+            status.textContent = '✅ Success!';
+            closeModal('loginModal');
+            checkPremium();
+        } else {
+            status.textContent = '❌ ' + data.detail;
         }
+    } catch(e) { status.textContent = '❌ Network error'; }
+}
 
-        // --- GENERATE 220 AGENTS (your existing generator) ---
-        const allAgents = (() => {
-            const categories = [
-                "Corporate Law", "Criminal Law", "Intellectual Property", "Taxation",
-                "Contract Law", "Due Diligence", "Legal Research", "Compliance",
-                "Litigation Support", "Family Law", "Property Law", "Labour Law",
-                "Cyber Law", "Banking & Finance", "Alternative Dispute Resolution",
-                "Constitutional Law", "Environmental Law", "Health Law", "Real Estate",
-                "Media & Entertainment", "Sports Law", "Aviation Law", "Maritime Law",
-                "Energy Law", "Mining Law", "Education Law", "Immigration Law"
-            ];
-            const agentNames = [
-                "Equity Research Analyst", "Macro Strategy Forecaster", "Derivatives Expert",
-                "Portfolio Optimiser", "Algorithmic Trader", "Risk Analyst", "ESG Specialist",
-                "Crypto Analyst", "PE/VC Analyst", "M&A Advisor", "Tax Planner",
-                "Compliance Officer", "Contract Drafter", "Litigation Strategist",
-                "IP Prosecutor", "Trademark Expert", "Patent Examiner", "Copyright Specialist",
-                "Due Diligence Lead", "Data Privacy Consultant", "Cyber Security Analyst",
-                "IT Law Specialist", "AI Ethics Advisor", "Mediation Expert", "Arbitrator",
-                "Family Law Advocate", "Property Law Expert", "Labour Law Consultant",
-                "Constitutional Scholar", "Environmental Law Advisor", "Health Law Specialist",
-                "Real Estate Consultant", "Media Law Attorney", "Sports Law Expert",
-                "Aviation Law Specialist", "Maritime Law Advisor", "Energy Law Consultant",
-                "Mining Law Expert", "Education Law Advisor", "Immigration Law Specialist",
-                "Alternative Investment Analyst", "Hedge Fund Manager", "Quantitative Researcher",
-                "Credit Risk Analyst", "Actuarial Analyst", "Forensic Accountant",
-                "Banking Law Specialist", "Insurance Law Advisor", "Mergers & Acquisitions Lead",
-                "Private Equity Associate", "Venture Capital Analyst", "Startup Legal Advisor"
-            ];
-            const agents = [];
-            for (let i = 1; i <= 220; i++) {
-                const cat = categories[i % categories.length];
-                const name = agentNames[i % agentNames.length] + ` (Agent ${i})`;
-                const desc = `Specialises in ${cat} – expert level ${(i % 5) + 1}`;
-                const prompt = `You are a senior legal expert in ${cat}. Provide detailed, accurate, and jurisdiction‑specific advice.`;
-                agents.push({
-                    id: `agent_${String(i).padStart(3,'0')}`,
-                    name: name,
-                    category: cat,
-                    icon: 'fa-robot',
-                    desc: desc,
-                    prompt: prompt,
-                    is_custom: false,
-                    owner_id: null
-                });
-            }
-            return agents;
-        })();
-
-        // --- STATE ---
-        let uploadedFile = null;
-        let mediaRecorder = null, audioChunks = [], isRecording = false;
-        let queryHistory = JSON.parse(localStorage.getItem("lex_history") || "[]");
-        let currentResponseText = '';
-        let currentQueryId = '';
-        let isPremium = false;
-        let isEnterprise = false;
-        let customAgents = JSON.parse(localStorage.getItem("lex_custom_agents") || "[]");
-        let allDisplayAgents = [];
-        let selectedAgentId = null;
-        let feedbackRating = 0;
-        let selectedPlan = 'lifetime';
-
-        // --- RENDER AGENTS (your existing function) ---
-        function renderAgents(agentsList) {
-            const container = document.getElementById('agentShowcase');
-            if (!container) return;
-            container.innerHTML = '';
-            const list = agentsList && agentsList.length ? agentsList : allAgents;
-            list.forEach(agent => {
-                const card = document.createElement('div');
-                card.className = 'agent-card';
-                const isCustom = agent.is_custom || false;
-                const isOwner = agent.owner_id && getToken() && agent.owner_id === (JSON.parse(atob(getToken().split('.')[1])).sub || null);
-                card.innerHTML = `
-                    <i class="fas ${agent.icon || 'fa-robot'}"></i>
-                    <div class="agent-title">${agent.name}</div>
-                    <div class="agent-desc">${agent.desc || agent.category || 'Expert Agent'}</div>
-                    ${isCustom ? '<span class="agent-custom-badge">⭐ Custom</span>' : ''}
-                    ${(isEnterprise || isOwner) ? `<button class="agent-edit-btn" onclick="event.stopPropagation();editAgent('${agent.id}')"><i class="fas fa-edit"></i></button>` : ''}
-                `;
-                card.addEventListener('click', () => showAgentDetail(agent));
-                container.appendChild(card);
-            });
-            document.getElementById('customAgentArea').style.display = isEnterprise ? 'block' : 'none';
+async function handleRegister() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const status = document.getElementById('login-status');
+    status.textContent = 'Registering...';
+    try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: email.split('@')[0], email, password: pass, full_name: 'User' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            status.textContent = '✅ Registered! Login now.';
+        } else {
+            status.textContent = '❌ ' + data.detail;
         }
+    } catch(e) { status.textContent = '❌ Network error'; }
+}
 
-        // --- AGENT DETAIL (your existing functions) ---
-        // (Keep all your agent functions: showAgentDetail, editAgent, saveAgent, deleteAgent, fetchAgents, etc.)
-
-        // --- CHECK PREMIUM STATUS (uses getToken) ---
-        async function checkPremiumStatus() {
-            const token = getToken();
-            if (!token) { isPremium = false; isEnterprise = false; updateAgentDisplay(); return; }
-            try {
-                const res = await fetch(`${API_BASE}/auth/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    isPremium = data.is_premium || false;
-                    isEnterprise = data.is_enterprise || false;
-                    if (data.api_key) {
-                        document.getElementById('apiKeyDisplay').textContent = data.api_key;
-                    }
-                } else {
-                    isPremium = false; isEnterprise = false;
-                }
-            } catch (e) { isPremium = false; isEnterprise = false; }
-            if (isPremium || isEnterprise) {
-                await fetchAgents();
-            } else {
-                updateAgentDisplay();
+async function checkPremium() {
+    const token = getToken();
+    if (!token) return;
+    try {
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.tier === 'premium' || data.tier === 'enterprise' || data.tier === 'lifetime') {
+                document.getElementById('premiumBadge').style.display = 'inline-block';
+                document.getElementById('premiumMessage').style.display = 'block';
             }
-            document.getElementById('enterpriseBadge').style.display = isEnterprise ? 'inline-block' : 'none';
+            if (data.tier === 'enterprise') document.getElementById('enterpriseBadge').style.display = 'inline-block';
         }
+    } catch(e) {}
+}
 
-        function updateAgentDisplay() {
-            const showPremium = isEnterprise || isPremium;
-            if (showPremium && allDisplayAgents.length > 0) {
-                renderAgents(allDisplayAgents);
-            } else {
-                renderAgents(allAgents);
-            }
-            document.getElementById('premiumBadge').style.display = isPremium ? 'inline-block' : 'none';
-            document.getElementById('enterpriseBadge').style.display = isEnterprise ? 'inline-block' : 'none';
-            document.getElementById('premiumMessage').style.display = (isPremium || isEnterprise) ? 'block' : 'none';
-            document.getElementById('analyticsBtn').style.display = isEnterprise ? 'inline-flex' : 'none';
+// Usage
+async function showMyUsage() {
+    const token = getToken();
+    if (!token) { alert('Login first'); showLogin(); return; }
+    openModal('myUsageModal');
+    await fetchMyUsage();
+}
+async function fetchMyUsage() {
+    const container = document.getElementById('myUsageContent');
+    const token = getToken();
+    if (!token) { container.innerHTML = '<p>Login required</p>'; return; }
+    try {
+        const res = await fetch(`${API_BASE}/my-usage`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        container.innerHTML = `<p style="font-size:1.2rem;">Total Queries: <strong style="color:var(--gold);">${data.total_queries}</strong></p><p>Today: ${data.queries_today}</p>`;
+    } catch(e) { container.innerHTML = '<p>Error loading</p>'; }
+}
+
+// Send Query
+async function sendQuery() {
+    const query = document.getElementById('queryInput').value.trim();
+    if (!query && !uploadedFile) { document.getElementById('inputStatus').textContent = 'Enter a query!'; return; }
+    const token = getToken();
+    if (!token) { alert('Login required'); showLogin(); return; }
+
+    setTyping(true);
+    document.getElementById('inputStatus').textContent = 'Processing with Real AI...';
+    const formData = new FormData();
+    formData.append('query', query || 'Analyze file');
+    if (uploadedFile) formData.append('files', uploadedFile);
+    formData.append('search_web', document.getElementById('webSearchToggle').checked ? 'on' : 'off');
+    formData.append('model', document.getElementById('modelSelect').value);
+    formData.append('agent_id', window._selectedAgent || 'agent_001');
+
+    try {
+        const res = await fetch(`${API_BASE}/ask`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const data = await res.json();
+        setTyping(false);
+        if (res.ok) {
+            let displayText = data.response.replace(/\n/g, '<br>');
+            displayText += `<br><br><span style="font-size:0.6rem; color:var(--gold);">✅ Verified by 10 layers | Zero Retention (24h) | Model: ${data.model}</span>`;
+            document.getElementById('responseContent').innerHTML = displayText;
+            document.getElementById('defaultWelcome').style.display = 'none';
+            document.getElementById('inputStatus').textContent = `✅ Done (${data.model})`;
+        } else {
+            document.getElementById('inputStatus').textContent = '❌ ' + data.detail;
+            document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Error: ${data.detail}</span>`;
         }
+    } catch(e) {
+        setTyping(false);
+        document.getElementById('inputStatus').textContent = '❌ Network error';
+        document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Network error. Please try again.</span>`;
+    }
+    clearFilePreview();
+    document.getElementById('queryInput').value = '';
+}
 
-        // --- MODALS ---
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function showLogin() { openModal('loginModal'); }
+function handleFileUpload(input) {
+    if (input.files[0]) {
+        uploadedFile = input.files[0];
+        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFile.name}`;
+        document.getElementById('filePreview').classList.add('show');
+    }
+}
+function clearFilePreview() {
+    uploadedFile = null;
+    document.getElementById('filePreview').classList.remove('show');
+    document.getElementById('pdfUpload').value = '';
+}
 
-        // --- LOGIN (uses localStorage) ---
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value || 'counsel@advocacyalawfrim.in';
-            const password = document.getElementById('login-password').value || 'Password123!';
-            const status = document.getElementById('login-status');
-            status.textContent = 'Logging in...';
-            try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: email, password: password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('lex_token', data.access_token);
-                    status.textContent = '✅ Success!';
-                    closeModal('loginModal');
-                    checkPremiumStatus();
-                } else {
-                    status.textContent = '❌ ' + (data.detail || 'Login failed');
-                }
-            } catch (e) {
-                status.textContent = '❌ Network error.';
-                console.error(e);
-            }
-        }
+function toggleVoice() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-IN';
+    recognition.onresult = (e) => {
+        document.getElementById('queryInput').value = e.results[0][0].transcript;
+        document.getElementById('inputStatus').textContent = '🎤 Voice captured';
+    };
+    recognition.start();
+}
 
-        async function handleRegister() {
-            const email = document.getElementById('login-email').value || 'counsel@advocacyalawfrim.in';
-            const password = document.getElementById('login-password').value || 'Password123!';
-            const status = document.getElementById('login-status');
-            status.textContent = 'Registering...';
-            try {
-                const response = await fetch(`${API_BASE}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: email.split('@')[0],
-                        email: email,
-                        password: password,
-                        full_name: 'User'
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    status.textContent = '✅ Registered. Please login.';
-                } else {
-                    status.textContent = '❌ ' + (data.detail || 'Registration failed');
-                }
-            } catch (e) {
-                status.textContent = '❌ Network error.';
-                console.error(e);
-            }
-        }
+function copyResponse() {
+    const text = document.getElementById('responseContent').innerText;
+    navigator.clipboard.writeText(text).then(() => document.getElementById('inputStatus').textContent = '✅ Copied!');
+}
+function downloadTXT() {
+    const text = document.getElementById('responseContent').innerText;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'lexsarthi_response.txt';
+    a.click();
+}
+function downloadPDF() {
+    const element = document.getElementById('responseContent');
+    if (!element.innerText.trim() || (document.getElementById('defaultWelcome').style.display !== 'none')) {
+        alert('No response to download. Please ask a question first.');
+        return;
+    }
+    document.getElementById('inputStatus').textContent = 'Generating PDF...';
+    html2pdf().set({ margin: 0.5, filename: 'lexsarthi_response.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } })
+        .from(element).save().then(() => {
+            document.getElementById('inputStatus').textContent = '✅ PDF downloaded!';
+        }).catch(() => {
+            document.getElementById('inputStatus').textContent = '❌ PDF failed.';
+        });
+}
+function clearResponse() {
+    document.getElementById('responseContent').innerHTML = document.getElementById('defaultWelcome').outerHTML;
+}
 
-        // --- FILE UPLOAD ---
-        function handleFileUpload(input, type) {
-            const file = input.files[0];
-            if (!file) return;
-            uploadedFile = file;
-            const preview = document.getElementById('filePreview');
-            document.getElementById('filePreviewText').textContent = `📎 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-            preview.classList.add('show');
-        }
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showLogin() { openModal('loginModal'); }
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
 
-        function clearFilePreview() {
-            uploadedFile = null;
-            document.getElementById('filePreview').classList.remove('show');
-            document.getElementById('pdfUpload').value = '';
-            document.getElementById('imageUpload').value = '';
-        }
-
-        // --- CONTRACT REVIEW HELPER ---
-        function setContractReview() {
-            document.getElementById('queryInput').value = 'Review this contract thoroughly. Identify risks, missing clauses, and provide recommendations.';
-            if (!uploadedFile) {
-                document.getElementById('pdfUpload').click();
-            }
-            document.getElementById('inputStatus').textContent = '📄 Contract review mode. Upload a PDF if not already.';
-        }
-
-        // --- SEND QUERY (uses getToken) ---
-        async function sendQuery() {
-            const query = document.getElementById('queryInput').value.trim();
-            if (!query && !uploadedFile) {
-                document.getElementById('inputStatus').textContent = '⚠️ Enter a query or upload a file.';
-                return;
-            }
-
-            const token = getToken();
-            if (!token) {
-                alert('Please login first.');
-                showLogin();
-                return;
-            }
-
-            document.getElementById('inputStatus').textContent = 'Alpha processing...';
-            const formData = new FormData();
-            formData.append('query', query || 'Analyze uploaded document');
-            if (uploadedFile) formData.append('files', uploadedFile);
-            const webSearch = document.getElementById('webSearchToggle').checked;
-            formData.append('search_web', webSearch ? 'yes' : 'off');
-            const langPref = localStorage.getItem('alpha_lang');
-            if (langPref && langPref !== 'auto') formData.append('lang', langPref);
-            const modelPref = localStorage.getItem('alpha_model') || 'Groq';
-            formData.append('model', modelPref);
-
-            try {
-                const res = await fetch(`${API_BASE}/ask`, {
+// Payment
+function showPayment() { openModal('paymentModal'); checkLifetime(); }
+function selectPlan(p) { document.getElementById('paymentPlan').value = p; }
+async function processPayment() {
+    const token = getToken();
+    if (!token) { alert('Login first'); return; }
+    const tier = document.getElementById('paymentPlan').value;
+    const status = document.getElementById('payment-status');
+    status.textContent = 'Creating order...';
+    try {
+        const res = await fetch(`${API_BASE}/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ tier })
+        });
+        const data = await res.json();
+        if (!res.ok) { status.textContent = '❌ ' + data.detail; return; }
+        const options = {
+            key: data.razorpay_key,
+            amount: data.amount,
+            currency: 'INR',
+            name: 'LexSarthi',
+            order_id: data.order_id,
+            handler: async function(response) {
+                const vRes = await fetch(`${API_BASE}/verify-payment`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
+                    body: new URLSearchParams({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
                 });
-                const data = await res.json();
-                if (res.ok) {
-                    currentResponseText = data.response;
-                    currentQueryId = data.query_id || '';
-                    let responseHtml = data.response.replace(/\n/g, '<br>');
-                    if (data.web_results && data.web_results.length) {
-                        responseHtml += '<br><br><strong>🌐 Web Results:</strong><ul>';
-                        data.web_results.slice(0, 5).forEach(r => {
-                            responseHtml += `<li><a href="${r.url}" target="_blank" style="color:var(--gold);">${r.title}</a> — ${r.snippet}</li>`;
-                        });
-                        responseHtml += '</ul>';
-                    }
-                    document.getElementById('responseContent').innerHTML = responseHtml;
-                    document.getElementById('responseArea').classList.add('active');
-                    const welcome = document.getElementById('defaultWelcome');
-                    if (welcome) welcome.style.display = 'none';
-                    document.getElementById('inputStatus').textContent =
-                        `✅ Alpha response ready (${data.model || 'unknown'})${webSearch ? ' · Web search enabled' : ''}`;
-                    queryHistory.push({ query: query || 'File', response: data.response.substring(0, 200),
-                        timestamp: new Date().toISOString() });
-                    if (queryHistory.length > 50) queryHistory = queryHistory.slice(-50);
-                    localStorage.setItem('lex_history', JSON.stringify(queryHistory));
+                const vData = await vRes.json();
+                if (vRes.ok) {
+                    status.textContent = '✅ Success! You are ' + vData.tier;
+                    closeModal('paymentModal');
+                    checkPremium();
                 } else {
-                    document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Error');
+                    status.textContent = '❌ ' + vData.detail;
                 }
-            } catch (e) {
-                document.getElementById('inputStatus').textContent = '❌ Network error.';
-                console.error(e);
             }
-            clearFilePreview();
-            document.getElementById('queryInput').value = '';
-        }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } catch(e) { status.textContent = '❌ ' + e.message; }
+}
+async function checkLifetime() {
+    try {
+        const res = await fetch(`${API_BASE}/lifetime-count`);
+        const data = await res.json();
+        document.getElementById('lifetimeCount').textContent = `(${data.remaining} left)`;
+    } catch(e) {}
+}
 
-        // --- MY USAGE (uses getToken) ---
-        async function showMyUsage() {
-            const token = getToken();
-            if (!token) {
-                alert('Please login first.');
-                showLogin();
-                return;
-            }
-            openModal('myUsageModal');
-            await fetchMyUsage();
-        }
-
-        async function fetchMyUsage() {
-            const container = document.getElementById('myUsageContent');
-            container.innerHTML = 'Loading...';
-            const token = getToken();
-            if (!token) { container.innerHTML = '<p>Please login.</p>'; return; }
-            try {
-                const res = await fetch(`${API_BASE}/my-usage`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    let html = `
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
-                            <div style="background:rgba(20,20,20,0.6); padding:12px; border-radius:8px; text-align:center;">
-                                <div style="font-size:1.8rem; font-weight:800; color:var(--gold);">${data.total_queries}</div>
-                                <div style="font-size:0.65rem; color:var(--text-muted);">Total Queries</div>
-                            </div>
-                            <div style="background:rgba(20,20,20,0.6); padding:12px; border-radius:8px; text-align:center;">
-                                <div style="font-size:1.8rem; font-weight:800; color:var(--gold);">${data.queries_today}</div>
-                                <div style="font-size:0.65rem; color:var(--text-muted);">Today</div>
-                            </div>
-                        </div>
-                        <p><strong>Agents Used:</strong> ${data.agents_used.length ? data.agents_used.join(', ') : 'None yet'}</p>
-                        <p style="margin-top:8px;"><strong>Recent Queries:</strong></p>
-                        <ul style="font-size:0.8rem; color:#aaa; max-height:150px; overflow-y:auto;">
-                            ${data.recent_queries.map(q => `<li>${new Date(q.timestamp).toLocaleString()} — ${q.query}</li>`).join('')}
-                        </ul>
-                    `;
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<p>Failed to load usage data.</p>';
-                }
-            } catch (e) {
-                container.innerHTML = '<p>Network error.</p>';
-            }
-        }
-
-        // --- PAYMENT (placeholder – uses getToken) ---
-        async function processPayment() {
-            const token = getToken();
-            if (!token) { alert('Please login first.'); showLogin(); return; }
-            // (Your existing Razorpay logic – uses getToken() for headers)
-        }
-
-        // --- OTHER FUNCTIONS (copyResponse, downloadTXT, downloadPDF, etc.) ---
-        // Keep your existing implementations – they are unchanged.
-
-        // --- KEYBOARD SHORTCUT ---
-        document.getElementById('queryInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendQuery();
-            }
-        });
-
-        // --- INIT ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedLang = localStorage.getItem('alpha_lang');
-            if (savedLang) document.getElementById('langSelect').value = savedLang;
-            const savedModel = localStorage.getItem('alpha_model');
-            if (savedModel) document.getElementById('modelSelect').value = savedModel;
-            const token = getToken();
-            if (token) {
-                checkPremiumStatus();
-            } else {
-                updateAgentDisplay();
-            }
-            document.getElementById('responseArea').classList.add('active');
-            checkLifetimeAvailability();
-        });
-
-        // --- LIFETIME AVAILABILITY ---
-        async function checkLifetimeAvailability() {
-            try {
-                const res = await fetch(`${API_BASE}/lifetime-count`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const remaining = data.remaining || 0;
-                    document.getElementById('lifetimeCount').textContent = `(${remaining > 0 ? remaining + ' left' : 'FULL'})`;
-                    if (data.count >= data.limit) {
-                        document.getElementById('lifetimeOption').style.opacity = '0.5';
-                        document.getElementById('lifetimeOption').style.cursor = 'not-allowed';
-                        document.getElementById('lifetimeOption').onclick = null;
-                    } else {
-                        document.getElementById('lifetimeOption').style.opacity = '1';
-                        document.getElementById('lifetimeOption').style.cursor = 'pointer';
-                        document.getElementById('lifetimeOption').onclick = function() { selectPaymentPlan('lifetime'); };
-                    }
-                }
-            } catch (e) { /* ignore */ }
-        }
-    </script>
-
+document.addEventListener('DOMContentLoaded', () => {
+    const token = getToken();
+    if (token) checkPremium();
+    document.getElementById('queryInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuery(); }
+    });
+});
+</script>
 </body>
 </html>
