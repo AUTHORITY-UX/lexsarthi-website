@@ -389,7 +389,7 @@ async def process_file(file: UploadFile) -> str:
         except Exception as e:
             raise ValueError(f"Image OCR failed: {str(e)}")
 
-    # --- 2. Fallback to puremagic for unknown extensions ---
+    # --- 2. Fallback to puremagic (if extension is unknown) ---
     try:
         import puremagic
         mime = puremagic.from_string(content, mime=True)[0]
@@ -434,32 +434,6 @@ async def process_file(file: UploadFile) -> str:
         pass
 
     raise ValueError(f"Unsupported or unreadable file: {filename}. Please upload a PDF, DOCX, or image file.")
-
-    # --- DOCX Processing ---
-    elif "docx" in file_type:
-        try:
-            doc = docx.Document(io.BytesIO(content))
-            text = " ".join([p.text for p in doc.paragraphs])
-        except Exception as e:
-            raise ValueError(f"DOCX extraction failed: {str(e)}")
-
-    # --- Image Processing ---
-    elif file_type.startswith("image/"):
-        try:
-            img = Image.open(io.BytesIO(content))
-            text = pytesseract.image_to_string(img)
-        except Exception as e:
-            raise ValueError(f"Image OCR failed: {str(e)}")
-
-    else:
-        raise ValueError(f"Unsupported file type: {file_type}")
-
-    # --- CRITICAL CHECK: If text is empty, throw an error ---
-    if not text or len(text.strip()) < 10:
-        raise ValueError("No readable text found in the document. Please ensure it is not a scanned image or encrypted PDF.")
-
-    return text.strip()
-
 # ─── AGENT ROUTING & SYSTEM PROMPTS ─────────────────────────────
 AGENT_PROMPTS = {
     "contract_review": """You are LexSarthi's Contract Review Agent, a senior M&A lawyer with 25 years of experience.
