@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexSarthi – Analysis of Supreme Court’s Draft AI Regulations 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #fefefe; color: #1A2C3E; line-height: 1.6; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        header { background: #0A2B3E; color: white; padding: 1.5rem 0; text-align: center; }
+        header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; }
+        header p { color: #C49A2B; margin-top: 0.5rem; }
+        .back-link { display: inline-block; margin-bottom: 1.5rem; color: #C49A2B; text-decoration: none; font-weight: 500; }
+        .back-link:hover { text-decoration: underline; }
+        h2 { font-family: 'Playfair Display', serif; margin-top: 2rem; margin-bottom: 1rem; color: #0A2B3E; border-left: 4px solid #C49A2B; padding-left: 1rem; }
+        h3 { margin-top: 1.5rem; color: #0A2B3E; }
+        .highlight { background: #F4F7FC; padding: 1rem; border-radius: 12px; margin: 1rem 0; border-left: 3px solid #C49A2B; }
+        .quote { font-style: italic; color: #4A5A72; border-left: 3px solid #C49A2B; padding-left: 1rem; margin: 1rem 0; }
+        footer { text-align: center; margin-top: 3rem; padding: 1rem; border-top: 1px solid #E9EEF3; font-size: 0.8rem; color: #5D6E85; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Analysis of Draft “Regulations for Use of Artificial Intelligence in Courts, 2026”</h1>
+    <p>LexSarthi – Advocacy A Law Firm | Comments submitted to the Supreme Court AI Committee</p>
+</header>
+<div class="container">
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <h2>Overview</h2>
+    <p>On 6 June 2026, the Supreme Court’s AI Committee published the draft <strong>“Regulations for Use of Artificial Intelligence in Courts, 2026”</strong>. The document establishes a comprehensive framework for AI governance in the judiciary, grounded in human primacy, transparency, accountability, and data protection.</p>
+    <p>LexSarthi, as India’s first AI‑native law firm, has analysed the draft and submitted formal comments. Below is a one‑page summary of the key provisions, our observations, and actionable recommendations.</p>
+
+    <div class="highlight">
+        <strong>📅 Deadline for public comments:</strong> 20 June 2026. <br>
+        <strong>📧 Submit to:</strong> office.regcc@sei.nic.in
+    </div>
+
+    <h2>Key Principles (Chapter II)</h2>
+    <ul>
+        <li><strong>Human primacy (Reg. 4):</strong> AI must remain subservient to judicial authority – no autonomous decision‑making.</li>
+        <li><strong>Transparency & explainability (Reg. 7):</strong> Every AI system must be capable of being understood and explained.</li>
+        <li><strong>Accountability (Reg. 8):</strong> Judicial officers remain fully responsible for AI‑assisted outputs; “black box” or hallucination is not a defence.</li>
+        <li><strong>Data protection (Reg. 10):</strong> DPDP Act principles apply; sensitive judicial data must be protected.</li>
+    </ul>
+
+    <h2>Permissible & Prohibited Uses (Chapter III)</h2>
+    <p><strong>Permissible:</strong> case management, transcription, translation, legal research, administrative automation, accessibility tools, anonymisation, etc. (Reg. 19).</p>
+    <p><strong>Absolutely prohibited (Reg. 20):</strong></p>
+    <ul>
+        <li>❌ Risk scoring (bail, recidivism, flight risk)</li>
+        <li>❌ Any form of adjudication or sentencing without human‑in‑the‑loop</li>
+        <li>❌ Undisclosed, opaque black‑box AI affecting rights</li>
+        <li>❌ Predictive profiling of behaviour</li>
+        <li>❌ Surveillance of court participants</li>
+        <li>❌ AI‑generated evidence without disclosure</li>
+    </ul>
+
+    <h2>Institutional Mechanism (Chapter IV)</h2>
+    <p>The regulations create an <strong>Apex Body</strong> (Supreme Court) and <strong>AI Committees</strong> in every High Court, supported by an <strong>AI Secretariat</strong> and a <strong>Centre of Research and Excellence (CoRE‑AI)</strong>. This structure is well‑designed for centralised policy‑making and local implementation.</p>
+
+    <h2>Oversight & Audits (Chapter V)</h2>
+    <ul>
+        <li><strong>AI Register (Reg. 37):</strong> Every court must maintain a register of all approved AI systems.</li>
+        <li><strong>Technical & Ethical Impact Assessment (Reg. 35):</strong> Required before approval.</li>
+        <li><strong>Controlled Environment Testing (Reg. 36):</strong> Isolated sandboxes for evaluation.</li>
+        <li><strong>Annual audits (Reg. 38):</strong> Mandatory every year.</li>
+        <li><strong>AI Incident Database (Reg. 39):</strong> Centralised recording of errors and failures.</li>
+    </ul>
+
+    <h2>Transparency & Disclosure (Reg. 43)</h2>
+    <p>Any AI‑assisted submission to a court must be disclosed using prescribed forms (Annexure I & II). Non‑disclosure may lead to adverse orders. LexSarthi supports this but recommends that standard forms be finalised before notification and made available in vernacular languages.</p>
+
+    <h2>LexSarthi’s Key Recommendations</h2>
+    <div class="highlight">
+        <ol>
+            <li><strong>Standardise AI Register format:</strong> Provide an open‑source reference implementation for courts with limited IT resources.</li>
+            <li><strong>Clarify “in‑house” audits (Reg. 38):</strong> Permit empanelled auditors and containerised audit scripts that run on‑premises without data transfer.</li>
+            <li><strong>Allow anonymised real data for testing (Reg. 36):</strong> Subject to data protection impact assessment.</li>
+            <li><strong>Interoperable AI Incident Database (Reg. 39):</strong> Common API schema for secure data sharing among High Courts.</li>
+            <li><strong>Explicitly approve online, self‑paced training modules (Reg. 49):</strong> Necessary for scaling capacity building.</li>
+            <li><strong>Grace period for non‑compliant legacy systems (Reg. 41):</strong> Up to 6 months with heightened oversight.</li>
+            <li><strong>Industry collaboration for CoRE‑AI (Reg. 32):</strong> Form an Industry Advisory Group.</li>
+        </ol>
+    </div>
+
+    <h2>Practical Implications for LexSarthi</h2>
+    <p>Our existing AI agents (contract risk analysis, legal notice drafting, DPDP compliance, etc.) are already designed to comply with the draft regulations:</p>
+    <ul>
+        <li>✅ <strong>Human‑in‑the‑loop:</strong> Every AI output is reviewed by a qualified advocate.</li>
+        <li>✅ <strong>Explainability:</strong> Our reports include reasoning and sources.</li>
+        <li>✅ <strong>No prohibited uses:</strong> No risk scoring, no behavioural prediction, no opaque black boxes.</li>
+        <li>✅ <strong>Transparency:</strong> Clients are informed when AI is used.</li>
+    </ul>
+    <p>We are ready to assist courts in implementing AI Registers, conducting audits, and delivering training programmes.</p>
+
+    <div class="quote">
+        “AI in courts must remain strictly subservient to human judgment. LexSarthi welcomes this balanced, future‑ready framework and stands ready to support the judiciary with compliant, explainable, and accountable AI tools.”<br>
+        – Adv. Upmanyu Kumar, Founder, LexSarthi
+    </div>
+
+    <h2>Submit Your Own Comments</h2>
+    <p>All stakeholders may send suggestions to <strong>office.regcc@sei.nic.in</strong> by 20 June 2026. LexSarthi’s full submission is available upon request.</p>
+    <p style="margin-top: 1rem;"><a href="index.html#contact" style="color:#C49A2B;">Contact us</a> for a copy of our detailed response or to discuss AI compliance for your organisation.</p>
+</div>
+<footer>
+    <p>© 2026 Advocacy A Law Firm (Proprietorship) – LexSarthi. This analysis is for informational purposes only.</p>
+</footer>
+</body>
+</html>
