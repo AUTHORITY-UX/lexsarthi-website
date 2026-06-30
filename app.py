@@ -350,21 +350,59 @@ async def increment_query(user_id: int):
 # ─── FILE PROCESSING ────────────────────────────────────────────
 async def process_file(file: UploadFile) -> str:
     content = await file.read()
+    text = ""
+    file_type = "unknown"
+
+    # Detect MIME type
     try:
-        mime = puremagic.from_string(content, mime=True)[0]
+        file_type = puremagic.from_string(content, mime=True)[0]
     except:
-        mime = "application/octet-stream"
-    
-    if mime == "application/pdf":
-        reader = PyPDF2.PdfReader(io.BytesIO(content))
-        return " ".join([p.extract_text() for p in reader.pages])
-    elif "docx" in mime:
-        doc = docx.Document(io.BytesIO(content))
-        return " ".join([p.text for p in doc.paragraphs])
-    elif mime.startswith("image/"):
-        img = Image.open(io.BytesIO(content))
-        return pytesseract.image_to_string(img)
-    return "Unsupported file type."
+        import mimetypes
+        ext = os.path.splitext(file.filename)[1].lower()
+        file_type = mimetypes.types_map.get(ext, "application/octet-stream")
+
+    # --- PDF Processing ---
+    if file_type == "application/pdf":
+        try:
+            reader = PyPDF2.PdfReader(io.BytesIO(content))
+            if len(reader.pages) == 0:
+                raise ValueError("PDF has no pages.")
+            for page in reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        except Exception as e:
+            # If PyPDF2 fails, try extracting raw text (fallback)
+            try:
+                # Attempt to read as plain text (sometimes PDFs are just text wrappers)
+                text = content.decode('utf-8', errors='ignore')
+            except:
+                raise ValueError(f"PDF extraction failed: {str(e)}")
+
+    # --- DOCX Processing ---
+    elif "docx" in file_type:
+        try:
+            doc = docx.Document(io.BytesIO(content))
+            text = " ".join([p.text for p in doc.paragraphs])
+        except Exception as e:
+            raise ValueError(f"DOCX extraction failed: {str(e)}")
+
+    # --- Image Processing ---
+    elif file_type.startswith("image/"):
+        try:
+            img = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(img)
+        except Exception as e:
+            raise ValueError(f"Image OCR failed: {str(e)}")
+
+    else:
+        raise ValueError(f"Unsupported file type: {file_type}")
+
+    # --- CRITICAL CHECK: If text is empty, throw an error ---
+    if not text or len(text.strip()) < 10:
+        raise ValueError("No readable text found in the document. Please ensure it is not a scanned image or encrypted PDF.")
+
+    return text.strip()
 
 # ─── AGENT ROUTING & SYSTEM PROMPTS ─────────────────────────────
 AGENT_PROMPTS = {
