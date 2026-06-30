@@ -434,7 +434,6 @@ async def process_file(file: UploadFile) -> str:
         pass
 
     raise ValueError(f"Unsupported or unreadable file: {filename}. Please upload a PDF, DOCX, or image file.")
-        
 
     # --- DOCX Processing ---
     elif "docx" in file_type:
