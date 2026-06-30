@@ -1,7 +1,7 @@
 # ===================================================================
-# LEXSARTHI v5.0 – COMPLETE BACKEND
+# LEXSARTHI v5.0 – UNIVERSAL DEFAULT AI (PDF Library Ready)
 # ===================================================================
-# Owner: THE ADVOCACY – A LAW FIRM (Upmanyu Kumar)
+# Owner: THE ADVOCACY – A LAW FIRM
 # Deployed: upamnyu12-lex.hf.space
 # ===================================================================
 
@@ -12,6 +12,8 @@ import logging
 import asyncio
 import random
 import string
+import re
+import glob
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
@@ -22,7 +24,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 import uvicorn
 
@@ -64,19 +65,17 @@ import razorpay
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("lexsarthi")
 
-# ─── ENV VARIABLES (Reads your Neon DB link from Secrets) ──────
-DATABASE_URL = os.getenv("DATABASE_URL")  # <-- THIS is your connection string!
+# ─── ENV VARIABLES ──────────────────────────────────────────────
+DATABASE_URL = os.getenv("DATABASE_URL")
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-change-me")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
 
-# AI Keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# Razorpay
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
@@ -88,7 +87,7 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel('gemini-pro')
 
-# ─── DATABASE SETUP (Pooling for 1M Users) ──────────────────────
+# ─── DATABASE SETUP ─────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
@@ -179,7 +178,7 @@ class PaymentCreate(BaseModel):
     tier: str
 
 # ─── SECURITY ────────────────────────────────────────────────────
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")  # <-- FIXED HASHING
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 security = HTTPBearer()
 
 def hash_password(password: str) -> str:
@@ -213,6 +212,164 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 # ─── RATE LIMITER SETUP ──────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
+
+# =================================================================
+# 🧠 UNIVERSAL DEFAULT LEGAL INTELLIGENCE (PDF LIBRARY LOADER)
+# =================================================================
+LEGAL_SECTIONS = {}  # {pdf_filename: {section_ref: section_text}}
+
+def extract_sections_from_pdf(filepath: str) -> dict:
+    """Extract text from a PDF and split into legal sections."""
+    sections = {}
+    try:
+        with open(filepath, 'rb') as f:
+            reader = PyPDF2.PdfReader(f)
+            full_text = ""
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    full_text += text + "\n"
+        
+        if not full_text.strip():
+            logger.warning(f"Empty text extracted from {filepath}")
+            return {}
+        
+        # Split by common legal section delimiters
+        # Supports: Section, Sec., Article, Chapter, Clause, etc.
+        section_pattern = r'(?=Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)'
+        raw_sections = re.split(section_pattern, full_text)
+        
+        for i, sec in enumerate(raw_sections):
+            if sec.strip():
+                # Try to find the section title
+                title_match = re.search(r'(Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)', sec)
+                if title_match:
+                    title = title_match.group(0)
+                    # If the section already exists, append to it (handles multi-part sections)
+                    if title in sections:
+                        sections[title] += "\n" + sec
+                    else:
+                        sections[title] = sec
+                else:
+                    # If no title found but it's the first chunk (preamble), store it as "Preamble"
+                    if i == 0:
+                        sections["Preamble"] = sec[:1500]  # Limit preamble size
+                    else:
+                        # Try to assign a generic key
+                        sections[f"Section_{i}"] = sec[:1000]
+        
+        logger.info(f"Extracted {len(sections)} sections from {os.path.basename(filepath)}")
+    except Exception as e:
+        logger.error(f"Failed to process {filepath}: {e}")
+    
+    return sections
+
+def load_pdf_library():
+    """Load all PDFs from the legal_docs folder."""
+    pdf_dir = "/app/legal_docs/"
+    if not os.path.exists(pdf_dir):
+        logger.warning(f"Legal PDF library folder not found: {pdf_dir}")
+        return
+    
+    pdf_files = glob.glob(os.path.join(pdf_dir, "*.pdf"))
+    if not pdf_files:
+        logger.warning("No PDF files found in legal_docs folder.")
+        return
+    
+    logger.info(f"Found {len(pdf_files)} PDFs. Loading legal library...")
+    for filepath in pdf_files:
+        filename = os.path.basename(filepath)
+        sections = extract_sections_from_pdf(filepath)
+        if sections:
+            LEGAL_SECTIONS[filename] = sections
+    
+    logger.info(f"✅ Universal Legal Library loaded: {len(LEGAL_SECTIONS)} PDFs, {sum(len(v) for v in LEGAL_SECTIONS.values())} sections total.")
+
+# Load the library at startup
+load_pdf_library()
+
+def search_local_knowledge(query: str) -> str:
+    """
+    Search the entire PDF library for matching legal sections.
+    This is the "Universal Default AI" fallback.
+    """
+    if not LEGAL_SECTIONS:
+        return "⚠️ Legal library is not loaded. Please try again later."
+    
+    query_lower = query.lower()
+    matched_results = []
+    
+    # Extract keywords from query (remove stopwords)
+    stopwords = {"the", "a", "an", "of", "for", "on", "at", "to", "in", "with", "without", "and", "or", "but", "what", "how", "why", "when", "where"}
+    keywords = [word for word in query_lower.split() if word not in stopwords and len(word) > 2]
+    
+    # If no keywords, just return the preamble of the first act
+    if not keywords:
+        for fname, sections in LEGAL_SECTIONS.items():
+            if "Preamble" in sections:
+                return f"📚 **From {fname.replace('.pdf', '')} (Preamble):**\n\n{sections['Preamble']}"
+        return "📚 Please provide a more specific legal query."
+    
+    # Search through all sections across all PDFs
+    for fname, sections in LEGAL_SECTIONS.items():
+        act_name = fname.replace('.pdf', '').upper()
+        for sec_ref, sec_text in sections.items():
+            # Check if any keyword appears in the section text or reference
+            sec_text_lower = sec_text.lower()
+            if any(kw in sec_text_lower for kw in keywords):
+                # Limit length to prevent massive output
+                trimmed_text = sec_text[:2000] + "..." if len(sec_text) > 2000 else sec_text
+                matched_results.append(f"📜 **{act_name} – {sec_ref}**\n{trimmed_text}\n")
+                
+                if len(matched_results) >= 5:  # Limit to 5 sections to avoid flooding
+                    break
+        if len(matched_results) >= 5:
+            break
+    
+    if matched_results:
+        result = "📚 **From Your Universal Legal Intelligence Library:**\n\n"
+        result += "\n".join(matched_results)
+        result += "\n\n*This is a fallback response from your local legal knowledge base (PDFs).*"
+        return result
+    
+    # If no specific match, return the introduction of the most relevant act
+    # Try to guess the act based on the query
+    act_guesses = {
+        "contract": "indian_contract_act.pdf",
+        "criminal": "Bharatiya_Nagarik_Suraksha_Sanhita_2023.pdf",
+        "constitution": "Constitution_act.pdf",
+        "evidence": "Evidence_act.pdf",
+        "company": "companies_act_2013.pdf",
+        "it act": "it_act_2000.pdf",
+        "data": "DATA_ACT.pdf",
+        "dpdpa": "DPDPA.pdf",
+        "arbitration": "the_arbitration_and_conciliation_act_1996.pdf",
+        "advocate": "the_advocate_act_1961.pdf",
+        "stamp": "the_indian_stamp_act_1899.pdf",
+        "insolvency": "the_insolvency_and_bankruptcy_code_2016.pdf",
+        "ai": "AI_ACT.pdf",
+    }
+    
+    for guess_key, guess_file in act_guesses.items():
+        if guess_key in query_lower:
+            for fname, sections in LEGAL_SECTIONS.items():
+                if guess_file in fname:
+                    if "Preamble" in sections:
+                        return f"📚 **From {fname.replace('.pdf', '').upper()} (Preamble - Relevant to your query):**\n\n{sections['Preamble'][:1500]}..."
+                    # Return first section
+                    first_key = list(sections.keys())[0]
+                    return f"📚 **From {fname.replace('.pdf', '').upper()} (Section relevant to '{guess_key}'):**\n\n{sections[first_key][:1500]}..."
+    
+    # Ultimate fallback: return the first few sections of the first loaded PDF
+    for fname, sections in LEGAL_SECTIONS.items():
+        intro_text = "N/A"
+        for key in ["Preamble", "Section 1", "Chapter 1"]:
+            if key in sections:
+                intro_text = sections[key]
+                break
+        return f"📚 **From {fname.replace('.pdf', '').upper()} (General Legal Intelligence):**\n\n{intro_text[:1500]}..."
+    
+    return "⚠️ No relevant legal sections found in your library. Please refine your query."
 
 # ─── LIFESPAN ──────────────────────────────────────────────────
 @asynccontextmanager
@@ -353,7 +510,6 @@ async def process_file(file: UploadFile) -> str:
     filename = file.filename.lower()
     text = ""
 
-    # --- 1. Check file extension (most reliable) ---
     if filename.endswith('.pdf'):
         try:
             reader = PyPDF2.PdfReader(io.BytesIO(content))
@@ -389,7 +545,6 @@ async def process_file(file: UploadFile) -> str:
         except Exception as e:
             raise ValueError(f"Image OCR failed: {str(e)}")
 
-    # --- 2. Fallback to puremagic (if extension is unknown) ---
     try:
         import puremagic
         mime = puremagic.from_string(content, mime=True)[0]
@@ -425,7 +580,6 @@ async def process_file(file: UploadFile) -> str:
             pass
         raise ValueError("The file appears to be an image but could not be OCR processed.")
 
-    # --- 3. Last resort: try reading as plain text ---
     try:
         text = content.decode('utf-8', errors='ignore')
         if text.strip():
@@ -434,6 +588,7 @@ async def process_file(file: UploadFile) -> str:
         pass
 
     raise ValueError(f"Unsupported or unreadable file: {filename}. Please upload a PDF, DOCX, or image file.")
+
 # ─── AGENT ROUTING & SYSTEM PROMPTS ─────────────────────────────
 AGENT_PROMPTS = {
     "contract_review": """You are LexSarthi's Contract Review Agent, a senior M&A lawyer with 25 years of experience.
@@ -543,8 +698,19 @@ async def execute_ai(query: str, model: str, agent_type: str = "general", agent_
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}", "HTTP-Referer": "https://lexsarthi.ai"},
-                    json={"model": model, "messages": [{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}]},
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "HTTP-Referer": "https://lexsarthi.ai"
+                    },
+                    json={
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": f"You are {agent_name}. {system_prompt}"},
+                            {"role": "user", "content": query}
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": 4096,
+                    },
                     timeout=30.0
                 )
                 if resp.status_code == 200:
@@ -552,15 +718,10 @@ async def execute_ai(query: str, model: str, agent_type: str = "general", agent_
         except Exception as e:
             logger.error(f"OpenRouter error: {e}")
 
-    # 5. Fallback
-    return f"""
-⚠️ **AI Service Unavailable**  
-We are currently experiencing high demand. Your query has been logged.
-
-**Your Query:** {query[:200]}...
-
-Please try again in a few moments, or contact support@lexsarthi.ai for urgent assistance.
-"""
+    # 5. ULTIMATE FALLBACK: UNIVERSAL LEGAL INTELLIGENCE (PDF Library)
+    logger.warning("All AI services failed. Falling back to Universal Legal Intelligence (PDF Library).")
+    local_response = search_local_knowledge(query)
+    return local_response
 
 # ─── API ENDPOINTS ──────────────────────────────────────────────
 
@@ -641,7 +802,6 @@ async def ask(
     
     combined_query = query
     
-    # --- HARDENED FILE PROCESSING ---
     if files:
         try:
             file_text = await process_file(files)
@@ -649,47 +809,8 @@ async def ask(
                 raise HTTPException(status_code=400, detail="File is empty or contains no readable text.")
             combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
         except HTTPException as he:
-            # Re-raise HTTP exceptions directly
             raise he
         except Exception as e:
-            logger.error(f"File processing error: {str(e)}")
-            raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
-
-    if search_web.lower() in ("on", "yes"):
-        combined_query += "\n\n--- Web Search Enabled ---"
-
-    await increment_query(current_user["id"])
-    
-    agent_type = route_agent(combined_query, agent_id)
-    agent_name = f"Agent {agent_id}"
-    
-    response_text = await execute_ai(combined_query, model, agent_type, agent_name)
-    
-    expires_at = datetime.now() + timedelta(hours=24)
-    await database.execute(
-        queries.insert().values(
-            user_id=current_user["id"],
-            query=combined_query,
-            response=response_text,
-            metadata={"agent": agent_id, "model": model, "file": bool(files), "agent_type": agent_type},
-            expires_at=expires_at
-        )
-    )
-    
-    return {"response": response_text, "model": model, "agent_used": agent_id}
-    
-    # --- HARDENED FILE PROCESSING ---
-    if files:
-        try:
-            file_text = await process_file(files)
-            if not file_text or len(file_text.strip()) < 20:
-                raise HTTPException(status_code=400, detail="File is empty or contains no readable text. Please upload a non-scanned PDF or DOCX.")
-            combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
-        except HTTPException as he:
-            # Re-raise HTTP exceptions directly
-            raise he
-        except Exception as e:
-            # Catch any other unexpected errors
             logger.error(f"File processing error: {str(e)}")
             raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
 
