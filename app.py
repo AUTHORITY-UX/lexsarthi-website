@@ -31,7 +31,7 @@ import uvicorn
 import asyncpg
 from databases import Database
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey, func, select, insert, update, delete
-from sqlalchemy.sql import text  # only for raw SQL if needed
+from sqlalchemy.sql import text
 
 # ─── Authentication ─────────────────────────────────────────────────
 import jwt
@@ -88,7 +88,7 @@ metadata = MetaData()
 users = Table(
     "users",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("email", String(255), unique=True, index=True),
     Column("username", String(100), unique=True),
     Column("password_hash", String(255)),
@@ -107,7 +107,7 @@ users = Table(
 queries = Table(
     "queries",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer, index=True),
     Column("query", Text),
     Column("response", Text),
@@ -119,7 +119,7 @@ queries = Table(
 payments = Table(
     "payments",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer),
     Column("razorpay_order_id", String(100)),
     Column("razorpay_payment_id", String(100), nullable=True),
@@ -131,11 +131,10 @@ payments = Table(
     Column("created_at", DateTime, server_default=func.now()),
 )
 
-# No foreign keys to avoid type mismatch warnings
 events = Table(
     "events",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer, nullable=True),
     Column("session_id", String(64)),
     Column("event_type", String(50)),
@@ -149,7 +148,7 @@ events = Table(
 referrals = Table(
     "referrals",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("referrer_id", Integer),
     Column("referee_id", Integer, nullable=True),
     Column("code", String(20), unique=True),
@@ -252,8 +251,9 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── Database Migration ────────────────────────────────────────────
 async def migrate_database():
-    """Add missing columns to existing tables."""
+    """Add missing columns and fix serial primary keys."""
     migrations = [
+        # Add missing columns
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE;",
@@ -263,6 +263,26 @@ async def migrate_database():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS queries_used_today INTEGER DEFAULT 0;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_query_reset TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE payments ADD COLUMN IF NOT EXISTS tier VARCHAR(20);",
+        # Fix id column to use SERIAL (if not already)
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name='users' AND column_name='id' 
+                AND column_default LIKE 'nextval%'
+            ) THEN
+                -- Create sequence if not exists
+                CREATE SEQUENCE IF NOT EXISTS users_id_seq;
+                -- Set default
+                ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('users_id_seq');
+                -- Set ownership
+                ALTER SEQUENCE users_id_seq OWNED BY users.id;
+                -- Set sequence's last value to max id (if any)
+                PERFORM setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1), true);
+            END IF;
+        END $$;
+        """
     ]
     for stmt in migrations:
         try:
@@ -946,7 +966,7 @@ async def use_referral(
 @app.get("/health")
 async def health_check():
     try:
-        await database.execute("SELECT 1")
+        await database.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}
     except:
         return {"status": "unhealthy", "database": "disconnected"}
