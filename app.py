@@ -210,19 +210,19 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 limiter = Limiter(key_func=get_remote_address)
 
 # =================================================================
-# 🧠 UNIVERSAL LEGAL PDF LIBRARY (NO DATA LOSS)
+# 🧠 UNIVERSAL LEGAL PDF LIBRARY (FULL TEXT STORED)
 # =================================================================
 LEGAL_SECTIONS = {}
 
 def extract_sections_from_pdf(filepath: str) -> dict:
     """
-    Extracts full raw text and attempts to split into sections.
-    Always stores the FULL text so no data is ever lost.
+    Extracts full raw text and stores it as '__FULL_TEXT__'.
+    Also attempts to split into sections for better indexing, but the full text is always available.
     """
     sections = {}
     full_text = ""
     
-    # 1. Extract raw text using pdfplumber
+    # 1. Extract raw text
     try:
         with pdfplumber.open(filepath) as pdf:
             for page in pdf.pages:
@@ -247,29 +247,29 @@ def extract_sections_from_pdf(filepath: str) -> dict:
     if not full_text.strip():
         return {}
 
-    # --- ALWAYS STORE THE FULL TEXT (NO DATA LOSS) ---
+    # Always store the complete raw text (no data loss)
     sections["__FULL_TEXT__"] = full_text.strip()
+    logger.info(f"Stored full raw text ({len(full_text)} chars) for {os.path.basename(filepath)}")
 
-    # --- 2. Try multiple splitting patterns (case‑insensitive) ---
+    # 2. Try to split into sections for better search granularity
     patterns = [
-        r'(?=Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Clause\s+\d+|§\s*\d+)',           # Standard
-        r'(?=CHAPTER\s+[IVXLCDM]+\b|PART\s+[IVXLCDM]+\b|SCHEDULE\s+[IVXLCDM]+\b)',    # Roman numerals
-        r'(?=CHAPTER\s+\d+|PART\s+\d+)',                                               # Chapter 1, Part 1
-        r'(?=\n\d+\.\s)',                                                              # Plain numbered lists (e.g., 1. Short title)
-        r'(?=\n\d+\s+[A-Z])',                                                          # 1. TEXT
+        r'(?=Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Clause\s+\d+|§\s*\d+)',
+        r'(?=CHAPTER\s+[IVXLCDM]+\b|PART\s+[IVXLCDM]+\b|SCHEDULE\s+[IVXLCDM]+\b)',
+        r'(?=CHAPTER\s+\d+|PART\s+\d+)',
+        r'(?=\n\d+\.\s)',
+        r'(?=\n\d+\s+[A-Z])',
     ]
     
     split_text = None
     for pattern in patterns:
         test_split = re.split(pattern, full_text, flags=re.IGNORECASE)
-        if len(test_split) > 3:  # Found a meaningful split
+        if len(test_split) > 3:
             split_text = test_split
             break
 
     if split_text and len(split_text) > 3:
         for i, chunk in enumerate(split_text):
             if chunk.strip():
-                # Try to extract a title from the chunk
                 title_match = re.search(r'(Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Chapter\s+[IVXLCDM]+|Part\s+[IVXLCDM]+|\d+\.\s+[A-Z])', chunk, re.IGNORECASE)
                 if title_match:
                     title = title_match.group(0).strip()
@@ -278,15 +278,13 @@ def extract_sections_from_pdf(filepath: str) -> dict:
                     else:
                         sections[title] = chunk
                 else:
-                    # If the chunk has no title, use its first 50 chars as key
                     first_line = chunk.strip().split('\n')[0][:50]
                     sections[f"Sec_{i}_{first_line}"] = chunk
+        logger.info(f"Split into {len(sections)-1} sections for {os.path.basename(filepath)} (full text also stored)")
     else:
-        # If splitting fails, just store the raw text as one block
         sections["Full_Text"] = full_text.strip()
-        logger.info(f"Stored full raw text as single block for {os.path.basename(filepath)}")
+        logger.info(f"Could not split; stored full text as single block for {os.path.basename(filepath)}")
     
-    logger.info(f"Extracted {len(sections)} sections/chunks from {os.path.basename(filepath)} (full text stored)")
     return sections
 
 def load_pdf_library():
@@ -304,33 +302,49 @@ def load_pdf_library():
         sections = extract_sections_from_pdf(filepath)
         if sections:
             LEGAL_SECTIONS[filename] = sections
-    logger.info(f"✅ Universal Legal Library loaded: {len(LEGAL_SECTIONS)} PDFs, {sum(len(v) for v in LEGAL_SECTIONS.values())} sections total.")
+    total_sections = sum(len(v) for v in LEGAL_SECTIONS.values())
+    logger.info(f"✅ Universal Legal Library loaded: {len(LEGAL_SECTIONS)} PDFs, {total_sections} total entries (including full text).")
 
 load_pdf_library()
 
 def search_local_knowledge(query: str) -> str:
     """
-    Search the local PDF library – uses FULL TEXT if sections are small.
+    Search the local PDF library. Uses full text search for exact matches.
+    If user asks for an act by name, returns the full text of that act.
     """
     if not LEGAL_SECTIONS:
         return "⚠️ Legal library is not loaded."
 
-    query_lower = query.lower()
+    query_lower = query.lower().strip()
     matched_results = []
     keywords = [word for word in query_lower.split() if len(word) > 3 and word not in {"the","and","for","with","without"}]
 
-    if not keywords:
-        # Return preamble of first PDF
-        for fname, secs in LEGAL_SECTIONS.items():
-            if "__FULL_TEXT__" in secs:
-                return f"📚 **From {fname.replace('.pdf','')} (Full Text Preview):**\n\n{secs['__FULL_TEXT__'][:1500]}..."
-        return "📚 Please provide a specific legal query."
+    # Check if user is asking for an entire act by name
+    act_names = {
+        "indian contract": "Indian contract act.pdf",
+        "contract act": "Indian contract act.pdf",
+        "constitution": "the_constitution_of_india.pdf",
+        "evidence": "EVIDENCE ACT.pdf",
+        "dpdpa": "DPDPA.pdf",
+        "data act": "DATA_ACT.pdf",
+        "ai act": "AI ACT.pdf",
+        "companies act": "companies act.pdf",
+        "bharatiya": "THE BHARATIYA NAGARIK SURAKSHA SANHITA, 2023.pdf",
+    }
+    for name, filename in act_names.items():
+        if name in query_lower and filename in LEGAL_SECTIONS:
+            full_text = LEGAL_SECTIONS[filename].get("__FULL_TEXT__", "")
+            if full_text:
+                # Return the first 3000 chars as preview (or full if small)
+                preview = full_text[:3000] + "..." if len(full_text) > 3000 else full_text
+                return f"📚 **Full text of {filename.replace('.pdf','')}:**\n\n{preview}"
 
+    # If no full act requested, search for keyword matches
     for fname, secs in LEGAL_SECTIONS.items():
         act_name = fname.replace('.pdf', '').upper()
         full_text = secs.get("__FULL_TEXT__", "")
         
-        # If full text exists, search for keywords directly
+        # Search line by line in full text
         if full_text:
             lines = full_text.split('\n')
             for line in lines:
@@ -338,8 +352,7 @@ def search_local_knowledge(query: str) -> str:
                     matched_results.append(f"📜 **{act_name}** (Exact Match)\n{line.strip()}\n")
                     if len(matched_results) >= 8:
                         break
-        
-        # Also search individual sections
+        # Also check individual sections
         for sec_ref, sec_text in secs.items():
             if sec_ref == "__FULL_TEXT__":
                 continue
@@ -356,7 +369,7 @@ def search_local_knowledge(query: str) -> str:
         result += "\n".join(matched_results[:8])
         return result
 
-    # If no match, return first 1500 chars of the first loaded PDF
+    # No match: return first 1500 chars of the first loaded PDF
     for fname, secs in LEGAL_SECTIONS.items():
         full = secs.get("__FULL_TEXT__") or secs.get("Full_Text") or ""
         if full:
@@ -366,14 +379,14 @@ def search_local_knowledge(query: str) -> str:
 
 # ─── DIVINE AGENTS & VERIFIERS ──────────────────────────────────
 DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"]
-LEGAL_DOMAINS = ["Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy","Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality","Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science","Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"]
+DOMAINS = ["Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy","Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality","Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science","Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"]
 ICONS = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"]
 
 def generate_divine_agents():
     agents = []
     for i in range(1, 221):
         name = DIVINE_NAMES[i % len(DIVINE_NAMES)] + (f" (Agent {i})" if i > 200 else "")
-        domain = LEGAL_DOMAINS[i % len(LEGAL_DOMAINS)]
+        domain = DOMAINS[i % len(DOMAINS)]
         icon = ICONS[i % len(ICONS)]
         agents.append({"id": f"agent_{i:03d}", "name": name, "domain": domain, "icon": icon})
     return agents
