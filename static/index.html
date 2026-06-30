@@ -455,7 +455,23 @@ async function sendQuery() {
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
-        const data = await res.json();
+
+        // --- CRITICAL: Read as text first to prevent JSON parse errors ---
+        const rawText = await res.text();
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (jsonError) {
+            // If JSON fails, display the raw text
+            setTyping(false);
+            document.getElementById('responseContent').innerHTML = rawText.replace(/\n/g, '<br>');
+            document.getElementById('defaultWelcome').style.display = 'none';
+            document.getElementById('inputStatus').textContent = '✅ Raw response received';
+            clearFilePreview();
+            document.getElementById('queryInput').value = '';
+            return;
+        }
+
         setTyping(false);
         if (res.ok) {
             let displayText = data.response.replace(/\n/g, '<br>');
@@ -464,24 +480,17 @@ async function sendQuery() {
             document.getElementById('defaultWelcome').style.display = 'none';
             document.getElementById('inputStatus').textContent = `✅ Done (${data.model})`;
         } else {
-            document.getElementById('inputStatus').textContent = '❌ ' + data.detail;
-            document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Error: ${data.detail}</span>`;
+            document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Server error');
+            document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Error: ${data.detail || 'Unknown error'}</span>`;
         }
     } catch(e) {
         setTyping(false);
-        document.getElementById('inputStatus').textContent = '❌ Network error';
-        document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Network error. Please try again.</span>`;
+        console.error("Frontend Error:", e);
+        document.getElementById('inputStatus').textContent = '❌ Network error: ' + e.message;
+        document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Network error. Details: ${e.message}. Please try again.</span>`;
     }
     clearFilePreview();
     document.getElementById('queryInput').value = '';
-}
-
-function handleFileUpload(input) {
-    if (input.files[0]) {
-        uploadedFile = input.files[0];
-        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFile.name}`;
-        document.getElementById('filePreview').classList.add('show');
-    }
 }
 function clearFilePreview() {
     uploadedFile = null;
