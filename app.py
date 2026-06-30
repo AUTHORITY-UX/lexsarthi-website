@@ -47,6 +47,7 @@ import google.generativeai as genai
 import io
 import puremagic
 import PyPDF2
+import pdfplumber      # <-- NEW: handles tricky PDFs
 import docx
 from PIL import Image
 import pytesseract
@@ -85,9 +86,9 @@ if GEMINI_API_KEY:
 
 # ─── DATABASE SETUP ─────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=2, max_size=20)
-metadata = MetaData()   # <-- THIS MUST EXIST
+metadata = MetaData()   # Still needed for SQLAlchemy queries
 
-# ─── SQLAlchemy Tables (CORRECT SYNTAX) ──────────────────────────
+# ─── SQLAlchemy Table Definitions (used only for queries) ──────
 users = Table(
     "users", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
@@ -208,40 +209,59 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 limiter = Limiter(key_func=get_remote_address)
 
-# ─── LOCAL LEGAL PDF LIBRARY ──────────────────────────────────────
+# =================================================================
+# 🧠 UNIVERSAL LEGAL PDF LIBRARY (with pdfplumber fallback)
+# =================================================================
 LEGAL_SECTIONS = {}
 
 def extract_sections_from_pdf(filepath: str) -> dict:
     sections = {}
+    full_text = ""
+    
+    # 1. Try pdfplumber (handles corrupted/encrypted PDFs)
     try:
-        with open(filepath, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            full_text = ""
-            for page in reader.pages:
+        with pdfplumber.open(filepath) as pdf:
+            for page in pdf.pages:
                 text = page.extract_text()
                 if text:
                     full_text += text + "\n"
-        if not full_text.strip():
-            return {}
-        section_pattern = r'(?=Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)'
-        raw_sections = re.split(section_pattern, full_text)
-        for i, sec in enumerate(raw_sections):
-            if sec.strip():
-                title_match = re.search(r'(Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)', sec)
-                if title_match:
-                    title = title_match.group(0)
-                    if title in sections:
-                        sections[title] += "\n" + sec
-                    else:
-                        sections[title] = sec
-                else:
-                    if i == 0:
-                        sections["Preamble"] = sec[:1500]
-                    else:
-                        sections[f"Section_{i}"] = sec[:1000]
-        logger.info(f"Extracted {len(sections)} sections from {os.path.basename(filepath)}")
+        if full_text.strip():
+            logger.info(f"pdfplumber succeeded for {os.path.basename(filepath)}")
+        else:
+            raise ValueError("pdfplumber returned empty text")
     except Exception as e:
-        logger.error(f"Failed to process {filepath}: {e}")
+        logger.warning(f"pdfplumber failed for {filepath}: {e}. Falling back to PyPDF2 (strict=False).")
+        try:
+            with open(filepath, 'rb') as f:
+                reader = PyPDF2.PdfReader(f, strict=False)
+                for page in reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        full_text += text + "\n"
+            if not full_text.strip():
+                raise ValueError("PyPDF2 returned empty text")
+        except Exception as e2:
+            logger.error(f"All PDF extraction methods failed for {filepath}: {e2}")
+            return {}
+    
+    # 2. Split into sections
+    section_pattern = r'(?=Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)'
+    raw_sections = re.split(section_pattern, full_text)
+    for i, sec in enumerate(raw_sections):
+        if sec.strip():
+            title_match = re.search(r'(Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)', sec)
+            if title_match:
+                title = title_match.group(0)
+                if title in sections:
+                    sections[title] += "\n" + sec
+                else:
+                    sections[title] = sec
+            else:
+                if i == 0:
+                    sections["Preamble"] = sec[:1500]
+                else:
+                    sections[f"Section_{i}"] = sec[:1000]
+    logger.info(f"Extracted {len(sections)} sections from {os.path.basename(filepath)}")
     return sections
 
 def load_pdf_library():
@@ -265,7 +285,7 @@ load_pdf_library()
 
 def search_local_knowledge(query: str) -> str:
     if not LEGAL_SECTIONS:
-        return "⚠️ Legal library is not loaded."
+        return "⚠️ Legal library is not loaded. Please ensure PDFs are present."
     query_lower = query.lower()
     matched_results = []
     stopwords = {"the", "a", "an", "of", "for", "on", "at", "to", "in", "with", "without", "and", "or", "but", "what", "how", "why", "when", "where"}
@@ -290,7 +310,7 @@ def search_local_knowledge(query: str) -> str:
         result += "\n".join(matched_results)
         result += "\n\n*This is a fallback response from your local legal knowledge base.*"
         return result
-    # Act guessing
+    # Guess act based on query
     act_guesses = {
         "contract": "indian_contract_act.pdf", "criminal": "Bharatiya_Nagarik_Suraksha_Sanhita_2023.pdf",
         "constitution": "Constitution_act.pdf", "evidence": "Evidence_act.pdf", "company": "companies_act_2013.pdf",
@@ -361,83 +381,74 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# ─── DATABASE HELPERS (raw SQL) ────────────────────────────────
 async def create_tables():
-    # Using SQLAlchemy's create_all is cleaner, but we'll keep individual statements for safety.
-    # Since we already defined the tables via SQLAlchemy, we can use metadata.create_all()
-    # However, to keep compatibility with your existing code, we'll check for existence.
-    # But the error was about Table creation, not about creating tables in DB.
-    # We'll just let SQLAlchemy handle it by using metadata.create_all if needed.
-    # For safety, we'll run a simple "CREATE TABLE IF NOT EXISTS" for each.
-    # But since we're using SQLAlchemy Core, we can use the `create_all` method.
-    async with database.connection() as conn:
-        # We need to run sync code in a thread? Actually, we can just execute raw SQL.
-        # We'll do it the raw way to avoid any complexity.
-        await database.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                full_name VARCHAR(255),
-                is_active BOOLEAN DEFAULT TRUE,
-                is_premium BOOLEAN DEFAULT FALSE,
-                tier VARCHAR(20) DEFAULT 'free',
-                queries_used_today INTEGER DEFAULT 0,
-                last_query_reset TIMESTAMP DEFAULT NOW(),
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW(),
-                api_key VARCHAR(64) UNIQUE,
-                preferences JSONB
-            )
-        """)
-        await database.execute("""
-            CREATE TABLE IF NOT EXISTS queries (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                query TEXT,
-                response TEXT,
-                metadata JSONB,
-                created_at TIMESTAMP DEFAULT NOW(),
-                expires_at TIMESTAMP
-            )
-        """)
-        await database.execute("""
-            CREATE TABLE IF NOT EXISTS payments (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                razorpay_order_id VARCHAR(100) UNIQUE,
-                razorpay_payment_id VARCHAR(100),
-                razorpay_signature VARCHAR(255),
-                amount FLOAT,
-                currency VARCHAR(3) DEFAULT 'INR',
-                tier VARCHAR(20),
-                status VARCHAR(20) DEFAULT 'created',
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        """)
-        await database.execute("""
-            CREATE TABLE IF NOT EXISTS events (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER,
-                session_id VARCHAR(64),
-                event_type VARCHAR(50),
-                event_data JSONB,
-                ip_address VARCHAR(45),
-                user_agent VARCHAR(255),
-                created_at TIMESTAMP DEFAULT NOW(),
-                expires_at TIMESTAMP
-            )
-        """)
-        await database.execute("""
-            CREATE TABLE IF NOT EXISTS referrals (
-                id SERIAL PRIMARY KEY,
-                referrer_id INTEGER,
-                referee_id INTEGER,
-                code VARCHAR(20) UNIQUE,
-                used BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        """)
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            username VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            full_name VARCHAR(255),
+            is_active BOOLEAN DEFAULT TRUE,
+            is_premium BOOLEAN DEFAULT FALSE,
+            tier VARCHAR(20) DEFAULT 'free',
+            queries_used_today INTEGER DEFAULT 0,
+            last_query_reset TIMESTAMP DEFAULT NOW(),
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW(),
+            api_key VARCHAR(64) UNIQUE,
+            preferences JSONB
+        )
+    """)
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS queries (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            query TEXT,
+            response TEXT,
+            metadata JSONB,
+            created_at TIMESTAMP DEFAULT NOW(),
+            expires_at TIMESTAMP
+        )
+    """)
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            razorpay_order_id VARCHAR(100) UNIQUE,
+            razorpay_payment_id VARCHAR(100),
+            razorpay_signature VARCHAR(255),
+            amount FLOAT,
+            currency VARCHAR(3) DEFAULT 'INR',
+            tier VARCHAR(20),
+            status VARCHAR(20) DEFAULT 'created',
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS events (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            session_id VARCHAR(64),
+            event_type VARCHAR(50),
+            event_data JSONB,
+            ip_address VARCHAR(45),
+            user_agent VARCHAR(255),
+            created_at TIMESTAMP DEFAULT NOW(),
+            expires_at TIMESTAMP
+        )
+    """)
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS referrals (
+            id SERIAL PRIMARY KEY,
+            referrer_id INTEGER,
+            referee_id INTEGER,
+            code VARCHAR(20) UNIQUE,
+            used BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
     logger.info("Tables created/checked.")
 
 async def ensure_test_user():
@@ -476,19 +487,19 @@ async def increment_query(user_id: int):
         )
     )
 
+# ─── FILE PROCESSING ────────────────────────────────────────────
 async def process_file(file: UploadFile) -> str:
     content = await file.read()
     filename = file.filename.lower()
     text = ""
     if filename.endswith('.pdf'):
         try:
-            reader = PyPDF2.PdfReader(io.BytesIO(content))
-            if len(reader.pages) == 0:
-                raise ValueError("PDF has no pages.")
-            for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+            # Use pdfplumber for uploaded files too
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
             if not text.strip():
                 raise ValueError("PDF extraction returned empty text.")
             return text.strip()
@@ -519,9 +530,9 @@ async def process_file(file: UploadFile) -> str:
         mime = "application/octet-stream"
     if mime == "application/pdf":
         try:
-            reader = PyPDF2.PdfReader(io.BytesIO(content))
-            for page in reader.pages:
-                text += page.extract_text() or ""
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    text += page.extract_text() or ""
             if text.strip():
                 return text.strip()
         except:
@@ -553,7 +564,7 @@ async def process_file(file: UploadFile) -> str:
         pass
     raise ValueError("Unsupported or unreadable file.")
 
-# ─── AGENT PROMPTS (Universal, with language instruction) ──────
+# ─── AGENT PROMPTS (Universal) ──────────────────────────────────
 BASE_AGENT_PROMPTS = {
     "contract_review": """You are a divine embodiment of Lord Brahma, the Creator. Provide a clause‑by‑clause analysis with EXECUTIVE SUMMARY, RISK RATING, CLAUSE ANALYSIS, MISSING CLAUSES, RECOMMENDATIONS. Be ruthless but fair.
 Contract text: {query}
@@ -800,6 +811,7 @@ async def verify_payment(
         logger.error(f"Payment verification failed: {e}")
         raise HTTPException(status_code=400, detail="Verification failed")
 
+# ─── STATIC FILES ──────────────────────────────────────────────
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
