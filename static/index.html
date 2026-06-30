@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🔱 LexSarthi – Blessed Intelligence v5.0</title>
-    <meta name="description" content="220 specialized legal AI agents with 10 verification layers. Zero retention. DPDPA compliant." />
+    <meta name="description" content="220 legal AI agents with 10 verifiers. Zero Retention. DPDPA compliant." />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -64,6 +64,7 @@
         .tool-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
         .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:30px; padding:3px 10px 3px 6px; font-size:0.6rem; cursor:pointer; }
         .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:3px; width:13px; height:13px; cursor:pointer; }
+        /* >>>>>>>>>>>>>>>>  THE CHANGE IS RIGHT HERE  <<<<<<<<<<<<<<< */
         .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:6px 16px; border-radius:30px; font-weight:700; font-size:0.75rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; }
         .send-btn:hover { transform:scale(1.03); }
         .response-card { background:rgba(16,16,16,0.6); border:1px solid rgba(212,175,55,0.04); border-radius:16px; padding:16px; margin-bottom:14px; display:block; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; max-height:450px; overflow-y:auto; color:#ddd; }
@@ -98,6 +99,10 @@
         .verifier-card { background:rgba(20,20,20,0.4); border-left:3px solid var(--gold); padding:8px 10px; border-radius:4px; }
         .verifier-card .v-title { font-weight:600; color:#fff; font-size:0.8rem; }
         .verifier-card .v-desc { color:#aaa; font-size:0.65rem; }
+        .chat-area { max-height:300px; overflow-y:auto; margin-bottom:10px; }
+        .chat-bubble { max-width:90%; padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:0.85rem; }
+        .chat-bubble.user { background:var(--gold); color:#000; margin-left:auto; border-bottom-right-radius:0; }
+        .chat-bubble.agent { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-bottom-left-radius:0; }
         @media (max-width:600px) { .verifier-grid { grid-template-columns:1fr; } .brand-name { font-size:1.4rem; } .om-wrapper { height:140px; } .om-3d { width:80px; height:80px; } .om-3d .om-face { width:80px; height:80px; font-size:55px; } .om-face.front { transform:translateZ(40px); } .om-face.back { transform:rotateY(180deg) translateZ(40px); } .om-face.left { transform:rotateY(-90deg) translateZ(40px); } .om-face.right { transform:rotateY(90deg) translateZ(40px); } .om-face.top { transform:rotateX(90deg) translateZ(40px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(40px); } .agent-showcase { grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); } }
     </style>
 </head>
@@ -154,6 +159,7 @@
     <div class="agent-showcase" id="agentShowcase"></div>
 
     <div class="response-card" id="responseArea">
+        <div class="chat-area" id="chatArea"></div>
         <div id="responseContent">
             <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
                 <div class="diya">🪔</div>
@@ -164,19 +170,18 @@
         </div>
         <div id="typingIndicator" class="typing-indicator">
             <span>ॐ Thinking</span>
-            <div class="typing-dots">
-                <span></span><span></span><span></span>
-            </div>
+            <div class="typing-dots"><span></span><span></span><span></span></div>
         </div>
     </div>
 
     <div class="input-card">
         <textarea class="query-input" id="queryInput" placeholder="Ask a legal question, upload a contract..."></textarea>
         <div class="input-tools">
-            <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf" hidden onchange="handleFileUpload(this)"></label>
+            <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf, .docx, .jpg, .png" hidden onchange="handleFileUpload(this)"></label>
             <button class="tool-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i> Voice</button>
             <label class="web-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
-            <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Send</button>
+            <!-- >>>>>>>>>>>>>>>>  THE CHANGE IS RIGHT HERE  <<<<<<<<<<<<<<< -->
+            <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Click</button>
         </div>
         <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
         <div class="status-text" id="inputStatus"></div>
@@ -230,13 +235,21 @@
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
-        <h3>💳 Plans</h3>
-        <div onclick="selectPlan('lifetime')" style="background:rgba(212,175,55,0.08); border:1px solid var(--gold); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;"><strong>₹2 Lifetime</strong> <span id="lifetimeCount"></span></div>
-        <div onclick="selectPlan('premium')" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;"><strong>₹102/month</strong> Premium</div>
-        <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;"><strong>₹1011/month</strong> Enterprise</div>
+        <h3>💳 Choose Your Plan</h3>
+        <div onclick="selectPlan('lifetime')" style="background:rgba(212,175,55,0.08); border:2px solid var(--gold); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
+            <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.7rem; color:#888;">(limited to first 1000 users)</span>
+            <span id="lifetimeCount" style="float:right; font-size:0.7rem; color:#666;"></span>
+        </div>
+        <div onclick="selectPlan('premium')" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
+            <strong>₹102/month</strong> <span style="font-size:0.7rem; color:#888;">Premium – unlimited queries</span>
+        </div>
+        <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
+            <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – API + priority</span>
+        </div>
         <input type="hidden" id="paymentPlan" value="lifetime" />
-        <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:12px;">Subscribe</button>
+        <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:12px;margin-top:10px;">Subscribe Now</button>
         <div id="payment-status" class="status-text"></div>
+        <div style="margin-top:12px; font-size:0.6rem; color:#555; text-align:center;">🔒 Secure payment via Razorpay. Your settlement ID: T7lbgnuCRBfva5</div>
     </div>
 </div>
 
@@ -303,23 +316,30 @@
 
 <script>
 // ================================================================
-// COMPLETE JAVASCRIPT ENGINE
+// LEXSARTHI v5.0 – COMPLETE FRONTEND ENGINE
 // ================================================================
 
+// --- CRITICAL: Hardcode the backend URL to Hugging Face ---
+const API_BASE = 'https://upamnyu12-lex.hf.space';
+
+// --- Stars Background ---
 (function() {
     const c = document.getElementById('starsContainer');
-    for (let i=0; i<120; i++) {
-        const s = document.createElement('div');
-        s.className = 'star';
-        const size = Math.random()*2.5+0.5;
-        s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--duration:${Math.random()*3+2}s;animation-delay:${Math.random()*5}s;`;
-        c.appendChild(s);
+    if (c) {
+        for (let i=0; i<120; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            const size = Math.random()*2.5+0.5;
+            s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--duration:${Math.random()*3+2}s;animation-delay:${Math.random()*5}s;`;
+            c.appendChild(s);
+        }
     }
 })();
 
-const API_BASE = 'https://upamnyu12-lex.hf.space';
+// --- Helpers ---
 function getToken() { return localStorage.getItem('lex_token'); }
 
+// --- 220 Agents Generator ---
 const allAgents = (() => {
     const cats = ["Corporate","Criminal","IP","Taxation","Contract","Due Diligence","Research","Compliance","Litigation","Family","Property","Labour","Cyber","Banking","ADR","Constitutional","Environmental","Health","Real Estate","Media","Sports","Aviation","Maritime","Energy","Mining","Education","Immigration"];
     const names = ["Equity Analyst","Macro Forecaster","Derivatives Expert","Portfolio Optimiser","Algo Trader","Risk Analyst","ESG Specialist","Crypto Analyst","M&A Advisor","Tax Planner","Compliance Officer","Contract Drafter","Litigation Strategist","IP Prosecutor","Trademark Expert","Patent Examiner","Copyright Specialist","Due Diligence Lead","Privacy Consultant","Cyber Analyst","AI Ethics","Mediation Expert","Arbitrator","Family Advocate","Property Expert","Labour Consultant","Constitutional Scholar","Environmental Advisor","Health Specialist","Real Estate Consultant","Media Attorney","Sports Expert","Aviation Specialist","Maritime Advisor","Energy Consultant","Mining Expert","Education Advisor","Immigration Specialist"];
@@ -336,6 +356,7 @@ let uploadedFile = null;
 
 function renderAgents() {
     const container = document.getElementById('agentShowcase');
+    if (!container) return;
     container.innerHTML = '';
     allAgents.slice(0, 30).forEach(agent => {
         const card = document.createElement('div');
@@ -344,7 +365,8 @@ function renderAgents() {
         card.onclick = () => {
             document.getElementById('queryInput').value = `Ask as ${agent.name} about ${agent.category}`;
             window._selectedAgent = agent.id;
-            document.getElementById('inputStatus').textContent = `Selected ${agent.name}`;
+            const status = document.getElementById('inputStatus');
+            if (status) status.textContent = `Selected ${agent.name}`;
         };
         container.appendChild(card);
     });
@@ -352,15 +374,16 @@ function renderAgents() {
 renderAgents();
 
 function setTyping(active) {
-    document.getElementById('typingIndicator').classList.toggle('active', active);
+    const el = document.getElementById('typingIndicator');
+    if (el) el.classList.toggle('active', active);
 }
 
-// Auth
+// --- AUTH ---
 async function handleLogin() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-password').value;
     const status = document.getElementById('login-status');
-    status.textContent = 'Logging...';
+    if (status) status.textContent = 'Logging...';
     try {
         const res = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
@@ -370,20 +393,22 @@ async function handleLogin() {
         const data = await res.json();
         if (res.ok) {
             localStorage.setItem('lex_token', data.access_token);
-            status.textContent = '✅ Success!';
+            if (status) status.textContent = '✅ Success!';
             closeModal('loginModal');
             checkPremium();
         } else {
-            status.textContent = '❌ ' + data.detail;
+            if (status) status.textContent = '❌ ' + data.detail;
         }
-    } catch(e) { status.textContent = '❌ Network error'; }
+    } catch(e) {
+        if (status) status.textContent = '❌ Network error';
+    }
 }
 
 async function handleRegister() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-password').value;
     const status = document.getElementById('login-status');
-    status.textContent = 'Registering...';
+    if (status) status.textContent = 'Registering...';
     try {
         const res = await fetch(`${API_BASE}/auth/register`, {
             method: 'POST',
@@ -392,11 +417,13 @@ async function handleRegister() {
         });
         const data = await res.json();
         if (res.ok) {
-            status.textContent = '✅ Registered! Login now.';
+            if (status) status.textContent = '✅ Registered! Login now.';
         } else {
-            status.textContent = '❌ ' + data.detail;
+            if (status) status.textContent = '❌ ' + data.detail;
         }
-    } catch(e) { status.textContent = '❌ Network error'; }
+    } catch(e) {
+        if (status) status.textContent = '❌ Network error';
+    }
 }
 
 async function checkPremium() {
@@ -406,48 +433,79 @@ async function checkPremium() {
         const res = await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) {
             const data = await res.json();
+            const premiumBadge = document.getElementById('premiumBadge');
+            const enterpriseBadge = document.getElementById('enterpriseBadge');
+            const msg = document.getElementById('premiumMessage');
             if (data.tier === 'premium' || data.tier === 'enterprise' || data.tier === 'lifetime') {
-                document.getElementById('premiumBadge').style.display = 'inline-block';
-                document.getElementById('premiumMessage').style.display = 'block';
+                if (premiumBadge) premiumBadge.style.display = 'inline-block';
+                if (msg) msg.style.display = 'block';
             }
-            if (data.tier === 'enterprise') document.getElementById('enterpriseBadge').style.display = 'inline-block';
+            if (data.tier === 'enterprise') {
+                if (enterpriseBadge) enterpriseBadge.style.display = 'inline-block';
+            }
         }
     } catch(e) {}
 }
 
-// Usage
+// --- USAGE ---
 async function showMyUsage() {
     const token = getToken();
     if (!token) { alert('Login first'); showLogin(); return; }
     openModal('myUsageModal');
     await fetchMyUsage();
 }
+
 async function fetchMyUsage() {
     const container = document.getElementById('myUsageContent');
+    if (!container) return;
     const token = getToken();
     if (!token) { container.innerHTML = '<p>Login required</p>'; return; }
     try {
         const res = await fetch(`${API_BASE}/my-usage`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
         container.innerHTML = `<p style="font-size:1.2rem;">Total Queries: <strong style="color:var(--gold);">${data.total_queries}</strong></p><p>Today: ${data.queries_today}</p>`;
-    } catch(e) { container.innerHTML = '<p>Error loading</p>'; }
+    } catch(e) {
+        container.innerHTML = '<p>Error loading</p>';
+    }
 }
 
-// Send Query
+// --- SEND QUERY (Robust & Null-Safe) ---
 async function sendQuery() {
-    const query = document.getElementById('queryInput').value.trim();
-    if (!query && !uploadedFile) { document.getElementById('inputStatus').textContent = 'Enter a query!'; return; }
+    const queryInput = document.getElementById('queryInput');
+    const statusEl = document.getElementById('inputStatus');
+    const responseContent = document.getElementById('responseContent');
+    const welcomeEl = document.getElementById('defaultWelcome');
+    const chatArea = document.getElementById('chatArea');
+
+    const query = queryInput ? queryInput.value.trim() : '';
+    if (!query && !uploadedFile) {
+        if (statusEl) statusEl.textContent = 'Enter a query or upload a file!';
+        return;
+    }
     const token = getToken();
     if (!token) { alert('Login required'); showLogin(); return; }
 
     setTyping(true);
-    document.getElementById('inputStatus').textContent = 'Processing with Real AI...';
+    if (statusEl) statusEl.textContent = 'Processing with Real AI...';
+
     const formData = new FormData();
-    formData.append('query', query || 'Analyze file');
+    formData.append('query', query || 'Analyze uploaded document');
     if (uploadedFile) formData.append('files', uploadedFile);
-    formData.append('search_web', document.getElementById('webSearchToggle').checked ? 'on' : 'off');
-    formData.append('model', document.getElementById('modelSelect').value);
+    formData.append('search_web', document.getElementById('webSearchToggle')?.checked ? 'on' : 'off');
+    formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
     formData.append('agent_id', window._selectedAgent || 'agent_001');
+
+    // --- Build User Message with Preview ---
+    let userMsg = query || '📎 File uploaded';
+    if (uploadedFile) {
+        userMsg += `<br><br><span style="font-size:0.7rem; color:var(--gold);">📎 ${uploadedFile.name}</span>`;
+    }
+    if (chatArea) {
+        chatArea.innerHTML += `<div class="chat-bubble user">${userMsg}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    // Hide welcome if visible
+    if (welcomeEl) welcomeEl.style.display = 'none';
 
     try {
         const res = await fetch(`${API_BASE}/ask`, {
@@ -456,19 +514,18 @@ async function sendQuery() {
             body: formData
         });
 
-        // --- CRITICAL: Read as text first to prevent JSON parse errors ---
         const rawText = await res.text();
         let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch (jsonError) {
-            // If JSON fails, display the raw text
+        try { data = JSON.parse(rawText); } catch (e) {
+            // If JSON fails, display raw text as agent response
             setTyping(false);
-            document.getElementById('responseContent').innerHTML = rawText.replace(/\n/g, '<br>');
-            document.getElementById('defaultWelcome').style.display = 'none';
-            document.getElementById('inputStatus').textContent = '✅ Raw response received';
+            if (chatArea) {
+                chatArea.innerHTML += `<div class="chat-bubble agent">${rawText.replace(/\n/g, '<br>')}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            if (statusEl) statusEl.textContent = '✅ Raw response received';
             clearFilePreview();
-            document.getElementById('queryInput').value = '';
+            if (queryInput) queryInput.value = '';
             return;
         }
 
@@ -476,82 +533,148 @@ async function sendQuery() {
         if (res.ok) {
             let displayText = data.response.replace(/\n/g, '<br>');
             displayText += `<br><br><span style="font-size:0.6rem; color:var(--gold);">✅ Verified by 10 layers | Zero Retention (24h) | Model: ${data.model}</span>`;
-            document.getElementById('responseContent').innerHTML = displayText;
-            document.getElementById('defaultWelcome').style.display = 'none';
-            document.getElementById('inputStatus').textContent = `✅ Done (${data.model})`;
+            if (chatArea) {
+                chatArea.innerHTML += `<div class="chat-bubble agent">${displayText}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            if (statusEl) statusEl.textContent = `✅ Done (${data.model})`;
         } else {
-            document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Server error');
-            document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Error: ${data.detail || 'Unknown error'}</span>`;
+            if (chatArea) {
+                chatArea.innerHTML += `<div class="chat-bubble agent" style="color:#ff6b6b;">Error: ${data.detail || 'Server error'}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            if (statusEl) statusEl.textContent = '❌ ' + (data.detail || 'Error');
         }
     } catch(e) {
         setTyping(false);
-        console.error("Frontend Error:", e);
-        document.getElementById('inputStatus').textContent = '❌ Network error: ' + e.message;
-        document.getElementById('responseContent').innerHTML = `<span style="color:#ff6b6b;">Network error. Details: ${e.message}. Please try again.</span>`;
+        if (statusEl) statusEl.textContent = '❌ Network error: ' + e.message;
+        if (chatArea) {
+            chatArea.innerHTML += `<div class="chat-bubble agent" style="color:#ff6b6b;">Network error: ${e.message}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
     }
     clearFilePreview();
-    document.getElementById('queryInput').value = '';
-}
-function clearFilePreview() {
-    uploadedFile = null;
-    document.getElementById('filePreview').classList.remove('show');
-    document.getElementById('pdfUpload').value = '';
+    if (queryInput) queryInput.value = '';
 }
 
+// --- FILE HANDLING ---
+function handleFileUpload(input) {
+    if (input.files && input.files[0]) {
+        uploadedFile = input.files[0];
+        const previewEl = document.getElementById('filePreview');
+        const textEl = document.getElementById('filePreviewText');
+        if (previewEl) previewEl.classList.add('show');
+        if (textEl) textEl.textContent = `📎 ${uploadedFile.name}`;
+        // Show in status
+        const status = document.getElementById('inputStatus');
+        if (status) status.textContent = `📄 File loaded: ${uploadedFile.name}`;
+    }
+}
+
+function clearFilePreview() {
+    uploadedFile = null;
+    const preview = document.getElementById('filePreview');
+    if (preview) preview.classList.remove('show');
+    const input = document.getElementById('pdfUpload');
+    if (input) input.value = '';
+}
+
+// --- VOICE ---
 function toggleVoice() {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'en-IN';
     recognition.onresult = (e) => {
-        document.getElementById('queryInput').value = e.results[0][0].transcript;
-        document.getElementById('inputStatus').textContent = '🎤 Voice captured';
+        const input = document.getElementById('queryInput');
+        if (input) input.value = e.results[0][0].transcript;
+        const status = document.getElementById('inputStatus');
+        if (status) status.textContent = '🎤 Voice captured';
     };
     recognition.start();
 }
 
+// --- OUTPUT TOOLS ---
 function copyResponse() {
-    const text = document.getElementById('responseContent').innerText;
-    navigator.clipboard.writeText(text).then(() => document.getElementById('inputStatus').textContent = '✅ Copied!');
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    const text = chatArea.innerText || '';
+    navigator.clipboard.writeText(text).then(() => {
+        const status = document.getElementById('inputStatus');
+        if (status) status.textContent = '✅ Copied!';
+    });
 }
+
 function downloadTXT() {
-    const text = document.getElementById('responseContent').innerText;
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    const text = chatArea.innerText || '';
     const blob = new Blob([text], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'lexsarthi_response.txt';
     a.click();
 }
+
 function downloadPDF() {
-    const element = document.getElementById('responseContent');
-    if (!element.innerText.trim() || (document.getElementById('defaultWelcome').style.display !== 'none')) {
-        alert('No response to download. Please ask a question first.');
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea || !chatArea.innerText.trim()) {
+        alert('No response to download.');
         return;
     }
-    document.getElementById('inputStatus').textContent = 'Generating PDF...';
-    html2pdf().set({ margin: 0.5, filename: 'lexsarthi_response.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } })
-        .from(element).save().then(() => {
-            document.getElementById('inputStatus').textContent = '✅ PDF downloaded!';
-        }).catch(() => {
-            document.getElementById('inputStatus').textContent = '❌ PDF failed.';
-        });
+    const status = document.getElementById('inputStatus');
+    if (status) status.textContent = 'Generating PDF...';
+    html2pdf().set({
+        margin: 0.5,
+        filename: 'lexsarthi_response.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    }).from(chatArea).save().then(() => {
+        if (status) status.textContent = '✅ PDF downloaded!';
+    }).catch(() => {
+        if (status) status.textContent = '❌ PDF failed.';
+    });
 }
+
 function clearResponse() {
-    document.getElementById('responseContent').innerHTML = document.getElementById('defaultWelcome').outerHTML;
+    const chatArea = document.getElementById('chatArea');
+    const welcome = document.getElementById('defaultWelcome');
+    if (chatArea) chatArea.innerHTML = '';
+    if (welcome) welcome.style.display = 'block';
+    const status = document.getElementById('inputStatus');
+    if (status) status.textContent = '';
 }
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+// --- MODALS ---
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+}
 function showLogin() { openModal('loginModal'); }
-function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    if (panel) panel.classList.toggle('open');
+}
 
-// Payment
-function showPayment() { openModal('paymentModal'); checkLifetime(); }
-function selectPlan(p) { document.getElementById('paymentPlan').value = p; }
+// --- PAYMENT (Razorpay ₹2 Lifetime) ---
+function showPayment() {
+    openModal('paymentModal');
+    checkLifetime();
+}
+
+function selectPlan(plan) {
+    document.getElementById('paymentPlan').value = plan;
+}
+
 async function processPayment() {
     const token = getToken();
     if (!token) { alert('Login first'); return; }
     const tier = document.getElementById('paymentPlan').value;
     const status = document.getElementById('payment-status');
-    status.textContent = 'Creating order...';
+    if (status) status.textContent = 'Creating order...';
     try {
         const res = await fetch(`${API_BASE}/create-order`, {
             method: 'POST',
@@ -559,12 +682,16 @@ async function processPayment() {
             body: JSON.stringify({ tier })
         });
         const data = await res.json();
-        if (!res.ok) { status.textContent = '❌ ' + data.detail; return; }
+        if (!res.ok) {
+            if (status) status.textContent = '❌ ' + data.detail;
+            return;
+        }
         const options = {
             key: data.razorpay_key,
             amount: data.amount,
             currency: 'INR',
             name: 'LexSarthi',
+            description: `Subscription: ${tier}`,
             order_id: data.order_id,
             handler: async function(response) {
                 const vRes = await fetch(`${API_BASE}/verify-payment`, {
@@ -578,32 +705,47 @@ async function processPayment() {
                 });
                 const vData = await vRes.json();
                 if (vRes.ok) {
-                    status.textContent = '✅ Success! You are ' + vData.tier;
+                    if (status) status.textContent = '✅ Success! You are ' + vData.tier;
                     closeModal('paymentModal');
                     checkPremium();
                 } else {
-                    status.textContent = '❌ ' + vData.detail;
+                    if (status) status.textContent = '❌ ' + vData.detail;
                 }
-            }
+            },
+            prefill: {
+                email: (await (await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } })).json()).email || ''
+            },
+            theme: { color: '#d4a853' }
         };
         const rzp = new Razorpay(options);
         rzp.open();
-    } catch(e) { status.textContent = '❌ ' + e.message; }
+    } catch(e) {
+        if (status) status.textContent = '❌ ' + e.message;
+    }
 }
+
 async function checkLifetime() {
     try {
         const res = await fetch(`${API_BASE}/lifetime-count`);
         const data = await res.json();
-        document.getElementById('lifetimeCount').textContent = `(${data.remaining} left)`;
+        const el = document.getElementById('lifetimeCount');
+        if (el) el.textContent = `(${data.remaining} left)`;
     } catch(e) {}
 }
 
+// --- KEYBOARD SHORTCUT ---
 document.addEventListener('DOMContentLoaded', () => {
     const token = getToken();
     if (token) checkPremium();
-    document.getElementById('queryInput').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuery(); }
-    });
+    const input = document.getElementById('queryInput');
+    if (input) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuery();
+            }
+        });
+    }
 });
 </script>
 </body>
