@@ -1,5 +1,5 @@
 # ===================================================================
-# LEXSARTHI v6.0 – UNIVERSAL DIVINE INTELLIGENCE
+# LEXSARTHI v6.0 – UNIVERSAL DIVINE INTELLIGENCE (FINAL)
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM
 # Deployed: upamnyu12-lex.hf.space
@@ -47,7 +47,7 @@ import google.generativeai as genai
 import io
 import puremagic
 import PyPDF2
-import pdfplumber      # <-- NEW: handles tricky PDFs
+import pdfplumber
 import docx
 from PIL import Image
 import pytesseract
@@ -86,9 +86,9 @@ if GEMINI_API_KEY:
 
 # ─── DATABASE SETUP ─────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=2, max_size=20)
-metadata = MetaData()   # Still needed for SQLAlchemy queries
+metadata = MetaData()
 
-# ─── SQLAlchemy Table Definitions (used only for queries) ──────
+# ─── SQLAlchemy Table Definitions ──────────────────────────────
 users = Table(
     "users", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
@@ -210,27 +210,29 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 limiter = Limiter(key_func=get_remote_address)
 
 # =================================================================
-# 🧠 UNIVERSAL LEGAL PDF LIBRARY (with pdfplumber fallback)
+# 🧠 UNIVERSAL LEGAL PDF LIBRARY (NO DATA LOSS)
 # =================================================================
 LEGAL_SECTIONS = {}
 
 def extract_sections_from_pdf(filepath: str) -> dict:
+    """
+    Extracts full raw text and attempts to split into sections.
+    Always stores the FULL text so no data is ever lost.
+    """
     sections = {}
     full_text = ""
     
-    # 1. Try pdfplumber (handles corrupted/encrypted PDFs)
+    # 1. Extract raw text using pdfplumber
     try:
         with pdfplumber.open(filepath) as pdf:
             for page in pdf.pages:
                 text = page.extract_text()
                 if text:
                     full_text += text + "\n"
-        if full_text.strip():
-            logger.info(f"pdfplumber succeeded for {os.path.basename(filepath)}")
-        else:
+        if not full_text.strip():
             raise ValueError("pdfplumber returned empty text")
     except Exception as e:
-        logger.warning(f"pdfplumber failed for {filepath}: {e}. Falling back to PyPDF2 (strict=False).")
+        logger.warning(f"pdfplumber failed: {e}. Falling back to PyPDF2 (strict=False).")
         try:
             with open(filepath, 'rb') as f:
                 reader = PyPDF2.PdfReader(f, strict=False)
@@ -238,30 +240,53 @@ def extract_sections_from_pdf(filepath: str) -> dict:
                     text = page.extract_text()
                     if text:
                         full_text += text + "\n"
-            if not full_text.strip():
-                raise ValueError("PyPDF2 returned empty text")
         except Exception as e2:
-            logger.error(f"All PDF extraction methods failed for {filepath}: {e2}")
+            logger.error(f"All extraction failed for {filepath}: {e2}")
             return {}
+
+    if not full_text.strip():
+        return {}
+
+    # --- ALWAYS STORE THE FULL TEXT (NO DATA LOSS) ---
+    sections["__FULL_TEXT__"] = full_text.strip()
+
+    # --- 2. Try multiple splitting patterns (case‑insensitive) ---
+    patterns = [
+        r'(?=Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Clause\s+\d+|§\s*\d+)',           # Standard
+        r'(?=CHAPTER\s+[IVXLCDM]+\b|PART\s+[IVXLCDM]+\b|SCHEDULE\s+[IVXLCDM]+\b)',    # Roman numerals
+        r'(?=CHAPTER\s+\d+|PART\s+\d+)',                                               # Chapter 1, Part 1
+        r'(?=\n\d+\.\s)',                                                              # Plain numbered lists (e.g., 1. Short title)
+        r'(?=\n\d+\s+[A-Z])',                                                          # 1. TEXT
+    ]
     
-    # 2. Split into sections
-    section_pattern = r'(?=Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)'
-    raw_sections = re.split(section_pattern, full_text)
-    for i, sec in enumerate(raw_sections):
-        if sec.strip():
-            title_match = re.search(r'(Section \d+\.?|Sec\. \d+\.?|Article \d+\.?|Chapter \d+\.?|Clause \d+\.?|§ \d+)', sec)
-            if title_match:
-                title = title_match.group(0)
-                if title in sections:
-                    sections[title] += "\n" + sec
+    split_text = None
+    for pattern in patterns:
+        test_split = re.split(pattern, full_text, flags=re.IGNORECASE)
+        if len(test_split) > 3:  # Found a meaningful split
+            split_text = test_split
+            break
+
+    if split_text and len(split_text) > 3:
+        for i, chunk in enumerate(split_text):
+            if chunk.strip():
+                # Try to extract a title from the chunk
+                title_match = re.search(r'(Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Chapter\s+[IVXLCDM]+|Part\s+[IVXLCDM]+|\d+\.\s+[A-Z])', chunk, re.IGNORECASE)
+                if title_match:
+                    title = title_match.group(0).strip()
+                    if title in sections:
+                        sections[title] += "\n" + chunk
+                    else:
+                        sections[title] = chunk
                 else:
-                    sections[title] = sec
-            else:
-                if i == 0:
-                    sections["Preamble"] = sec[:1500]
-                else:
-                    sections[f"Section_{i}"] = sec[:1000]
-    logger.info(f"Extracted {len(sections)} sections from {os.path.basename(filepath)}")
+                    # If the chunk has no title, use its first 50 chars as key
+                    first_line = chunk.strip().split('\n')[0][:50]
+                    sections[f"Sec_{i}_{first_line}"] = chunk
+    else:
+        # If splitting fails, just store the raw text as one block
+        sections["Full_Text"] = full_text.strip()
+        logger.info(f"Stored full raw text as single block for {os.path.basename(filepath)}")
+    
+    logger.info(f"Extracted {len(sections)} sections/chunks from {os.path.basename(filepath)} (full text stored)")
     return sections
 
 def load_pdf_library():
@@ -284,53 +309,60 @@ def load_pdf_library():
 load_pdf_library()
 
 def search_local_knowledge(query: str) -> str:
+    """
+    Search the local PDF library – uses FULL TEXT if sections are small.
+    """
     if not LEGAL_SECTIONS:
-        return "⚠️ Legal library is not loaded. Please ensure PDFs are present."
+        return "⚠️ Legal library is not loaded."
+
     query_lower = query.lower()
     matched_results = []
-    stopwords = {"the", "a", "an", "of", "for", "on", "at", "to", "in", "with", "without", "and", "or", "but", "what", "how", "why", "when", "where"}
-    keywords = [word for word in query_lower.split() if word not in stopwords and len(word) > 2]
+    keywords = [word for word in query_lower.split() if len(word) > 3 and word not in {"the","and","for","with","without"}]
+
     if not keywords:
-        for fname, sections in LEGAL_SECTIONS.items():
-            if "Preamble" in sections:
-                return f"📚 **From {fname.replace('.pdf', '')} (Preamble):**\n\n{sections['Preamble']}"
-        return "📚 Please provide a more specific query."
-    for fname, sections in LEGAL_SECTIONS.items():
+        # Return preamble of first PDF
+        for fname, secs in LEGAL_SECTIONS.items():
+            if "__FULL_TEXT__" in secs:
+                return f"📚 **From {fname.replace('.pdf','')} (Full Text Preview):**\n\n{secs['__FULL_TEXT__'][:1500]}..."
+        return "📚 Please provide a specific legal query."
+
+    for fname, secs in LEGAL_SECTIONS.items():
         act_name = fname.replace('.pdf', '').upper()
-        for sec_ref, sec_text in sections.items():
+        full_text = secs.get("__FULL_TEXT__", "")
+        
+        # If full text exists, search for keywords directly
+        if full_text:
+            lines = full_text.split('\n')
+            for line in lines:
+                if any(kw in line.lower() for kw in keywords):
+                    matched_results.append(f"📜 **{act_name}** (Exact Match)\n{line.strip()}\n")
+                    if len(matched_results) >= 8:
+                        break
+        
+        # Also search individual sections
+        for sec_ref, sec_text in secs.items():
+            if sec_ref == "__FULL_TEXT__":
+                continue
             if any(kw in sec_text.lower() for kw in keywords):
-                trimmed = sec_text[:2000] + "..." if len(sec_text) > 2000 else sec_text
+                trimmed = sec_text[:1500] + "..." if len(sec_text) > 1500 else sec_text
                 matched_results.append(f"📜 **{act_name} – {sec_ref}**\n{trimmed}\n")
-                if len(matched_results) >= 5:
+                if len(matched_results) >= 8:
                     break
-        if len(matched_results) >= 5:
+        if len(matched_results) >= 8:
             break
+
     if matched_results:
-        result = "📚 **From Your Universal Legal Intelligence Library:**\n\n"
-        result += "\n".join(matched_results)
-        result += "\n\n*This is a fallback response from your local legal knowledge base.*"
+        result = "📚 **Exact Matches from Your Legal Library:**\n\n"
+        result += "\n".join(matched_results[:8])
         return result
-    # Guess act based on query
-    act_guesses = {
-        "contract": "indian_contract_act.pdf", "criminal": "Bharatiya_Nagarik_Suraksha_Sanhita_2023.pdf",
-        "constitution": "Constitution_act.pdf", "evidence": "Evidence_act.pdf", "company": "companies_act_2013.pdf",
-        "it act": "it_act_2000.pdf", "data": "DATA_ACT.pdf", "dpdpa": "DPDPA.pdf",
-        "arbitration": "the_arbitration_and_conciliation_act_1996.pdf", "advocate": "the_advocate_act_1961.pdf",
-        "stamp": "the_indian_stamp_act_1899.pdf", "insolvency": "the_insolvency_and_bankruptcy_code_2016.pdf", "ai": "AI_ACT.pdf",
-    }
-    for guess_key, guess_file in act_guesses.items():
-        if guess_key in query_lower:
-            for fname, sections in LEGAL_SECTIONS.items():
-                if guess_file in fname:
-                    if "Preamble" in sections:
-                        return f"📚 **From {fname.replace('.pdf', '').upper()} (Preamble):**\n\n{sections['Preamble'][:1500]}..."
-                    first_key = list(sections.keys())[0]
-                    return f"📚 **From {fname.replace('.pdf', '').upper()}:**\n\n{sections[first_key][:1500]}..."
-    for fname, sections in LEGAL_SECTIONS.items():
-        for key in ["Preamble", "Section 1", "Chapter 1"]:
-            if key in sections:
-                return f"📚 **From {fname.replace('.pdf', '').upper()}:**\n\n{sections[key][:1500]}..."
-    return "⚠️ No relevant legal sections found."
+
+    # If no match, return first 1500 chars of the first loaded PDF
+    for fname, secs in LEGAL_SECTIONS.items():
+        full = secs.get("__FULL_TEXT__") or secs.get("Full_Text") or ""
+        if full:
+            return f"📚 **From {fname.replace('.pdf','')} (Relevant Excerpt):**\n\n{full[:1500]}..."
+
+    return "⚠️ No matches found. Please refine your query."
 
 # ─── DIVINE AGENTS & VERIFIERS ──────────────────────────────────
 DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"]
@@ -381,7 +413,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── DATABASE HELPERS (raw SQL) ────────────────────────────────
+# ─── DATABASE HELPERS ────────────────────────────────────────────
 async def create_tables():
     await database.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -494,7 +526,6 @@ async def process_file(file: UploadFile) -> str:
     text = ""
     if filename.endswith('.pdf'):
         try:
-            # Use pdfplumber for uploaded files too
             with pdfplumber.open(io.BytesIO(content)) as pdf:
                 for page in pdf.pages:
                     page_text = page.extract_text()
@@ -524,7 +555,6 @@ async def process_file(file: UploadFile) -> str:
         except Exception as e:
             raise ValueError(f"Image OCR failed: {str(e)}")
     try:
-        import puremagic
         mime = puremagic.from_string(content, mime=True)[0]
     except:
         mime = "application/octet-stream"
@@ -607,6 +637,7 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
     base_prompt = BASE_AGENT_PROMPTS.get(agent_type, BASE_AGENT_PROMPTS["general"])
     lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use the appropriate script."
     system_prompt = f"{base_prompt}\n\n{lang_instruction}"
+    
     # Try Groq
     if model.startswith("llama") and groq_client:
         try:
