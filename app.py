@@ -610,16 +610,24 @@ async def ask(
         raise HTTPException(status_code=429, detail="Free limit reached. Upgrade to Premium.")
     
     combined_query = query
+    
+    # --- HARDENED FILE PROCESSING ---
     if files:
         try:
             file_text = await process_file(files)
-            combined_query += f"\n\n--- Document Content ---\n{file_text}"
+            if not file_text or len(file_text.strip()) < 20:
+                raise HTTPException(status_code=400, detail="File is empty or contains no readable text. Please upload a non-scanned PDF or DOCX.")
+            combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
+        except HTTPException as he:
+            # Re-raise HTTP exceptions directly
+            raise he
         except Exception as e:
-            logger.warning(f"File error: {e}")
-            combined_query += "\n\n--- File processing failed. ---"
+            # Catch any other unexpected errors
+            logger.error(f"File processing error: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
 
     if search_web.lower() in ("on", "yes"):
-        combined_query += "\n\n--- Web Search Enabled (Active in Enterprise) ---"
+        combined_query += "\n\n--- Web Search Enabled ---"
 
     await increment_query(current_user["id"])
     
