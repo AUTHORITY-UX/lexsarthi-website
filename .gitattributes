@@ -26,3 +26,7 @@ legal_docs/companies[[:space:]]act.pdf filter=lfs diff=lfs merge=lfs -text
 legal_docs/DATA_ACT.pdf filter=lfs diff=lfs merge=lfs -text
 legal_docs/data_broker_reg_delete_act_statute_eff_20260101.pdf filter=lfs diff=lfs merge=lfs -text
 legal_docs/Indian[[:space:]]contract[[:space:]]act.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/DPDPA.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/EVIDENCE[[:space:]]ACT.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/THE[[:space:]]BHARATIYA[[:space:]]NAGARIK[[:space:]]SURAKSHA[[:space:]]SANHITA,[[:space:]]2023.pdf filter=lfs diff=lfs merge=lfs -text
+legal_docs/the_constitution_of_india.pdf filter=lfs diff=lfs merge=lfs -text
