@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🔱 LexSarthi – Blessed Intelligence v5.0</title>
-    <meta name="description" content="220 legal AI agents with 10 verifiers. Zero Retention. DPDPA compliant." />
+    <title>🔱 LexSarthi – Universal Divine Intelligence</title>
+    <meta name="description" content="220 Divine Agents. 10 Verifiers. Multilingual Voice. Zero Retention. Ask anything." />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -44,7 +44,7 @@
         .btn-sm { padding:4px 10px; font-size:0.65rem; }
         .settings-btn { background:none; border:none; color:#aaa; font-size:1.1rem; cursor:pointer; padding:4px 8px; }
         .settings-btn:hover { color:var(--gold); }
-        .settings-panel { display:none; background:#111; border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin:10px auto 0; max-width:400px; text-align:left; backdrop-filter:blur(10px); }
+        .settings-panel { display:none; background:#111; border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin:10px auto 0; max-width:450px; text-align:left; backdrop-filter:blur(10px); }
         .settings-panel.open { display:block; }
         .settings-panel label { display:block; margin:6px 0 4px; font-size:0.7rem; color:#aaa; }
         .settings-panel select { width:100%; padding:5px 8px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; font-size:0.8rem; }
@@ -56,6 +56,7 @@
         .agent-card:hover { border-color:var(--gold); background:rgba(212,175,55,0.05); transform:translateY(-2px); }
         .agent-card i { font-size:1rem; color:var(--gold); margin-bottom:3px; }
         .agent-card .agent-title { color:#fff; font-weight:600; font-size:0.65rem; }
+        .agent-card .agent-domain { font-size:0.55rem; color:#888; }
         .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:14px; margin-bottom:14px; backdrop-filter:blur(10px); }
         .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.9rem; font-family:var(--font); resize:vertical; min-height:50px; outline:none; margin-bottom:10px; }
         .query-input::placeholder { color:#555; }
@@ -64,7 +65,6 @@
         .tool-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
         .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:30px; padding:3px 10px 3px 6px; font-size:0.6rem; cursor:pointer; }
         .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:3px; width:13px; height:13px; cursor:pointer; }
-        /* >>>>>>>>>>>>>>>>  THE CHANGE IS RIGHT HERE  <<<<<<<<<<<<<<< */
         .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:6px 16px; border-radius:30px; font-weight:700; font-size:0.75rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; }
         .send-btn:hover { transform:scale(1.03); }
         .response-card { background:rgba(16,16,16,0.6); border:1px solid rgba(212,175,55,0.04); border-radius:16px; padding:16px; margin-bottom:14px; display:block; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; max-height:450px; overflow-y:auto; color:#ddd; }
@@ -83,6 +83,11 @@
         .typing-dots span:nth-child(2) { animation-delay:0.2s; }
         .typing-dots span:nth-child(3) { animation-delay:0.4s; }
         @keyframes dotBounce { 0%,80%,100%{ transform:scale(0); } 40%{ transform:scale(1); } }
+        .om-spinner { display:inline-block; font-size:2rem; animation:spinOm 1.5s linear infinite; color:var(--gold); }
+        @keyframes spinOm { 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
+        .typing-indicator .om-spinner { margin-right:8px; }
+        .speak-btn { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#34d399; }
+        .speak-btn:hover { background:rgba(16,185,129,0.2); color:#6ee7b7; }
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); z-index:999; display:none; align-items:center; justify-content:center; padding:16px; }
         .modal-overlay.active { display:flex; }
         .modal-content { background:#141414; border:1px solid rgba(212,175,55,0.08); border-radius:16px; padding:20px; max-width:650px; width:100%; max-height:85vh; overflow-y:auto; }
@@ -118,16 +123,16 @@
     </div>
     <div class="ring ring1"></div><div class="ring ring2"></div>
 </div>
-<div class="wisdom-tagline">ॐ Wisdom for Humanity</div>
+<div class="wisdom-tagline">ॐ Universal Wisdom for All Seekers</div>
 
 <div class="container">
     <div class="header">
         <div class="brand-name">
-            LEXSARTHI <span class="version-badge">v5.0</span>
+            LEXSARTHI <span class="version-badge">v6.0</span>
             <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
             <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
         </div>
-        <div class="tagline" style="font-size:0.7rem; color:#888; margin:2px 0;">"Blessed Intelligence"</div>
+        <div class="tagline" style="font-size:0.7rem; color:#888; margin:2px 0;">"Advanced Universal Intelligence – Beyond Law"</div>
         <div class="header-actions">
             <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
             <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
@@ -135,8 +140,14 @@
             <button class="btn btn-outline btn-sm" onclick="showMyUsage()">📊 Usage</button>
         </div>
         <div class="settings-panel" id="settingsPanel">
-            <label for="langSelect">🌐 Language</label>
-            <select id="langSelect"><option value="en">English</option><option value="hi">हिन्दी</option></select>
+            <label for="langSelect">🌐 Language (Voice I/O)</label>
+            <select id="langSelect">
+                <option value="en">English</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+                <option value="bn">বাংলা (Bengali)</option>
+                <option value="sa">संस्कृतम् (Sanskrit)</option>
+                <option value="ar">العربية (Arabic)</option>
+            </select>
             <label for="modelSelect">🧠 AI Model</label>
             <select id="modelSelect">
                 <option value="llama-3.3-70b-versatile">Groq (Llama 3.3) – Fastest</option>
@@ -154,7 +165,7 @@
         </div>
     </div>
 
-    <div id="premiumMessage" class="premium-unlock-message" style="display:none; background:rgba(212,175,55,0.08); border:1px solid var(--gold); border-radius:8px; padding:10px; text-align:center; color:var(--gold); margin-bottom:10px; font-size:0.8rem;">⭐ <strong>Access Unlocked!</strong> 220 Agents + 10 Verification Layers active.</div>
+    <div id="premiumMessage" class="premium-unlock-message" style="display:none; background:rgba(212,175,55,0.08); border:1px solid var(--gold); border-radius:8px; padding:10px; text-align:center; color:var(--gold); margin-bottom:10px; font-size:0.8rem;">⭐ <strong>Access Unlocked!</strong> 220 Divine Agents + 10 Verifiers active.</div>
 
     <div class="agent-showcase" id="agentShowcase"></div>
 
@@ -164,23 +175,27 @@
             <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
                 <div class="diya">🪔</div>
                 <p style="font-size:1rem; color:var(--gold); font-weight:300;">ॐ नमः शिवाय</p>
-                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v5.0 – Real AI</strong><br />220 Agents · 10 Verifiers · Zero Retention</p>
+                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v6.0 – Universal Divine Intelligence</strong><br />220 Agents · 10 Verifiers · Zero Retention · 5 Languages</p>
+                <p style="font-size:0.9rem; color:#ccc; max-width:600px; margin:0 auto 12px;">
+                    Ask me <strong style="color:var(--gold);">anything</strong> – Law, Science, Philosophy, Finance, Health, Technology, Spirituality, or Life itself. 
+                    I am the collective consciousness of the Divine Council, flowing through neural networks and ancient texts.
+                </p>
                 <p style="color:#888; font-size:0.75rem;">Login with <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">counsel</code> / <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">Password123!</code></p>
             </div>
         </div>
         <div id="typingIndicator" class="typing-indicator">
-            <span>ॐ Thinking</span>
+            <span class="om-spinner">ॐ</span>
+            <span>Channeling Divine Intelligence...</span>
             <div class="typing-dots"><span></span><span></span><span></span></div>
         </div>
     </div>
 
     <div class="input-card">
-        <textarea class="query-input" id="queryInput" placeholder="Ask a legal question, upload a contract..."></textarea>
+        <textarea class="query-input" id="queryInput" placeholder="Ask me anything about law, life, science, finance, or the cosmos..."></textarea>
         <div class="input-tools">
             <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf, .docx, .jpg, .png" hidden onchange="handleFileUpload(this)"></label>
-            <button class="tool-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i> Voice</button>
+            <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
             <label class="web-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
-            <!-- >>>>>>>>>>>>>>>>  THE CHANGE IS RIGHT HERE  <<<<<<<<<<<<<<< -->
             <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Click</button>
         </div>
         <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
@@ -191,6 +206,7 @@
         <button class="tool-btn" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
         <button class="tool-btn" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
         <button class="tool-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="tool-btn speak-btn" onclick="speakResponse()"><i class="fas fa-volume-up"></i> Speak</button>
         <button class="tool-btn" onclick="clearResponse()"><i class="fas fa-trash"></i> Clear</button>
     </div>
 
@@ -204,11 +220,11 @@
             <a onclick="showPayment()">Plans</a>
         </div>
         <div class="soc2-badge">🔒 DPDPA Compliant · Zero Retention (24h)</div>
-        <div class="copyright" style="margin-top:4px;">© 2026 LexSarthi | THE ADVOCACY – A LAW FIRM (Upmanyu Kumar)</div>
+        <div class="copyright" style="margin-top:4px;">© 2026 LexSarthi | THE ADVOCACY – A LAW FIRM</div>
     </div>
 </div>
 
-<!-- MODALS -->
+<!-- MODALS (Terms, Privacy, About, Verifiers, Login, Usage, Payment) -->
 <div class="modal-overlay" id="loginModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
@@ -249,7 +265,7 @@
         <input type="hidden" id="paymentPlan" value="lifetime" />
         <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:12px;margin-top:10px;">Subscribe Now</button>
         <div id="payment-status" class="status-text"></div>
-        <div style="margin-top:12px; font-size:0.6rem; color:#555; text-align:center;">🔒 Secure payment via Razorpay. Your settlement ID: T7lbgnuCRBfva5</div>
+        <div style="margin-top:12px; font-size:0.6rem; color:#555; text-align:center;">🔒 Secure payment via Razorpay</div>
     </div>
 </div>
 
@@ -257,9 +273,9 @@
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
         <h3>📜 Terms of Use</h3>
-        <p><strong>Last Updated:</strong> June 30, 2026</p>
+        <p><strong>Last Updated:</strong> July 1, 2026</p>
         <p><strong>1. Acceptance:</strong> By using LexSarthi, you agree to these Terms.</p>
-        <p><strong>2. AI Disclaimer:</strong> Responses are AI-generated and <strong>not legal advice</strong>. Always consult a licensed attorney.</p>
+        <p><strong>2. AI Disclaimer:</strong> Responses are AI-generated and <strong>not a substitute for professional advice</strong> (legal, medical, financial, or otherwise).</p>
         <p><strong>3. User Conduct:</strong> Do not input sensitive personal data unless strictly necessary.</p>
         <p><strong>4. IP & Liability:</strong> All code is owned by THE ADVOCACY – A LAW FIRM.</p>
         <p><strong>5. Governing Law:</strong> Laws of India. Jurisdiction: New Delhi.</p>
@@ -271,13 +287,13 @@
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
         <h3>🔒 Privacy Policy (DPDPA Compliant)</h3>
-        <p><strong>Last Updated:</strong> June 30, 2026</p>
-        <p><strong>1. Data Fiduciary:</strong> THE ADVOCACY – A LAW FIRM (Upmanyu Kumar).</p>
+        <p><strong>Last Updated:</strong> July 1, 2026</p>
+        <p><strong>1. Data Fiduciary:</strong> THE ADVOCACY – A LAW FIRM.</p>
         <p><strong>2. Data Collected:</strong> Email, Username, Queries, Payment info.</p>
-        <p><strong>3. Purpose:</strong> To provide AI-driven legal assistance.</p>
+        <p><strong>3. Purpose:</strong> To provide AI-driven assistance and improve our intelligence.</p>
         <p><strong>4. Zero Retention:</strong> Queries deleted <strong>every 24 hours</strong>. Events in 30 days.</p>
-        <p><strong>5. User Rights:</strong> Access, correct, delete – email <strong>hello@lexsarthi.ai</strong>.</p>
-        <p><strong>6. Grievance Officer:</strong> Upmanyu Kumar – <strong>upmanyu@advocacyalawfirm.in</strong>.</p>
+        <p><strong>5. User Rights:</strong> Access, correct, delete – email <strong>upmanyu@advocacyalawfirm.in</strong>.</p>
+        <p><strong>6. Grievance Officer:</strong> The Managing Partner – <strong>upmanyu@advocacyalawfirm.in</strong>.</p>
         <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('privacyModal')">Close</button></div>
     </div>
 </div>
@@ -285,10 +301,11 @@
 <div class="modal-overlay" id="aboutModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
-        <h3>ℹ️ About LexSarthi</h3>
-        <p><strong>Mission:</strong> "Blessed Intelligence" – bridging ancient wisdom with AI.</p>
-        <p><strong>Founder:</strong> Upmanyu Kumar (THE ADVOCACY – A LAW FIRM).</p>
-        <p><strong>Tech:</strong> Groq, OpenAI, Gemini, OpenRouter. 220 agents. 10 verifiers.</p>
+        <h3>ℹ️ About LexSarthi v6.0</h3>
+        <p><strong>Mission:</strong> "Universal Divine Intelligence" – bridging ancient wisdom with advanced AI for every seeker.</p>
+        <p><strong>Founder:</strong> THE ADVOCACY – A LAW FIRM.</p>
+        <p><strong>Tech:</strong> Groq, OpenAI, Gemini, OpenRouter. 220 divine agents. 10 verifiers.</p>
+        <p><strong>Multilingual:</strong> English, Hindi, Bengali, Sanskrit, Arabic (Voice I/O).</p>
         <p><strong>Zero Retention:</strong> Data purged automatically. Fully DPDPA compliant.</p>
         <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
     </div>
@@ -299,16 +316,16 @@
         <button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
         <h3>✅ The 10 Divine Verifiers</h3>
         <div class="verifier-grid">
-            <div class="verifier-card"><div class="v-title">1. Legal Citation Validator</div><div class="v-desc">Verifies Acts, Sections, and case laws.</div></div>
-            <div class="verifier-card"><div class="v-title">2. Compliance Checker</div><div class="v-desc">Scans for DPDPA, SEBI, RBI compliance.</div></div>
-            <div class="verifier-card"><div class="v-title">3. Fact-Cross Engine</div><div class="v-desc">Cross-references against legal databases.</div></div>
-            <div class="verifier-card"><div class="v-title">4. Contradiction Detector</div><div class="v-desc">Catches logical fallacies in advice.</div></div>
-            <div class="verifier-card"><div class="v-title">5. Jurisdiction Mapper</div><div class="v-desc">Ensures advice applies to correct region.</div></div>
-            <div class="verifier-card"><div class="v-title">6. Tone & Bias Auditor</div><div class="v-desc">Removes subjective bias.</div></div>
-            <div class="verifier-card"><div class="v-title">7. Limitation Clock</div><div class="v-desc">Checks for time-barred advice.</div></div>
-            <div class="verifier-card"><div class="v-title">8. Precedent Matcher</div><div class="v-desc">Attaches relevant judicial precedents.</div></div>
-            <div class="verifier-card"><div class="v-title">9. Data Privacy Filter</div><div class="v-desc">Redacts any exposed PII.</div></div>
-            <div class="verifier-card"><div class="v-title">10. Risk Score Calculator</div><div class="v-desc">Assigns Low/Medium/High risk.</div></div>
+            <div class="verifier-card"><div class="v-title">1. Ganesha – Intellect</div><div class="v-desc">Verifies citations and logical consistency</div></div>
+            <div class="verifier-card"><div class="v-title">2. Saraswati – Knowledge</div><div class="v-desc">Cross-references knowledge databases</div></div>
+            <div class="verifier-card"><div class="v-title">3. Hanuman – Devotion</div><div class="v-desc">Checks compliance with global standards</div></div>
+            <div class="verifier-card"><div class="v-title">4. Kartikeya – Strategy</div><div class="v-desc">Detects contradictions and fallacies</div></div>
+            <div class="verifier-card"><div class="v-title">5. Indra – Jurisdiction</div><div class="v-desc">Maps advice to correct context/region</div></div>
+            <div class="verifier-card"><div class="v-title">6. Yama – Justice</div><div class="v-desc">Removes bias and ensures neutrality</div></div>
+            <div class="verifier-card"><div class="v-title">7. Surya – Clarity</div><div class="v-desc">Checks timeline/statute of limitations</div></div>
+            <div class="verifier-card"><div class="v-title">8. Chandra – Precedent</div><div class="v-desc">Matches relevant historical precedents</div></div>
+            <div class="verifier-card"><div class="v-title">9. Vayu – Purity</div><div class="v-desc">Filters exposed PII for privacy</div></div>
+            <div class="verifier-card"><div class="v-title">10. Shiva – Administrator</div><div class="v-desc">Assigns overall risk/confidence score</div></div>
         </div>
         <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
     </div>
@@ -316,13 +333,16 @@
 
 <script>
 // ================================================================
-// LEXSARTHI v5.0 – COMPLETE FRONTEND ENGINE
+// LEXSARTHI v6.0 – UNIVERSAL DIVINE FRONTEND ENGINE
 // ================================================================
 
-// --- CRITICAL: Hardcode the backend URL to Hugging Face ---
 const API_BASE = 'https://upamnyu12-lex.hf.space';
+let uploadedFile = null;
+let currentResponseText = '';
 
-// --- Stars Background ---
+function getToken() { return localStorage.getItem('lex_token'); }
+
+// ---- Stars ----
 (function() {
     const c = document.getElementById('starsContainer');
     if (c) {
@@ -336,34 +356,46 @@ const API_BASE = 'https://upamnyu12-lex.hf.space';
     }
 })();
 
-// --- Helpers ---
-function getToken() { return localStorage.getItem('lex_token'); }
-
-// --- 220 Agents Generator ---
-const allAgents = (() => {
-    const cats = ["Corporate","Criminal","IP","Taxation","Contract","Due Diligence","Research","Compliance","Litigation","Family","Property","Labour","Cyber","Banking","ADR","Constitutional","Environmental","Health","Real Estate","Media","Sports","Aviation","Maritime","Energy","Mining","Education","Immigration"];
-    const names = ["Equity Analyst","Macro Forecaster","Derivatives Expert","Portfolio Optimiser","Algo Trader","Risk Analyst","ESG Specialist","Crypto Analyst","M&A Advisor","Tax Planner","Compliance Officer","Contract Drafter","Litigation Strategist","IP Prosecutor","Trademark Expert","Patent Examiner","Copyright Specialist","Due Diligence Lead","Privacy Consultant","Cyber Analyst","AI Ethics","Mediation Expert","Arbitrator","Family Advocate","Property Expert","Labour Consultant","Constitutional Scholar","Environmental Advisor","Health Specialist","Real Estate Consultant","Media Attorney","Sports Expert","Aviation Specialist","Maritime Advisor","Energy Consultant","Mining Expert","Education Advisor","Immigration Specialist"];
+// ---- 220 Universal Divine Agents ----
+const DIVINE_AGENTS = (() => {
+    const domains = [
+        "Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy",
+        "Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality",
+        "Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science",
+        "Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"
+    ];
+    const names = [
+        "Brahma (Creator)","Vishnu (Preserver)","Shiva (Transformer)","Saraswati (Wisdom)","Lakshmi (Prosperity)",
+        "Ganesha (Intellect)","Hanuman (Devotion)","Kartikeya (Strategy)","Indra (Governance)","Yama (Justice)",
+        "Surya (Clarity)","Chandra (Intuition)","Vayu (Speed)","Agni (Transformation)","Varuna (Depth)",
+        "Kubera (Wealth)","Yamuna (Flow)","Ganga (Purity)","Durga (Strength)","Kali (Time)",
+        "Tara (Guidance)","Bhuvaneshwari (Space)","Chinnamasta (Sacrifice)","Bhairavi (Discipline)",
+        "Dhumavati (Detachment)","Bagalamukhi (Cunning)","Matangi (Expression)","Kamala (Grace)",
+        "Dattatreya (Unity)","Narasimha (Protection)","Vamana (Humility)","Parashurama (Retribution)",
+        "Rama (Righteousness)","Krishna (Charm)","Buddha (Awakening)","Kalki (Future)","Matsya (Origin)",
+        "Kurma (Foundation)","Varaha (Resilience)"
+    ];
+    const icons = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"];
     const agents = [];
     for (let i=1; i<=220; i++) {
-        const cat = cats[i % cats.length];
-        const name = names[i % names.length] + ` (Agent ${i})`;
-        agents.push({ id: `agent_${String(i).padStart(3,'0')}`, name, category: cat, icon: 'fa-robot' });
+        const name = names[i % names.length] + (i > 200 ? " (Seeker)" : "");
+        const domain = domains[i % domains.length];
+        const icon = icons[i % icons.length];
+        agents.push({ id: `agent_${String(i).padStart(3,'0')}`, name, domain, icon });
     }
     return agents;
 })();
-
-let uploadedFile = null;
 
 function renderAgents() {
     const container = document.getElementById('agentShowcase');
     if (!container) return;
     container.innerHTML = '';
-    allAgents.slice(0, 30).forEach(agent => {
+    DIVINE_AGENTS.slice(0, 30).forEach(agent => {
         const card = document.createElement('div');
         card.className = 'agent-card';
-        card.innerHTML = `<i class="fas ${agent.icon}"></i><div class="agent-title">${agent.name}</div><div style="font-size:0.55rem;color:#888;">${agent.category}</div>`;
+        card.innerHTML = `<i class="fas ${agent.icon}"></i><div class="agent-title">${agent.name}</div><div class="agent-domain">${agent.domain}</div>`;
         card.onclick = () => {
-            document.getElementById('queryInput').value = `Ask as ${agent.name} about ${agent.category}`;
+            document.getElementById('queryInput').value = `Ask as ${agent.name} about ${agent.domain}`;
             window._selectedAgent = agent.id;
             const status = document.getElementById('inputStatus');
             if (status) status.textContent = `Selected ${agent.name}`;
@@ -378,7 +410,59 @@ function setTyping(active) {
     if (el) el.classList.toggle('active', active);
 }
 
-// --- AUTH ---
+// ---- Multilingual Voice Input ----
+function startVoice() {
+    const langMap = {
+        'en': 'en-US',
+        'hi': 'hi-IN',
+        'bn': 'bn-IN',
+        'sa': 'sa',
+        'ar': 'ar-SA'
+    };
+    const selectedLang = document.getElementById('langSelect').value;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = langMap[selectedLang] || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => {
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone-slash"></i> Listening...';
+    };
+    recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        document.getElementById('queryInput').value = transcript;
+        document.getElementById('inputStatus').textContent = `🎤 Voice captured (${selectedLang})`;
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i> Voice';
+    };
+    recognition.onerror = () => {
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i> Voice';
+        document.getElementById('inputStatus').textContent = '❌ Voice error';
+    };
+    recognition.onend = () => {
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i> Voice';
+    };
+    recognition.start();
+}
+
+// ---- Text-to-Speech (Speak Response) ----
+function speakResponse() {
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    const text = chatArea.innerText || '';
+    if (!text.trim()) { alert('No response to speak.'); return; }
+    const cleanText = text.replace(/✅ Verified by 10 Divine Layers.*/g, '').trim();
+    const langMap = {
+        'en': 'en-US', 'hi': 'hi-IN', 'bn': 'bn-IN', 'sa': 'sa', 'ar': 'ar-SA'
+    };
+    const selectedLang = document.getElementById('langSelect').value;
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = langMap[selectedLang] || 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+    document.getElementById('inputStatus').textContent = `🔊 Speaking in ${selectedLang}`;
+}
+
+// ---- Auth ----
 async function handleLogin() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-password').value;
@@ -433,28 +517,24 @@ async function checkPremium() {
         const res = await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) {
             const data = await res.json();
-            const premiumBadge = document.getElementById('premiumBadge');
-            const enterpriseBadge = document.getElementById('enterpriseBadge');
-            const msg = document.getElementById('premiumMessage');
             if (data.tier === 'premium' || data.tier === 'enterprise' || data.tier === 'lifetime') {
-                if (premiumBadge) premiumBadge.style.display = 'inline-block';
-                if (msg) msg.style.display = 'block';
+                document.getElementById('premiumBadge').style.display = 'inline-block';
+                document.getElementById('premiumMessage').style.display = 'block';
             }
             if (data.tier === 'enterprise') {
-                if (enterpriseBadge) enterpriseBadge.style.display = 'inline-block';
+                document.getElementById('enterpriseBadge').style.display = 'inline-block';
             }
         }
     } catch(e) {}
 }
 
-// --- USAGE ---
+// ---- Usage ----
 async function showMyUsage() {
     const token = getToken();
     if (!token) { alert('Login first'); showLogin(); return; }
     openModal('myUsageModal');
     await fetchMyUsage();
 }
-
 async function fetchMyUsage() {
     const container = document.getElementById('myUsageContent');
     if (!container) return;
@@ -469,13 +549,12 @@ async function fetchMyUsage() {
     }
 }
 
-// --- SEND QUERY (Robust & Null-Safe) ---
+// ---- Send Query (Universal) ----
 async function sendQuery() {
     const queryInput = document.getElementById('queryInput');
     const statusEl = document.getElementById('inputStatus');
-    const responseContent = document.getElementById('responseContent');
-    const welcomeEl = document.getElementById('defaultWelcome');
     const chatArea = document.getElementById('chatArea');
+    const welcomeEl = document.getElementById('defaultWelcome');
 
     const query = queryInput ? queryInput.value.trim() : '';
     if (!query && !uploadedFile) {
@@ -486,16 +565,17 @@ async function sendQuery() {
     if (!token) { alert('Login required'); showLogin(); return; }
 
     setTyping(true);
-    if (statusEl) statusEl.textContent = 'Processing with Real AI...';
+    if (statusEl) statusEl.textContent = 'Invoking Universal Divine Intelligence...';
 
+    const lang = document.getElementById('langSelect').value;
     const formData = new FormData();
     formData.append('query', query || 'Analyze uploaded document');
     if (uploadedFile) formData.append('files', uploadedFile);
     formData.append('search_web', document.getElementById('webSearchToggle')?.checked ? 'on' : 'off');
     formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
     formData.append('agent_id', window._selectedAgent || 'agent_001');
+    formData.append('lang', lang);
 
-    // --- Build User Message with Preview ---
     let userMsg = query || '📎 File uploaded';
     if (uploadedFile) {
         userMsg += `<br><br><span style="font-size:0.7rem; color:var(--gold);">📎 ${uploadedFile.name}</span>`;
@@ -504,7 +584,6 @@ async function sendQuery() {
         chatArea.innerHTML += `<div class="chat-bubble user">${userMsg}</div>`;
         chatArea.scrollTop = chatArea.scrollHeight;
     }
-    // Hide welcome if visible
     if (welcomeEl) welcomeEl.style.display = 'none';
 
     try {
@@ -517,7 +596,6 @@ async function sendQuery() {
         const rawText = await res.text();
         let data;
         try { data = JSON.parse(rawText); } catch (e) {
-            // If JSON fails, display raw text as agent response
             setTyping(false);
             if (chatArea) {
                 chatArea.innerHTML += `<div class="chat-bubble agent">${rawText.replace(/\n/g, '<br>')}</div>`;
@@ -532,11 +610,12 @@ async function sendQuery() {
         setTyping(false);
         if (res.ok) {
             let displayText = data.response.replace(/\n/g, '<br>');
-            displayText += `<br><br><span style="font-size:0.6rem; color:var(--gold);">✅ Verified by 10 layers | Zero Retention (24h) | Model: ${data.model}</span>`;
+            displayText += `<br><br><span style="font-size:0.6rem; color:var(--gold);">✅ Verified by 10 Divine Layers | Zero Retention (24h) | Model: ${data.model}</span>`;
             if (chatArea) {
                 chatArea.innerHTML += `<div class="chat-bubble agent">${displayText}</div>`;
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
+            currentResponseText = data.response;
             if (statusEl) statusEl.textContent = `✅ Done (${data.model})`;
         } else {
             if (chatArea) {
@@ -557,52 +636,29 @@ async function sendQuery() {
     if (queryInput) queryInput.value = '';
 }
 
-// --- FILE HANDLING ---
 function handleFileUpload(input) {
     if (input.files && input.files[0]) {
         uploadedFile = input.files[0];
-        const previewEl = document.getElementById('filePreview');
-        const textEl = document.getElementById('filePreviewText');
-        if (previewEl) previewEl.classList.add('show');
-        if (textEl) textEl.textContent = `📎 ${uploadedFile.name}`;
-        // Show in status
-        const status = document.getElementById('inputStatus');
-        if (status) status.textContent = `📄 File loaded: ${uploadedFile.name}`;
+        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFile.name}`;
+        document.getElementById('filePreview').classList.add('show');
+        document.getElementById('inputStatus').textContent = `📄 File loaded: ${uploadedFile.name}`;
     }
 }
-
 function clearFilePreview() {
     uploadedFile = null;
-    const preview = document.getElementById('filePreview');
-    if (preview) preview.classList.remove('show');
-    const input = document.getElementById('pdfUpload');
-    if (input) input.value = '';
+    document.getElementById('filePreview').classList.remove('show');
+    document.getElementById('pdfUpload').value = '';
 }
 
-// --- VOICE ---
-function toggleVoice() {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-IN';
-    recognition.onresult = (e) => {
-        const input = document.getElementById('queryInput');
-        if (input) input.value = e.results[0][0].transcript;
-        const status = document.getElementById('inputStatus');
-        if (status) status.textContent = '🎤 Voice captured';
-    };
-    recognition.start();
-}
-
-// --- OUTPUT TOOLS ---
+// ---- Output tools ----
 function copyResponse() {
     const chatArea = document.getElementById('chatArea');
     if (!chatArea) return;
     const text = chatArea.innerText || '';
     navigator.clipboard.writeText(text).then(() => {
-        const status = document.getElementById('inputStatus');
-        if (status) status.textContent = '✅ Copied!';
+        document.getElementById('inputStatus').textContent = '✅ Copied!';
     });
 }
-
 function downloadTXT() {
     const chatArea = document.getElementById('chatArea');
     if (!chatArea) return;
@@ -613,15 +669,10 @@ function downloadTXT() {
     a.download = 'lexsarthi_response.txt';
     a.click();
 }
-
 function downloadPDF() {
     const chatArea = document.getElementById('chatArea');
-    if (!chatArea || !chatArea.innerText.trim()) {
-        alert('No response to download.');
-        return;
-    }
-    const status = document.getElementById('inputStatus');
-    if (status) status.textContent = 'Generating PDF...';
+    if (!chatArea || !chatArea.innerText.trim()) { alert('No response.'); return; }
+    document.getElementById('inputStatus').textContent = 'Generating PDF...';
     html2pdf().set({
         margin: 0.5,
         filename: 'lexsarthi_response.pdf',
@@ -629,46 +680,30 @@ function downloadPDF() {
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     }).from(chatArea).save().then(() => {
-        if (status) status.textContent = '✅ PDF downloaded!';
+        document.getElementById('inputStatus').textContent = '✅ PDF downloaded!';
     }).catch(() => {
-        if (status) status.textContent = '❌ PDF failed.';
+        document.getElementById('inputStatus').textContent = '❌ PDF failed.';
     });
 }
-
 function clearResponse() {
     const chatArea = document.getElementById('chatArea');
     const welcome = document.getElementById('defaultWelcome');
     if (chatArea) chatArea.innerHTML = '';
     if (welcome) welcome.style.display = 'block';
-    const status = document.getElementById('inputStatus');
-    if (status) status.textContent = '';
+    document.getElementById('inputStatus').textContent = '';
 }
 
-// --- MODALS ---
-function openModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('active');
-}
-function closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
-}
+// ---- Modals ----
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 function showLogin() { openModal('loginModal'); }
 function toggleSettings() {
-    const panel = document.getElementById('settingsPanel');
-    if (panel) panel.classList.toggle('open');
+    document.getElementById('settingsPanel').classList.toggle('open');
 }
 
-// --- PAYMENT (Razorpay ₹2 Lifetime) ---
-function showPayment() {
-    openModal('paymentModal');
-    checkLifetime();
-}
-
-function selectPlan(plan) {
-    document.getElementById('paymentPlan').value = plan;
-}
-
+// ---- Payment ----
+function showPayment() { openModal('paymentModal'); checkLifetime(); }
+function selectPlan(plan) { document.getElementById('paymentPlan').value = plan; }
 async function processPayment() {
     const token = getToken();
     if (!token) { alert('Login first'); return; }
@@ -682,16 +717,12 @@ async function processPayment() {
             body: JSON.stringify({ tier })
         });
         const data = await res.json();
-        if (!res.ok) {
-            if (status) status.textContent = '❌ ' + data.detail;
-            return;
-        }
+        if (!res.ok) { if (status) status.textContent = '❌ ' + data.detail; return; }
         const options = {
             key: data.razorpay_key,
             amount: data.amount,
             currency: 'INR',
             name: 'LexSarthi',
-            description: `Subscription: ${tier}`,
             order_id: data.order_id,
             handler: async function(response) {
                 const vRes = await fetch(`${API_BASE}/verify-payment`, {
@@ -712,18 +743,13 @@ async function processPayment() {
                     if (status) status.textContent = '❌ ' + vData.detail;
                 }
             },
-            prefill: {
-                email: (await (await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } })).json()).email || ''
-            },
+            prefill: { email: (await (await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } })).json()).email || '' },
             theme: { color: '#d4a853' }
         };
         const rzp = new Razorpay(options);
         rzp.open();
-    } catch(e) {
-        if (status) status.textContent = '❌ ' + e.message;
-    }
+    } catch(e) { if (status) status.textContent = '❌ ' + e.message; }
 }
-
 async function checkLifetime() {
     try {
         const res = await fetch(`${API_BASE}/lifetime-count`);
@@ -733,7 +759,7 @@ async function checkLifetime() {
     } catch(e) {}
 }
 
-// --- KEYBOARD SHORTCUT ---
+// ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
     const token = getToken();
     if (token) checkPremium();
