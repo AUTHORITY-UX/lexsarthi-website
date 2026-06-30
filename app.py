@@ -597,9 +597,13 @@ async def login(user_login: UserLogin):
         if not user:
             logger.warning(f"Username not found: {user_login.username}")
     
+    # 🔥 CRITICAL: Ensure user is not None before using .get()
     if user is None:
         logger.error("User object is None – aborting login")
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Convert to dict for safe access
+    user = dict(user)
     
     if not verify_password(user_login.password, user["password_hash"]):
         logger.warning(f"Password verification failed for {user['username']}")
