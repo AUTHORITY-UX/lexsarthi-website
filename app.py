@@ -1,93 +1,101 @@
 # ===================================================================
-# LEXSARTHI ALPHA v5.0 – BACKEND (FastAPI)
+# LEXSARTHI v5.0 – THE FINAL CHARIOT
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM (Proprietor: Upmanyu Kumar)
-# Deployed on Hugging Face Spaces: upamnyu12-lex.hf.space
+# Deployed: upamnyu12-lex.hf.space
+# Launch Date: 12.08.2026 – ॐ नमः शिवाय
 # ===================================================================
 
 import os
-import json
 import uuid
-import hashlib
-import hmac
-import base64
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
-from contextlib import asynccontextmanager
-from enum import Enum
-import io
+import json
+import logging
+import asyncio
 import random
 import string
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Dict, Any
+from contextlib import asynccontextmanager
 
-# ─── Core FastAPI ─────────────────────────────────────────────────────
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, BackgroundTasks
+# ─── FASTAPI ──────────────────────────────────────────────────────
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from pydantic import BaseModel, EmailStr, Field
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, EmailStr
 import uvicorn
 
-# ─── Database ────────────────────────────────────────────────────────
-import asyncpg
-from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, ForeignKey, func, select, insert, update, delete
-from sqlalchemy.sql import text
+# ─── RATE LIMITING (Essential for 1M users) ─────────────────────
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
-# ─── Authentication ─────────────────────────────────────────────────
+# ─── DATABASE ─────────────────────────────────────────────────────
+from databases import Database
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select
+
+# ─── AUTH ─────────────────────────────────────────────────────────
 import jwt
 from passlib.context import CryptContext
-from datetime import datetime, timedelta, timezone
 
-# ─── File / Image / PDF ─────────────────────────────────────────────
+# ─── AI PROVIDERS ────────────────────────────────────────────────
+import httpx
+from groq import Groq
+import openai
+import google.generativeai as genai
+
+# ─── FILE PROCESSING ─────────────────────────────────────────────
+import io
 import puremagic
 import PyPDF2
 import docx
 from PIL import Image
 import pytesseract
-import io
 
-# ─── Voice Transcription ────────────────────────────────────────────
-import speech_recognition as sr
-
-# ─── Web Search ──────────────────────────────────────────────────────
-import httpx
-
-# ─── Payments (Razorpay) ──────────────────────────────────────────
-import razorpay
-
-# ─── Rate Limiting ──────────────────────────────────────────────────
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
-# ─── Background Tasks ──────────────────────────────────────────────
-import asyncio
+# ─── SCHEDULER ──────────────────────────────────────────────────
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-# ─── Logging ────────────────────────────────────────────────────────
-import logging
+# ─── PAYMENTS ──────────────────────────────────────────────────
+import razorpay
 
-logging.basicConfig(level=logging.INFO)
+# ─── LOGGING ────────────────────────────────────────────────────
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("lexsarthi")
 
-# ─── Environment Variables ────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/lexsarthi")
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-me")
+# ─── ENV VARIABLES ──────────────────────────────────────────────
+DATABASE_URL = os.getenv("DATABASE_URL")
+JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-change-me")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_MINUTES = 60 * 24 * 7  # 7 days
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
-WEB_SEARCH_API_KEY = os.getenv("WEB_SEARCH_API_KEY", "")  # optional
+JWT_EXPIRY_MINUTES = 60 * 24 * 7
 
-# ─── Database Setup ─────────────────────────────────────────────────
-database = Database(DATABASE_URL, min_size=1, max_size=10)
+# AI Keys
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+# Razorpay
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+# ─── CLIENTS INIT ──────────────────────────────────────────────
+openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+gemini_model = None
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel('gemini-pro')
+
+# ─── DATABASE SETUP (Pooling for 1M Users) ──────────────────────
+database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
-# ─── SQLAlchemy Table Definitions ──────────────────────────────────
+# ─── SQLAlchemy Tables ──────────────────────────────────────────
 users = Table(
-    "users",
-    metadata,
+    "users", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("email", String(255), unique=True, index=True),
     Column("username", String(100), unique=True),
@@ -105,8 +113,7 @@ users = Table(
 )
 
 queries = Table(
-    "queries",
-    metadata,
+    "queries", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer, index=True),
     Column("query", Text),
@@ -117,8 +124,7 @@ queries = Table(
 )
 
 payments = Table(
-    "payments",
-    metadata,
+    "payments", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer),
     Column("razorpay_order_id", String(100)),
@@ -132,8 +138,7 @@ payments = Table(
 )
 
 events = Table(
-    "events",
-    metadata,
+    "events", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer, nullable=True),
     Column("session_id", String(64)),
@@ -146,8 +151,7 @@ events = Table(
 )
 
 referrals = Table(
-    "referrals",
-    metadata,
+    "referrals", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("referrer_id", Integer),
     Column("referee_id", Integer, nullable=True),
@@ -156,7 +160,7 @@ referrals = Table(
     Column("created_at", DateTime, server_default=func.now()),
 )
 
-# ─── Pydantic Models ────────────────────────────────────────────────
+# ─── PYDANTIC MODELS ────────────────────────────────────────────
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
@@ -172,18 +176,12 @@ class Token(BaseModel):
     token_type: str
     user: dict
 
-class QueryRequest(BaseModel):
-    query: str
-    context: Optional[Dict[str, Any]] = None
-
 class PaymentCreate(BaseModel):
-    tier: str  # "premium" or "enterprise" or "lifetime"
+    tier: str
 
-class ReferralCreate(BaseModel):
-    code: str
-
-# ─── Password Hashing ──────────────────────────────────────────────
+# ─── SECURITY ────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -191,145 +189,56 @@ def hash_password(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-# ─── JWT ────────────────────────────────────────────────────────────
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict):
+    expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRY_MINUTES)
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=JWT_EXPIRY_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except jwt.PyJWTError:
+    except:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# ─── Security ──────────────────────────────────────────────────────
-security = HTTPBearer()
-
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    payload = decode_token(token)
+    payload = decode_token(credentials.credentials)
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    # Try to parse as integer; if fails, treat as username
-    try:
-        user_id_int = int(user_id)
-        query = users.select().where(users.c.id == user_id_int)
-    except ValueError:
-        # user_id is a string (probably username from old tokens)
-        query = users.select().where(users.c.username == user_id)
+    query = users.select().where(users.c.id == int(user_id))
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
-    if credentials is None:
-        return None
-    try:
-        return await get_current_user(credentials)
-    except:
-        return None
-
-# ─── Rate Limiter ──────────────────────────────────────────────────
+# ─── RATE LIMITER SETUP ──────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 
-# ─── Create FastAPI App ────────────────────────────────────────────
-app = FastAPI(title="LexSarthi Alpha v5.0", version="5.0")
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# ─── Middleware ──────────────────────────────────────────────────
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # restrict in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# ─── Database Migration ────────────────────────────────────────────
-async def migrate_database():
-    """Check if users.id has a sequence; if not, drop and recreate all tables."""
-    # Check if users.id has a sequence
-    seq = await database.fetch_val("SELECT pg_get_serial_sequence('users', 'id')")
-    if seq is None:
-        logger.warning("users.id is not using a sequence. Dropping all tables to recreate with correct schema.")
-        await database.execute("DROP TABLE IF EXISTS payments, queries, referrals, events, users CASCADE")
-        logger.info("All tables dropped. They will be recreated on next startup.")
-        return  # exit early; tables will be recreated in create_tables()
-
-    # If sequence exists, run regular migrations
-    migrations = [
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE;",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB;",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE;",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS queries_used_today INTEGER DEFAULT 0;",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_query_reset TIMESTAMP DEFAULT NOW();",
-        "ALTER TABLE payments ADD COLUMN IF NOT EXISTS tier VARCHAR(20);",
-    ]
-    for stmt in migrations:
-        try:
-            await database.execute(stmt)
-        except Exception as e:
-            logger.info(f"Migration skipped (already applied): {e}")
-
-# ─── Ensure Test User ──────────────────────────────────────────────
-async def ensure_test_user():
-    """Force‑create or reset the test user 'counsel' with known password."""
-    hashed = hash_password("Password123!")
-    existing = await get_user_by_username("counsel")
-    
-    if existing:
-        await database.execute(users.delete().where(users.c.username == "counsel"))
-        logger.info("Removed stale test user 'counsel'.")
-    
-    stmt = users.insert().values(
-        username="counsel",
-        email="counsel@advocacyalawfrim.in",
-        password_hash=hashed,
-        full_name="Counsel User",
-        tier="free",
-        queries_used_today=0,
-        last_query_reset=datetime.now()
-    )
-    await database.execute(stmt)
-    logger.info("Created fresh test user 'counsel' with password 'Password123!'.")
-
-# ─── Lifespan Events ──────────────────────────────────────────────
+# ─── LIFESPAN ──────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     await database.connect()
-    logger.info("Database connected")
-    # Run migrations (may drop tables if needed)
-    await migrate_database()
-    # Create tables if they don't exist (idempotent)
+    logger.info("Database connected with connection pool.")
     await create_tables()
-    # Ensure test user exists
     await ensure_test_user()
-    # Start scheduler
+    
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(delete_expired_queries, IntervalTrigger(hours=1))
+    scheduler.add_job(delete_expired_data, IntervalTrigger(hours=1))
     scheduler.start()
-    logger.info("Scheduler started")
+    logger.info("Scheduler started. Zero-Retention Policy Active.")
     yield
-    # Shutdown
     await database.disconnect()
-    logger.info("Database disconnected")
 
-app.router.lifespan_context = lifespan
+app = FastAPI(title="LexSarthi v5.0", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── Helper Functions ──────────────────────────────────────────────
+# ─── DB HELPERS ──────────────────────────────────────────────────
 async def create_tables():
-    """Create tables if they don't exist, gracefully handling existing schemas."""
-    queries_to_create = [
+    stmts = [
         """
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -397,207 +306,209 @@ async def create_tables():
         );
         """
     ]
-    for stmt in queries_to_create:
+    for stmt in stmts:
         try:
             await database.execute(stmt)
         except Exception as e:
-            logger.info(f"Skipping table creation (already exists or minor issue): {e}")
+            logger.info(f"Table check: {e}")
 
-async def delete_expired_queries():
-    cutoff = datetime.now() - timedelta(hours=24)
-    await database.execute(queries.delete().where(queries.c.created_at < cutoff))
-    cutoff_events = datetime.now() - timedelta(days=30)
-    await database.execute(events.delete().where(events.c.created_at < cutoff_events))
-    logger.info(f"Deleted expired data older than 24h (queries) and 30d (events)")
-
-async def get_user_by_username(username: str):
-    query = users.select().where(users.c.username == username)
-    return await database.fetch_one(query)
-
-async def get_user_by_email(email: str):
-    query = users.select().where(users.c.email == email.lower())
-    return await database.fetch_one(query)
-
-async def create_user(user_data: UserCreate):
-    hashed = hash_password(user_data.password)
-    stmt = users.insert().values(
-        username=user_data.username,
-        email=user_data.email.lower(),
-        password_hash=hashed,
-        full_name=user_data.full_name,
-        tier="free",
-        queries_used_today=0,
-        last_query_reset=datetime.now()
-    ).returning(users.c.id)
-    user_id = await database.fetch_val(stmt)
-    return user_id
-
-async def increment_query_count(user_id: int):
-    user = await database.fetch_one(users.select().where(users.c.id == user_id))
-    last_reset = user["last_query_reset"]
-    now = datetime.now()
-    if now.date() > last_reset.date():
-        await database.execute(
-            users.update().where(users.c.id == user_id).values(
-                queries_used_today=1,
-                last_query_reset=now
-            )
+async def ensure_test_user():
+    await database.execute(users.delete().where(users.c.username == "counsel"))
+    hashed = hash_password("Password123!")
+    await database.execute(
+        users.insert().values(
+            username="counsel",
+            email="counsel@advocacyalawfrim.in",
+            password_hash=hashed,
+            full_name="Counsel User",
+            tier="free"
         )
-        return 1
-    else:
-        await database.execute(
-            users.update().where(users.c.id == user_id).values(
-                queries_used_today=users.c.queries_used_today + 1
-            )
-        )
-        updated = await database.fetch_one(users.select().where(users.c.id == user_id))
-        return updated["queries_used_today"]
+    )
+    logger.info("Test user 'counsel' created.")
 
-async def check_query_limit(user_id: int) -> bool:
-    user = await database.fetch_one(users.select().where(users.c.id == user_id))
+async def delete_expired_data():
+    await database.execute(queries.delete().where(queries.c.created_at < datetime.now() - timedelta(hours=24)))
+    await database.execute(events.delete().where(events.c.created_at < datetime.now() - timedelta(days=30)))
+    logger.info("Expired data purged (Zero Retention).")
+
+async def check_query_limit(user: dict) -> bool:
     if user["tier"] in ("premium", "enterprise", "lifetime"):
         return True
-    last_reset = user["last_query_reset"]
-    now = datetime.now()
-    if now.date() > last_reset.date():
-        return True
     used = user["queries_used_today"]
+    last_reset = user["last_query_reset"]
+    if datetime.now().date() > last_reset.date():
+        return True
     return used < 10
 
-# ─── Agent System ────────────────────────────────────────────────────
-AGENT_MAP = {
-    "contract_review": "Analyzes contracts for risks and compliance.",
-    "legal_research": "Finds relevant case laws and statutes.",
-    "drafting": "Generates legal documents from templates.",
-    "due_diligence": "Checks regulatory and legal compliance.",
-    "ip_search": "Searches for patents and trademarks.",
+async def increment_query(user_id: int):
+    await database.execute(
+        users.update().where(users.c.id == user_id).values(
+            queries_used_today=users.c.queries_used_today + 1,
+            updated_at=datetime.now()
+        )
+    )
+
+# ─── FILE PROCESSING ────────────────────────────────────────────
+async def process_file(file: UploadFile) -> str:
+    content = await file.read()
+    try:
+        mime = puremagic.from_string(content, mime=True)[0]
+    except:
+        mime = "application/octet-stream"
+    
+    if mime == "application/pdf":
+        reader = PyPDF2.PdfReader(io.BytesIO(content))
+        return " ".join([p.extract_text() for p in reader.pages])
+    elif "docx" in mime:
+        doc = docx.Document(io.BytesIO(content))
+        return " ".join([p.text for p in doc.paragraphs])
+    elif mime.startswith("image/"):
+        img = Image.open(io.BytesIO(content))
+        return pytesseract.image_to_string(img)
+    return "Unsupported file type."
+
+# ─── AGENT ROUTING & SYSTEM PROMPTS ─────────────────────────────
+AGENT_PROMPTS = {
+    "contract_review": """You are LexSarthi's Contract Review Agent, a senior M&A lawyer with 25 years of experience.
+Your task is to provide a **clause‑by‑clause analysis** of the provided contract.
+Structure your response with these exact headings:
+1. EXECUTIVE SUMMARY (2‑3 sentences on overall risk)
+2. RISK RATING (High / Medium / Low)
+3. CLAUSE‑BY‑CLAUSE ANALYSIS (list each critical clause, explain the risk, and suggest a redline)
+4. MISSING CLAUSES (list any critical clauses that are absent)
+5. RECOMMENDATIONS (bullet‑point actionable steps)
+
+Be ruthless but fair. Use plain English, not legalese. Make it actionable for a junior lawyer to execute.
+Contract text: {query}
+""",
+    "legal_research": """You are LexSarthi's Legal Research Agent, a Supreme Court librarian.
+Your task is to find the most relevant statutes, case laws, and legal principles for the given query.
+Provide citations with full case names and judgment dates.
+Structure: 
+1. RELEVANT STATUTES
+2. KEY CASE LAWS (with ratio decidendi)
+3. LEGAL PRINCIPLES APPLICABLE
+4. JURISDICTIONAL NOTES (India‑specific)
+Query: {query}
+""",
+    "drafting": """You are LexSarthi's Drafting Agent, a senior conveyancing expert.
+Your task is to draft a legally sound document based on the user's request.
+Use standard Indian legal formatting.
+Include:
+- Title and Preamble
+- Definitions
+- Operative Clauses
+- Signatory blocks
+- Execution date
+If the user specifies a document type (e.g., NDA, Sale Deed, Employment Contract), draft it precisely.
+User request: {query}
+""",
+    "due_diligence": """You are LexSarthi's Due Diligence Agent, a forensic financial lawyer.
+Analyse the provided data for regulatory compliance, financial discrepancies, and legal red flags.
+Structure:
+1. COMPLIANCE CHECKLIST
+2. FINANCIAL HIGHLIGHTS & RED FLAGS
+3. REGULATORY RISKS
+4. RECOMMENDATIONS
+Report: {query}
+""",
+    "general": """You are LexSarthi, a general legal AI assistant.
+Provide accurate, structured, and jurisdiction‑aware (India‑focused) legal guidance.
+Be concise but comprehensive. Always state if a point is uncertain.
+User query: {query}
+"""
 }
 
-def route_agent(query: str) -> str:
+def route_agent(query: str, agent_id: str = "agent_001") -> str:
     query_lower = query.lower()
-    if "contract" in query_lower or "agreement" in query_lower:
+    if "contract" in query_lower or "agreement" in query_lower or "review" in query_lower:
         return "contract_review"
-    if "case" in query_lower or "judgment" in query_lower:
+    if "case" in query_lower or "judgment" in query_lower or "research" in query_lower:
         return "legal_research"
-    if "draft" in query_lower or "create" in query_lower:
+    if "draft" in query_lower or "create" in query_lower or "prepare" in query_lower:
         return "drafting"
-    if "patent" in query_lower or "trademark" in query_lower:
-        return "ip_search"
     if "due diligence" in query_lower or "compliance" in query_lower:
         return "due_diligence"
     return "general"
 
-async def execute_agent(agent_name: str, query: str) -> str:
-    responses = {
-        "contract_review": "This contract has potential risks in clause 5 (indemnity) and clause 12 (termination). Consider limiting liability.",
-        "legal_research": "Under Section 138 of the Negotiable Instruments Act, the cheque must be presented within 6 months.",
-        "drafting": "I've drafted a simple NDA. Please review and customize the parties.",
-        "ip_search": "There are 3 similar patents registered in India for this technology.",
-        "due_diligence": "The company is compliant with all applicable regulations except for pending GST filings.",
-        "general": "I'm your general legal assistant. How can I help?"
-    }
-    return responses.get(agent_name, "I'm processing your request. Please hold on.")
+# ─── ULTIMATE AI ROUTER (Multi-Model) ────────────────────────────
+async def execute_ai(query: str, model: str, agent_type: str = "general", agent_name: str = "General Counsel") -> str:
+    prompt_template = AGENT_PROMPTS.get(agent_type, AGENT_PROMPTS["general"])
+    system_prompt = prompt_template.format(query=query)
+    
+    # 1. Groq (Fastest)
+    if model.startswith("llama") and groq_client:
+        try:
+            response = groq_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}],
+                temperature=0.3,
+                max_tokens=4096,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Groq error: {e}")
 
-# ─── Verifier System ──────────────────────────────────────────────
-VERIFIER_MAP = {
-    "fact_check": "Verifies factual claims against known databases.",
-    "legal_citation": "Checks if cited laws are correct and current.",
-    "compliance": "Validates regulatory compliance.",
-}
-async def verify_response(agent_response: str, context: dict) -> tuple[str, str]:
-    return agent_response, "fact_check"
+    # 2. OpenAI
+    if model.startswith("gpt") and openai_client:
+        try:
+            response = openai_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}],
+                temperature=0.3,
+                max_tokens=4096,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"OpenAI error: {e}")
 
-# ─── File Processing ──────────────────────────────────────────────
-async def process_uploaded_file(file: UploadFile) -> str:
-    content = await file.read()
-    try:
-        file_type = puremagic.from_string(content, mime=True)[0]
-    except:
-        ext = os.path.splitext(file.filename)[1].lower()
-        file_type = {
-            '.pdf': 'application/pdf',
-            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-        }.get(ext, 'application/octet-stream')
-    if file_type == "application/pdf":
-        pdf = PyPDF2.PdfReader(io.BytesIO(content))
-        text = " ".join([page.extract_text() for page in pdf.pages])
-        return text
-    elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        doc = docx.Document(io.BytesIO(content))
-        text = " ".join([para.text for para in doc.paragraphs])
-        return text
-    elif file_type.startswith("image/"):
-        img = Image.open(io.BytesIO(content))
-        text = pytesseract.image_to_string(img)
-        return text
-    else:
-        return "Unsupported file type."
+    # 3. Gemini
+    if model.startswith("gemini") and gemini_model:
+        try:
+            response = gemini_model.generate_content([system_prompt, query])
+            return response.text
+        except Exception as e:
+            logger.error(f"Gemini error: {e}")
 
-# ─── Voice Transcription ──────────────────────────────────────────
-async def transcribe_audio(audio_bytes: bytes) -> str:
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
-        audio = recognizer.record(source)
-    try:
-        text = recognizer.recognize_google(audio, language="en-IN")
-        return text
-    except:
-        return "Could not transcribe audio."
+    # 4. OpenRouter (Claude)
+    if "claude" in model and OPENROUTER_API_KEY:
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}", "HTTP-Referer": "https://lexsarthi.ai"},
+                    json={"model": model, "messages": [{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}]},
+                    timeout=30.0
+                )
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            logger.error(f"OpenRouter error: {e}")
 
-# ─── Web Search ──────────────────────────────────────────────────
-async def web_search(query: str) -> str:
-    if not WEB_SEARCH_API_KEY:
-        return "Web search is not configured."
-    async with httpx.AsyncClient() as client:
-        url = "https://serpapi.com/search"
-        params = {
-            "q": query,
-            "api_key": WEB_SEARCH_API_KEY,
-            "hl": "en",
-            "gl": "in"
-        }
-        resp = await client.get(url, params=params)
-        data = resp.json()
-        organic = data.get("organic_results", [])
-        snippets = [r.get("snippet", "") for r in organic[:3]]
-        return " ".join(snippets) if snippets else "No results found."
+    # 5. Fallback (Graceful Degradation)
+    return f"""
+⚠️ **AI Service Unavailable**  
+We are currently experiencing high demand. Your query has been logged.
 
-# ─── API Endpoints ──────────────────────────────────────────────
+**Your Query:** {query[:200]}...
 
-@app.get("/")
-async def root():
-    return {"message": "LexSarthi Alpha v5.0 – Legal AI OS", "status": "operational"}
+Please try again in a few moments, or contact support@lexsarthi.ai for urgent assistance.
+"""
 
-# ─── Authentication Router ──────────────────────────────────────
-from fastapi import APIRouter
-auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
+# ─── API ENDPOINTS ──────────────────────────────────────────────
 
-@auth_router.post("/login", response_model=Token)
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.post("/auth/login", response_model=Token)
 async def login(user_login: UserLogin):
-    logger.info(f"Login attempt with: {user_login.username}")
-    user = None
-    if '@' in user_login.username:
-        user = await get_user_by_email(user_login.username)
-        if not user:
-            logger.warning(f"Email not found: {user_login.username}")
-    else:
-        user = await get_user_by_username(user_login.username)
-        if not user:
-            logger.warning(f"Username not found: {user_login.username}")
-    
-    if user is None:
-        logger.error("User object is None – aborting login")
+    logger.info(f"Login: {user_login.username}")
+    user = await database.fetch_one(users.select().where(users.c.username == user_login.username))
+    if not user:
+        user = await database.fetch_one(users.select().where(users.c.email == user_login.username.lower()))
+    if not user or not verify_password(user_login.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    user = dict(user)
-    
-    if not verify_password(user_login.password, user["password_hash"]):
-        logger.warning(f"Password verification failed for {user['username']}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
     token = create_access_token({"sub": str(user["id"])})
     return {
         "access_token": token,
@@ -607,236 +518,112 @@ async def login(user_login: UserLogin):
             "username": user["username"],
             "email": user["email"],
             "full_name": user["full_name"],
-            "tier": user.get("tier", "free"),
-            "is_premium": user.get("is_premium", False),
+            "tier": user["tier"],
+            "is_premium": user["is_premium"]
         }
     }
 
-@auth_router.get("/me")
+@app.post("/auth/register")
+async def register(user: UserCreate):
+    existing = await database.fetch_one(users.select().where((users.c.username == user.username) | (users.c.email == user.email.lower())))
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+    hashed = hash_password(user.password)
+    stmt = users.insert().values(
+        username=user.username,
+        email=user.email.lower(),
+        password_hash=hashed,
+        full_name=user.full_name,
+        tier="free"
+    ).returning(users.c.id)
+    user_id = await database.fetch_val(stmt)
+    token = create_access_token({"sub": str(user_id)})
+    return {"access_token": token, "token_type": "bearer", "user": {"id": user_id, "username": user.username}}
+
+@app.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
-@auth_router.post("/register")
-async def register(user: UserCreate):
-    if await get_user_by_username(user.username):
-        raise HTTPException(status_code=400, detail="Username already taken")
-    if await get_user_by_email(user.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
-    user_id = await create_user(user)
-    token = create_access_token({"sub": str(user_id)})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user_id,
-            "username": user.username,
-            "email": user.email,
-            "full_name": user.full_name,
-            "tier": "free"
-        }
-    }
-
-@auth_router.post("/api-key")
-async def regenerate_api_key(current_user: dict = Depends(get_current_user)):
-    new_key = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-    await database.execute(
-        users.update().where(users.c.id == current_user["id"]).values(api_key=new_key)
-    )
-    return {"api_key": new_key}
-
-app.include_router(auth_router)
-
-# Legacy endpoints for backward compatibility
-@app.post("/login", response_model=Token)
-async def login_legacy(user_login: UserLogin):
-    return await login(user_login)
-
-@app.get("/me")
-async def get_me_legacy(current_user: dict = Depends(get_current_user)):
-    return current_user
-
-@app.post("/register")
-async def register_legacy(user: UserCreate):
-    return await register(user)
-
-# ─── Lifetime Count ────────────────────────────────────────────
 @app.get("/lifetime-count")
-async def get_lifetime_count():
-    try:
-        stmt = select(func.count()).select_from(users).where(users.c.tier == "lifetime")
-        count = await database.fetch_val(stmt)
-        limit = 1000
-        return {"count": count or 0, "limit": limit, "remaining": max(0, limit - (count or 0))}
-    except Exception as e:
-        logger.warning(f"Lifetime count fallback: {e}")
-        stmt = select(func.count()).select_from(users)
-        total = await database.fetch_val(stmt)
-        return {"count": total or 0, "limit": 1000, "remaining": 0}
+async def lifetime_count():
+    count = await database.fetch_val(select(func.count()).select_from(users).where(users.c.tier == "lifetime")) or 0
+    return {"count": count, "limit": 1000, "remaining": max(0, 1000 - count)}
 
-# ─── My Usage (for all users) ──────────────────────────────────
 @app.get("/my-usage")
 async def my_usage(current_user: dict = Depends(get_current_user)):
-    user_id = current_user["id"]
-    stmt = select(func.count()).select_from(queries).where(queries.c.user_id == user_id)
-    total = await database.fetch_val(stmt)
-    stmt = select(func.count()).select_from(queries).where(
-        queries.c.user_id == user_id,
+    total = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id == current_user["id"])) or 0
+    today = await database.fetch_val(select(func.count()).select_from(queries).where(
+        queries.c.user_id == current_user["id"],
         func.date(queries.c.created_at) == func.current_date()
-    )
-    today = await database.fetch_val(stmt)
-    stmt = select(queries.c.metadata['agent'].distinct()).where(
-        queries.c.user_id == user_id,
-        queries.c.metadata.isnot(None)
-    )
-    agents = await database.fetch_all(stmt)
-    agent_list = [a[0] for a in agents if a[0]]
-    stmt = select(queries.c.query, queries.c.created_at).where(
-        queries.c.user_id == user_id
-    ).order_by(queries.c.created_at.desc()).limit(5)
-    recent = await database.fetch_all(stmt)
-    return {
-        "total_queries": total or 0,
-        "queries_today": today or 0,
-        "agents_used": agent_list,
-        "recent_queries": [
-            {"query": r["query"], "timestamp": r["created_at"].isoformat()}
-            for r in recent
-        ]
-    }
+    )) or 0
+    return {"total_queries": total, "queries_today": today}
 
-# ─── Admin Stats (Enterprise only) ─────────────────────────────
-@app.get("/admin/stats")
-async def admin_stats(current_user: dict = Depends(get_current_user)):
-    if current_user.get("tier") != "enterprise":
-        raise HTTPException(status_code=403, detail="Enterprise tier required")
-    total_users = await database.fetch_val(select(func.count()).select_from(users))
-    total_queries = await database.fetch_val(select(func.count()).select_from(queries))
-    dau_stmt = select(func.count(func.distinct(queries.c.user_id))).where(
-        queries.c.created_at > func.now() - text("INTERVAL '1 day'")
-    )
-    dau = await database.fetch_val(dau_stmt)
-    paid_users = await database.fetch_val(
-        select(func.count()).select_from(users).where(users.c.tier.in_(["premium", "enterprise", "lifetime"]))
-    )
-    return {
-        "total_users": total_users or 0,
-        "total_queries": total_queries or 0,
-        "daily_active_users": dau or 0,
-        "paid_users": paid_users or 0,
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ─── Main Query (FormData support) ─────────────────────────────
 @app.post("/ask")
-@limiter.limit("30/minute")
+@limiter.limit("30/minute")  # Protection for 1M users
 async def ask(
     request: Request,
     query: str = Form(...),
     files: Optional[UploadFile] = File(None),
     search_web: str = Form("off"),
-    lang: Optional[str] = Form(None),
-    model: Optional[str] = Form(None),
-    session_id: Optional[str] = Form(None),
+    model: str = Form("llama-3.3-70b-versatile"),
+    agent_id: str = Form("agent_001"),
     current_user: dict = Depends(get_current_user)
 ):
-    user_id = current_user["id"]
-    if not await check_query_limit(user_id):
+    if not await check_query_limit(current_user):
         raise HTTPException(status_code=429, detail="Free limit reached. Upgrade to Premium.")
     
+    combined_query = query
     if files:
         try:
-            file_text = await process_uploaded_file(files)
-            combined_query = query + "\n\n--- Document Content ---\n" + file_text
+            file_text = await process_file(files)
+            combined_query += f"\n\n--- Document Content ---\n{file_text}"
         except Exception as e:
-            logger.warning(f"File processing failed: {e}")
-            combined_query = query
-    else:
-        combined_query = query
+            logger.warning(f"File error: {e}")
+            combined_query += "\n\n--- File processing failed. ---"
 
-    await increment_query_count(user_id)
-    agent_name = route_agent(combined_query)
-    response_text = await execute_agent(agent_name, combined_query)
-    verified_text, verifier_name = await verify_response(response_text, {})
-    metadata = {
-        "agent": agent_name,
-        "verifier": verifier_name,
-        "has_file": bool(files),
-        "search_web": search_web,
-        "lang": lang,
-        "model": model,
-    }
+    if search_web.lower() in ("on", "yes"):
+        combined_query += "\n\n--- Web Search Enabled (Active in Enterprise) ---"
+
+    await increment_query(current_user["id"])
+    
+    agent_type = route_agent(combined_query, agent_id)
+    agent_name = f"Agent {agent_id}"
+    
+    response_text = await execute_ai(combined_query, model, agent_type, agent_name)
+    
     expires_at = datetime.now() + timedelta(hours=24)
-    stmt = queries.insert().values(
-        user_id=user_id,
-        query=combined_query,
-        response=verified_text,
-        metadata=metadata,
-        expires_at=expires_at
+    await database.execute(
+        queries.insert().values(
+            user_id=current_user["id"],
+            query=combined_query,
+            response=response_text,
+            metadata={"agent": agent_id, "model": model, "file": bool(files), "agent_type": agent_type},
+            expires_at=expires_at
+        )
     )
-    await database.execute(stmt)
-    return {
-        "response": verified_text,
-        "agent_used": agent_name,
-        "verifier_used": verifier_name,
-    }
+    
+    return {"response": response_text, "model": model, "agent_used": agent_id}
 
-# ─── File Upload ──────────────────────────────────────────────────
-@app.post("/upload")
-async def upload_file(
-    file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
-):
-    try:
-        text = await process_uploaded_file(file)
-        return {"filename": file.filename, "extracted_text": text[:500] + "..." if len(text)>500 else text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ─── Voice Transcription ──────────────────────────────────────────
-@app.post("/transcribe")
-async def transcribe_audio_endpoint(
-    file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
-):
-    content = await file.read()
-    text = await transcribe_audio(content)
-    return {"transcription": text}
-
-# ─── Web Search ────────────────────────────────────────────────────
-@app.post("/search")
-async def search(
-    query: str,
-    current_user: dict = Depends(get_current_user)
-):
-    results = await web_search(query)
-    return {"results": results}
-
-# ─── Razorpay Payment ──────────────────────────────────────────
-client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+# ─── RAZORPAY ──────────────────────────────────────────────────
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
 
 @app.post("/create-order")
-async def create_order(
-    payment_data: PaymentCreate,
-    current_user: dict = Depends(get_current_user)
-):
+async def create_order(payment: PaymentCreate, current_user: dict = Depends(get_current_user)):
+    if not razorpay_client:
+        raise HTTPException(status_code=501, detail="Payments not configured")
     amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}
-    if payment_data.tier not in amount_map:
-        raise HTTPException(status_code=400, detail="Invalid tier")
-    amount = amount_map[payment_data.tier]
-    order = client.order.create({
-        "amount": amount,
-        "currency": "INR",
-        "payment_capture": 1
-    })
-    stmt = payments.insert().values(
-        user_id=current_user["id"],
-        razorpay_order_id=order["id"],
-        amount=amount/100,
-        tier=payment_data.tier,
-        status="created"
+    amount = amount_map.get(payment.tier, 10200)
+    order = razorpay_client.order.create({"amount": amount, "currency": "INR", "payment_capture": 1})
+    await database.execute(
+        payments.insert().values(
+            user_id=current_user["id"],
+            razorpay_order_id=order["id"],
+            amount=amount/100,
+            tier=payment.tier,
+            status="created"
+        )
     )
-    await database.execute(stmt)
-    return {"order_id": order["id"], "amount": amount, "currency": "INR", "razorpay_key": RAZORPAY_KEY_ID}
+    return {"order_id": order["id"], "amount": amount, "razorpay_key": RAZORPAY_KEY_ID}
 
 @app.post("/verify-payment")
 async def verify_payment(
@@ -845,124 +632,29 @@ async def verify_payment(
     razorpay_signature: str = Form(...),
     current_user: dict = Depends(get_current_user)
 ):
-    params_dict = {
-        "razorpay_order_id": razorpay_order_id,
-        "razorpay_payment_id": razorpay_payment_id,
-        "razorpay_signature": razorpay_signature
-    }
+    if not razorpay_client:
+        raise HTTPException(status_code=501, detail="Payments not configured")
     try:
-        client.utility.verify_payment_signature(params_dict)
-        stmt = payments.update().where(payments.c.razorpay_order_id == razorpay_order_id).values(
-            razorpay_payment_id=razorpay_payment_id,
-            razorpay_signature=razorpay_signature,
-            status="paid"
-        )
-        await database.execute(stmt)
-        payment = await database.fetch_one(
-            payments.select().where(payments.c.razorpay_order_id == razorpay_order_id)
-        )
+        razorpay_client.utility.verify_payment_signature({
+            "razorpay_order_id": razorpay_order_id,
+            "razorpay_payment_id": razorpay_payment_id,
+            "razorpay_signature": razorpay_signature
+        })
+        payment = await database.fetch_one(payments.select().where(payments.c.razorpay_order_id == razorpay_order_id))
         tier = payment["tier"]
-        stmt = users.update().where(users.c.id == current_user["id"]).values(
-            tier=tier,
-            is_premium=True if tier != "free" else False
+        await database.execute(
+            users.update().where(users.c.id == current_user["id"]).values(tier=tier, is_premium=True)
         )
-        await database.execute(stmt)
+        await database.execute(
+            payments.update().where(payments.c.razorpay_order_id == razorpay_order_id).values(status="paid")
+        )
         return {"status": "success", "tier": tier}
-    except:
-        raise HTTPException(status_code=400, detail="Payment verification failed")
+    except Exception as e:
+        logger.error(f"Payment verification failed: {e}")
+        raise HTTPException(status_code=400, detail="Verification failed")
 
-# ─── Analytics Tracking ──────────────────────────────────────────
-@app.post("/track")
-async def track_event(
-    request: Request,
-    event_type: str,
-    event_data: Optional[dict] = None,
-    current_user: Optional[dict] = Depends(get_current_user_optional)
-):
-    session_id = request.headers.get("X-Session-ID") or str(uuid.uuid4())
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent")
-    stmt = events.insert().values(
-        user_id=current_user["id"] if current_user else None,
-        session_id=session_id,
-        event_type=event_type,
-        event_data=event_data or {},
-        ip_address=ip,
-        user_agent=user_agent,
-        expires_at=datetime.now() + timedelta(days=30)
-    )
-    await database.execute(stmt)
-    return {"status": "ok"}
+# ─── STATIC FILES ──────────────────────────────────────────────
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-# ─── Referral System ─────────────────────────────────────────────
-@app.post("/referral/generate")
-async def generate_referral(
-    current_user: dict = Depends(get_current_user)
-):
-    existing = await database.fetch_one(
-        referrals.select().where(referrals.c.referrer_id == current_user["id"])
-    )
-    if existing:
-        return {"code": existing["code"]}
-    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    while True:
-        existing_code = await database.fetch_one(
-            referrals.select().where(referrals.c.code == code)
-        )
-        if not existing_code:
-            break
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    stmt = referrals.insert().values(
-        referrer_id=current_user["id"],
-        code=code,
-        used=False
-    )
-    await database.execute(stmt)
-    return {"code": code}
-
-@app.post("/referral/use")
-async def use_referral(
-    referral_data: ReferralCreate,
-    current_user: dict = Depends(get_current_user)
-):
-    ref = await database.fetch_one(
-        referrals.select().where(referrals.c.code == referral_data.code)
-    )
-    if not ref:
-        raise HTTPException(status_code=404, detail="Invalid referral code")
-    if ref["used"]:
-        raise HTTPException(status_code=400, detail="Referral code already used")
-    if ref["referrer_id"] == current_user["id"]:
-        raise HTTPException(status_code=400, detail="You cannot use your own referral code")
-    stmt = referrals.update().where(referrals.c.id == ref["id"]).values(
-        referee_id=current_user["id"],
-        used=True
-    )
-    await database.execute(stmt)
-    referrer = await database.fetch_one(users.select().where(users.c.id == ref["referrer_id"]))
-    prefs = referrer["preferences"] or {}
-    bonus = prefs.get("bonus_queries", 0) + 5
-    prefs["bonus_queries"] = bonus
-    await database.execute(
-        users.update().where(users.c.id == ref["referrer_id"]).values(preferences=prefs)
-    )
-    new_prefs = current_user["preferences"] or {}
-    new_bonus = new_prefs.get("bonus_queries", 0) + 3
-    new_prefs["bonus_queries"] = new_bonus
-    await database.execute(
-        users.update().where(users.c.id == current_user["id"]).values(preferences=new_prefs)
-    )
-    return {"status": "success", "message": "Referral applied! You got 3 bonus queries."}
-
-# ─── Health ──────────────────────────────────────────────────────
-@app.get("/health")
-async def health_check():
-    try:
-        await database.execute(text("SELECT 1"))
-        return {"status": "healthy", "database": "connected"}
-    except:
-        return {"status": "unhealthy", "database": "disconnected"}
-
-# ─── Run ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
