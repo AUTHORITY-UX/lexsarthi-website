@@ -251,9 +251,17 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── Database Migration ────────────────────────────────────────────
 async def migrate_database():
-    """Add missing columns and fix serial primary keys."""
+    """Check if users.id has a sequence; if not, drop and recreate all tables."""
+    # Check if users.id has a sequence
+    seq = await database.fetch_val("SELECT pg_get_serial_sequence('users', 'id')")
+    if seq is None:
+        logger.warning("users.id is not using a sequence. Dropping all tables to recreate with correct schema.")
+        await database.execute("DROP TABLE IF EXISTS payments, queries, referrals, events, users CASCADE")
+        logger.info("All tables dropped. They will be recreated on next startup.")
+        return  # exit early; tables will be recreated in create_tables()
+
+    # If sequence exists, run regular migrations
     migrations = [
-        # Add missing columns
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE;",
@@ -263,26 +271,6 @@ async def migrate_database():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS queries_used_today INTEGER DEFAULT 0;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_query_reset TIMESTAMP DEFAULT NOW();",
         "ALTER TABLE payments ADD COLUMN IF NOT EXISTS tier VARCHAR(20);",
-        # Fix id column to use SERIAL (if not already)
-        """
-        DO $$
-        BEGIN
-            IF NOT EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name='users' AND column_name='id' 
-                AND column_default LIKE 'nextval%'
-            ) THEN
-                -- Create sequence if not exists
-                CREATE SEQUENCE IF NOT EXISTS users_id_seq;
-                -- Set default
-                ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('users_id_seq');
-                -- Set ownership
-                ALTER SEQUENCE users_id_seq OWNED BY users.id;
-                -- Set sequence's last value to max id (if any)
-                PERFORM setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1), true);
-            END IF;
-        END $$;
-        """
     ]
     for stmt in migrations:
         try:
@@ -320,7 +308,7 @@ async def lifespan(app: FastAPI):
     # Startup
     await database.connect()
     logger.info("Database connected")
-    # Run migrations
+    # Run migrations (may drop tables if needed)
     await migrate_database()
     # Create tables if they don't exist (idempotent)
     await create_tables()
@@ -682,13 +670,11 @@ async def register_legacy(user: UserCreate):
 @app.get("/lifetime-count")
 async def get_lifetime_count():
     try:
-        # Count lifetime users using SQLAlchemy Core
         stmt = select(func.count()).select_from(users).where(users.c.tier == "lifetime")
         count = await database.fetch_val(stmt)
         limit = 1000
         return {"count": count or 0, "limit": limit, "remaining": max(0, limit - (count or 0))}
     except Exception as e:
-        # Fallback: count all users
         logger.warning(f"Lifetime count fallback: {e}")
         stmt = select(func.count()).select_from(users)
         total = await database.fetch_val(stmt)
@@ -698,23 +684,19 @@ async def get_lifetime_count():
 @app.get("/my-usage")
 async def my_usage(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
-    # Total queries
     stmt = select(func.count()).select_from(queries).where(queries.c.user_id == user_id)
     total = await database.fetch_val(stmt)
-    # Today
     stmt = select(func.count()).select_from(queries).where(
         queries.c.user_id == user_id,
         func.date(queries.c.created_at) == func.current_date()
     )
     today = await database.fetch_val(stmt)
-    # Agents used
     stmt = select(queries.c.metadata['agent'].distinct()).where(
         queries.c.user_id == user_id,
         queries.c.metadata.isnot(None)
     )
     agents = await database.fetch_all(stmt)
     agent_list = [a[0] for a in agents if a[0]]
-    # Recent queries
     stmt = select(queries.c.query, queries.c.created_at).where(
         queries.c.user_id == user_id
     ).order_by(queries.c.created_at.desc()).limit(5)
