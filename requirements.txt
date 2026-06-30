@@ -18,3 +18,4 @@ pillow==10.3.0
 pytesseract==0.3.10
 puremagic==1.28
 slowapi==0.1.9
+email-validator==2.1.1
