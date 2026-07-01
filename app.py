@@ -5,6 +5,8 @@
 # Deployed: upamnyu12-lex.hf.space
 # ===================================================================
 
+import random
+import string
 import os
 import uuid
 import json
