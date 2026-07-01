@@ -4,75 +4,73 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🔱 LexSarthi – Universal Divine Intelligence v7.0</title>
-    <meta name="description" content="220 Divine Agents, 10 Verifiers, Oracle Mode, Swarm, Bulk Processing." />
+    <meta name="description" content="Universal Divine AI – 24 languages, Zero Retention, Oracle Mode." />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* ===== SAME DIVINE CSS AS BEFORE (omitted for brevity) ===== */
         * { margin:0; padding:0; box-sizing:border-box; }
         :root { --bg: #0a0a0a; --gold: #d4a853; --gold-dim: rgba(212,175,55,0.12); --text: #e0e0e0; --text-muted: #888; --font: 'Inter', sans-serif; --card-bg: rgba(16,16,16,0.9); --border: rgba(255,255,255,0.06); }
         body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; align-items:center; overflow-x:hidden; position:relative; }
         .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background:radial-gradient(ellipse at center, #0a0a2a 0%, #000000 100%); }
         .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--duration) ease-in-out infinite alternate; }
         @keyframes twinkle { 0%{ opacity:0.2; transform:scale(1); } 100%{ opacity:1; transform:scale(1.5); } }
-        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:180px; margin:10px 0 0; perspective:1000px; }
-        .om-3d { width:100px; height:100px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 30px rgba(212,175,55,0.4)); }
+        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:160px; margin:10px 0 0; perspective:1000px; }
+        .om-3d { width:90px; height:90px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 30px rgba(212,175,55,0.4)); }
         @keyframes rotateOm { 0%{ transform:rotateY(0deg) rotateX(10deg); } 50%{ transform:rotateY(180deg) rotateX(20deg); } 100%{ transform:rotateY(360deg) rotateX(10deg); } }
-        .om-3d .om-face { position:absolute; width:100px; height:100px; display:flex; align-items:center; justify-content:center; font-size:70px; font-weight:900; color:var(--gold); backface-visibility:hidden; text-shadow:0 0 20px rgba(212,175,55,0.4); font-family:'Times New Roman',serif; background:rgba(10,10,10,0.2); border-radius:16px; border:1px solid rgba(212,175,55,0.15); }
-        .om-face.front { transform:translateZ(50px); } .om-face.back { transform:rotateY(180deg) translateZ(50px); } .om-face.left { transform:rotateY(-90deg) translateZ(50px); } .om-face.right { transform:rotateY(90deg) translateZ(50px); } .om-face.top { transform:rotateX(90deg) translateZ(50px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(50px); }
-        .ring { position:absolute; border-radius:50%; border:1px solid rgba(212,175,55,0.15); animation:ringPulse 4s ease-in-out infinite; }
-        .ring1 { width:160px; height:160px; top:-30px; left:-30px; }
-        .ring2 { width:210px; height:210px; top:-55px; left:-55px; animation-delay:0.5s; }
-        @keyframes ringPulse { 0%,100%{ opacity:0.2; transform:scale(1); } 50%{ opacity:0.6; transform:scale(1.04); } }
+        .om-3d .om-face { position:absolute; width:90px; height:90px; display:flex; align-items:center; justify-content:center; font-size:60px; font-weight:900; color:var(--gold); backface-visibility:hidden; text-shadow:0 0 20px rgba(212,175,55,0.4); font-family:'Times New Roman',serif; background:rgba(10,10,10,0.2); border-radius:14px; border:1px solid rgba(212,175,55,0.15); }
+        .om-face.front { transform:translateZ(45px); } .om-face.back { transform:rotateY(180deg) translateZ(45px); } .om-face.left { transform:rotateY(-90deg) translateZ(45px); } .om-face.right { transform:rotateY(90deg) translateZ(45px); } .om-face.top { transform:rotateX(90deg) translateZ(45px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(45px); }
+        .ring { position:absolute; border-radius:50%; border:1px solid rgba(212,175,55,0.12); animation:ringPulse 4s ease-in-out infinite; }
+        .ring1 { width:150px; height:150px; top:-30px; left:-30px; }
+        .ring2 { width:200px; height:200px; top:-55px; left:-55px; animation-delay:0.5s; }
+        @keyframes ringPulse { 0%,100%{ opacity:0.2; transform:scale(1); } 50%{ opacity:0.5; transform:scale(1.03); } }
         .wisdom-tagline { text-align:center; font-size:0.7rem; color:var(--gold); letter-spacing:6px; text-transform:uppercase; opacity:0.7; margin: -5px 0 15px; z-index:1; position:relative; }
         .diya { display:inline-block; font-size:2.5rem; animation:glow 2s ease-in-out infinite alternate; line-height:1; }
         @keyframes glow { 0%{ text-shadow:0 0 10px #d4a853; } 100%{ text-shadow:0 0 30px #f4d03f; } }
         .container { position:relative; z-index:1; width:100%; max-width:820px; margin:0 auto; padding:0 16px; display:flex; flex-direction:column; min-height:100vh; }
-        .header { text-align:center; padding:8px 0; border-bottom:1px solid var(--border); margin-bottom:12px; }
-        .brand-name { font-size:1.8rem; font-weight:900; background:linear-gradient(135deg,#f4d03f,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
-        .version-badge { font-size:0.6rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 8px; border-radius:10px; -webkit-text-fill-color: #888; }
-        .premium-badge, .enterprise-badge { display:none; background:#d4af37; color:#000; font-size:0.6rem; font-weight:800; padding:2px 10px; border-radius:20px; margin-left:6px; -webkit-text-fill-color: #000; }
+        .header { text-align:center; padding:6px 0; border-bottom:1px solid var(--border); margin-bottom:8px; }
+        .brand-name { font-size:1.6rem; font-weight:900; background:linear-gradient(135deg,#f4d03f,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
+        .version-badge { font-size:0.55rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 8px; border-radius:10px; -webkit-text-fill-color: #888; }
+        .premium-badge, .enterprise-badge { display:none; background:#d4af37; color:#000; font-size:0.55rem; font-weight:800; padding:2px 10px; border-radius:20px; margin-left:6px; -webkit-text-fill-color: #000; }
         .enterprise-badge { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; -webkit-text-fill-color: #fff; }
-        .header-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:6px; }
-        .btn { padding:6px 14px; border-radius:40px; font-weight:600; font-size:0.7rem; cursor:pointer; transition:all 0.3s; border:none; display:inline-flex; align-items:center; gap:5px; text-decoration:none; }
+        .header-actions { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:4px; }
+        .btn { padding:5px 12px; border-radius:40px; font-weight:600; font-size:0.65rem; cursor:pointer; transition:all 0.3s; border:none; display:inline-flex; align-items:center; gap:4px; text-decoration:none; }
         .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; }
         .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
         .btn-gold { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; font-weight:700; box-shadow:0 0 20px rgba(212,175,55,0.2); }
         .btn-gold:hover { transform:translateY(-1px); box-shadow:0 0 30px rgba(212,175,55,0.4); }
         .btn-enterprise { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; }
-        .btn-sm { padding:4px 10px; font-size:0.65rem; }
+        .btn-sm { padding:3px 8px; font-size:0.6rem; }
         .settings-btn { background:none; border:none; color:#aaa; font-size:1.1rem; cursor:pointer; padding:4px 8px; }
         .settings-btn:hover { color:var(--gold); }
-        .settings-panel { display:none; background:#111; border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin:10px auto 0; max-width:450px; text-align:left; backdrop-filter:blur(10px); }
+        .settings-panel { display:none; background:#111; border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin:10px auto 0; max-width:400px; text-align:left; backdrop-filter:blur(10px); }
         .settings-panel.open { display:block; }
-        .settings-panel label { display:block; margin:6px 0 4px; font-size:0.7rem; color:#aaa; }
-        .settings-panel select { width:100%; padding:5px 8px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; font-size:0.8rem; }
-        .settings-divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
-        .agent-showcase { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:6px; margin:10px 0 16px; max-height:450px; overflow-y:auto; padding-right:4px; }
-        .agent-showcase::-webkit-scrollbar { width:4px; }
-        .agent-showcase::-webkit-scrollbar-thumb { background:var(--gold); border-radius:10px; }
-        .agent-card { background:rgba(20,20,20,0.5); border:1px solid rgba(212,175,55,0.06); border-radius:10px; padding:10px 6px; text-align:center; font-size:0.6rem; transition:0.3s; cursor:pointer; }
-        .agent-card:hover { border-color:var(--gold); background:rgba(212,175,55,0.05); transform:translateY(-2px); }
-        .agent-card i { font-size:1rem; color:var(--gold); margin-bottom:3px; }
-        .agent-card .agent-title { color:#fff; font-weight:600; font-size:0.65rem; }
-        .agent-card .agent-domain { font-size:0.55rem; color:#888; }
-        .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:14px; margin-bottom:14px; backdrop-filter:blur(10px); }
-        .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.9rem; font-family:var(--font); resize:vertical; min-height:50px; outline:none; margin-bottom:10px; }
+        .settings-panel label { display:block; margin:4px 0 2px; font-size:0.7rem; color:#aaa; }
+        .settings-panel select { width:100%; padding:4px 8px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; font-size:0.75rem; }
+        .settings-divider { border:none; border-top:1px solid var(--border); margin:8px 0; }
+        .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:16px; margin-bottom:12px; backdrop-filter:blur(10px); }
+        .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.95rem; font-family:var(--font); resize:vertical; min-height:70px; outline:none; margin-bottom:10px; }
         .query-input::placeholder { color:#555; }
         .input-tools { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-        .tool-btn { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#bbb; padding:5px 12px; border-radius:30px; font-size:0.65rem; cursor:pointer; transition:0.3s; display:flex; align-items:center; gap:4px; }
+        .tool-btn { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#bbb; padding:4px 10px; border-radius:30px; font-size:0.6rem; cursor:pointer; transition:0.3s; display:flex; align-items:center; gap:4px; }
         .tool-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
-        .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:30px; padding:3px 10px 3px 6px; font-size:0.6rem; cursor:pointer; }
-        .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:3px; width:13px; height:13px; cursor:pointer; }
-        .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:6px 16px; border-radius:30px; font-weight:700; font-size:0.75rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; }
+        .web-toggle-label { display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:30px; padding:2px 8px 2px 5px; font-size:0.55rem; cursor:pointer; }
+        .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:2px; width:12px; height:12px; cursor:pointer; }
+        .oracle-toggle { background:rgba(124,58,237,0.05); border-color:rgba(124,58,237,0.15); }
+        .oracle-toggle:hover { background:rgba(124,58,237,0.1); }
+        .bulk-btn { background:rgba(16,185,129,0.05); border-color:rgba(16,185,129,0.15); }
+        .bulk-btn:hover { background:rgba(16,185,129,0.1); }
+        .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:6px 18px; border-radius:30px; font-weight:700; font-size:0.75rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; }
         .send-btn:hover { transform:scale(1.03); }
+        .quick-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+        .quick-btn { background:rgba(255,255,255,0.04); border:1px solid rgba(212,175,55,0.1); border-radius:30px; padding:4px 14px; font-size:0.65rem; color:#ccc; cursor:pointer; transition:0.3s; }
+        .quick-btn:hover { background:rgba(212,175,55,0.08); border-color:var(--gold); color:var(--gold); transform:translateY(-1px); }
         .response-card { background:rgba(16,16,16,0.6); border:1px solid rgba(212,175,55,0.04); border-radius:16px; padding:16px; margin-bottom:14px; display:block; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; max-height:450px; overflow-y:auto; color:#ddd; }
         .response-card::-webkit-scrollbar { width:4px; }
         .response-card::-webkit-scrollbar-thumb { background:var(--gold); border-radius:10px; }
-        .output-tools { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-bottom:12px; }
-        .file-preview { display:none; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:30px; padding:3px 12px; font-size:0.65rem; color:#34d399; margin-top:6px; }
+        .output-tools { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-bottom:10px; }
+        .file-preview { display:none; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:30px; padding:2px 10px; font-size:0.6rem; color:#34d399; margin-top:6px; }
         .file-preview.show { display:flex; }
         .file-preview .remove { cursor:pointer; color:#aaa; margin-left:4px; }
         .file-preview .remove:hover { color:#e74c3c; }
@@ -84,7 +82,7 @@
         .typing-dots span:nth-child(2) { animation-delay:0.2s; }
         .typing-dots span:nth-child(3) { animation-delay:0.4s; }
         @keyframes dotBounce { 0%,80%,100%{ transform:scale(0); } 40%{ transform:scale(1); } }
-        .om-spinner { display:inline-block; font-size:2rem; animation:spinOm 1.5s linear infinite; color:var(--gold); }
+        .om-spinner { display:inline-block; font-size:1.8rem; animation:spinOm 1.5s linear infinite; color:var(--gold); }
         @keyframes spinOm { 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
         .typing-indicator .om-spinner { margin-right:8px; }
         .speak-btn { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#34d399; }
@@ -97,24 +95,19 @@
         .modal-content .close-btn:hover { color:#fff; }
         .modal-content input { width:100%; padding:8px 12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:8px; }
         .modal-content .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
-        .footer { margin-top:auto; padding:12px 0; border-top:1px solid var(--border); text-align:center; font-size:0.65rem; color:#666; }
-        .footer-links a { color:#888; cursor:pointer; margin:0 6px; text-decoration:none; font-size:0.65rem; }
+        .footer { margin-top:auto; padding:10px 0; border-top:1px solid var(--border); text-align:center; font-size:0.6rem; color:#666; }
+        .footer-links a { color:#888; cursor:pointer; margin:0 4px; text-decoration:none; font-size:0.6rem; }
         .footer-links a:hover { color:var(--gold); }
-        .soc2-badge { display:inline-block; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); color:#34d399; padding:2px 10px; border-radius:12px; font-size:0.55rem; margin-top:4px; }
-        .verifier-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
-        .verifier-card { background:rgba(20,20,20,0.4); border-left:3px solid var(--gold); padding:8px 10px; border-radius:4px; }
-        .verifier-card .v-title { font-weight:600; color:#fff; font-size:0.8rem; }
-        .verifier-card .v-desc { color:#aaa; font-size:0.65rem; }
+        .soc2-badge { display:inline-block; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); color:#34d399; padding:2px 8px; border-radius:12px; font-size:0.5rem; margin-top:4px; }
+        .verifier-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:10px 0; }
+        .verifier-card { background:rgba(20,20,20,0.4); border-left:3px solid var(--gold); padding:6px 8px; border-radius:4px; }
+        .verifier-card .v-title { font-weight:600; color:#fff; font-size:0.75rem; }
+        .verifier-card .v-desc { color:#aaa; font-size:0.6rem; }
         .chat-area { max-height:300px; overflow-y:auto; margin-bottom:10px; }
-        .chat-bubble { max-width:90%; padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:0.85rem; }
+        .chat-bubble { max-width:90%; padding:6px 12px; border-radius:8px; margin-bottom:4px; font-size:0.85rem; }
         .chat-bubble.user { background:var(--gold); color:#000; margin-left:auto; border-bottom-right-radius:0; }
         .chat-bubble.agent { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-bottom-left-radius:0; }
-        /* New: Oracle & Bulk styles */
-        .oracle-toggle { background:rgba(124,58,237,0.05); border-color:rgba(124,58,237,0.15); }
-        .oracle-toggle:hover { background:rgba(124,58,237,0.1); }
-        .bulk-btn { background:rgba(16,185,129,0.05); border-color:rgba(16,185,129,0.15); }
-        .bulk-btn:hover { background:rgba(16,185,129,0.1); }
-        @media (max-width:600px) { .verifier-grid { grid-template-columns:1fr; } .brand-name { font-size:1.4rem; } .om-wrapper { height:140px; } .om-3d { width:80px; height:80px; } .om-3d .om-face { width:80px; height:80px; font-size:55px; } .om-face.front { transform:translateZ(40px); } .om-face.back { transform:rotateY(180deg) translateZ(40px); } .om-face.left { transform:rotateY(-90deg) translateZ(40px); } .om-face.right { transform:rotateY(90deg) translateZ(40px); } .om-face.top { transform:rotateX(90deg) translateZ(40px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(40px); } .agent-showcase { grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); } }
+        @media (max-width:600px) { .verifier-grid { grid-template-columns:1fr; } .brand-name { font-size:1.3rem; } .om-wrapper { height:130px; } .om-3d { width:70px; height:70px; } .om-3d .om-face { width:70px; height:70px; font-size:45px; } .om-face.front { transform:translateZ(35px); } .om-face.back { transform:rotateY(180deg) translateZ(35px); } .om-face.left { transform:rotateY(-90deg) translateZ(35px); } .om-face.right { transform:rotateY(90deg) translateZ(35px); } .om-face.top { transform:rotateX(90deg) translateZ(35px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(35px); } .quick-actions { justify-content:center; } }
     </style>
 </head>
 <body>
@@ -138,7 +131,7 @@
             <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
             <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
         </div>
-        <div class="tagline" style="font-size:0.7rem; color:#888; margin:2px 0;">"Divine Intelligence – Oracle · Swarm · Bulk"</div>
+        <div class="tagline" style="font-size:0.65rem; color:#888; margin:2px 0;">"Universal Divine Intelligence"</div>
         <div class="header-actions">
             <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
             <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
@@ -148,11 +141,14 @@
         <div class="settings-panel" id="settingsPanel">
             <label for="langSelect">🌐 Language (Voice I/O)</label>
             <select id="langSelect">
-                <option value="en">English</option>
-                <option value="hi">हिन्दी (Hindi)</option>
-                <option value="bn">বাংলা (Bengali)</option>
-                <option value="sa">संस्कृतम् (Sanskrit)</option>
-                <option value="ar">العربية (Arabic)</option>
+                <option value="en">English</option><option value="es">Español</option><option value="fr">Français</option>
+                <option value="de">Deutsch</option><option value="pt">Português</option><option value="it">Italiano</option>
+                <option value="nl">Nederlands</option><option value="ru">Русский</option><option value="sv">Svenska</option>
+                <option value="pl">Polski</option><option value="tr">Türkçe</option><option value="hi">हिन्दी</option>
+                <option value="bn">বাংলা</option><option value="sa">संस्कृतम्</option><option value="ar">العربية</option>
+                <option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option>
+                <option value="th">ไทย</option><option value="vi">Tiếng Việt</option><option value="id">Bahasa Indonesia</option>
+                <option value="ms">Bahasa Melayu</option><option value="he">עברית</option><option value="el">Ελληνικά</option>
             </select>
             <label for="modelSelect">🧠 AI Model</label>
             <select id="modelSelect">
@@ -162,7 +158,7 @@
                 <option value="claude-3-sonnet">OpenRouter (Claude)</option>
             </select>
             <hr class="settings-divider" />
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; font-size:0.7rem;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; font-size:0.65rem;">
                 <a onclick="openModal('termsModal')" style="color:var(--gold);cursor:pointer;">Terms</a> | 
                 <a onclick="openModal('privacyModal')" style="color:var(--gold);cursor:pointer;">Privacy</a> | 
                 <a onclick="openModal('aboutModal')" style="color:var(--gold);cursor:pointer;">About</a> | 
@@ -171,9 +167,7 @@
         </div>
     </div>
 
-    <div id="premiumMessage" class="premium-unlock-message" style="display:none; background:rgba(212,175,55,0.08); border:1px solid var(--gold); border-radius:8px; padding:10px; text-align:center; color:var(--gold); margin-bottom:10px; font-size:0.8rem;">⭐ <strong>Access Unlocked!</strong> 220 Divine Agents + 10 Verifiers active.</div>
-
-    <div class="agent-showcase" id="agentShowcase"></div>
+    <div id="premiumMessage" class="premium-unlock-message" style="display:none; background:rgba(212,175,55,0.08); border:1px solid var(--gold); border-radius:8px; padding:8px; text-align:center; color:var(--gold); margin-bottom:10px; font-size:0.75rem;">⭐ <strong>Access Unlocked!</strong> 220 Divine Agents + 10 Verifiers active.</div>
 
     <div class="response-card" id="responseArea">
         <div class="chat-area" id="chatArea"></div>
@@ -181,7 +175,7 @@
             <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
                 <div class="diya">🪔</div>
                 <p style="font-size:1rem; color:var(--gold); font-weight:300;">ॐ नमः शिवाय</p>
-                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v7.0 – Oracle · Swarm · Bulk</strong><br />220 Agents · 10 Verifiers · Zero Retention · Memory</p>
+                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v7.0</strong><br />220 Divine Agents · 10 Verifiers · Zero Retention · 24 Languages</p>
                 <p style="color:#888; font-size:0.75rem;">Login with <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">counsel</code> / <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">Password123!</code></p>
             </div>
         </div>
@@ -193,27 +187,32 @@
     </div>
 
     <div class="input-card">
-        <textarea class="query-input" id="queryInput" placeholder="Ask a legal question, upload a contract, or enter Oracle mode..."></textarea>
+        <!-- UPDATED PLACEHOLDER -->
+        <textarea class="query-input" id="queryInput" placeholder="Write, speak, or upload your query..."></textarea>
         <div class="input-tools">
             <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf, .docx, .jpg, .png" hidden onchange="handleFileUpload(this)"></label>
             <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
             <label class="web-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
-
-            <!-- NEW: Oracle Mode Toggle -->
             <label class="web-toggle-label oracle-toggle">
                 <input type="checkbox" id="oracleModeToggle" />
                 <i class="fas fa-moon"></i> Oracle
             </label>
-
-            <!-- NEW: Bulk Upload -->
             <label class="tool-btn bulk-btn">
                 <i class="fas fa-layer-group"></i> Bulk
                 <input type="file" id="bulkUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleBulkUpload(this)">
             </label>
-
-            <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Click</button>
+            <!-- UPDATED BUTTON TEXT -->
+            <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> OKAY</button>
         </div>
         <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
+        
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="quickAction('Review this contract thoroughly. Identify risks, missing clauses, and provide recommendations.')">📄 Review Contract</button>
+            <button class="quick-btn" onclick="quickAction('Draft a standard Non-Disclosure Agreement (NDA).')">📝 Draft NDA</button>
+            <button class="quick-btn" onclick="quickAction('Search for relevant case laws and statutes on this topic: ')">🔍 Legal Research</button>
+            <button class="quick-btn" onclick="quickAction('What is the meaning of life and my purpose?')">🕉️ Ask the Oracle</button>
+        </div>
+
         <div class="status-text" id="inputStatus"></div>
     </div>
 
@@ -239,7 +238,7 @@
     </div>
 </div>
 
-<!-- MODALS (same as before) -->
+<!-- ====== MODALS (same as before) ====== -->
 <div class="modal-overlay" id="loginModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
@@ -267,20 +266,20 @@
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
         <h3>💳 Choose Your Plan</h3>
-        <div onclick="selectPlan('lifetime')" style="background:rgba(212,175,55,0.08); border:2px solid var(--gold); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
-            <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.7rem; color:#888;">(limited to first 1000 users)</span>
-            <span id="lifetimeCount" style="float:right; font-size:0.7rem; color:#666;"></span>
+        <div onclick="selectPlan('lifetime')" style="background:rgba(212,175,55,0.08); border:2px solid var(--gold); padding:10px; border-radius:8px; margin:6px 0; cursor:pointer;">
+            <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.65rem; color:#888;">(limited to first 1000)</span>
+            <span id="lifetimeCount" style="float:right; font-size:0.65rem; color:#666;"></span>
         </div>
-        <div onclick="selectPlan('premium')" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
-            <strong>₹102/month</strong> <span style="font-size:0.7rem; color:#888;">Premium – unlimited queries</span>
+        <div onclick="selectPlan('premium')" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.15); padding:10px; border-radius:8px; margin:6px 0; cursor:pointer;">
+            <strong>₹102/month</strong> <span style="font-size:0.65rem; color:#888;">Premium – unlimited</span>
         </div>
-        <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
-            <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – API + Bulk</span>
+        <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:10px; border-radius:8px; margin:6px 0; cursor:pointer;">
+            <strong>₹1011/month</strong> <span style="font-size:0.65rem; color:#888;">Enterprise – API + Bulk</span>
         </div>
         <input type="hidden" id="paymentPlan" value="lifetime" />
-        <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:12px;margin-top:10px;">Subscribe Now</button>
+        <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:10px;margin-top:8px;">Subscribe Now</button>
         <div id="payment-status" class="status-text"></div>
-        <div style="margin-top:12px; font-size:0.6rem; color:#555; text-align:center;">🔒 Secure payment via Razorpay</div>
+        <div style="margin-top:10px; font-size:0.55rem; color:#555; text-align:center;">🔒 Secure via Razorpay</div>
     </div>
 </div>
 
@@ -305,7 +304,7 @@
         <p><strong>Last Updated:</strong> July 1, 2026</p>
         <p><strong>1. Data Fiduciary:</strong> THE ADVOCACY – A LAW FIRM.</p>
         <p><strong>2. Data Collected:</strong> Email, Username, Queries, Payment info.</p>
-        <p><strong>3. Purpose:</strong> To provide AI-driven assistance and improve our intelligence.</p>
+        <p><strong>3. Purpose:</strong> To provide AI-driven assistance.</p>
         <p><strong>4. Zero Retention:</strong> Queries deleted <strong>every 24 hours</strong>. Events in 30 days.</p>
         <p><strong>5. User Rights:</strong> Access, correct, delete – email <strong>upmanyu@advocacyalawfirm.in</strong>.</p>
         <p><strong>6. Grievance Officer:</strong> The Managing Partner – <strong>upmanyu@advocacyalawfirm.in</strong>.</p>
@@ -317,11 +316,10 @@
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
         <h3>ℹ️ About LexSarthi v7.0</h3>
-        <p><strong>Mission:</strong> "Universal Divine Intelligence" – bridging ancient wisdom with advanced AI.</p>
+        <p><strong>Mission:</strong> "Universal Divine Intelligence" – bridging ancient wisdom with AI.</p>
         <p><strong>Founder:</strong> THE ADVOCACY – A LAW FIRM.</p>
         <p><strong>Tech:</strong> Groq, OpenAI, Gemini, OpenRouter. 220 divine agents. 10 verifiers.</p>
-        <p><strong>Features:</strong> Oracle Mode, Agent Swarm, Bulk Processing, User Memory, Enterprise API.</p>
-        <p><strong>Multilingual:</strong> English, Hindi, Bengali, Sanskrit, Arabic (Voice I/O).</p>
+        <p><strong>Features:</strong> Oracle Mode, Agent Swarm, Bulk Processing, Memory, 24 languages.</p>
         <p><strong>Zero Retention:</strong> Data purged automatically. Fully DPDPA compliant.</p>
         <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
     </div>
@@ -332,16 +330,16 @@
         <button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
         <h3>✅ The 10 Divine Verifiers</h3>
         <div class="verifier-grid">
-            <div class="verifier-card"><div class="v-title">1. Ganesha – Intellect</div><div class="v-desc">Verifies citations and logical consistency</div></div>
-            <div class="verifier-card"><div class="v-title">2. Saraswati – Knowledge</div><div class="v-desc">Cross-references knowledge databases</div></div>
-            <div class="verifier-card"><div class="v-title">3. Hanuman – Devotion</div><div class="v-desc">Checks compliance with global standards</div></div>
-            <div class="verifier-card"><div class="v-title">4. Kartikeya – Strategy</div><div class="v-desc">Detects contradictions and fallacies</div></div>
-            <div class="verifier-card"><div class="v-title">5. Indra – Jurisdiction</div><div class="v-desc">Maps advice to correct context/region</div></div>
-            <div class="verifier-card"><div class="v-title">6. Yama – Justice</div><div class="v-desc">Removes bias and ensures neutrality</div></div>
-            <div class="verifier-card"><div class="v-title">7. Surya – Clarity</div><div class="v-desc">Checks timeline/statute of limitations</div></div>
-            <div class="verifier-card"><div class="v-title">8. Chandra – Precedent</div><div class="v-desc">Matches relevant historical precedents</div></div>
-            <div class="verifier-card"><div class="v-title">9. Vayu – Purity</div><div class="v-desc">Filters exposed PII for privacy</div></div>
-            <div class="verifier-card"><div class="v-title">10. Shiva – Administrator</div><div class="v-desc">Assigns overall risk/confidence score</div></div>
+            <div class="verifier-card"><div class="v-title">1. Ganesha – Intellect</div><div class="v-desc">Verifies citations and logic</div></div>
+            <div class="verifier-card"><div class="v-title">2. Saraswati – Knowledge</div><div class="v-desc">Cross-references knowledge</div></div>
+            <div class="verifier-card"><div class="v-title">3. Hanuman – Devotion</div><div class="v-desc">Compliance checks</div></div>
+            <div class="verifier-card"><div class="v-title">4. Kartikeya – Strategy</div><div class="v-desc">Detects contradictions</div></div>
+            <div class="verifier-card"><div class="v-title">5. Indra – Jurisdiction</div><div class="v-desc">Context/region mapping</div></div>
+            <div class="verifier-card"><div class="v-title">6. Yama – Justice</div><div class="v-desc">Bias removal</div></div>
+            <div class="verifier-card"><div class="v-title">7. Surya – Clarity</div><div class="v-desc">Timeline checks</div></div>
+            <div class="verifier-card"><div class="v-title">8. Chandra – Precedent</div><div class="v-desc">Precedent matching</div></div>
+            <div class="verifier-card"><div class="v-title">9. Vayu – Purity</div><div class="v-desc">PII redaction</div></div>
+            <div class="verifier-card"><div class="v-title">10. Shiva – Administrator</div><div class="v-desc">Risk/confidence score</div></div>
         </div>
         <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
     </div>
@@ -349,7 +347,7 @@
 
 <script>
 // ================================================================
-// LEXSARTHI v7.0 – DIVINE FRONTEND ENGINE
+// LEXSARTHI v7.0 – FRONTEND ENGINE
 // ================================================================
 
 const API_BASE = 'https://upamnyu12-lex.hf.space';
@@ -362,7 +360,7 @@ function getToken() { return localStorage.getItem('lex_token'); }
 (function() {
     const c = document.getElementById('starsContainer');
     if (c) {
-        for (let i=0; i<120; i++) {
+        for (let i=0; i<100; i++) {
             const s = document.createElement('div');
             s.className = 'star';
             const size = Math.random()*2.5+0.5;
@@ -372,58 +370,21 @@ function getToken() { return localStorage.getItem('lex_token'); }
     }
 })();
 
-// ---- 220 Divine Agents ----
-const DIVINE_AGENTS = (() => {
-    const domains = [
-        "Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy",
-        "Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality",
-        "Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science",
-        "Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"
-    ];
-    const names = [
-        "Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama",
-        "Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara",
-        "Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala",
-        "Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"
-    ];
-    const icons = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"];
-    const agents = [];
-    for (let i=1; i<=220; i++) {
-        const name = names[i % names.length] + (i > 200 ? " (Seeker)" : "");
-        const domain = domains[i % domains.length];
-        const icon = icons[i % icons.length];
-        agents.push({ id: `agent_${String(i).padStart(3,'0')}`, name, domain, icon });
-    }
-    return agents;
-})();
-
-function renderAgents() {
-    const container = document.getElementById('agentShowcase');
-    if (!container) return;
-    container.innerHTML = '';
-    DIVINE_AGENTS.slice(0, 30).forEach(agent => {
-        const card = document.createElement('div');
-        card.className = 'agent-card';
-        card.innerHTML = `<i class="fas ${agent.icon}"></i><div class="agent-title">${agent.name}</div><div class="agent-domain">${agent.domain}</div>`;
-        card.onclick = () => {
-            document.getElementById('queryInput').value = `Ask as ${agent.name} about ${agent.domain}`;
-            window._selectedAgent = agent.id;
-            const status = document.getElementById('inputStatus');
-            if (status) status.textContent = `Selected ${agent.name}`;
-        };
-        container.appendChild(card);
-    });
-}
-renderAgents();
-
 function setTyping(active) {
     const el = document.getElementById('typingIndicator');
     if (el) el.classList.toggle('active', active);
 }
 
-// ---- Multilingual Voice ----
+// ---- Voice & Language Mapping ----
+const langMap = {
+    'en':'en-US','es':'es-ES','fr':'fr-FR','de':'de-DE','pt':'pt-BR','it':'it-IT',
+    'nl':'nl-NL','ru':'ru-RU','sv':'sv-SE','pl':'pl-PL','tr':'tr-TR',
+    'hi':'hi-IN','bn':'bn-IN','sa':'sa','ar':'ar-SA',
+    'zh':'zh-CN','ja':'ja-JP','ko':'ko-KR','th':'th-TH','vi':'vi-VN',
+    'id':'id-ID','ms':'ms-MY','he':'he-IL','el':'el-GR'
+};
+
 function startVoice() {
-    const langMap = { 'en':'en-US','hi':'hi-IN','bn':'bn-IN','sa':'sa','ar':'ar-SA' };
     const selectedLang = document.getElementById('langSelect').value;
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = langMap[selectedLang] || 'en-US';
@@ -448,14 +409,12 @@ function startVoice() {
     recognition.start();
 }
 
-// ---- Text-to-Speech ----
 function speakResponse() {
     const chatArea = document.getElementById('chatArea');
     if (!chatArea) return;
     const text = chatArea.innerText || '';
     if (!text.trim()) { alert('No response to speak.'); return; }
     const cleanText = text.replace(/✅ Verified by 10 Divine Layers.*/g, '').trim();
-    const langMap = { 'en':'en-US','hi':'hi-IN','bn':'bn-IN','sa':'sa','ar':'ar-SA' };
     const selectedLang = document.getElementById('langSelect').value;
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = langMap[selectedLang] || 'en-US';
@@ -463,6 +422,15 @@ function speakResponse() {
     utterance.pitch = 1;
     window.speechSynthesis.speak(utterance);
     document.getElementById('inputStatus').textContent = `🔊 Speaking in ${selectedLang}`;
+}
+
+function quickAction(prompt) {
+    const input = document.getElementById('queryInput');
+    if (input) {
+        input.value = prompt;
+        input.focus();
+        sendQuery();
+    }
 }
 
 // ---- Auth ----
@@ -567,20 +535,19 @@ function clearFilePreview() {
     document.getElementById('pdfUpload').value = '';
 }
 
-// ---- Bulk Upload (NEW) ----
+// ---- Bulk Upload ----
 async function handleBulkUpload(input) {
     const files = input.files;
     if (!files.length) return;
     const token = getToken();
     if (!token) { alert('Login first'); showLogin(); return; }
 
-    // Check if user is premium/enterprise (we'll let backend enforce)
     const formData = new FormData();
     for (let f of files) formData.append('files', f);
     const query = document.getElementById('queryInput').value || 'Analyze these documents';
     formData.append('query', query);
     formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
-    formData.append('agent_id', window._selectedAgent || 'agent_001');
+    formData.append('agent_id', 'agent_001');
     formData.append('lang', document.getElementById('langSelect').value || 'en');
 
     document.getElementById('inputStatus').textContent = `📦 Bulk processing started (${files.length} files)...`;
@@ -593,14 +560,12 @@ async function handleBulkUpload(input) {
         const data = await res.json();
         if (res.ok) {
             document.getElementById('inputStatus').textContent = `✅ Bulk job created: ${data.job_id} (${data.total_files} files)`;
-            // Optionally poll for result; for now just inform
         } else {
             document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Bulk upload failed');
         }
     } catch(e) {
         document.getElementById('inputStatus').textContent = '❌ Network error';
     }
-    // Reset input
     input.value = '';
 }
 
@@ -624,7 +589,7 @@ async function sendQuery() {
 
     const lang = document.getElementById('langSelect').value;
     const model = document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile';
-    const agent_id = window._selectedAgent || 'agent_001';
+    const agent_id = 'agent_001';
     const oracle_mode = document.getElementById('oracleModeToggle').checked ? 'true' : 'false';
 
     const formData = new FormData();
@@ -636,7 +601,6 @@ async function sendQuery() {
     formData.append('lang', lang);
     formData.append('oracle_mode', oracle_mode);
 
-    // Build user message
     let userMsg = query || '📎 File uploaded';
     if (uploadedFile) {
         userMsg += `<br><br><span style="font-size:0.7rem; color:var(--gold);">📎 ${uploadedFile.name}</span>`;
