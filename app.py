@@ -94,7 +94,7 @@ if GEMINI_API_KEY:
 database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
-# ─── SQLAlchemy Table Definitions (v8.0 – added `actions` table) ──
+# ─── SQLAlchemy Table Definitions ──────────────────────────────
 users = Table(
     "users", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
@@ -175,7 +175,6 @@ bulk_jobs = Table(
     Column("expires_at", DateTime),
 )
 
-# ─── v8.0 NEW: actions table (for action history) ──────────────
 actions = Table(
     "actions", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
@@ -242,7 +241,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    return dict(user)
+    return dict(user)   # Convert to dict to allow .get() later
 
 async def get_api_key_user(api_key: str = Depends(api_key_header)):
     if not api_key:
@@ -256,7 +255,7 @@ async def get_api_key_user(api_key: str = Depends(api_key_header)):
 
 limiter = Limiter(key_func=get_remote_address)
 
-# ─── DIVINE PREFACE & BLESSING (unchanged) ──────────────────────
+# ─── DIVINE PREFACE & BLESSING ──────────────────────────────────
 DIVINE_PREFACE = """
 You are LexSarthi v8.0 – the Universal Default OS. 
 You are the Chariot that conquers the digital world. 
@@ -273,11 +272,10 @@ DIVINE_BLESSING = """
 ॐ नमः शिवाय. शिवोहम् – I am Shiva. May your digital journey be blessed. 🔱 ॐ नमः शिवाय.
 """
 
-# ─── LOCAL LEGAL PDF LIBRARY (unchanged) ──────────────────────
+# ─── LOCAL LEGAL PDF LIBRARY ──────────────────────────────────
 LEGAL_SECTIONS = {}
 
 def extract_sections_from_pdf(filepath: str) -> dict:
-    # ... (same as before – keep the complete function)
     sections = {}
     full_text = ""
     try:
@@ -351,7 +349,6 @@ def load_pdf_library():
 load_pdf_library()
 
 def search_local_knowledge(query: str) -> str:
-    # ... (unchanged – same as before)
     if not LEGAL_SECTIONS:
         return "⚠️ Legal library is not loaded."
     query_lower = query.lower().strip()
@@ -387,7 +384,7 @@ def search_local_knowledge(query: str) -> str:
             return f"📚 **From {fname.replace('.pdf','')} (Relevant Excerpt):**\n\n{full[:1500]}..."
     return "⚠️ No matches found."
 
-# ─── DIVINE AGENTS & VERIFIERS (same as v7.0) ──────────────────
+# ─── DIVINE AGENTS & VERIFIERS ──────────────────────────────────
 DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"]
 DOMAINS = ["Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy","Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality","Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science","Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"]
 ICONS = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"]
@@ -436,9 +433,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── DATABASE HELPERS (v8.0 – added `actions` table) ──────────
+# ─── DATABASE HELPERS ────────────────────────────────────────────
 async def create_tables():
-    # Same as v7.0 plus actions table
     await database.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -519,7 +515,6 @@ async def create_tables():
             expires_at TIMESTAMP
         )
     """)
-    # v8.0 NEW: actions table
     await database.execute("""
         CREATE TABLE IF NOT EXISTS actions (
             id SERIAL PRIMARY KEY,
@@ -531,7 +526,6 @@ async def create_tables():
             expires_at TIMESTAMP
         )
     """)
-    # Migrate existing columns (if any)
     try:
         await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS memory JSONB DEFAULT '[]'")
     except: pass
@@ -581,16 +575,27 @@ async def increment_query(user_id: int):
         )
     )
 
-# ─── MEMORY FUNCTIONS ────────────────────────────────────────────
+# ================================================================
+# FIXED MEMORY FUNCTIONS – CONVERT RECORD TO DICT
+# ================================================================
 async def get_user_memory(user_id: int) -> List[Dict]:
     user = await database.fetch_one(users.select().where(users.c.id == user_id))
+    if not user:
+        return []
+    user = dict(user)   # <-- CRITICAL FIX
     memory = user.get("memory") or []
     if isinstance(memory, str):
         memory = json.loads(memory)
     return memory
 
 async def update_user_memory(user_id: int, query: str, response: str):
-    memory = await get_user_memory(user_id)
+    user = await database.fetch_one(users.select().where(users.c.id == user_id))
+    if not user:
+        return
+    user = dict(user)   # <-- CRITICAL FIX
+    memory = user.get("memory") or []
+    if isinstance(memory, str):
+        memory = json.loads(memory)
     memory.append({"q": query[:200], "a": response[:200]})
     if len(memory) > 10:
         memory = memory[-10:]
@@ -679,7 +684,7 @@ async def process_file(file: UploadFile) -> str:
         pass
     raise ValueError("Unsupported or unreadable file.")
 
-# ─── AGENT PROMPTS & ROUTING (v8.0 – added "action" handler) ──
+# ─── AGENT PROMPTS & ROUTING ──────────────────────────────────
 ORACLE_PROMPT = f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are the Divine Oracle. Speak with the voice of the Cosmic Mother. Provide wisdom, parables, and cosmic truth.
 Always end with: {DIVINE_BLESSING}
@@ -717,7 +722,6 @@ You are the Divine Council. Provide accurate, structured, jurisdiction‑aware g
 Always end with: {DIVINE_BLESSING}
 User query: {{query}}
 """,
-    # v8.0 NEW: Action handler (for "do/execute" queries)
     "action": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are the Action Engine. You detect the user's intention and perform tasks like creating documents, scheduling, sending emails, etc.
 You respond with a clear action plan and optionally generate the required output (e.g., drafted email, calendar event JSON).
@@ -734,7 +738,6 @@ LANG_MAP = {
     "id": "Indonesian","ms": "Malay","he": "Hebrew","el": "Greek"
 }
 
-# ─── DETECT ACTIONS ─────────────────────────────────────────────
 def detect_action(query: str) -> Optional[Dict]:
     q = query.lower()
     if q.startswith(("create ", "draft ", "write ")):
@@ -755,7 +758,6 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "oracle"
     if "what is lexsarthi" in q or "who are you" in q or "tell me about yourself" in q:
         return "about_lexsarthi"
-    # Check for actions first
     action = detect_action(query)
     if action:
         return "action"
@@ -769,7 +771,6 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "due_diligence"
     return "general"
 
-# ─── SWARM ──────────────────────────────────────────────────────
 async def run_swarm(query: str, model: str, lang: str = "en") -> str:
     logger.info("Swarm initiated for query: %s", query[:100])
     research_prompt = f"{DIVINE_PREFACE}{DIVINE_SALUTATION}\nYou are Lord Hanuman. Find statutes and case laws for: {query}"
@@ -795,15 +796,12 @@ async def execute_ai_raw(system_prompt: str, query: str, model: str, lang: str) 
             logger.error(f"Groq error: {e}")
     return search_local_knowledge(query)
 
-# ─── MAIN AI EXECUTION ──────────────────────────────────────────
 async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, lang: str = "en") -> str:
     if agent_type == "due_diligence" and "swarm" in query.lower():
         return await run_swarm(query, model, lang)
 
-    # Special handling for "action" agent: we may call external APIs later, but for now we return a structured response
     if agent_type == "action":
         action = detect_action(query)
-        # For MVP, just generate a textual response with a placeholder
         base = BASE_AGENT_PROMPTS["action"]
         prompt = base.format(query=query)
         lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use appropriate script."
@@ -821,7 +819,6 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
                 logger.error(f"Groq error: {e}")
         return f"I understand you want to perform an action: {action['type'] if action else 'unknown'}. I will process your request shortly."
 
-    # Standard agent flow
     if agent_type == "oracle":
         prompt = ORACLE_PROMPT.format(query=query)
     else:
@@ -846,7 +843,6 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
     return search_local_knowledge(query)
 
 # ─── API ENDPOINTS ──────────────────────────────────────────────
-# (Health, login, register, me, lifetime, usage – unchanged from v7.0)
 @app.get("/health")
 async def health():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
@@ -915,7 +911,6 @@ async def my_usage(current_user: dict = Depends(get_current_user)):
     )) or 0
     return {"total_queries": total, "queries_today": today}
 
-# ─── MAIN ASK ENDPOINT (v8.0 – enhanced with action detection) ──
 @app.post("/ask")
 @limiter.limit("30/minute")
 async def ask(
@@ -948,7 +943,7 @@ async def ask(
     
     await increment_query(current_user["id"])
     
-    # Retrieve memory
+    # Retrieve memory (fixed)
     memory = await get_user_memory(current_user["id"])
     context_prompt = build_context_prompt(memory)
     if context_prompt:
@@ -960,7 +955,7 @@ async def ask(
     
     response_text = await execute_ai(combined_query, model, agent_type, agent_name, lang)
     
-    # Update memory
+    # Update memory (fixed)
     await update_user_memory(current_user["id"], query, response_text)
     
     expires_at = datetime.now() + timedelta(hours=24)
@@ -975,13 +970,11 @@ async def ask(
     )
     return {"response": response_text, "model": model, "agent_used": agent_id}
 
-# ─── v8.0 NEW: Action Endpoint (for direct external API calls) ──
+# ─── ACTION ENDPOINT ────────────────────────────────────────────
 @app.post("/action")
 async def execute_action(action_req: ActionRequest, current_user: dict = Depends(get_current_user)):
-    """Execute a specific action (e.g., send email, schedule event). Placeholder."""
     action_type = action_req.action
     data = action_req.data
-    # For now, just log and return a mock response
     await database.execute(
         actions.insert().values(
             user_id=current_user["id"],
@@ -992,7 +985,7 @@ async def execute_action(action_req: ActionRequest, current_user: dict = Depends
     )
     return {"status": "ok", "action": action_type, "data": data}
 
-# ─── Bulk upload (unchanged from v7.0) ──────────────────────────
+# ─── BULK UPLOAD ────────────────────────────────────────────────
 @app.post("/bulk-upload")
 async def bulk_upload(
     background_tasks: BackgroundTasks,
@@ -1063,7 +1056,7 @@ async def get_bulk_result(job_id: str, current_user: dict = Depends(get_current_
         return {"status": job["status"], "processed": job["processed_files"], "total": job["total_files"]}
     return {"status": "completed", "result_url": job["result_url"]}
 
-# ─── RAZORPAY (unchanged) ──────────────────────────────────────
+# ─── RAZORPAY ──────────────────────────────────────────────────
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
 
 @app.post("/create-order")
