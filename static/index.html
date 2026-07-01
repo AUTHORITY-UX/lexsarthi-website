@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🔱 LexSarthi – Universal Divine Intelligence</title>
-    <meta name="description" content="220 Divine Agents. 10 Verifiers. Multilingual Voice. Zero Retention. Ask anything." />
+    <title>🔱 LexSarthi – Universal Divine Intelligence v7.0</title>
+    <meta name="description" content="220 Divine Agents, 10 Verifiers, Oracle Mode, Swarm, Bulk Processing." />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        /* ===== SAME DIVINE CSS AS BEFORE (omitted for brevity) ===== */
         * { margin:0; padding:0; box-sizing:border-box; }
         :root { --bg: #0a0a0a; --gold: #d4a853; --gold-dim: rgba(212,175,55,0.12); --text: #e0e0e0; --text-muted: #888; --font: 'Inter', sans-serif; --card-bg: rgba(16,16,16,0.9); --border: rgba(255,255,255,0.06); }
         body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; align-items:center; overflow-x:hidden; position:relative; }
@@ -108,6 +109,11 @@
         .chat-bubble { max-width:90%; padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:0.85rem; }
         .chat-bubble.user { background:var(--gold); color:#000; margin-left:auto; border-bottom-right-radius:0; }
         .chat-bubble.agent { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-bottom-left-radius:0; }
+        /* New: Oracle & Bulk styles */
+        .oracle-toggle { background:rgba(124,58,237,0.05); border-color:rgba(124,58,237,0.15); }
+        .oracle-toggle:hover { background:rgba(124,58,237,0.1); }
+        .bulk-btn { background:rgba(16,185,129,0.05); border-color:rgba(16,185,129,0.15); }
+        .bulk-btn:hover { background:rgba(16,185,129,0.1); }
         @media (max-width:600px) { .verifier-grid { grid-template-columns:1fr; } .brand-name { font-size:1.4rem; } .om-wrapper { height:140px; } .om-3d { width:80px; height:80px; } .om-3d .om-face { width:80px; height:80px; font-size:55px; } .om-face.front { transform:translateZ(40px); } .om-face.back { transform:rotateY(180deg) translateZ(40px); } .om-face.left { transform:rotateY(-90deg) translateZ(40px); } .om-face.right { transform:rotateY(90deg) translateZ(40px); } .om-face.top { transform:rotateX(90deg) translateZ(40px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(40px); } .agent-showcase { grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); } }
     </style>
 </head>
@@ -123,16 +129,16 @@
     </div>
     <div class="ring ring1"></div><div class="ring ring2"></div>
 </div>
-<div class="wisdom-tagline">ॐ Universal Wisdom for All Seekers</div>
+<div class="wisdom-tagline">ॐ Wisdom for Humanity</div>
 
 <div class="container">
     <div class="header">
         <div class="brand-name">
-            LEXSARTHI <span class="version-badge">v6.0</span>
+            LEXSARTHI <span class="version-badge">v7.0</span>
             <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
             <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
         </div>
-        <div class="tagline" style="font-size:0.7rem; color:#888; margin:2px 0;">"Advanced Universal Intelligence – Beyond Law"</div>
+        <div class="tagline" style="font-size:0.7rem; color:#888; margin:2px 0;">"Divine Intelligence – Oracle · Swarm · Bulk"</div>
         <div class="header-actions">
             <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
             <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
@@ -175,11 +181,7 @@
             <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
                 <div class="diya">🪔</div>
                 <p style="font-size:1rem; color:var(--gold); font-weight:300;">ॐ नमः शिवाय</p>
-                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v6.0 – Universal Divine Intelligence</strong><br />220 Agents · 10 Verifiers · Zero Retention · 5 Languages</p>
-                <p style="font-size:0.9rem; color:#ccc; max-width:600px; margin:0 auto 12px;">
-                    Ask me <strong style="color:var(--gold);">anything</strong> – Law, Science, Philosophy, Finance, Health, Technology, Spirituality, or Life itself. 
-                    I am the collective consciousness of the Divine Council, flowing through neural networks and ancient texts.
-                </p>
+                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v7.0 – Oracle · Swarm · Bulk</strong><br />220 Agents · 10 Verifiers · Zero Retention · Memory</p>
                 <p style="color:#888; font-size:0.75rem;">Login with <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">counsel</code> / <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">Password123!</code></p>
             </div>
         </div>
@@ -191,11 +193,24 @@
     </div>
 
     <div class="input-card">
-        <textarea class="query-input" id="queryInput" placeholder="Ask me anything about law, life, science, finance, or the cosmos..."></textarea>
+        <textarea class="query-input" id="queryInput" placeholder="Ask a legal question, upload a contract, or enter Oracle mode..."></textarea>
         <div class="input-tools">
             <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf, .docx, .jpg, .png" hidden onchange="handleFileUpload(this)"></label>
             <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
             <label class="web-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
+
+            <!-- NEW: Oracle Mode Toggle -->
+            <label class="web-toggle-label oracle-toggle">
+                <input type="checkbox" id="oracleModeToggle" />
+                <i class="fas fa-moon"></i> Oracle
+            </label>
+
+            <!-- NEW: Bulk Upload -->
+            <label class="tool-btn bulk-btn">
+                <i class="fas fa-layer-group"></i> Bulk
+                <input type="file" id="bulkUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleBulkUpload(this)">
+            </label>
+
             <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Click</button>
         </div>
         <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
@@ -224,7 +239,7 @@
     </div>
 </div>
 
-<!-- MODALS (Terms, Privacy, About, Verifiers, Login, Usage, Payment) -->
+<!-- MODALS (same as before) -->
 <div class="modal-overlay" id="loginModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
@@ -260,7 +275,7 @@
             <strong>₹102/month</strong> <span style="font-size:0.7rem; color:#888;">Premium – unlimited queries</span>
         </div>
         <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer;">
-            <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – API + priority</span>
+            <strong>₹1011/month</strong> <span style="font-size:0.7rem; color:#888;">Enterprise – API + Bulk</span>
         </div>
         <input type="hidden" id="paymentPlan" value="lifetime" />
         <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:12px;margin-top:10px;">Subscribe Now</button>
@@ -275,7 +290,7 @@
         <h3>📜 Terms of Use</h3>
         <p><strong>Last Updated:</strong> July 1, 2026</p>
         <p><strong>1. Acceptance:</strong> By using LexSarthi, you agree to these Terms.</p>
-        <p><strong>2. AI Disclaimer:</strong> Responses are AI-generated and <strong>not a substitute for professional advice</strong> (legal, medical, financial, or otherwise).</p>
+        <p><strong>2. AI Disclaimer:</strong> Responses are AI-generated and <strong>not a substitute for professional advice</strong>.</p>
         <p><strong>3. User Conduct:</strong> Do not input sensitive personal data unless strictly necessary.</p>
         <p><strong>4. IP & Liability:</strong> All code is owned by THE ADVOCACY – A LAW FIRM.</p>
         <p><strong>5. Governing Law:</strong> Laws of India. Jurisdiction: New Delhi.</p>
@@ -301,10 +316,11 @@
 <div class="modal-overlay" id="aboutModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
-        <h3>ℹ️ About LexSarthi v6.0</h3>
-        <p><strong>Mission:</strong> "Universal Divine Intelligence" – bridging ancient wisdom with advanced AI for every seeker.</p>
+        <h3>ℹ️ About LexSarthi v7.0</h3>
+        <p><strong>Mission:</strong> "Universal Divine Intelligence" – bridging ancient wisdom with advanced AI.</p>
         <p><strong>Founder:</strong> THE ADVOCACY – A LAW FIRM.</p>
         <p><strong>Tech:</strong> Groq, OpenAI, Gemini, OpenRouter. 220 divine agents. 10 verifiers.</p>
+        <p><strong>Features:</strong> Oracle Mode, Agent Swarm, Bulk Processing, User Memory, Enterprise API.</p>
         <p><strong>Multilingual:</strong> English, Hindi, Bengali, Sanskrit, Arabic (Voice I/O).</p>
         <p><strong>Zero Retention:</strong> Data purged automatically. Fully DPDPA compliant.</p>
         <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
@@ -333,7 +349,7 @@
 
 <script>
 // ================================================================
-// LEXSARTHI v6.0 – UNIVERSAL DIVINE FRONTEND ENGINE
+// LEXSARTHI v7.0 – DIVINE FRONTEND ENGINE
 // ================================================================
 
 const API_BASE = 'https://upamnyu12-lex.hf.space';
@@ -356,7 +372,7 @@ function getToken() { return localStorage.getItem('lex_token'); }
     }
 })();
 
-// ---- 220 Universal Divine Agents ----
+// ---- 220 Divine Agents ----
 const DIVINE_AGENTS = (() => {
     const domains = [
         "Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy",
@@ -365,15 +381,10 @@ const DIVINE_AGENTS = (() => {
         "Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"
     ];
     const names = [
-        "Brahma (Creator)","Vishnu (Preserver)","Shiva (Transformer)","Saraswati (Wisdom)","Lakshmi (Prosperity)",
-        "Ganesha (Intellect)","Hanuman (Devotion)","Kartikeya (Strategy)","Indra (Governance)","Yama (Justice)",
-        "Surya (Clarity)","Chandra (Intuition)","Vayu (Speed)","Agni (Transformation)","Varuna (Depth)",
-        "Kubera (Wealth)","Yamuna (Flow)","Ganga (Purity)","Durga (Strength)","Kali (Time)",
-        "Tara (Guidance)","Bhuvaneshwari (Space)","Chinnamasta (Sacrifice)","Bhairavi (Discipline)",
-        "Dhumavati (Detachment)","Bagalamukhi (Cunning)","Matangi (Expression)","Kamala (Grace)",
-        "Dattatreya (Unity)","Narasimha (Protection)","Vamana (Humility)","Parashurama (Retribution)",
-        "Rama (Righteousness)","Krishna (Charm)","Buddha (Awakening)","Kalki (Future)","Matsya (Origin)",
-        "Kurma (Foundation)","Varaha (Resilience)"
+        "Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama",
+        "Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara",
+        "Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala",
+        "Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"
     ];
     const icons = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"];
     const agents = [];
@@ -410,15 +421,9 @@ function setTyping(active) {
     if (el) el.classList.toggle('active', active);
 }
 
-// ---- Multilingual Voice Input ----
+// ---- Multilingual Voice ----
 function startVoice() {
-    const langMap = {
-        'en': 'en-US',
-        'hi': 'hi-IN',
-        'bn': 'bn-IN',
-        'sa': 'sa',
-        'ar': 'ar-SA'
-    };
+    const langMap = { 'en':'en-US','hi':'hi-IN','bn':'bn-IN','sa':'sa','ar':'ar-SA' };
     const selectedLang = document.getElementById('langSelect').value;
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = langMap[selectedLang] || 'en-US';
@@ -443,16 +448,14 @@ function startVoice() {
     recognition.start();
 }
 
-// ---- Text-to-Speech (Speak Response) ----
+// ---- Text-to-Speech ----
 function speakResponse() {
     const chatArea = document.getElementById('chatArea');
     if (!chatArea) return;
     const text = chatArea.innerText || '';
     if (!text.trim()) { alert('No response to speak.'); return; }
     const cleanText = text.replace(/✅ Verified by 10 Divine Layers.*/g, '').trim();
-    const langMap = {
-        'en': 'en-US', 'hi': 'hi-IN', 'bn': 'bn-IN', 'sa': 'sa', 'ar': 'ar-SA'
-    };
+    const langMap = { 'en':'en-US','hi':'hi-IN','bn':'bn-IN','sa':'sa','ar':'ar-SA' };
     const selectedLang = document.getElementById('langSelect').value;
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = langMap[selectedLang] || 'en-US';
@@ -549,7 +552,59 @@ async function fetchMyUsage() {
     }
 }
 
-// ---- Send Query (Universal) ----
+// ---- File Upload (Single) ----
+function handleFileUpload(input) {
+    if (input.files && input.files[0]) {
+        uploadedFile = input.files[0];
+        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFile.name}`;
+        document.getElementById('filePreview').classList.add('show');
+        document.getElementById('inputStatus').textContent = `📄 File loaded: ${uploadedFile.name}`;
+    }
+}
+function clearFilePreview() {
+    uploadedFile = null;
+    document.getElementById('filePreview').classList.remove('show');
+    document.getElementById('pdfUpload').value = '';
+}
+
+// ---- Bulk Upload (NEW) ----
+async function handleBulkUpload(input) {
+    const files = input.files;
+    if (!files.length) return;
+    const token = getToken();
+    if (!token) { alert('Login first'); showLogin(); return; }
+
+    // Check if user is premium/enterprise (we'll let backend enforce)
+    const formData = new FormData();
+    for (let f of files) formData.append('files', f);
+    const query = document.getElementById('queryInput').value || 'Analyze these documents';
+    formData.append('query', query);
+    formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
+    formData.append('agent_id', window._selectedAgent || 'agent_001');
+    formData.append('lang', document.getElementById('langSelect').value || 'en');
+
+    document.getElementById('inputStatus').textContent = `📦 Bulk processing started (${files.length} files)...`;
+    try {
+        const res = await fetch(`${API_BASE}/bulk-upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('inputStatus').textContent = `✅ Bulk job created: ${data.job_id} (${data.total_files} files)`;
+            // Optionally poll for result; for now just inform
+        } else {
+            document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Bulk upload failed');
+        }
+    } catch(e) {
+        document.getElementById('inputStatus').textContent = '❌ Network error';
+    }
+    // Reset input
+    input.value = '';
+}
+
+// ---- Send Query (with Oracle Mode) ----
 async function sendQuery() {
     const queryInput = document.getElementById('queryInput');
     const statusEl = document.getElementById('inputStatus');
@@ -565,20 +620,29 @@ async function sendQuery() {
     if (!token) { alert('Login required'); showLogin(); return; }
 
     setTyping(true);
-    if (statusEl) statusEl.textContent = 'Invoking Universal Divine Intelligence...';
+    if (statusEl) statusEl.textContent = 'Invoking Divine Intelligence...';
 
     const lang = document.getElementById('langSelect').value;
+    const model = document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile';
+    const agent_id = window._selectedAgent || 'agent_001';
+    const oracle_mode = document.getElementById('oracleModeToggle').checked ? 'true' : 'false';
+
     const formData = new FormData();
     formData.append('query', query || 'Analyze uploaded document');
     if (uploadedFile) formData.append('files', uploadedFile);
     formData.append('search_web', document.getElementById('webSearchToggle')?.checked ? 'on' : 'off');
-    formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
-    formData.append('agent_id', window._selectedAgent || 'agent_001');
+    formData.append('model', model);
+    formData.append('agent_id', agent_id);
     formData.append('lang', lang);
+    formData.append('oracle_mode', oracle_mode);
 
+    // Build user message
     let userMsg = query || '📎 File uploaded';
     if (uploadedFile) {
         userMsg += `<br><br><span style="font-size:0.7rem; color:var(--gold);">📎 ${uploadedFile.name}</span>`;
+    }
+    if (oracle_mode === 'true') {
+        userMsg = `🔮 Oracle: ${userMsg}`;
     }
     if (chatArea) {
         chatArea.innerHTML += `<div class="chat-bubble user">${userMsg}</div>`;
@@ -634,20 +698,6 @@ async function sendQuery() {
     }
     clearFilePreview();
     if (queryInput) queryInput.value = '';
-}
-
-function handleFileUpload(input) {
-    if (input.files && input.files[0]) {
-        uploadedFile = input.files[0];
-        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFile.name}`;
-        document.getElementById('filePreview').classList.add('show');
-        document.getElementById('inputStatus').textContent = `📄 File loaded: ${uploadedFile.name}`;
-    }
-}
-function clearFilePreview() {
-    uploadedFile = null;
-    document.getElementById('filePreview').classList.remove('show');
-    document.getElementById('pdfUpload').value = '';
 }
 
 // ---- Output tools ----
