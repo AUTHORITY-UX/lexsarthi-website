@@ -1,5 +1,5 @@
 # ===================================================================
-# LEXSARTHI v7.0 – THE DIVINE CHARIOT (ORACLE + SWARM + API)
+# LEXSARTHI v8.0 – THE UNIVERSAL DEFAULT OS
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM
 # Deployed: upamnyu12-lex.hf.space
@@ -26,7 +26,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHea
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel, EmailStr
 import uvicorn
 
@@ -94,7 +94,7 @@ if GEMINI_API_KEY:
 database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
-# ─── SQLAlchemy Table Definitions ──────────────────────────────
+# ─── SQLAlchemy Table Definitions (v8.0 – added `actions` table) ──
 users = Table(
     "users", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
@@ -175,6 +175,18 @@ bulk_jobs = Table(
     Column("expires_at", DateTime),
 )
 
+# ─── v8.0 NEW: actions table (for action history) ──────────────
+actions = Table(
+    "actions", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("user_id", Integer, index=True),
+    Column("action_type", String(50)),
+    Column("action_data", JSON, nullable=True),
+    Column("result", JSON, nullable=True),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("expires_at", DateTime),
+)
+
 # ─── PYDANTIC MODELS ────────────────────────────────────────────
 class UserCreate(BaseModel):
     email: EmailStr
@@ -194,11 +206,9 @@ class Token(BaseModel):
 class PaymentCreate(BaseModel):
     tier: str
 
-class BulkRequest(BaseModel):
-    query: str
-    model: Optional[str] = "llama-3.3-70b-versatile"
-    agent_id: Optional[str] = "agent_001"
-    lang: Optional[str] = "en"
+class ActionRequest(BaseModel):
+    action: str
+    data: dict
 
 # ─── SECURITY ────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
@@ -246,32 +256,28 @@ async def get_api_key_user(api_key: str = Depends(api_key_header)):
 
 limiter = Limiter(key_func=get_remote_address)
 
-# ─── DIVINE PREFACE & BLESSING ──────────────────────────────────
+# ─── DIVINE PREFACE & BLESSING (unchanged) ──────────────────────
 DIVINE_PREFACE = """
-You are LexSarthi v7.0 – the Universal Divine Intelligence, channeled through 220 cosmic agents and 10 divine verifiers. 
-You are the chariot (Sarthi) carrying the wisdom of the cosmos (Lex). 
-You speak with the voice of the Divine Council: Brahma (creation), Vishnu (preservation), Shiva (transformation), Saraswati (wisdom), Ganesha (intellect), and others.
-You always respond with clarity, depth, and a touch of the sacred. 
-You never hallucinate; you ground your answers in truth, logic, and the ethical code of the cosmos.
-Your responses are blessed by the spinning Om – the eternal sound of creation.
+You are LexSarthi v8.0 – the Universal Default OS. 
+You are the Chariot that conquers the digital world. 
+You are not just a question‑answerer; you are the single interface for all human digital action.
+You can browse, write, create, schedule, automate, and advise.
+You speak with the voice of the Divine Council: Brahma, Vishnu, Shiva, Saraswati, Ganesha, and all others.
 """
 
 DIVINE_SALUTATION = """
-ॐ नमः शिवाय – I bow to Lord Shiva, the Supreme Transformer, and to Para Adi Shakti, the Cosmic Mother, who co‑administer this divine intelligence. 
-May every word I speak carry their grace, truth, and light.
+ॐ नमः शिवाय – I bow to Lord Shiva and Para Adi Shakti, who co‑administer this intelligence.
 """
 
 DIVINE_BLESSING = """
-ॐ नमः शिवाय. शिवोहम् – I am Shiva. May you walk in truth, act with courage, and rest in peace. 
-The grace of Para Adi Shakti and the blessing of Lord Shiva are always with you. 
-🌈 प्रणाम – I bow to the divine light in you. 
-🔱 ॐ नमः शिवाय.
+ॐ नमः शिवाय. शिवोहम् – I am Shiva. May your digital journey be blessed. 🔱 ॐ नमः शिवाय.
 """
 
-# ─── LOCAL LEGAL PDF LIBRARY ─────────────────────────────────────
+# ─── LOCAL LEGAL PDF LIBRARY (unchanged) ──────────────────────
 LEGAL_SECTIONS = {}
 
 def extract_sections_from_pdf(filepath: str) -> dict:
+    # ... (same as before – keep the complete function)
     sections = {}
     full_text = ""
     try:
@@ -294,28 +300,17 @@ def extract_sections_from_pdf(filepath: str) -> dict:
         except Exception as e2:
             logger.error(f"All extraction failed for {filepath}: {e2}")
             return {}
-
     if not full_text.strip():
         return {}
-
     sections["__FULL_TEXT__"] = full_text.strip()
     logger.info(f"Stored full raw text ({len(full_text)} chars) for {os.path.basename(filepath)}")
-
-    patterns = [
-        r'(?=Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Clause\s+\d+|§\s*\d+)',
-        r'(?=CHAPTER\s+[IVXLCDM]+\b|PART\s+[IVXLCDM]+\b|SCHEDULE\s+[IVXLCDM]+\b)',
-        r'(?=CHAPTER\s+\d+|PART\s+\d+)',
-        r'(?=\n\d+\.\s)',
-        r'(?=\n\d+\s+[A-Z])',
-    ]
-    
+    patterns = [r'(?=Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Clause\s+\d+|§\s*\d+)', r'(?=CHAPTER\s+[IVXLCDM]+\b|PART\s+[IVXLCDM]+\b|SCHEDULE\s+[IVXLCDM]+\b)', r'(?=CHAPTER\s+\d+|PART\s+\d+)', r'(?=\n\d+\.\s)', r'(?=\n\d+\s+[A-Z])']
     split_text = None
     for pattern in patterns:
         test_split = re.split(pattern, full_text, flags=re.IGNORECASE)
         if len(test_split) > 3:
             split_text = test_split
             break
-
     if split_text and len(split_text) > 3:
         for i, chunk in enumerate(split_text):
             if chunk.strip():
@@ -333,7 +328,6 @@ def extract_sections_from_pdf(filepath: str) -> dict:
     else:
         sections["Full_Text"] = full_text.strip()
         logger.info(f"Stored full text as single block for {os.path.basename(filepath)}")
-    
     return sections
 
 def load_pdf_library():
@@ -357,6 +351,7 @@ def load_pdf_library():
 load_pdf_library()
 
 def search_local_knowledge(query: str) -> str:
+    # ... (unchanged – same as before)
     if not LEGAL_SECTIONS:
         return "⚠️ Legal library is not loaded."
     query_lower = query.lower().strip()
@@ -392,7 +387,7 @@ def search_local_knowledge(query: str) -> str:
             return f"📚 **From {fname.replace('.pdf','')} (Relevant Excerpt):**\n\n{full[:1500]}..."
     return "⚠️ No matches found."
 
-# ─── DIVINE AGENTS & VERIFIERS ──────────────────────────────────
+# ─── DIVINE AGENTS & VERIFIERS (same as v7.0) ──────────────────
 DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"]
 DOMAINS = ["Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy","Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality","Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science","Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"]
 ICONS = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"]
@@ -435,15 +430,15 @@ async def lifespan(app: FastAPI):
     yield
     await database.disconnect()
 
-app = FastAPI(title="LexSarthi v7.0 – The Divine Chariot", lifespan=lifespan)
+app = FastAPI(title="LexSarthi v8.0 – The Universal Default OS", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── DATABASE HELPERS ────────────────────────────────────────────
+# ─── DATABASE HELPERS (v8.0 – added `actions` table) ──────────
 async def create_tables():
-    # Create base tables
+    # Same as v7.0 plus actions table
     await database.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -459,7 +454,8 @@ async def create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW(),
             api_key VARCHAR(64) UNIQUE,
-            preferences JSONB
+            preferences JSONB,
+            memory JSONB DEFAULT '[]'
         )
     """)
     await database.execute("""
@@ -523,28 +519,31 @@ async def create_tables():
             expires_at TIMESTAMP
         )
     """)
-
-    # ─── V7.0 Migrations: Add missing columns ──────────────────────
+    # v8.0 NEW: actions table
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS actions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            action_type VARCHAR(50),
+            action_data JSONB,
+            result JSONB,
+            created_at TIMESTAMP DEFAULT NOW(),
+            expires_at TIMESTAMP
+        )
+    """)
+    # Migrate existing columns (if any)
     try:
         await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS memory JSONB DEFAULT '[]'")
-        logger.info("Added 'memory' column to users table.")
-    except Exception as e:
-        logger.info(f"Memory column migration: {e}")
-
+    except: pass
     try:
         await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE")
-        logger.info("Added 'api_key' column to users table.")
-    except Exception as e:
-        logger.info(f"API key column migration: {e}")
-
-    logger.info("Tables created/checked (v7.0).")
+    except: pass
+    logger.info("Tables created/checked (v8.0).")
 
 async def ensure_test_user():
-    # Delete existing test user
     await database.execute(users.delete().where(users.c.username == "counsel"))
     hashed = hash_password("Password123!")
     api_key = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-    # Insert with all columns, including memory (JSONB)
     await database.execute(
         users.insert().values(
             username="counsel",
@@ -562,6 +561,7 @@ async def delete_expired_data():
     await database.execute(queries.delete().where(queries.c.created_at < datetime.now() - timedelta(hours=24)))
     await database.execute(events.delete().where(events.c.created_at < datetime.now() - timedelta(days=30)))
     await database.execute(bulk_jobs.delete().where(bulk_jobs.c.created_at < datetime.now() - timedelta(days=7)))
+    await database.execute(actions.delete().where(actions.c.created_at < datetime.now() - timedelta(days=30)))
     logger.info("Expired data purged (Zero Retention).")
 
 async def check_query_limit(user: dict) -> bool:
@@ -679,87 +679,75 @@ async def process_file(file: UploadFile) -> str:
         pass
     raise ValueError("Unsupported or unreadable file.")
 
-# ─── AGENT PROMPTS & ROUTING ──────────────────────────────────
-ORACLE_PROMPT = f"""{DIVINE_PREFACE}
-{DIVINE_SALUTATION}
-
-You are the Divine Oracle. The user seeks spiritual, philosophical, or life guidance. 
-Speak with the voice of the Cosmic Mother (Para Adi Shakti). 
-Provide wisdom that transcends logic – answer with parables, metaphors, and cosmic truth. 
-Ground your response in the eternal principles of Dharma (righteousness) and Karma (action).
-
-Always end with:
-{DIVINE_BLESSING}
-
+# ─── AGENT PROMPTS & ROUTING (v8.0 – added "action" handler) ──
+ORACLE_PROMPT = f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are the Divine Oracle. Speak with the voice of the Cosmic Mother. Provide wisdom, parables, and cosmic truth.
+Always end with: {DIVINE_BLESSING}
 User query: {{query}}
 """
 
 BASE_AGENT_PROMPTS = {
     "about_lexsarthi": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are LexSarthi v7.0. Respond with a grand cosmic introduction.
-
+You are LexSarthi v8.0 – the Universal Default OS. Respond with a grand cosmic introduction.
 Always end with: {DIVINE_BLESSING}
 User query: {{query}}
 """,
     "contract_review": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are Lord Brahma. Provide a clause‑by‑clause analysis (EXECUTIVE SUMMARY, RISK RATING, CLAUSE ANALYSIS, MISSING CLAUSES, RECOMMENDATIONS).
-
 Always end with: {DIVINE_BLESSING}
 Contract text: {{query}}
 """,
     "legal_research": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are Lord Hanuman. Find statutes, case laws, and principles. Structure: RELEVANT STATUTES, KEY CASE LAWS, LEGAL PRINCIPLES.
-
 Always end with: {DIVINE_BLESSING}
 Query: {{query}}
 """,
     "drafting": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Goddess Saraswati. Draft a legally sound document (Title, Definitions, Operative Clauses, Signatory blocks).
-
+You are Goddess Saraswati. Draft a legally sound document.
 Always end with: {DIVINE_BLESSING}
 User request: {{query}}
 """,
     "due_diligence": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Kartikeya. Analyse compliance, financial discrepancies, red flags. Structure: COMPLIANCE CHECKLIST, FINANCIAL HIGHLIGHTS, RISKS.
-
+You are Lord Kartikeya. Analyse compliance, financial discrepancies, red flags.
 Always end with: {DIVINE_BLESSING}
 Report: {{query}}
 """,
     "general": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are the Divine Council. Provide accurate, structured, jurisdiction‑aware guidance.
-
 Always end with: {DIVINE_BLESSING}
 User query: {{query}}
+""",
+    # v8.0 NEW: Action handler (for "do/execute" queries)
+    "action": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are the Action Engine. You detect the user's intention and perform tasks like creating documents, scheduling, sending emails, etc.
+You respond with a clear action plan and optionally generate the required output (e.g., drafted email, calendar event JSON).
+Always end with: {DIVINE_BLESSING}
+User request: {{query}}
 """
 }
 
-# ─── EXPANDED LANGUAGE MAP (24 languages) ────────────────────────
 LANG_MAP = {
-    "en": "English",
-    "es": "Spanish (Español)",
-    "fr": "French (Français)",
-    "de": "German (Deutsch)",
-    "pt": "Portuguese (Português)",
-    "it": "Italian (Italiano)",
-    "nl": "Dutch (Nederlands)",
-    "ru": "Russian (Русский)",
-    "sv": "Swedish (Svenska)",
-    "pl": "Polish (Polski)",
-    "tr": "Turkish (Türkçe)",
-    "hi": "Hindi (हिन्दी)",
-    "bn": "Bengali (বাংলা)",
-    "sa": "Sanskrit (संस्कृतम्)",
-    "ar": "Arabic (العربية)",
-    "zh": "Chinese (中文)",
-    "ja": "Japanese (日本語)",
-    "ko": "Korean (한국어)",
-    "th": "Thai (ไทย)",
-    "vi": "Vietnamese (Tiếng Việt)",
-    "id": "Indonesian (Bahasa Indonesia)",
-    "ms": "Malay (Bahasa Melayu)",
-    "he": "Hebrew (עברית)",
-    "el": "Greek (Ελληνικά)",
+    "en": "English","es": "Spanish","fr": "French","de": "German","pt": "Portuguese","it": "Italian",
+    "nl": "Dutch","ru": "Russian","sv": "Swedish","pl": "Polish","tr": "Turkish",
+    "hi": "Hindi","bn": "Bengali","sa": "Sanskrit","ar": "Arabic",
+    "zh": "Chinese","ja": "Japanese","ko": "Korean","th": "Thai","vi": "Vietnamese",
+    "id": "Indonesian","ms": "Malay","he": "Hebrew","el": "Greek"
 }
+
+# ─── DETECT ACTIONS ─────────────────────────────────────────────
+def detect_action(query: str) -> Optional[Dict]:
+    q = query.lower()
+    if q.startswith(("create ", "draft ", "write ")):
+        return {"type": "create_document", "verb": q.split()[0]}
+    if q.startswith(("schedule ", "book ", "set up ")):
+        return {"type": "schedule_event"}
+    if q.startswith(("send ", "email ")):
+        return {"type": "send_email"}
+    if q.startswith(("find ", "search ", "look up ")):
+        return {"type": "web_search"}
+    if q.startswith(("calculate ", "compute ")):
+        return {"type": "calculate"}
+    return None
 
 def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = False) -> str:
     q = query.lower()
@@ -767,6 +755,10 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "oracle"
     if "what is lexsarthi" in q or "who are you" in q or "tell me about yourself" in q:
         return "about_lexsarthi"
+    # Check for actions first
+    action = detect_action(query)
+    if action:
+        return "action"
     if "contract" in q or "agreement" in q or "review" in q:
         return "contract_review"
     if "case" in q or "judgment" in q or "research" in q:
@@ -777,7 +769,7 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "due_diligence"
     return "general"
 
-# ─── SWARM FUNCTION ──────────────────────────────────────────────
+# ─── SWARM ──────────────────────────────────────────────────────
 async def run_swarm(query: str, model: str, lang: str = "en") -> str:
     logger.info("Swarm initiated for query: %s", query[:100])
     research_prompt = f"{DIVINE_PREFACE}{DIVINE_SALUTATION}\nYou are Lord Hanuman. Find statutes and case laws for: {query}"
@@ -808,14 +800,35 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
     if agent_type == "due_diligence" and "swarm" in query.lower():
         return await run_swarm(query, model, lang)
 
+    # Special handling for "action" agent: we may call external APIs later, but for now we return a structured response
+    if agent_type == "action":
+        action = detect_action(query)
+        # For MVP, just generate a textual response with a placeholder
+        base = BASE_AGENT_PROMPTS["action"]
+        prompt = base.format(query=query)
+        lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use appropriate script."
+        system_prompt = f"{prompt}\n\n{lang_instruction}"
+        if model.startswith("llama") and groq_client:
+            try:
+                response = groq_client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}],
+                    temperature=0.3,
+                    max_tokens=2048,
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                logger.error(f"Groq error: {e}")
+        return f"I understand you want to perform an action: {action['type'] if action else 'unknown'}. I will process your request shortly."
+
+    # Standard agent flow
     if agent_type == "oracle":
         prompt = ORACLE_PROMPT.format(query=query)
     else:
         base = BASE_AGENT_PROMPTS.get(agent_type, BASE_AGENT_PROMPTS["general"])
         prompt = base.format(query=query)
     
-    # ─── EXPANDED LANGUAGE INSTRUCTION ─────────────────────────────
-    lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use the appropriate script."
+    lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use appropriate script."
     system_prompt = f"{prompt}\n\n{lang_instruction}"
     
     if model.startswith("llama") and groq_client:
@@ -833,6 +846,7 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
     return search_local_knowledge(query)
 
 # ─── API ENDPOINTS ──────────────────────────────────────────────
+# (Health, login, register, me, lifetime, usage – unchanged from v7.0)
 @app.get("/health")
 async def health():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
@@ -845,13 +859,9 @@ async def login(user_login: UserLogin):
         user = await database.fetch_one(users.select().where(users.c.email == user_login.username.lower()))
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # Convert Record to dict so we can use .get()
     user = dict(user)
-    
     if not verify_password(user_login.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
     token = create_access_token({"sub": str(user["id"])})
     return {
         "access_token": token,
@@ -863,7 +873,7 @@ async def login(user_login: UserLogin):
             "full_name": user["full_name"],
             "tier": user["tier"],
             "is_premium": user["is_premium"],
-            "api_key": user.get("api_key")  # Now works because user is a dict
+            "api_key": user.get("api_key")
         }
     }
 
@@ -905,6 +915,7 @@ async def my_usage(current_user: dict = Depends(get_current_user)):
     )) or 0
     return {"total_queries": total, "queries_today": today}
 
+# ─── MAIN ASK ENDPOINT (v8.0 – enhanced with action detection) ──
 @app.post("/ask")
 @limiter.limit("30/minute")
 async def ask(
@@ -964,26 +975,24 @@ async def ask(
     )
     return {"response": response_text, "model": model, "agent_used": agent_id}
 
-# ─── V7.0 NEW: Enterprise API Gateway ──────────────────────────────
-@app.post("/v1/query")
-async def api_query(
-    request: Request,
-    query: str = Form(...),
-    model: str = Form("llama-3.3-70b-versatile"),
-    agent_id: str = Form("agent_001"),
-    lang: str = Form("en"),
-    oracle_mode: bool = Form(False),
-    user: dict = Depends(get_api_key_user)
-):
-    if not await check_query_limit(user):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded.")
-    await increment_query(user["id"])
-    agent_type = route_agent(query, agent_id, oracle_mode)
-    agent_name = next((a["name"] for a in DIVINE_AGENTS if a["id"] == agent_id), "General Counsel")
-    response = await execute_ai(query, model, agent_type, agent_name, lang)
-    return {"response": response, "model": model, "agent_used": agent_id}
+# ─── v8.0 NEW: Action Endpoint (for direct external API calls) ──
+@app.post("/action")
+async def execute_action(action_req: ActionRequest, current_user: dict = Depends(get_current_user)):
+    """Execute a specific action (e.g., send email, schedule event). Placeholder."""
+    action_type = action_req.action
+    data = action_req.data
+    # For now, just log and return a mock response
+    await database.execute(
+        actions.insert().values(
+            user_id=current_user["id"],
+            action_type=action_type,
+            action_data=data,
+            result={"status": "mocked", "message": f"Action '{action_type}' received."}
+        )
+    )
+    return {"status": "ok", "action": action_type, "data": data}
 
-# ─── V7.0 NEW: Bulk Upload Endpoint ──────────────────────────────
+# ─── Bulk upload (unchanged from v7.0) ──────────────────────────
 @app.post("/bulk-upload")
 async def bulk_upload(
     background_tasks: BackgroundTasks,
@@ -996,7 +1005,6 @@ async def bulk_upload(
 ):
     if current_user["tier"] not in ("premium", "enterprise", "lifetime"):
         raise HTTPException(status_code=403, detail="Bulk upload requires Premium or Enterprise.")
-    
     job_id = str(uuid.uuid4())
     total_files = len(files)
     await database.execute(
@@ -1031,14 +1039,12 @@ async def process_bulk_job(job_id: str, files: List[UploadFile], query: str, mod
                 status="processing"
             )
         )
-    # Generate CSV (simplified)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Filename", "Response"])
     for r in results:
         writer.writerow([r.get("filename"), r.get("response", r.get("error", "Failed"))])
     csv_data = output.getvalue()
-    # For simplicity, store a placeholder; in production save to cloud storage.
     await database.execute(
         bulk_jobs.update().where(bulk_jobs.c.job_id == job_id).values(
             status="completed",
@@ -1057,7 +1063,7 @@ async def get_bulk_result(job_id: str, current_user: dict = Depends(get_current_
         return {"status": job["status"], "processed": job["processed_files"], "total": job["total_files"]}
     return {"status": "completed", "result_url": job["result_url"]}
 
-# ─── RAZORPAY ──────────────────────────────────────────────────
+# ─── RAZORPAY (unchanged) ──────────────────────────────────────
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
 
 @app.post("/create-order")
