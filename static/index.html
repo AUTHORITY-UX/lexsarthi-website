@@ -17,7 +17,7 @@
         .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--duration) ease-in-out infinite alternate; }
         @keyframes twinkle { 0%{ opacity:0.2; transform:scale(1); } 100%{ opacity:1; transform:scale(1.5); } }
 
-        /* ===== MAJESTIC 3D OM (RESTORED) ===== */
+        /* ===== MAJESTIC 3D OM ===== */
         .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:180px; margin:10px 0 0; perspective:1000px; }
         .om-3d { width:120px; height:120px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 40px rgba(212,175,55,0.5)); }
         @keyframes rotateOm { 0%{ transform:rotateY(0deg) rotateX(10deg); } 50%{ transform:rotateY(180deg) rotateX(20deg); } 100%{ transform:rotateY(360deg) rotateX(10deg); } }
@@ -60,8 +60,14 @@
         .canvas { display:grid; grid-template-columns:1fr 2fr 1fr; gap:8px; flex:1; min-height:60vh; }
         .panel { background:rgba(20,20,20,0.5); border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; flex-direction:column; overflow:hidden; }
         .panel-header { font-size:0.6rem; color:var(--text-muted); padding-bottom:4px; border-bottom:1px solid var(--border); margin-bottom:6px; display:flex; justify-content:space-between; }
-        .panel-body { flex:1; overflow-y:auto; font-size:0.8rem; line-height:1.5; }
+        .panel-body { flex:1; overflow-y:auto; font-size:0.8rem; line-height:1.5; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
         .panel-body iframe { width:100%; height:100%; border:none; background:#fff; border-radius:4px; }
+        /* New Search Panel Styles */
+        .search-panel-placeholder { color:#888; font-size:0.8rem; padding:20px; }
+        .search-panel-placeholder strong { color:var(--gold); }
+        .search-panel-placeholder .btn-small { background:var(--gold); color:#000; border:none; padding:4px 12px; border-radius:20px; margin-top:8px; cursor:pointer; font-size:0.65rem; font-weight:600; display:inline-block; text-decoration:none; }
+        .search-panel-placeholder .btn-small:hover { background:#f4d03f; }
+
         .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.06); border-radius:12px; padding:10px; margin-top:8px; backdrop-filter:blur(10px); }
         .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.85rem; font-family:var(--font); resize:vertical; min-height:50px; outline:none; margin-bottom:6px; }
         .query-input::placeholder { color:#555; }
@@ -113,7 +119,6 @@
         .footer-links a { color:#888; cursor:pointer; margin:0 3px; text-decoration:none; font-size:0.5rem; }
         .footer-links a:hover { color:var(--gold); }
         .soc2-badge { display:inline-block; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); color:#34d399; padding:1px 6px; border-radius:8px; font-size:0.45rem; margin-top:2px; }
-        
         .copyright-notice { font-size:0.5rem; color:#555; margin-top:2px; }
         .copyright-notice strong { color:#888; font-weight:400; }
 
@@ -193,17 +198,22 @@
 
     <!-- CANVAS: Three Panels -->
     <div class="canvas">
-        <!-- Left: Browser -->
+        <!-- Left: Web Search Info (Fixed) -->
         <div class="panel">
-            <div class="panel-header"><span>🌐 Browse</span> <span style="font-size:0.5rem; color:#555;">iframe</span></div>
+            <div class="panel-header"><span>🌐 Web Search</span> <span style="font-size:0.5rem; color:#555;">info</span></div>
             <div class="panel-body">
-                <iframe src="https://duckduckgo.com" title="Browser"></iframe>
+                <div class="search-panel-placeholder">
+                    <i class="fas fa-globe" style="font-size:2rem; color:var(--gold); opacity:0.4; display:block; margin-bottom:10px;"></i>
+                    <p>DuckDuckGo blocks iframe embedding for security.</p>
+                    <p style="font-size:0.7rem; margin-top:6px;">Use the <strong>Web</strong> toggle in the chat panel to enable real‑time web search via LexSarthi.</p>
+                    <a href="https://duckduckgo.com" target="_blank" class="btn-small">🔍 Open DuckDuckGo in new tab</a>
+                </div>
             </div>
         </div>
         <!-- Center: Document Editor -->
         <div class="panel">
             <div class="panel-header"><span>📝 Document</span> <span style="font-size:0.5rem; color:#555;">editor</span></div>
-            <div class="panel-body" id="docEditor" contenteditable="true" style="background:#111; padding:6px; border-radius:4px; min-height:100px; color:#ddd; font-family:monospace; font-size:0.8rem;">
+            <div class="panel-body" id="docEditor" contenteditable="true" style="background:#111; padding:6px; border-radius:4px; min-height:100px; color:#ddd; font-family:monospace; font-size:0.8rem; width:100%; align-items:flex-start; justify-content:flex-start; text-align:left;">
                 <p>Write or paste your content here...</p>
             </div>
             <div style="margin-top:4px; display:flex; gap:4px;">
@@ -214,7 +224,7 @@
         <!-- Right: Chat -->
         <div class="panel">
             <div class="panel-header"><span>💬 Chat</span> <span style="font-size:0.5rem; color:#555;">divine</span></div>
-            <div class="panel-body" id="chatArea" style="display:flex; flex-direction:column; max-height:400px; overflow-y:auto;">
+            <div class="panel-body" id="chatArea" style="display:flex; flex-direction:column; max-height:400px; overflow-y:auto; align-items:stretch; justify-content:flex-start;">
                 <div id="defaultWelcome" style="color:#ddd; padding:4px; text-align:center; line-height:1.6;">
                     <div style="font-size:0.8rem; color:var(--gold);">ॐ नमः शिवाय</div>
                     <p style="font-size:0.7rem; color:#888;">Login with counsel / Password123!</p>
@@ -269,7 +279,7 @@
     </div>
 </div>
 
-<!-- ====== MODALS (shortened for brevity, but include them) ====== -->
+<!-- ====== MODALS (shortened but fully functional) ====== -->
 <div class="modal-overlay" id="loginModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
@@ -352,7 +362,7 @@
 
 <script>
 // ================================================================
-// LEXSARTHI v8.0 – FRONTEND ENGINE (Same as before, included fully)
+// LEXSARTHI v8.0 – FRONTEND ENGINE (FULL)
 // ================================================================
 
 const API_BASE = 'https://upamnyu12-lex.hf.space';
@@ -645,7 +655,6 @@ async function sendQuery() {
                 chatArea.innerHTML += `<div class="chat-bubble agent">${displayText}</div>`;
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
-            // Also paste into doc editor
             const docEditor = document.getElementById('docEditor');
             if (docEditor) {
                 docEditor.innerHTML = data.response.replace(/\n/g, '<br>');
