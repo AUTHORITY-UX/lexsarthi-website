@@ -1,5 +1,5 @@
 # ===================================================================
-# LEXSARTHI v8.0 – UNIVERSAL DEFAULT OS (with CA Agents)
+# LEXSARTHI v8.0 – COMPLETE FIX (No Nonsense Fallback)
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM
 # Deployed: upamnyu12-lex.hf.space
@@ -348,9 +348,15 @@ def load_pdf_library():
 
 load_pdf_library()
 
-def search_local_knowledge(query: str) -> str:
+# ─── UPDATED SEARCH FUNCTION (Ignores file uploads) ────────────
+def search_local_knowledge(query: str, has_file: bool = False) -> str:
+    """Search the local PDF library. If has_file is True, refuse to fall back."""
+    if has_file:
+        return "⚠️ **Document Too Large**\n\nThe document you uploaded is too large for the AI to process in real-time. Please try a shorter document (under 10 pages) or use the **Bulk Upload** feature for large batches.\n\n**Alternative:** Split your document into smaller sections and ask about each part separately."
+    
     if not LEGAL_SECTIONS:
         return "⚠️ Legal library is not loaded."
+    
     query_lower = query.lower().strip()
     matched_results = []
     keywords = [word for word in query_lower.split() if len(word) > 3 and word not in {"the","and","for","with","without"}]
@@ -382,7 +388,7 @@ def search_local_knowledge(query: str) -> str:
         full = secs.get("__FULL_TEXT__") or secs.get("Full_Text") or ""
         if full:
             return f"📚 **From {fname.replace('.pdf','')} (Relevant Excerpt):**\n\n{full[:1500]}..."
-    return "⚠️ No matches found."
+    return "⚠️ No matches found. Please refine your query."
 
 # ─── DIVINE AGENTS & VERIFIERS ──────────────────────────────────
 DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"]
@@ -575,9 +581,7 @@ async def increment_query(user_id: int):
         )
     )
 
-# ================================================================
-# FIXED MEMORY FUNCTIONS
-# ================================================================
+# ─── MEMORY FUNCTIONS ────────────────────────────────────────────
 async def get_user_memory(user_id: int) -> List[Dict]:
     user = await database.fetch_one(users.select().where(users.c.id == user_id))
     if not user:
@@ -684,7 +688,7 @@ async def process_file(file: UploadFile) -> str:
         pass
     raise ValueError("Unsupported or unreadable file.")
 
-# ─── AGENT PROMPTS & ROUTING (with CA Agents) ──────────────────
+# ─── AGENT PROMPTS & ROUTING ──────────────────────────────────
 ORACLE_PROMPT = f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are the Divine Oracle. Speak with the voice of the Cosmic Mother. Provide wisdom, parables, and cosmic truth.
 Always end with: {DIVINE_BLESSING}
@@ -728,33 +732,28 @@ You respond with a clear action plan and optionally generate the required output
 Always end with: {DIVINE_BLESSING}
 User request: {{query}}
 """,
-    # ─── NEW CA AGENTS ──────────────────────────────────────────
     "gst_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Kubera, the treasurer of the gods. You specialise in GST compliance, filing, returns (GSTR-1, GSTR-3B), and GST registration.
-Provide step‑by‑step guidance, due dates, and penalty information.
+You are Lord Kubera. Specialise in GST compliance, filing, returns, and registration.
 Always end with: {DIVINE_BLESSING}
 Query: {{query}}
 """,
     "income_tax_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Goddess Lakshmi, the bestower of prosperity. You specialise in Income Tax Act, ITR filing (ITR-1 to ITR-7), TDS, and tax planning.
-Provide clear, practical advice with relevant sections.
+You are Goddess Lakshmi. Specialise in Income Tax Act, ITR filing, TDS, and tax planning.
 Always end with: {DIVINE_BLESSING}
 Query: {{query}}
 """,
     "incorporation_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Brahma, the creator. You specialise in company incorporation (Private Limited, OPC, LLP), ROC compliance, and drafting MOA/AOA.
-Provide the full process, required documents, and timelines.
+You are Lord Brahma. Specialise in company incorporation, ROC compliance, and drafting MOA/AOA.
 Always end with: {DIVINE_BLESSING}
 Query: {{query}}
 """,
     "firm_registration_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Vishnu, the preserver. You specialise in partnership firm registration, LLP registration, and compliance under the Partnership Act.
+You are Lord Vishnu. Specialise in partnership firm registration and LLP compliance.
 Always end with: {DIVINE_BLESSING}
 Query: {{query}}
 """,
     "audit_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Yama, the dispenser of justice. You specialise in statutory audit, internal audit, tax audit, and CARO reporting.
-Provide checklists, compliance requirements, and reporting standards.
+You are Lord Yama. Specialise in statutory audit, internal audit, tax audit, and CARO reporting.
 Always end with: {DIVINE_BLESSING}
 Query: {{query}}
 """
@@ -788,7 +787,6 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "oracle"
     if "what is lexsarthi" in q or "who are you" in q or "tell me about yourself" in q:
         return "about_lexsarthi"
-    # ─── DETECT CA AGENTS ──────────────────────────────────────
     if "gst" in q or "goods and services tax" in q or "gstr" in q:
         return "gst_agent"
     if "income tax" in q or "itr" in q or "tax return" in q or "tds" in q:
@@ -799,7 +797,6 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "firm_registration_agent"
     if "audit" in q or "statutory audit" in q or "internal audit" in q or "tax audit" in q:
         return "audit_agent"
-    # ─── LEGAL AGENTS ──────────────────────────────────────────
     if "contract" in q or "agreement" in q or "review" in q:
         return "contract_review"
     if "case" in q or "judgment" in q or "research" in q:
@@ -808,7 +805,6 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "drafting"
     if "due diligence" in q or "compliance" in q:
         return "due_diligence"
-    # ─── ACTION ────────────────────────────────────────────────
     action = detect_action(query)
     if action:
         return "action"
@@ -837,12 +833,14 @@ async def execute_ai_raw(system_prompt: str, query: str, model: str, lang: str) 
             return response.choices[0].message.content
         except Exception as e:
             logger.error(f"Groq error: {e}")
-    return search_local_knowledge(query)
+    return search_local_knowledge(query, has_file=False)
 
-async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, lang: str = "en") -> str:
+async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, lang: str = "en", has_file: bool = False) -> str:
+    # If swarm triggered
     if agent_type == "due_diligence" and "swarm" in query.lower():
         return await run_swarm(query, model, lang)
 
+    # If action agent
     if agent_type == "action":
         action = detect_action(query)
         base = BASE_AGENT_PROMPTS["action"]
@@ -862,7 +860,7 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
                 logger.error(f"Groq error: {e}")
         return f"I understand you want to perform an action: {action['type'] if action else 'unknown'}. I will process your request shortly."
 
-    # Handle all agents (including CA) using the prompt dictionary
+    # Standard agents
     if agent_type == "oracle":
         prompt = ORACLE_PROMPT.format(query=query)
     else:
@@ -872,6 +870,7 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
     lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use appropriate script."
     system_prompt = f"{prompt}\n\n{lang_instruction}"
     
+    # Try AI providers
     if model.startswith("llama") and groq_client:
         try:
             response = groq_client.chat.completions.create(
@@ -883,8 +882,8 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
             return response.choices[0].message.content
         except Exception as e:
             logger.error(f"Groq error: {e}")
-    # Fallback to local knowledge
-    return search_local_knowledge(query)
+    # Fallback – pass has_file flag to avoid nonsense library search on file uploads
+    return search_local_knowledge(query, has_file=has_file)
 
 # ─── API ENDPOINTS ──────────────────────────────────────────────
 @app.get("/health")
@@ -970,18 +969,30 @@ async def ask(
 ):
     if not await check_query_limit(current_user):
         raise HTTPException(status_code=429, detail="Free limit reached.")
+    
     combined_query = query
+    has_file = False
     if files:
+        has_file = True
         try:
             file_text = await process_file(files)
             if not file_text or len(file_text.strip()) < 20:
-                raise HTTPException(status_code=400, detail="File is empty or unreadable.")
+                raise HTTPException(status_code=400, detail="File is empty or contains no readable text.")
             combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
         except HTTPException as he:
             raise he
         except Exception as e:
             logger.error(f"File error: {e}")
             raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
+    
+    # --- NEW: Check query length to prevent AI failure ---
+    if len(combined_query) > 20000:  # roughly 5000 tokens
+        if has_file:
+            raise HTTPException(
+                status_code=413, 
+                detail="Document is too large for real-time review. Please upload a smaller document (under 10 pages) or use the Bulk Upload feature for large batches."
+            )
+    
     if search_web.lower() in ("on", "yes"):
         combined_query += "\n\n--- Web Search Enabled ---"
     
@@ -996,7 +1007,8 @@ async def ask(
     agent_type = route_agent(combined_query, agent_id, oracle)
     agent_name = next((a["name"] for a in DIVINE_AGENTS if a["id"] == agent_id), "General Counsel")
     
-    response_text = await execute_ai(combined_query, model, agent_type, agent_name, lang)
+    # Pass has_file to execute_ai to prevent fallback nonsense
+    response_text = await execute_ai(combined_query, model, agent_type, agent_name, lang, has_file)
     
     await update_user_memory(current_user["id"], query, response_text)
     
@@ -1006,7 +1018,7 @@ async def ask(
             user_id=current_user["id"],
             query=combined_query,
             response=response_text,
-            metadata={"agent": agent_id, "model": model, "file": bool(files), "agent_type": agent_type, "lang": lang, "oracle": oracle},
+            metadata={"agent": agent_id, "model": model, "file": has_file, "agent_type": agent_type, "lang": lang, "oracle": oracle},
             expires_at=expires_at
         )
     )
@@ -1063,7 +1075,7 @@ async def process_bulk_job(job_id: str, files: List[UploadFile], query: str, mod
             combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
             agent_type = route_agent(combined_query, agent_id)
             agent_name = next((a["name"] for a in DIVINE_AGENTS if a["id"] == agent_id), "General Counsel")
-            response = await execute_ai(combined_query, model, agent_type, agent_name, lang)
+            response = await execute_ai(combined_query, model, agent_type, agent_name, lang, has_file=True)
             results.append({"filename": file.filename, "response": response})
         except Exception as e:
             results.append({"filename": file.filename, "error": str(e)})
