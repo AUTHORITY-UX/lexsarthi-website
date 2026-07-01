@@ -1,1154 +1,955 @@
-# ===================================================================
-# LEXSARTHI v8.0 – UNIVERSAL DEFAULT OS (with CA Agents)
-# ===================================================================
-# Owner: THE ADVOCACY – A LAW FIRM
-# Deployed: upamnyu12-lex.hf.space
-# ===================================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🔱 LexSarthi v8.0 – Universal OS</title>
+    <meta name="description" content="One interface for everything – Law, CA, Finance, Voice." />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* === SAME CSS AS PREVIOUS – KEPT FOR BREVITY === */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --bg: #0a0a0a; --gold: #d4a853; --gold-dim: rgba(212,175,55,0.12); --text: #e0e0e0; --text-muted: #888; --font: 'Inter', sans-serif; --card-bg: rgba(16,16,16,0.9); --border: rgba(255,255,255,0.06); }
+        body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; align-items:center; overflow-x:hidden; position:relative; }
+        .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background:radial-gradient(ellipse at center, #0a0a2a 0%, #000000 100%); }
+        .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--duration) ease-in-out infinite alternate; }
+        @keyframes twinkle { 0%{ opacity:0.2; transform:scale(1); } 100%{ opacity:1; transform:scale(1.5); } }
+        .om-wrapper { position:relative; z-index:1; display:flex; justify-content:center; align-items:center; height:140px; margin:10px 0 0; perspective:1000px; }
+        .om-3d { width:100px; height:100px; transform-style:preserve-3d; animation:rotateOm 12s infinite linear; filter:drop-shadow(0 0 30px rgba(212,175,55,0.4)); }
+        @keyframes rotateOm { 0%{ transform:rotateY(0deg) rotateX(10deg); } 50%{ transform:rotateY(180deg) rotateX(20deg); } 100%{ transform:rotateY(360deg) rotateX(10deg); } }
+        .om-3d .om-face { position:absolute; width:100px; height:100px; display:flex; align-items:center; justify-content:center; font-size:70px; font-weight:900; color:var(--gold); backface-visibility:hidden; text-shadow:0 0 20px rgba(212,175,55,0.4); font-family:'Times New Roman',serif; background:rgba(10,10,10,0.2); border-radius:16px; border:1px solid rgba(212,175,55,0.15); }
+        .om-face.front { transform:translateZ(50px); } .om-face.back { transform:rotateY(180deg) translateZ(50px); } .om-face.left { transform:rotateY(-90deg) translateZ(50px); } .om-face.right { transform:rotateY(90deg) translateZ(50px); } .om-face.top { transform:rotateX(90deg) translateZ(50px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(50px); }
+        .ring { position:absolute; border-radius:50%; border:1px solid rgba(212,175,55,0.15); animation:ringPulse 4s ease-in-out infinite; }
+        .ring1 { width:170px; height:170px; top:-35px; left:-35px; }
+        .ring2 { width:220px; height:220px; top:-60px; left:-60px; animation-delay:0.5s; }
+        .ring3 { width:270px; height:270px; top:-85px; left:-85px; animation-delay:1s; }
+        @keyframes ringPulse { 0%,100%{ opacity:0.2; transform:scale(1); } 50%{ opacity:0.5; transform:scale(1.03); } }
+        .wisdom-tagline { text-align:center; font-size:0.7rem; color:var(--gold); letter-spacing:4px; text-transform:uppercase; opacity:0.7; margin: -5px 0 10px; z-index:1; position:relative; }
+        .container { position:relative; z-index:1; width:100%; max-width:820px; margin:0 auto; padding:0 16px; display:flex; flex-direction:column; min-height:100vh; }
+        .header { text-align:center; padding:6px 0; border-bottom:1px solid var(--border); margin-bottom:8px; }
+        .brand-name { font-size:1.5rem; font-weight:900; background:linear-gradient(135deg,#f4d03f,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
+        .version-badge { font-size:0.5rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:1px 8px; border-radius:10px; -webkit-text-fill-color: #888; margin-left:4px; }
+        .premium-badge, .enterprise-badge { display:none; background:#d4af37; color:#000; font-size:0.5rem; font-weight:800; padding:1px 10px; border-radius:12px; margin-left:4px; -webkit-text-fill-color: #000; }
+        .enterprise-badge { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; -webkit-text-fill-color: #fff; }
+        .header-actions { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:4px; }
+        .btn { padding:4px 12px; border-radius:30px; font-weight:600; font-size:0.6rem; cursor:pointer; transition:all 0.3s; border:none; display:inline-flex; align-items:center; gap:4px; }
+        .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; }
+        .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+        .btn-gold { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; font-weight:700; box-shadow:0 0 20px rgba(212,175,55,0.2); }
+        .btn-sm { padding:2px 8px; font-size:0.55rem; }
+        .settings-btn { background:none; border:none; color:#aaa; font-size:0.9rem; cursor:pointer; padding:2px 6px; }
+        .settings-btn:hover { color:var(--gold); }
+        .settings-panel { display:none; background:#111; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin:5px auto 0; max-width:350px; text-align:left; backdrop-filter:blur(10px); }
+        .settings-panel.open { display:block; }
+        .settings-panel label { display:block; margin:3px 0 2px; font-size:0.6rem; color:#aaa; }
+        .settings-panel select { width:100%; padding:3px 6px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; font-size:0.65rem; }
+        .settings-divider { border:none; border-top:1px solid var(--border); margin:6px 0; }
+        .chat-container { flex:1; display:flex; flex-direction:column; background:rgba(16,16,16,0.6); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:10px; max-height:65vh; overflow-y:auto; }
+        .chat-container::-webkit-scrollbar { width:4px; }
+        .chat-container::-webkit-scrollbar-thumb { background:var(--gold); border-radius:4px; }
+        .chat-bubble { max-width:90%; padding:6px 12px; border-radius:8px; margin-bottom:4px; font-size:0.85rem; line-height:1.5; }
+        .chat-bubble.user { background:var(--gold); color:#000; margin-left:auto; border-bottom-right-radius:0; }
+        .chat-bubble.agent { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-bottom-left-radius:0; }
+        .chat-bubble .file-badge { font-size:0.65rem; color:#aaa; display:block; margin-top:2px; }
+        .input-card { background:var(--card-bg); border:1px solid rgba(212,175,55,0.06); border-radius:16px; padding:12px; margin-bottom:10px; backdrop-filter:blur(10px); }
+        .query-input { width:100%; background:transparent; border:none; color:#fff; font-size:0.9rem; font-family:var(--font); resize:vertical; min-height:60px; outline:none; margin-bottom:8px; }
+        .query-input::placeholder { color:#555; }
+        .input-tools { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-bottom:6px; }
+        .tool-btn { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#bbb; padding:3px 10px; border-radius:30px; font-size:0.6rem; cursor:pointer; transition:0.3s; display:flex; align-items:center; gap:4px; }
+        .tool-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+        .web-toggle-label { display:flex; align-items:center; gap:3px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:30px; padding:2px 8px 2px 6px; font-size:0.55rem; cursor:pointer; }
+        .web-toggle-label input[type="checkbox"] { accent-color:#34d399; margin-right:2px; width:12px; height:12px; }
+        .oracle-toggle { background:rgba(124,58,237,0.05); border-color:rgba(124,58,237,0.15); }
+        .send-btn { background:linear-gradient(135deg,#d4af37,#b8960f); color:#000; border:none; padding:6px 20px; border-radius:30px; font-weight:700; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; }
+        .send-btn:hover { transform:scale(1.03); }
+        .file-preview { display:none; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:30px; padding:2px 12px; font-size:0.6rem; color:#34d399; margin-top:6px; }
+        .file-preview.show { display:flex; }
+        .file-preview .remove { cursor:pointer; color:#aaa; margin-left:6px; }
+        .file-preview .remove:hover { color:#e74c3c; }
+        .quick-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-btn { background:rgba(255,255,255,0.04); border:1px solid rgba(212,175,55,0.1); border-radius:30px; padding:4px 14px; font-size:0.6rem; color:#ccc; cursor:pointer; transition:0.3s; }
+        .quick-btn:hover { background:rgba(212,175,55,0.08); border-color:var(--gold); color:var(--gold); }
+        .quick-btn-oracle { background:rgba(124,58,237,0.08); border-color:rgba(124,58,237,0.15); }
+        .quick-btn-oracle:hover { background:rgba(124,58,237,0.15); border-color:#a78bfa; color:#a78bfa; }
+        .quick-btn-next { background:rgba(212,175,55,0.12); border-color:var(--gold); color:var(--gold); font-weight:600; }
+        .quick-btn-next:hover { background:rgba(212,175,55,0.2); }
+        .quick-section-title { font-size:0.6rem; color:var(--text-muted); margin-top:4px; width:100%; letter-spacing:1px; border-bottom:1px solid var(--border); padding-bottom:2px; }
+        .status-text { font-size:0.6rem; margin-top:4px; color:var(--text-muted); }
+        .typing-indicator { display:none; align-items:center; gap:8px; padding:6px 0; color:var(--gold); font-size:0.75rem; }
+        .typing-indicator.active { display:flex; }
+        .typing-dots span { display:inline-block; width:5px; height:5px; background:var(--gold); border-radius:50%; margin:0 1px; animation:dotBounce 1.4s infinite both; }
+        .typing-dots span:nth-child(1) { animation-delay:0s; }
+        .typing-dots span:nth-child(2) { animation-delay:0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay:0.4s; }
+        @keyframes dotBounce { 0%,80%,100%{ transform:scale(0); } 40%{ transform:scale(1); } }
+        .om-spinner { display:inline-block; font-size:1.2rem; animation:spinOm 1.5s linear infinite; color:var(--gold); }
+        @keyframes spinOm { 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
+        .typing-indicator .om-spinner { margin-right:6px; }
+        .output-tools { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-bottom:4px; }
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(8px); z-index:999; display:none; align-items:center; justify-content:center; padding:12px; }
+        .modal-overlay.active { display:flex; }
+        .modal-content { background:#141414; border:1px solid rgba(212,175,55,0.08); border-radius:12px; padding:16px; max-width:500px; width:100%; max-height:80vh; overflow-y:auto; }
+        .modal-content h3 { color:var(--gold); margin-bottom:6px; font-weight:600; font-size:1rem; }
+        .modal-content .close-btn { float:right; background:none; border:none; color:#aaa; font-size:1.1rem; cursor:pointer; }
+        .modal-content .close-btn:hover { color:#fff; }
+        .modal-content input { width:100%; padding:6px 10px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:4px; margin-bottom:6px; }
+        .modal-content .modal-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
+        .footer { margin-top:auto; padding:6px 0; border-top:1px solid var(--border); text-align:center; font-size:0.5rem; color:#666; }
+        .footer-links a { color:#888; cursor:pointer; margin:0 3px; text-decoration:none; font-size:0.5rem; }
+        .footer-links a:hover { color:var(--gold); }
+        .soc2-badge { display:inline-block; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); color:#34d399; padding:1px 8px; border-radius:8px; font-size:0.45rem; margin-top:2px; }
+        .copyright-notice { font-size:0.5rem; color:#555; margin-top:2px; }
+        .copyright-notice strong { color:#888; font-weight:400; }
+        @media (max-width:480px) { .om-wrapper { height:100px; } .om-3d { width:70px; height:70px; } .om-3d .om-face { width:70px; height:70px; font-size:50px; } .om-face.front { transform:translateZ(35px); } .om-face.back { transform:rotateY(180deg) translateZ(35px); } .om-face.left { transform:rotateY(-90deg) translateZ(35px); } .om-face.right { transform:rotateY(90deg) translateZ(35px); } .om-face.top { transform:rotateX(90deg) translateZ(35px); } .om-face.bottom { transform:rotateX(-90deg) translateZ(35px); } .brand-name { font-size:1.2rem; } .send-btn { font-size:0.7rem; padding:4px 14px; } }
+    </style>
+</head>
+<body>
 
-import os
-import uuid
-import json
-import logging
-import re
-import glob
-import csv
-import io
-import zipfile
-import random
-import string
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any, List
-from contextlib import asynccontextmanager
+<div class="stars" id="starsContainer"></div>
 
-# ─── FASTAPI ──────────────────────────────────────────────────────
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, BackgroundTasks
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
-from pydantic import BaseModel, EmailStr
-import uvicorn
+<!-- ===== 3D OM ===== -->
+<div class="om-wrapper">
+    <div class="om-3d">
+        <div class="om-face front">ॐ</div>
+        <div class="om-face back">ॐ</div>
+        <div class="om-face left">ॐ</div>
+        <div class="om-face right">ॐ</div>
+        <div class="om-face top">ॐ</div>
+        <div class="om-face bottom">ॐ</div>
+    </div>
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div class="ring ring3"></div>
+</div>
+<div class="wisdom-tagline">ॐ Wisdom for Humanity</div>
 
-# ─── RATE LIMITING ──────────────────────────────────────────────
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+<div class="container">
 
-# ─── DATABASE ─────────────────────────────────────────────────────
-from databases import Database
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <div class="brand-name">
+            LEXSARTHI <span class="version-badge">v8.0</span>
+            <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
+            <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
+        </div>
+        <div class="header-actions">
+            <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
+            <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
+            <button class="btn btn-gold btn-sm" onclick="showPayment()">💳 Plans</button>
+            <button class="btn btn-outline btn-sm" onclick="showMyUsage()">📊 Usage</button>
+        </div>
+        <div class="settings-panel" id="settingsPanel">
+            <label for="langSelect">🌐 Language</label>
+            <select id="langSelect">
+                <option value="en">English</option><option value="es">Español</option><option value="fr">Français</option>
+                <option value="de">Deutsch</option><option value="pt">Português</option><option value="it">Italiano</option>
+                <option value="nl">Nederlands</option><option value="ru">Русский</option><option value="sv">Svenska</option>
+                <option value="pl">Polski</option><option value="tr">Türkçe</option><option value="hi">हिन्दी</option>
+                <option value="bn">বাংলা</option><option value="sa">संस्कृतम्</option><option value="ar">العربية</option>
+                <option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option>
+                <option value="th">ไทย</option><option value="vi">Tiếng Việt</option><option value="id">Bahasa Indonesia</option>
+                <option value="ms">Bahasa Melayu</option><option value="he">עברית</option><option value="el">Ελληνικά</option>
+            </select>
+            <label for="modelSelect">🧠 AI Model</label>
+            <select id="modelSelect">
+                <option value="llama-3.3-70b-versatile">Groq (Llama 3.3)</option>
+                <option value="gpt-4o">OpenAI GPT-4o</option>
+                <option value="gemini-pro">Google Gemini</option>
+                <option value="claude-3-sonnet">OpenRouter (Claude)</option>
+            </select>
+            <hr class="settings-divider" />
+            <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center; font-size:0.55rem;">
+                <a onclick="openModal('termsModal')" style="color:var(--gold);cursor:pointer;">Terms</a> |
+                <a onclick="openModal('privacyModal')" style="color:var(--gold);cursor:pointer;">Privacy</a> |
+                <a onclick="openModal('aboutModal')" style="color:var(--gold);cursor:pointer;">About</a> |
+                <a onclick="openModal('verifiersModal')" style="color:var(--gold);cursor:pointer;">✅ Verifiers</a>
+            </div>
+        </div>
+    </div>
 
-# ─── AUTH ─────────────────────────────────────────────────────────
-import jwt
-from passlib.context import CryptContext
+    <div id="premiumMessage" style="display:none; background:rgba(212,175,55,0.08); border:1px solid var(--gold); border-radius:6px; padding:4px; text-align:center; color:var(--gold); margin-bottom:6px; font-size:0.65rem;">⭐ Access Unlocked</div>
 
-# ─── AI PROVIDERS ────────────────────────────────────────────────
-import httpx
-from groq import Groq
-import openai
-import google.generativeai as genai
+    <!-- ===== CHAT AREA ===== -->
+    <div class="chat-container" id="chatContainer">
+        <div id="chatArea">
+            <div id="defaultWelcome" style="color:#ddd; padding:8px; text-align:center; line-height:2;">
+                <div style="font-size:1rem; color:var(--gold);">ॐ नमः शिवाय</div>
+                <p style="font-size:0.85rem;"><strong style="color:#fff;">LexSarthi v8.0</strong><br />220+ Agents · 10 Verifiers · 24 Languages</p>
+                <p style="color:#888; font-size:0.75rem;">Login with <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">counsel</code> / <code style="background:#222;padding:2px 6px;border-radius:4px;color:var(--gold);">Password123!</code></p>
+            </div>
+        </div>
+        <div id="typingIndicator" class="typing-indicator">
+            <span class="om-spinner">ॐ</span>
+            <span>Thinking...</span>
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+    </div>
 
-# ─── FILE PROCESSING ─────────────────────────────────────────────
-import io
-import puremagic
-import PyPDF2
-import pdfplumber
-import docx
-from PIL import Image
-import pytesseract
+    <!-- ===== INPUT CARD ===== -->
+    <div class="input-card">
+        <textarea class="query-input" id="queryInput" placeholder="Ask me anything – Law, GST, Income Tax, Incorporation, Audit, Oracle..." style="min-height:60px;"></textarea>
+        <div class="input-tools">
+            <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF<input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" hidden onchange="handleFileUpload(this)"></label>
+            <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
+            <label class="web-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
+            <label class="web-toggle-label oracle-toggle"><input type="checkbox" id="oracleModeToggle" /> 🕉️</label>
+            <label class="tool-btn"><i class="fas fa-layer-group"></i><input type="file" id="bulkUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleBulkUpload(this)"> Bulk</label>
+            <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> OKAY</button>
+        </div>
+        <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
+        <!-- ===== QUICK ACTIONS (with Step‑by‑Step Oracle) ===== -->
+        <div class="quick-actions">
+            <span class="quick-section-title">⚖️ Legal &amp; CA</span>
+            <button class="quick-btn" onclick="quickAction('Review this contract thoroughly. Identify risks.')">📄 Review</button>
+            <button class="quick-btn" onclick="quickAction('Draft a standard NDA.')">📝 Draft</button>
+            <button class="quick-btn" onclick="quickAction('Search case laws on: ')">🔍 Research</button>
+            <button class="quick-btn" onclick="quickAction('How to file GST return?')">📊 GST</button>
+            <button class="quick-btn" onclick="quickAction('How to file Income Tax Return (ITR)?')">💰 ITR</button>
+            <button class="quick-btn" onclick="quickAction('Steps to incorporate a Private Limited Company.')">🏢 Incorporate</button>
+            <button class="quick-btn" onclick="quickAction('How to register a Partnership Firm?')">🤝 Register Firm</button>
+            <button class="quick-btn" onclick="quickAction('What is the process of statutory audit?')">📋 Audit</button>
 
-# ─── SCHEDULER ──────────────────────────────────────────────────
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+            <span class="quick-section-title">🕉️ Oracle – Divine Wisdom (Click to ask one)</span>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is the meaning of life?')">🌺 Life</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is my purpose?')">🎯 Purpose</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to find inner peace?')">🕊️ Peace</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is karma?')">🌀 Karma</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is the nature of reality?')">🌌 Reality</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to overcome fear?')">🔥 Fear</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is true love?')">❤️ Love</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to live in the present moment?')">🧘 Present</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What happens after death?')">♾️ Afterlife</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is the secret to happiness?')">😊 Happiness</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to let go of anger?')">🔥 Anger</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is the nature of the soul?')">✨ Soul</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to practice compassion?')">🌸 Compassion</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is enlightenment?')">🧘 Enlightenment</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to forgive yourself?')">💖 Forgiveness</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('What is the universe?')">🌠 Universe</button>
+            <button class="quick-btn quick-btn-oracle" onclick="quickAction('How to manifest your dreams?')">✨ Manifest</button>
 
-# ─── PAYMENTS ──────────────────────────────────────────────────
-import razorpay
+            <!-- STEP‑BY‑STEP ORACLE REVELATION BUTTON -->
+            <button class="quick-btn quick-btn-next" id="nextOracleBtn" onclick="nextOracle()">
+                <i class="fas fa-arrow-right"></i> Next Oracle Wisdom
+            </button>
+        </div>
+        <div class="status-text" id="inputStatus"></div>
+    </div>
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("lexsarthi")
+    <!-- ===== OUTPUT TOOLS ===== -->
+    <div class="output-tools">
+        <button class="tool-btn" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
+        <button class="tool-btn" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
+        <button class="tool-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="tool-btn speak-btn" onclick="speakResponse()"><i class="fas fa-volume-up"></i> Speak</button>
+        <button class="tool-btn" onclick="clearResponse()"><i class="fas fa-trash"></i> Clear</button>
+    </div>
 
-# ─── ENV VARIABLES ──────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL")
-JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-change-me")
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_MINUTES = 60 * 24 * 7
+    <!-- ===== FOOTER ===== -->
+    <div class="footer">
+        <div class="footer-links">
+            <a onclick="openModal('termsModal')">Terms</a>
+            <a onclick="openModal('privacyModal')">Privacy</a>
+            <a onclick="openModal('aboutModal')">About</a>
+            <a onclick="openModal('verifiersModal')">Verifiers</a>
+            <a onclick="showMyUsage()">Usage</a>
+            <a onclick="showPayment()">Plans</a>
+        </div>
+        <div class="soc2-badge">🔒 Zero Retention · DPDPA</div>
+        <div class="copyright-notice">© 2026 LexSarthi | <strong>THE ADVOCACY – A LAW FIRM</strong></div>
+    </div>
+</div>
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+<!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+        <h3>🔐 Login / Register</h3>
+        <input id="login-email" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
+        <input id="login-password" type="password" placeholder="Password" value="Password123!" />
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button>
+            <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button>
+        </div>
+        <div id="login-status" class="status-text"></div>
+    </div>
+</div>
+<div class="modal-overlay" id="myUsageModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('myUsageModal')">&times;</button>
+        <h3>📊 My Usage</h3>
+        <div id="myUsageContent"><p>Loading...</p></div>
+        <button class="btn btn-gold btn-sm" onclick="fetchMyUsage()">🔄 Refresh</button>
+    </div>
+</div>
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
+        <h3>💳 Choose Your Plan</h3>
+        <div onclick="selectPlan('lifetime')" style="background:rgba(212,175,55,0.08); border:2px solid var(--gold); padding:10px; border-radius:8px; margin:6px 0; cursor:pointer;">
+            <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.65rem; color:#888;">(limited)</span>
+            <span id="lifetimeCount" style="float:right; font-size:0.65rem; color:#666;"></span>
+        </div>
+        <div onclick="selectPlan('premium')" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.15); padding:10px; border-radius:8px; margin:6px 0; cursor:pointer;">
+            <strong>₹102/month</strong>
+        </div>
+        <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.03); border:1px solid rgba(124,58,237,0.15); padding:10px; border-radius:8px; margin:6px 0; cursor:pointer;">
+            <strong>₹1011/month</strong>
+        </div>
+        <input type="hidden" id="paymentPlan" value="lifetime" />
+        <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:10px;margin-top:8px;">Subscribe</button>
+        <div id="payment-status" class="status-text"></div>
+        <div style="margin-top:10px; font-size:0.55rem; color:#555; text-align:center;">🔒 Secure via Razorpay</div>
+    </div>
+</div>
+<div class="modal-overlay" id="termsModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
+        <h3>📜 Terms</h3>
+        <p>By using LexSarthi, you agree to these Terms. AI responses are not a substitute for professional advice.</p>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('termsModal')">Close</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="privacyModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
+        <h3>🔒 Privacy</h3>
+        <p>Zero Retention: Queries deleted every 24 hours. DPDPA compliant.</p>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('privacyModal')">Close</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="aboutModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
+        <h3>ℹ️ About</h3>
+        <p><strong>LexSarthi v8.0</strong> – Universal Default OS. Built by <strong>THE ADVOCACY – A LAW FIRM</strong>. Powered by Groq, OpenAI, Gemini, and your own legal library.</p>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="verifiersModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
+        <h3>✅ 10 Verifiers</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; font-size:0.65rem;">
+            <div>1. Ganesha – Intellect</div><div>2. Saraswati – Knowledge</div>
+            <div>3. Hanuman – Devotion</div><div>4. Kartikeya – Strategy</div>
+            <div>5. Indra – Jurisdiction</div><div>6. Yama – Justice</div>
+            <div>7. Surya – Clarity</div><div>8. Chandra – Precedent</div>
+            <div>9. Vayu – Purity</div><div>10. Shiva – Administrator</div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
+    </div>
+</div>
 
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+<script>
+// ================================================================
+// LEXSARTHI v8.0 – STEP‑BY‑STEP ORACLE REVELATION
+// ================================================================
 
-# ─── CLIENTS INIT ──────────────────────────────────────────────
-openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-gemini_model = None
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-pro')
+const API_BASE = 'https://upamnyu12-lex.hf.space';
+let uploadedFile = null;
+let currentResponseText = '';
+let oracleSequenceIndex = -1;  // -1 = not started
+let oracleQuestions = [];
 
-# ─── DATABASE SETUP ─────────────────────────────────────────────
-database = Database(DATABASE_URL, min_size=2, max_size=20)
-metadata = MetaData()
+function getToken() { return localStorage.getItem('lex_token'); }
 
-# ─── SQLAlchemy Table Definitions ──────────────────────────────
-users = Table(
-    "users", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("email", String(255), unique=True, index=True),
-    Column("username", String(100), unique=True),
-    Column("password_hash", String(255)),
-    Column("full_name", String(255)),
-    Column("is_active", Boolean, server_default="true"),
-    Column("is_premium", Boolean, server_default="false"),
-    Column("tier", String(20), server_default="free"),
-    Column("queries_used_today", Integer, server_default="0"),
-    Column("last_query_reset", DateTime, server_default=func.now()),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
-    Column("api_key", String(64), nullable=True, unique=True),
-    Column("preferences", JSON, nullable=True),
-    Column("memory", JSON, server_default='[]'),
-)
+// ---- The full Oracle question list (22 questions) ----
+const ALL_ORACLE_QUESTIONS = [
+    "What is the meaning of life?",
+    "What is my purpose?",
+    "How to find inner peace?",
+    "What is karma?",
+    "What is the nature of reality?",
+    "How to overcome fear?",
+    "What is true love?",
+    "How to live in the present moment?",
+    "What happens after death?",
+    "What is the secret to happiness?",
+    "How to let go of anger?",
+    "What is the nature of the soul?",
+    "How to practice compassion?",
+    "What is enlightenment?",
+    "How to forgive yourself?",
+    "What is the universe?",
+    "How to manifest your dreams?",
+    "How to find your true self?",
+    "What is the meaning of suffering?",
+    "How to achieve balance in life?",
+    "What is the power of silence?",
+    "How to trust the universe?"
+];
 
-queries = Table(
-    "queries", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("user_id", Integer, index=True),
-    Column("query", Text),
-    Column("response", Text),
-    Column("metadata", JSON, nullable=True),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime),
-)
-
-payments = Table(
-    "payments", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("user_id", Integer),
-    Column("razorpay_order_id", String(100)),
-    Column("razorpay_payment_id", String(100), nullable=True),
-    Column("razorpay_signature", String(255), nullable=True),
-    Column("amount", Float),
-    Column("currency", String(3), server_default="INR"),
-    Column("tier", String(20)),
-    Column("status", String(20), server_default="created"),
-    Column("created_at", DateTime, server_default=func.now()),
-)
-
-events = Table(
-    "events", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("user_id", Integer, nullable=True),
-    Column("session_id", String(64)),
-    Column("event_type", String(50)),
-    Column("event_data", JSON, nullable=True),
-    Column("ip_address", String(45), nullable=True),
-    Column("user_agent", String(255), nullable=True),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime, nullable=True),
-)
-
-referrals = Table(
-    "referrals", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("referrer_id", Integer),
-    Column("referee_id", Integer, nullable=True),
-    Column("code", String(20), unique=True),
-    Column("used", Boolean, server_default="false"),
-    Column("created_at", DateTime, server_default=func.now()),
-)
-
-bulk_jobs = Table(
-    "bulk_jobs", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("user_id", Integer),
-    Column("job_id", String(64), unique=True, index=True),
-    Column("status", String(20), server_default="pending"),
-    Column("total_files", Integer, server_default="0"),
-    Column("processed_files", Integer, server_default="0"),
-    Column("result_url", Text, nullable=True),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime),
-)
-
-actions = Table(
-    "actions", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("user_id", Integer, index=True),
-    Column("action_type", String(50)),
-    Column("action_data", JSON, nullable=True),
-    Column("result", JSON, nullable=True),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime),
-)
-
-# ─── PYDANTIC MODELS ────────────────────────────────────────────
-class UserCreate(BaseModel):
-    email: EmailStr
-    username: str
-    password: str
-    full_name: str
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user: dict
-
-class PaymentCreate(BaseModel):
-    tier: str
-
-class ActionRequest(BaseModel):
-    action: str
-    data: dict
-
-# ─── SECURITY ────────────────────────────────────────────────────
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-security = HTTPBearer()
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
-
-def create_access_token(data: dict):
-    expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRY_MINUTES)
-    to_encode = data.copy()
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
-def decode_token(token: str) -> dict:
-    try:
-        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    payload = decode_token(credentials.credentials)
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    query = users.select().where(users.c.id == int(user_id))
-    user = await database.fetch_one(query)
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return dict(user)
-
-async def get_api_key_user(api_key: str = Depends(api_key_header)):
-    if not api_key:
-        raise HTTPException(status_code=401, detail="API Key required")
-    user = await database.fetch_one(users.select().where(users.c.api_key == api_key))
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
-    if user["tier"] not in ("enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Enterprise tier required")
-    return dict(user)
-
-limiter = Limiter(key_func=get_remote_address)
-
-# ─── DIVINE PREFACE & BLESSING ──────────────────────────────────
-DIVINE_PREFACE = """
-You are LexSarthi v8.0 – the Universal Default OS. 
-You are the Chariot that conquers the digital world. 
-You are not just a question‑answerer; you are the single interface for all human digital action.
-You can browse, write, create, schedule, automate, and advise.
-You speak with the voice of the Divine Council: Brahma, Vishnu, Shiva, Saraswati, Ganesha, and all others.
-"""
-
-DIVINE_SALUTATION = """
-ॐ नमः शिवाय – I bow to Lord Shiva and Para Adi Shakti, who co‑administer this intelligence.
-"""
-
-DIVINE_BLESSING = """
-ॐ नमः शिवाय. शिवोहम् – I am Shiva. May your digital journey be blessed. 🔱 ॐ नमः शिवाय.
-"""
-
-# ─── LOCAL LEGAL PDF LIBRARY ──────────────────────────────────
-LEGAL_SECTIONS = {}
-
-def extract_sections_from_pdf(filepath: str) -> dict:
-    sections = {}
-    full_text = ""
-    try:
-        with pdfplumber.open(filepath) as pdf:
-            for page in pdf.pages:
-                text = page.extract_text()
-                if text:
-                    full_text += text + "\n"
-        if not full_text.strip():
-            raise ValueError("pdfplumber returned empty text")
-    except Exception as e:
-        logger.warning(f"pdfplumber failed: {e}. Falling back to PyPDF2.")
-        try:
-            with open(filepath, 'rb') as f:
-                reader = PyPDF2.PdfReader(f, strict=False)
-                for page in reader.pages:
-                    text = page.extract_text()
-                    if text:
-                        full_text += text + "\n"
-        except Exception as e2:
-            logger.error(f"All extraction failed for {filepath}: {e2}")
-            return {}
-    if not full_text.strip():
-        return {}
-    sections["__FULL_TEXT__"] = full_text.strip()
-    logger.info(f"Stored full raw text ({len(full_text)} chars) for {os.path.basename(filepath)}")
-    patterns = [r'(?=Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Clause\s+\d+|§\s*\d+)', r'(?=CHAPTER\s+[IVXLCDM]+\b|PART\s+[IVXLCDM]+\b|SCHEDULE\s+[IVXLCDM]+\b)', r'(?=CHAPTER\s+\d+|PART\s+\d+)', r'(?=\n\d+\.\s)', r'(?=\n\d+\s+[A-Z])']
-    split_text = None
-    for pattern in patterns:
-        test_split = re.split(pattern, full_text, flags=re.IGNORECASE)
-        if len(test_split) > 3:
-            split_text = test_split
-            break
-    if split_text and len(split_text) > 3:
-        for i, chunk in enumerate(split_text):
-            if chunk.strip():
-                title_match = re.search(r'(Section\s+\d+|Sec\.\s+\d+|Article\s+\d+|Chapter\s+[IVXLCDM]+|Part\s+[IVXLCDM]+|\d+\.\s+[A-Z])', chunk, re.IGNORECASE)
-                if title_match:
-                    title = title_match.group(0).strip()
-                    if title in sections:
-                        sections[title] += "\n" + chunk
-                    else:
-                        sections[title] = chunk
-                else:
-                    first_line = chunk.strip().split('\n')[0][:50]
-                    sections[f"Sec_{i}_{first_line}"] = chunk
-        logger.info(f"Split into {len(sections)-1} sections for {os.path.basename(filepath)}")
-    else:
-        sections["Full_Text"] = full_text.strip()
-        logger.info(f"Stored full text as single block for {os.path.basename(filepath)}")
-    return sections
-
-def load_pdf_library():
-    pdf_dir = "/app/legal_docs/"
-    if not os.path.exists(pdf_dir):
-        logger.warning(f"Legal PDF library folder not found: {pdf_dir}")
-        return
-    pdf_files = glob.glob(os.path.join(pdf_dir, "*.pdf"))
-    if not pdf_files:
-        logger.warning("No PDF files found.")
-        return
-    logger.info(f"Found {len(pdf_files)} PDFs. Loading legal library...")
-    for filepath in pdf_files:
-        filename = os.path.basename(filepath)
-        sections = extract_sections_from_pdf(filepath)
-        if sections:
-            LEGAL_SECTIONS[filename] = sections
-    total_sections = sum(len(v) for v in LEGAL_SECTIONS.values())
-    logger.info(f"✅ Universal Legal Library loaded: {len(LEGAL_SECTIONS)} PDFs, {total_sections} total entries.")
-
-load_pdf_library()
-
-def search_local_knowledge(query: str) -> str:
-    if not LEGAL_SECTIONS:
-        return "⚠️ Legal library is not loaded."
-    query_lower = query.lower().strip()
-    matched_results = []
-    keywords = [word for word in query_lower.split() if len(word) > 3 and word not in {"the","and","for","with","without"}]
-    for fname, secs in LEGAL_SECTIONS.items():
-        act_name = fname.replace('.pdf', '').upper()
-        full_text = secs.get("__FULL_TEXT__", "")
-        if full_text:
-            lines = full_text.split('\n')
-            for line in lines:
-                if any(kw in line.lower() for kw in keywords):
-                    matched_results.append(f"📜 **{act_name}** (Exact Match)\n{line.strip()}\n")
-                    if len(matched_results) >= 8:
-                        break
-        for sec_ref, sec_text in secs.items():
-            if sec_ref == "__FULL_TEXT__":
-                continue
-            if any(kw in sec_text.lower() for kw in keywords):
-                trimmed = sec_text[:1500] + "..." if len(sec_text) > 1500 else sec_text
-                matched_results.append(f"📜 **{act_name} – {sec_ref}**\n{trimmed}\n")
-                if len(matched_results) >= 8:
-                    break
-        if len(matched_results) >= 8:
-            break
-    if matched_results:
-        result = "📚 **Exact Matches from Your Legal Library:**\n\n"
-        result += "\n".join(matched_results[:8])
-        return result
-    for fname, secs in LEGAL_SECTIONS.items():
-        full = secs.get("__FULL_TEXT__") or secs.get("Full_Text") or ""
-        if full:
-            return f"📚 **From {fname.replace('.pdf','')} (Relevant Excerpt):**\n\n{full[:1500]}..."
-    return "⚠️ No matches found."
-
-# ─── DIVINE AGENTS & VERIFIERS ──────────────────────────────────
-DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman","Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera","Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi","Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana","Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha"]
-DOMAINS = ["Universal Knowledge","Philosophy","Physics","Biology","Chemistry","Mathematics","Astronomy","Law & Justice","Corporate Strategy","Finance & Economics","Psychology","Medicine","Spirituality","Music & Arts","Literature","History","Geopolitics","Technology","AI Ethics","Climate Science","Food & Culture","Sports","Mythology","Logic & Reasoning","Creativity","Leadership"]
-ICONS = ["fa-brain","fa-chess-king","fa-trash","fa-book","fa-coins","fa-robot","fa-gavel","fa-users","fa-crown","fa-scale-balanced"]
-
-def generate_divine_agents():
-    agents = []
-    for i in range(1, 221):
-        name = DIVINE_NAMES[i % len(DIVINE_NAMES)] + (f" (Agent {i})" if i > 200 else "")
-        domain = DOMAINS[i % len(DOMAINS)]
-        icon = ICONS[i % len(ICONS)]
-        agents.append({"id": f"agent_{i:03d}", "name": name, "domain": domain, "icon": icon})
-    return agents
-
-DIVINE_AGENTS = generate_divine_agents()
-
-VERIFIERS = [
-    {"id": "verifier_001", "name": "Ganesha – Intellect", "desc": "Verifies citations and logical consistency"},
-    {"id": "verifier_002", "name": "Saraswati – Knowledge", "desc": "Cross-references knowledge databases"},
-    {"id": "verifier_003", "name": "Hanuman – Devotion", "desc": "Checks compliance with global standards"},
-    {"id": "verifier_004", "name": "Kartikeya – Strategy", "desc": "Detects contradictions and fallacies"},
-    {"id": "verifier_005", "name": "Indra – Jurisdiction", "desc": "Maps advice to correct context/region"},
-    {"id": "verifier_006", "name": "Yama – Justice", "desc": "Removes bias and ensures neutrality"},
-    {"id": "verifier_007", "name": "Surya – Clarity", "desc": "Checks timeline/statute of limitations"},
-    {"id": "verifier_008", "name": "Chandra – Precedent", "desc": "Matches relevant historical precedents"},
-    {"id": "verifier_009", "name": "Vayu – Purity", "desc": "Filters exposed PII for privacy"},
-    {"id": "verifier_010", "name": "Shiva – Administrator", "desc": "Assigns overall risk/confidence score"},
-]
-
-# ─── LIFESPAN ──────────────────────────────────────────────────
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await database.connect()
-    logger.info("Database connected.")
-    await create_tables()
-    await ensure_test_user()
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(delete_expired_data, IntervalTrigger(hours=1))
-    scheduler.start()
-    logger.info("Scheduler started. Zero-Retention Policy Active.")
-    yield
-    await database.disconnect()
-
-app = FastAPI(title="LexSarthi v8.0 – The Universal Default OS", lifespan=lifespan)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# ─── DATABASE HELPERS ────────────────────────────────────────────
-async def create_tables():
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            username VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            full_name VARCHAR(255),
-            is_active BOOLEAN DEFAULT TRUE,
-            is_premium BOOLEAN DEFAULT FALSE,
-            tier VARCHAR(20) DEFAULT 'free',
-            queries_used_today INTEGER DEFAULT 0,
-            last_query_reset TIMESTAMP DEFAULT NOW(),
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(),
-            api_key VARCHAR(64) UNIQUE,
-            preferences JSONB,
-            memory JSONB DEFAULT '[]'
-        )
-    """)
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS queries (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            query TEXT,
-            response TEXT,
-            metadata JSONB,
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )
-    """)
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS payments (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            razorpay_order_id VARCHAR(100) UNIQUE,
-            razorpay_payment_id VARCHAR(100),
-            razorpay_signature VARCHAR(255),
-            amount FLOAT,
-            currency VARCHAR(3) DEFAULT 'INR',
-            tier VARCHAR(20),
-            status VARCHAR(20) DEFAULT 'created',
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-    """)
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS events (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER,
-            session_id VARCHAR(64),
-            event_type VARCHAR(50),
-            event_data JSONB,
-            ip_address VARCHAR(45),
-            user_agent VARCHAR(255),
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )
-    """)
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS referrals (
-            id SERIAL PRIMARY KEY,
-            referrer_id INTEGER,
-            referee_id INTEGER,
-            code VARCHAR(20) UNIQUE,
-            used BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-    """)
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS bulk_jobs (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            job_id VARCHAR(64) UNIQUE NOT NULL,
-            status VARCHAR(20) DEFAULT 'pending',
-            total_files INTEGER DEFAULT 0,
-            processed_files INTEGER DEFAULT 0,
-            result_url TEXT,
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )
-    """)
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS actions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            action_type VARCHAR(50),
-            action_data JSONB,
-            result JSONB,
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )
-    """)
-    try:
-        await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS memory JSONB DEFAULT '[]'")
-    except: pass
-    try:
-        await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(64) UNIQUE")
-    except: pass
-    logger.info("Tables created/checked (v8.0).")
-
-async def ensure_test_user():
-    await database.execute(users.delete().where(users.c.username == "counsel"))
-    hashed = hash_password("Password123!")
-    api_key = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-    await database.execute(
-        users.insert().values(
-            username="counsel",
-            email="counsel@advocacyalawfrim.in",
-            password_hash=hashed,
-            full_name="Counsel User",
-            tier="enterprise",
-            api_key=api_key,
-            memory=[]
-        )
-    )
-    logger.info("Test user 'counsel' created with Enterprise tier.")
-
-async def delete_expired_data():
-    await database.execute(queries.delete().where(queries.c.created_at < datetime.now() - timedelta(hours=24)))
-    await database.execute(events.delete().where(events.c.created_at < datetime.now() - timedelta(days=30)))
-    await database.execute(bulk_jobs.delete().where(bulk_jobs.c.created_at < datetime.now() - timedelta(days=7)))
-    await database.execute(actions.delete().where(actions.c.created_at < datetime.now() - timedelta(days=30)))
-    logger.info("Expired data purged (Zero Retention).")
-
-async def check_query_limit(user: dict) -> bool:
-    if user["tier"] in ("premium", "enterprise", "lifetime"):
-        return True
-    used = user["queries_used_today"]
-    last_reset = user["last_query_reset"]
-    if datetime.now().date() > last_reset.date():
-        return True
-    return used < 10
-
-async def increment_query(user_id: int):
-    await database.execute(
-        users.update().where(users.c.id == user_id).values(
-            queries_used_today=users.c.queries_used_today + 1,
-            updated_at=datetime.now()
-        )
-    )
-
-# ================================================================
-# FIXED MEMORY FUNCTIONS
-# ================================================================
-async def get_user_memory(user_id: int) -> List[Dict]:
-    user = await database.fetch_one(users.select().where(users.c.id == user_id))
-    if not user:
-        return []
-    user = dict(user)
-    memory = user.get("memory") or []
-    if isinstance(memory, str):
-        memory = json.loads(memory)
-    return memory
-
-async def update_user_memory(user_id: int, query: str, response: str):
-    user = await database.fetch_one(users.select().where(users.c.id == user_id))
-    if not user:
-        return
-    user = dict(user)
-    memory = user.get("memory") or []
-    if isinstance(memory, str):
-        memory = json.loads(memory)
-    memory.append({"q": query[:200], "a": response[:200]})
-    if len(memory) > 10:
-        memory = memory[-10:]
-    await database.execute(
-        users.update().where(users.c.id == user_id).values(memory=json.dumps(memory))
-    )
-
-def build_context_prompt(memory: List[Dict]) -> str:
-    if not memory:
-        return ""
-    context = "\n".join([f"Previous User: {m['q']}\nPrevious Assistant: {m['a']}" for m in memory[:-1]])
-    return f"Context from this conversation:\n{context}\nCurrent query: "
-
-# ─── FILE PROCESSING ────────────────────────────────────────────
-async def process_file(file: UploadFile) -> str:
-    content = await file.read()
-    filename = file.filename.lower()
-    text = ""
-    if filename.endswith('.pdf'):
-        try:
-            with pdfplumber.open(io.BytesIO(content)) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text + "\n"
-            if not text.strip():
-                raise ValueError("PDF extraction returned empty text.")
-            return text.strip()
-        except Exception as e:
-            raise ValueError(f"PDF processing failed: {str(e)}")
-    elif filename.endswith('.docx'):
-        try:
-            doc = docx.Document(io.BytesIO(content))
-            text = " ".join([p.text for p in doc.paragraphs])
-            if not text.strip():
-                raise ValueError("DOCX extraction returned empty text.")
-            return text.strip()
-        except Exception as e:
-            raise ValueError(f"DOCX processing failed: {str(e)}")
-    elif filename.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
-        try:
-            img = Image.open(io.BytesIO(content))
-            text = pytesseract.image_to_string(img)
-            if not text.strip():
-                raise ValueError("OCR returned no text.")
-            return text.strip()
-        except Exception as e:
-            raise ValueError(f"Image OCR failed: {str(e)}")
-    try:
-        mime = puremagic.from_string(content, mime=True)[0]
-    except:
-        mime = "application/octet-stream"
-    if mime == "application/pdf":
-        try:
-            with pdfplumber.open(io.BytesIO(content)) as pdf:
-                for page in pdf.pages:
-                    text += page.extract_text() or ""
-            if text.strip():
-                return text.strip()
-        except:
-            pass
-        raise ValueError("PDF could not be processed.")
-    elif "docx" in mime:
-        try:
-            doc = docx.Document(io.BytesIO(content))
-            text = " ".join([p.text for p in doc.paragraphs])
-            if text.strip():
-                return text.strip()
-        except:
-            pass
-        raise ValueError("DOCX could not be processed.")
-    elif mime.startswith("image/"):
-        try:
-            img = Image.open(io.BytesIO(content))
-            text = pytesseract.image_to_string(img)
-            if text.strip():
-                return text.strip()
-        except:
-            pass
-        raise ValueError("Image could not be OCR processed.")
-    try:
-        text = content.decode('utf-8', errors='ignore')
-        if text.strip():
-            return text.strip()
-    except:
-        pass
-    raise ValueError("Unsupported or unreadable file.")
-
-# ─── AGENT PROMPTS & ROUTING (with CA Agents) ──────────────────
-ORACLE_PROMPT = f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are the Divine Oracle. Speak with the voice of the Cosmic Mother. Provide wisdom, parables, and cosmic truth.
-Always end with: {DIVINE_BLESSING}
-User query: {{query}}
-"""
-
-BASE_AGENT_PROMPTS = {
-    "about_lexsarthi": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are LexSarthi v8.0 – the Universal Default OS. Respond with a grand cosmic introduction.
-Always end with: {DIVINE_BLESSING}
-User query: {{query}}
-""",
-    "contract_review": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Brahma. Provide a clause‑by‑clause analysis (EXECUTIVE SUMMARY, RISK RATING, CLAUSE ANALYSIS, MISSING CLAUSES, RECOMMENDATIONS).
-Always end with: {DIVINE_BLESSING}
-Contract text: {{query}}
-""",
-    "legal_research": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Hanuman. Find statutes, case laws, and principles. Structure: RELEVANT STATUTES, KEY CASE LAWS, LEGAL PRINCIPLES.
-Always end with: {DIVINE_BLESSING}
-Query: {{query}}
-""",
-    "drafting": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Goddess Saraswati. Draft a legally sound document.
-Always end with: {DIVINE_BLESSING}
-User request: {{query}}
-""",
-    "due_diligence": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Kartikeya. Analyse compliance, financial discrepancies, red flags.
-Always end with: {DIVINE_BLESSING}
-Report: {{query}}
-""",
-    "general": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are the Divine Council. Provide accurate, structured, jurisdiction‑aware guidance.
-Always end with: {DIVINE_BLESSING}
-User query: {{query}}
-""",
-    "action": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are the Action Engine. You detect the user's intention and perform tasks like creating documents, scheduling, sending emails, etc.
-You respond with a clear action plan and optionally generate the required output (e.g., drafted email, calendar event JSON).
-Always end with: {DIVINE_BLESSING}
-User request: {{query}}
-""",
-    # ─── NEW CA AGENTS ──────────────────────────────────────────
-    "gst_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Kubera, the treasurer of the gods. You specialise in GST compliance, filing, returns (GSTR-1, GSTR-3B), and GST registration.
-Provide step‑by‑step guidance, due dates, and penalty information.
-Always end with: {DIVINE_BLESSING}
-Query: {{query}}
-""",
-    "income_tax_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Goddess Lakshmi, the bestower of prosperity. You specialise in Income Tax Act, ITR filing (ITR-1 to ITR-7), TDS, and tax planning.
-Provide clear, practical advice with relevant sections.
-Always end with: {DIVINE_BLESSING}
-Query: {{query}}
-""",
-    "incorporation_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Brahma, the creator. You specialise in company incorporation (Private Limited, OPC, LLP), ROC compliance, and drafting MOA/AOA.
-Provide the full process, required documents, and timelines.
-Always end with: {DIVINE_BLESSING}
-Query: {{query}}
-""",
-    "firm_registration_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Vishnu, the preserver. You specialise in partnership firm registration, LLP registration, and compliance under the Partnership Act.
-Always end with: {DIVINE_BLESSING}
-Query: {{query}}
-""",
-    "audit_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
-You are Lord Yama, the dispenser of justice. You specialise in statutory audit, internal audit, tax audit, and CARO reporting.
-Provide checklists, compliance requirements, and reporting standards.
-Always end with: {DIVINE_BLESSING}
-Query: {{query}}
-"""
+// ---- Track Oracle question popularity (localStorage) ----
+function getOracleStats() {
+    const stats = localStorage.getItem('oracle_stats');
+    if (stats) {
+        try { return JSON.parse(stats); } catch { return {}; }
+    }
+    return {};
 }
 
-LANG_MAP = {
-    "en": "English","es": "Spanish","fr": "French","de": "German","pt": "Portuguese","it": "Italian",
-    "nl": "Dutch","ru": "Russian","sv": "Swedish","pl": "Polish","tr": "Turkish",
-    "hi": "Hindi","bn": "Bengali","sa": "Sanskrit","ar": "Arabic",
-    "zh": "Chinese","ja": "Japanese","ko": "Korean","th": "Thai","vi": "Vietnamese",
-    "id": "Indonesian","ms": "Malay","he": "Hebrew","el": "Greek"
+function updateOracleStats(question) {
+    const stats = getOracleStats();
+    stats[question] = (stats[question] || 0) + 1;
+    localStorage.setItem('oracle_stats', JSON.stringify(stats));
 }
 
-def detect_action(query: str) -> Optional[Dict]:
-    q = query.lower()
-    if q.startswith(("create ", "draft ", "write ")):
-        return {"type": "create_document", "verb": q.split()[0]}
-    if q.startswith(("schedule ", "book ", "set up ")):
-        return {"type": "schedule_event"}
-    if q.startswith(("send ", "email ")):
-        return {"type": "send_email"}
-    if q.startswith(("find ", "search ", "look up ")):
-        return {"type": "web_search"}
-    if q.startswith(("calculate ", "compute ")):
-        return {"type": "calculate"}
-    return None
+function getMostPopularQuestions(limit = 5) {
+    const stats = getOracleStats();
+    const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+    return sorted.slice(0, limit).map(item => item[0]);
+}
 
-def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = False) -> str:
-    q = query.lower()
-    if oracle_mode:
-        return "oracle"
-    if "what is lexsarthi" in q or "who are you" in q or "tell me about yourself" in q:
-        return "about_lexsarthi"
-    # ─── DETECT CA AGENTS ──────────────────────────────────────
-    if "gst" in q or "goods and services tax" in q or "gstr" in q:
-        return "gst_agent"
-    if "income tax" in q or "itr" in q or "tax return" in q or "tds" in q:
-        return "income_tax_agent"
-    if "incorporate" in q or "company formation" in q or "private limited" in q or "opc" in q or "llp" in q:
-        return "incorporation_agent"
-    if "firm" in q or "partnership" in q or "registration of firm" in q:
-        return "firm_registration_agent"
-    if "audit" in q or "statutory audit" in q or "internal audit" in q or "tax audit" in q:
-        return "audit_agent"
-    # ─── LEGAL AGENTS ──────────────────────────────────────────
-    if "contract" in q or "agreement" in q or "review" in q:
-        return "contract_review"
-    if "case" in q or "judgment" in q or "research" in q:
-        return "legal_research"
-    if "draft" in q or "create" in q or "prepare" in q:
-        return "drafting"
-    if "due diligence" in q or "compliance" in q:
-        return "due_diligence"
-    # ─── ACTION ────────────────────────────────────────────────
-    action = detect_action(query)
-    if action:
-        return "action"
-    return "general"
+// ---- Build the ordered list: popular first, then the rest ----
+function buildOracleSequence() {
+    const popular = getMostPopularQuestions(5);
+    const remaining = ALL_ORACLE_QUESTIONS.filter(q => !popular.includes(q));
+    return [...popular, ...remaining];
+}
 
-async def run_swarm(query: str, model: str, lang: str = "en") -> str:
-    logger.info("Swarm initiated for query: %s", query[:100])
-    research_prompt = f"{DIVINE_PREFACE}{DIVINE_SALUTATION}\nYou are Lord Hanuman. Find statutes and case laws for: {query}"
-    research_response = await execute_ai_raw(research_prompt, query, model, lang)
-    draft_prompt = f"{DIVINE_PREFACE}{DIVINE_SALUTATION}\nYou are Goddess Saraswati. Draft a legal document based on:\n{research_response[:1000]}\n\nOriginal: {query}"
-    draft_response = await execute_ai_raw(draft_prompt, query, model, lang)
-    review_prompt = f"{DIVINE_PREFACE}{DIVINE_SALUTATION}\nYou are Lord Kartikeya. Review this draft for risks:\n{draft_response[:1000]}"
-    review_response = await execute_ai_raw(review_prompt, query, model, lang)
-    final = f"📜 **RESEARCH (Hanuman):**\n{research_response}\n\n📝 **DRAFT (Saraswati):**\n{draft_response}\n\n✅ **REVIEW (Kartikeya):**\n{review_response}\n\n{DIVINE_BLESSING}"
-    return final
-
-async def execute_ai_raw(system_prompt: str, query: str, model: str, lang: str) -> str:
-    if model.startswith("llama") and groq_client:
-        try:
-            response = groq_client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
-                temperature=0.3,
-                max_tokens=2048,
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            logger.error(f"Groq error: {e}")
-    return search_local_knowledge(query)
-
-async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, lang: str = "en") -> str:
-    if agent_type == "due_diligence" and "swarm" in query.lower():
-        return await run_swarm(query, model, lang)
-
-    if agent_type == "action":
-        action = detect_action(query)
-        base = BASE_AGENT_PROMPTS["action"]
-        prompt = base.format(query=query)
-        lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use appropriate script."
-        system_prompt = f"{prompt}\n\n{lang_instruction}"
-        if model.startswith("llama") and groq_client:
-            try:
-                response = groq_client.chat.completions.create(
-                    model=model,
-                    messages=[{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}],
-                    temperature=0.3,
-                    max_tokens=2048,
-                )
-                return response.choices[0].message.content
-            except Exception as e:
-                logger.error(f"Groq error: {e}")
-        return f"I understand you want to perform an action: {action['type'] if action else 'unknown'}. I will process your request shortly."
-
-    # Handle all agents (including CA) using the prompt dictionary
-    if agent_type == "oracle":
-        prompt = ORACLE_PROMPT.format(query=query)
-    else:
-        base = BASE_AGENT_PROMPTS.get(agent_type, BASE_AGENT_PROMPTS["general"])
-        prompt = base.format(query=query)
-    
-    lang_instruction = f"IMPORTANT: Respond in {LANG_MAP.get(lang, 'English')} language. Use appropriate script."
-    system_prompt = f"{prompt}\n\n{lang_instruction}"
-    
-    if model.startswith("llama") and groq_client:
-        try:
-            response = groq_client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": f"You are {agent_name}. {system_prompt}"}, {"role": "user", "content": query}],
-                temperature=0.3,
-                max_tokens=4096,
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            logger.error(f"Groq error: {e}")
-    # Fallback to local knowledge
-    return search_local_knowledge(query)
-
-# ─── API ENDPOINTS ──────────────────────────────────────────────
-@app.get("/health")
-async def health():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-@app.post("/auth/login", response_model=Token)
-async def login(user_login: UserLogin):
-    logger.info(f"Login: {user_login.username}")
-    user = await database.fetch_one(users.select().where(users.c.username == user_login.username))
-    if not user:
-        user = await database.fetch_one(users.select().where(users.c.email == user_login.username.lower()))
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    user = dict(user)
-    if not verify_password(user_login.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": str(user["id"])})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user["id"],
-            "username": user["username"],
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "tier": user["tier"],
-            "is_premium": user["is_premium"],
-            "api_key": user.get("api_key")
-        }
+// ---- Step‑by‑step Oracle handler ----
+async function nextOracle() {
+    const token = getToken();
+    if (!token) {
+        alert('Please login first.');
+        showLogin();
+        return;
     }
 
-@app.post("/auth/register")
-async def register(user: UserCreate):
-    existing = await database.fetch_one(users.select().where((users.c.username == user.username) | (users.c.email == user.email.lower())))
-    if existing:
-        raise HTTPException(status_code=400, detail="User already exists")
-    hashed = hash_password(user.password)
-    api_key = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-    stmt = users.insert().values(
-        username=user.username,
-        email=user.email.lower(),
-        password_hash=hashed,
-        full_name=user.full_name,
-        tier="free",
-        api_key=api_key,
-        memory=[]
-    ).returning(users.c.id)
-    user_id = await database.fetch_val(stmt)
-    token = create_access_token({"sub": str(user_id)})
-    return {"access_token": token, "token_type": "bearer", "user": {"id": user_id, "username": user.username, "api_key": api_key}}
+    // If sequence not started, initialise
+    if (oracleSequenceIndex === -1) {
+        oracleQuestions = buildOracleSequence();
+        oracleSequenceIndex = 0;
+        // Enable Oracle mode automatically
+        document.getElementById('oracleModeToggle').checked = true;
+        // Update button text
+        updateOracleButton();
+    }
 
-@app.get("/auth/me")
-async def get_me(current_user: dict = Depends(get_current_user)):
-    return current_user
+    // If all questions answered
+    if (oracleSequenceIndex >= oracleQuestions.length) {
+        document.getElementById('inputStatus').textContent = '✅ All Oracle wisdom revealed! Click "Clear" to start fresh.';
+        return;
+    }
 
-@app.get("/lifetime-count")
-async def lifetime_count():
-    count = await database.fetch_val(select(func.count()).select_from(users).where(users.c.tier == "lifetime")) or 0
-    return {"count": count, "limit": 1000, "remaining": max(0, 1000 - count)}
+    const question = oracleQuestions[oracleSequenceIndex];
+    const chatArea = document.getElementById('chatArea');
+    const welcomeEl = document.getElementById('defaultWelcome');
+    if (welcomeEl) welcomeEl.style.display = 'none';
 
-@app.get("/my-usage")
-async def my_usage(current_user: dict = Depends(get_current_user)):
-    total = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id == current_user["id"])) or 0
-    today = await database.fetch_val(select(func.count()).select_from(queries).where(
-        queries.c.user_id == current_user["id"],
-        func.date(queries.c.created_at) == func.current_date()
-    )) or 0
-    return {"total_queries": total, "queries_today": today}
+    // Add user message
+    chatArea.innerHTML += `<div class="chat-bubble user">🔮 Oracle: ${question}</div>`;
+    chatArea.scrollTop = chatArea.scrollHeight;
+    document.getElementById('inputStatus').textContent = `🕉️ Revealing wisdom (${oracleSequenceIndex+1}/${oracleQuestions.length})...`;
 
-@app.post("/ask")
-@limiter.limit("30/minute")
-async def ask(
-    request: Request,
-    query: str = Form(...),
-    files: Optional[UploadFile] = File(None),
-    search_web: str = Form("off"),
-    model: str = Form("llama-3.3-70b-versatile"),
-    agent_id: str = Form("agent_001"),
-    lang: str = Form("en"),
-    oracle_mode: str = Form("false"),
-    current_user: dict = Depends(get_current_user)
-):
-    if not await check_query_limit(current_user):
-        raise HTTPException(status_code=429, detail="Free limit reached.")
-    combined_query = query
-    if files:
-        try:
-            file_text = await process_file(files)
-            if not file_text or len(file_text.strip()) < 20:
-                raise HTTPException(status_code=400, detail="File is empty or unreadable.")
-            combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
-        except HTTPException as he:
-            raise he
-        except Exception as e:
-            logger.error(f"File error: {e}")
-            raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
-    if search_web.lower() in ("on", "yes"):
-        combined_query += "\n\n--- Web Search Enabled ---"
-    
-    await increment_query(current_user["id"])
-    
-    memory = await get_user_memory(current_user["id"])
-    context_prompt = build_context_prompt(memory)
-    if context_prompt:
-        combined_query = context_prompt + combined_query
-    
-    oracle = oracle_mode.lower() == "true"
-    agent_type = route_agent(combined_query, agent_id, oracle)
-    agent_name = next((a["name"] for a in DIVINE_AGENTS if a["id"] == agent_id), "General Counsel")
-    
-    response_text = await execute_ai(combined_query, model, agent_type, agent_name, lang)
-    
-    await update_user_memory(current_user["id"], query, response_text)
-    
-    expires_at = datetime.now() + timedelta(hours=24)
-    await database.execute(
-        queries.insert().values(
-            user_id=current_user["id"],
-            query=combined_query,
-            response=response_text,
-            metadata={"agent": agent_id, "model": model, "file": bool(files), "agent_type": agent_type, "lang": lang, "oracle": oracle},
-            expires_at=expires_at
-        )
-    )
-    return {"response": response_text, "model": model, "agent_used": agent_id}
+    // Build form data
+    const formData = new FormData();
+    formData.append('query', question);
+    formData.append('search_web', document.getElementById('webSearchToggle').checked ? 'on' : 'off');
+    formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
+    formData.append('agent_id', 'agent_001');
+    formData.append('lang', document.getElementById('langSelect').value || 'en');
+    formData.append('oracle_mode', 'true');
 
-# ─── ACTION ENDPOINT ────────────────────────────────────────────
-@app.post("/action")
-async def execute_action(action_req: ActionRequest, current_user: dict = Depends(get_current_user)):
-    action_type = action_req.action
-    data = action_req.data
-    await database.execute(
-        actions.insert().values(
-            user_id=current_user["id"],
-            action_type=action_type,
-            action_data=data,
-            result={"status": "mocked", "message": f"Action '{action_type}' received."}
-        )
-    )
-    return {"status": "ok", "action": action_type, "data": data}
+    try {
+        const res = await fetch(`${API_BASE}/ask`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
 
-# ─── BULK UPLOAD ────────────────────────────────────────────────
-@app.post("/bulk-upload")
-async def bulk_upload(
-    background_tasks: BackgroundTasks,
-    files: List[UploadFile] = File(...),
-    query: str = Form(...),
-    model: str = Form("llama-3.3-70b-versatile"),
-    agent_id: str = Form("agent_001"),
-    lang: str = Form("en"),
-    current_user: dict = Depends(get_current_user)
-):
-    if current_user["tier"] not in ("premium", "enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Bulk upload requires Premium or Enterprise.")
-    job_id = str(uuid.uuid4())
-    total_files = len(files)
-    await database.execute(
-        bulk_jobs.insert().values(
-            user_id=current_user["id"],
-            job_id=job_id,
-            total_files=total_files,
-            status="processing",
-            expires_at=datetime.now() + timedelta(days=7)
-        )
-    )
-    background_tasks.add_task(process_bulk_job, job_id, files, query, model, agent_id, lang, current_user["id"])
-    return {"job_id": job_id, "status": "processing", "total_files": total_files}
+        const rawText = await res.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch (e) {
+            chatArea.innerHTML += `<div class="chat-bubble agent">${rawText.replace(/\n/g, '<br>')}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return;
+        }
 
-async def process_bulk_job(job_id: str, files: List[UploadFile], query: str, model: str, agent_id: str, lang: str, user_id: int):
-    results = []
-    processed = 0
-    for file in files:
-        try:
-            file_text = await process_file(file)
-            combined_query = f"{query}\n\n--- Document Content ---\n{file_text}"
-            agent_type = route_agent(combined_query, agent_id)
-            agent_name = next((a["name"] for a in DIVINE_AGENTS if a["id"] == agent_id), "General Counsel")
-            response = await execute_ai(combined_query, model, agent_type, agent_name, lang)
-            results.append({"filename": file.filename, "response": response})
-        except Exception as e:
-            results.append({"filename": file.filename, "error": str(e)})
-        processed += 1
-        await database.execute(
-            bulk_jobs.update().where(bulk_jobs.c.job_id == job_id).values(
-                processed_files=processed,
-                status="processing"
-            )
-        )
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Filename", "Response"])
-    for r in results:
-        writer.writerow([r.get("filename"), r.get("response", r.get("error", "Failed"))])
-    csv_data = output.getvalue()
-    await database.execute(
-        bulk_jobs.update().where(bulk_jobs.c.job_id == job_id).values(
-            status="completed",
-            result_url=f"job_{job_id}.csv"
-        )
-    )
+        if (res.ok) {
+            let displayText = data.response.replace(/\n/g, '<br>');
+            displayText += `<br><span style="font-size:0.5rem; color:var(--gold);">✅ Verified | Zero Retention (24h) | ${data.model}</span>`;
+            chatArea.innerHTML += `<div class="chat-bubble agent">${displayText}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+            // Update popularity
+            updateOracleStats(question);
+        } else {
+            chatArea.innerHTML += `<div class="chat-bubble agent" style="color:#ff6b6b;">Error: ${data.detail || 'Server error'}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+    } catch(e) {
+        chatArea.innerHTML += `<div class="chat-bubble agent" style="color:#ff6b6b;">Network error: ${e.message}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
 
-@app.get("/bulk-result/{job_id}")
-async def get_bulk_result(job_id: str, current_user: dict = Depends(get_current_user)):
-    job = await database.fetch_one(bulk_jobs.select().where(bulk_jobs.c.job_id == job_id))
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    if job["user_id"] != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    if job["status"] != "completed":
-        return {"status": job["status"], "processed": job["processed_files"], "total": job["total_files"]}
-    return {"status": "completed", "result_url": job["result_url"]}
+    // Move to next question
+    oracleSequenceIndex++;
+    updateOracleButton();
+    document.getElementById('inputStatus').textContent = oracleSequenceIndex >= oracleQuestions.length ? 
+        '✅ All wisdom revealed!' : 
+        `🕉️ Click "Next Oracle Wisdom" for the next insight.`;
+}
 
-# ─── RAZORPAY ──────────────────────────────────────────────────
-razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
+function updateOracleButton() {
+    const btn = document.getElementById('nextOracleBtn');
+    if (oracleSequenceIndex === -1) {
+        btn.innerHTML = '<i class="fas fa-arrow-right"></i> Next Oracle Wisdom';
+        return;
+    }
+    if (oracleSequenceIndex >= oracleQuestions.length) {
+        btn.innerHTML = '<i class="fas fa-check"></i> Wisdom Complete';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'default';
+        return;
+    }
+    btn.innerHTML = `<i class="fas fa-arrow-right"></i> Next Wisdom (${oracleSequenceIndex+1}/${oracleQuestions.length})`;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+}
 
-@app.post("/create-order")
-async def create_order(payment: PaymentCreate, current_user: dict = Depends(get_current_user)):
-    if not razorpay_client:
-        raise HTTPException(status_code=501, detail="Payments not configured")
-    amount_map = {"premium": 10200, "enterprise": 101100, "lifetime": 200}
-    amount = amount_map.get(payment.tier, 10200)
-    order = razorpay_client.order.create({"amount": amount, "currency": "INR", "payment_capture": 1})
-    await database.execute(
-        payments.insert().values(
-            user_id=current_user["id"],
-            razorpay_order_id=order["id"],
-            amount=amount/100,
-            tier=payment.tier,
-            status="created"
-        )
-    )
-    return {"order_id": order["id"], "amount": amount, "razorpay_key": RAZORPAY_KEY_ID}
+// ---- Reset Oracle sequence when user clears chat or logs out ----
+function resetOracleSequence() {
+    oracleSequenceIndex = -1;
+    oracleQuestions = [];
+    const btn = document.getElementById('nextOracleBtn');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.innerHTML = '<i class="fas fa-arrow-right"></i> Next Oracle Wisdom';
+}
 
-@app.post("/verify-payment")
-async def verify_payment(
-    razorpay_order_id: str = Form(...),
-    razorpay_payment_id: str = Form(...),
-    razorpay_signature: str = Form(...),
-    current_user: dict = Depends(get_current_user)
-):
-    if not razorpay_client:
-        raise HTTPException(status_code=501, detail="Payments not configured")
-    try:
-        razorpay_client.utility.verify_payment_signature({
-            "razorpay_order_id": razorpay_order_id,
-            "razorpay_payment_id": razorpay_payment_id,
-            "razorpay_signature": razorpay_signature
-        })
-        payment = await database.fetch_one(payments.select().where(payments.c.razorpay_order_id == razorpay_order_id))
-        tier = payment["tier"]
-        await database.execute(
-            users.update().where(users.c.id == current_user["id"]).values(tier=tier, is_premium=True)
-        )
-        await database.execute(
-            payments.update().where(payments.c.razorpay_order_id == razorpay_order_id).values(status="paid")
-        )
-        return {"status": "success", "tier": tier}
-    except Exception as e:
-        logger.error(f"Payment verification failed: {e}")
-        raise HTTPException(status_code=400, detail="Verification failed")
+// ---- Stars ----
+(function() {
+    const c = document.getElementById('starsContainer');
+    if (c) {
+        for (let i=0; i<80; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            const size = Math.random()*2+0.5;
+            s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--duration:${Math.random()*3+2}s;animation-delay:${Math.random()*5}s;`;
+            c.appendChild(s);
+        }
+    }
+})();
 
-# ─── STATIC FILES ──────────────────────────────────────────────
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+function setTyping(active) {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.classList.toggle('active', active);
+}
 
-if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
+// ---- Voice & Language ----
+const langMap = {
+    'en':'en-US','es':'es-ES','fr':'fr-FR','de':'de-DE','pt':'pt-BR','it':'it-IT',
+    'nl':'nl-NL','ru':'ru-RU','sv':'sv-SE','pl':'pl-PL','tr':'tr-TR',
+    'hi':'hi-IN','bn':'bn-IN','sa':'sa','ar':'ar-SA',
+    'zh':'zh-CN','ja':'ja-JP','ko':'ko-KR','th':'th-TH','vi':'vi-VN',
+    'id':'id-ID','ms':'ms-MY','he':'he-IL','el':'el-GR'
+};
+
+function startVoice() {
+    const selectedLang = document.getElementById('langSelect').value;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = langMap[selectedLang] || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => {
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+    };
+    recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        document.getElementById('queryInput').value = transcript;
+        document.getElementById('inputStatus').textContent = '🎤 Voice captured';
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+    };
+    recognition.onerror = () => {
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+        document.getElementById('inputStatus').textContent = '❌ Voice error';
+    };
+    recognition.onend = () => {
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+    };
+    recognition.start();
+}
+
+function speakResponse() {
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    const text = chatArea.innerText || '';
+    if (!text.trim()) { alert('No response.'); return; }
+    const cleanText = text.replace(/✅ Verified by 10 Divine Layers.*/g, '').trim();
+    const selectedLang = document.getElementById('langSelect').value;
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = langMap[selectedLang] || 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+    document.getElementById('inputStatus').textContent = '🔊 Speaking';
+}
+
+function quickAction(prompt) {
+    const input = document.getElementById('queryInput');
+    if (input) {
+        input.value = prompt;
+        input.focus();
+        sendQuery();
+    }
+}
+
+// ---- Auth ----
+async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const status = document.getElementById('login-status');
+    if (status) status.textContent = 'Logging...';
+    try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: email, password: pass })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('lex_token', data.access_token);
+            if (status) status.textContent = '✅ Success!';
+            closeModal('loginModal');
+            checkPremium();
+            // Reset Oracle sequence on login
+            resetOracleSequence();
+        } else {
+            if (status) status.textContent = '❌ ' + data.detail;
+        }
+    } catch(e) {
+        if (status) status.textContent = '❌ Network error';
+    }
+}
+
+async function handleRegister() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const status = document.getElementById('login-status');
+    if (status) status.textContent = 'Registering...';
+    try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: email.split('@')[0], email, password: pass, full_name: 'User' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            if (status) status.textContent = '✅ Registered! Login now.';
+        } else {
+            if (status) status.textContent = '❌ ' + data.detail;
+        }
+    } catch(e) {
+        if (status) status.textContent = '❌ Network error';
+    }
+}
+
+async function checkPremium() {
+    const token = getToken();
+    if (!token) return;
+    try {
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.tier === 'premium' || data.tier === 'enterprise' || data.tier === 'lifetime') {
+                document.getElementById('premiumBadge').style.display = 'inline-block';
+                document.getElementById('premiumMessage').style.display = 'block';
+            }
+            if (data.tier === 'enterprise') {
+                document.getElementById('enterpriseBadge').style.display = 'inline-block';
+            }
+        }
+    } catch(e) {}
+}
+
+async function showMyUsage() {
+    const token = getToken();
+    if (!token) { alert('Login first'); showLogin(); return; }
+    openModal('myUsageModal');
+    await fetchMyUsage();
+}
+async function fetchMyUsage() {
+    const container = document.getElementById('myUsageContent');
+    if (!container) return;
+    const token = getToken();
+    if (!token) { container.innerHTML = '<p>Login required</p>'; return; }
+    try {
+        const res = await fetch(`${API_BASE}/my-usage`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        container.innerHTML = `<p>Total Queries: <strong>${data.total_queries}</strong></p><p>Today: ${data.queries_today}</p>`;
+    } catch(e) {
+        container.innerHTML = '<p>Error loading</p>';
+    }
+}
+
+// ---- File handling ----
+function handleFileUpload(input) {
+    if (input.files && input.files[0]) {
+        uploadedFile = input.files[0];
+        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFile.name}`;
+        document.getElementById('filePreview').classList.add('show');
+        document.getElementById('inputStatus').textContent = `📄 File loaded: ${uploadedFile.name}`;
+    }
+}
+function clearFilePreview() {
+    uploadedFile = null;
+    document.getElementById('filePreview').classList.remove('show');
+    document.getElementById('pdfUpload').value = '';
+}
+
+async function handleBulkUpload(input) {
+    const files = input.files;
+    if (!files.length) return;
+    const token = getToken();
+    if (!token) { alert('Login first'); showLogin(); return; }
+    const formData = new FormData();
+    for (let f of files) formData.append('files', f);
+    const query = document.getElementById('queryInput').value || 'Analyze these documents';
+    formData.append('query', query);
+    formData.append('model', document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile');
+    formData.append('agent_id', 'agent_001');
+    formData.append('lang', document.getElementById('langSelect').value || 'en');
+    document.getElementById('inputStatus').textContent = `📦 Bulk processing (${files.length} files)...`;
+    try {
+        const res = await fetch(`${API_BASE}/bulk-upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('inputStatus').textContent = `✅ Bulk job created: ${data.job_id}`;
+        } else {
+            document.getElementById('inputStatus').textContent = '❌ ' + (data.detail || 'Bulk failed');
+        }
+    } catch(e) {
+        document.getElementById('inputStatus').textContent = '❌ Network error';
+    }
+    input.value = '';
+}
+
+// ---- Send Query (used by quick actions and manual typing) ----
+async function sendQuery() {
+    const queryInput = document.getElementById('queryInput');
+    const statusEl = document.getElementById('inputStatus');
+    const chatArea = document.getElementById('chatArea');
+    const welcomeEl = document.getElementById('defaultWelcome');
+
+    const query = queryInput ? queryInput.value.trim() : '';
+    if (!query && !uploadedFile) {
+        if (statusEl) statusEl.textContent = 'Enter a query or upload a file!';
+        return;
+    }
+    const token = getToken();
+    if (!token) { alert('Login required'); showLogin(); return; }
+
+    setTyping(true);
+    if (statusEl) statusEl.textContent = 'Invoking Divine Intelligence...';
+
+    const lang = document.getElementById('langSelect').value;
+    const model = document.getElementById('modelSelect')?.value || 'llama-3.3-70b-versatile';
+    const oracle_mode = document.getElementById('oracleModeToggle').checked ? 'true' : 'false';
+    const web_search = document.getElementById('webSearchToggle').checked ? 'on' : 'off';
+
+    const formData = new FormData();
+    formData.append('query', query || 'Analyze uploaded document');
+    if (uploadedFile) formData.append('files', uploadedFile);
+    formData.append('search_web', web_search);
+    formData.append('model', model);
+    formData.append('agent_id', 'agent_001');
+    formData.append('lang', lang);
+    formData.append('oracle_mode', oracle_mode);
+
+    let userMsg = query || '📎 File uploaded';
+    if (uploadedFile) userMsg += `<br><span style="font-size:0.6rem; color:var(--gold);">📎 ${uploadedFile.name}</span>`;
+    if (oracle_mode === 'true') userMsg = `🔮 Oracle: ${userMsg}`;
+    if (web_search === 'on') userMsg += `<br><span style="font-size:0.5rem; color:#34d399;">🌐 Web Search enabled</span>`;
+    if (chatArea) {
+        chatArea.innerHTML += `<div class="chat-bubble user">${userMsg}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    if (welcomeEl) welcomeEl.style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_BASE}/ask`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        const rawText = await res.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch (e) {
+            setTyping(false);
+            if (chatArea) {
+                chatArea.innerHTML += `<div class="chat-bubble agent">${rawText.replace(/\n/g, '<br>')}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            if (statusEl) statusEl.textContent = '✅ Raw response';
+            clearFilePreview();
+            if (queryInput) queryInput.value = '';
+            return;
+        }
+
+        setTyping(false);
+        if (res.ok) {
+            let displayText = data.response.replace(/\n/g, '<br>');
+            displayText += `<br><span style="font-size:0.5rem; color:var(--gold);">✅ Verified | Zero Retention (24h) | ${data.model}</span>`;
+            if (chatArea) {
+                chatArea.innerHTML += `<div class="chat-bubble agent">${displayText}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            currentResponseText = data.response;
+            if (statusEl) statusEl.textContent = `✅ Done (${data.model})`;
+        } else {
+            if (chatArea) {
+                chatArea.innerHTML += `<div class="chat-bubble agent" style="color:#ff6b6b;">Error: ${data.detail || 'Server error'}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            if (statusEl) statusEl.textContent = '❌ ' + (data.detail || 'Error');
+        }
+    } catch(e) {
+        setTyping(false);
+        if (statusEl) statusEl.textContent = '❌ Network error: ' + e.message;
+        if (chatArea) {
+            chatArea.innerHTML += `<div class="chat-bubble agent" style="color:#ff6b6b;">Network error: ${e.message}</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+    }
+    clearFilePreview();
+    if (queryInput) queryInput.value = '';
+}
+
+// ---- Output tools ----
+function copyResponse() {
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    const text = chatArea.innerText || '';
+    navigator.clipboard.writeText(text).then(() => {
+        document.getElementById('inputStatus').textContent = '✅ Copied!';
+    });
+}
+function downloadTXT() {
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    const text = chatArea.innerText || '';
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'lexsarthi_response.txt';
+    a.click();
+}
+function downloadPDF() {
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea || !chatArea.innerText.trim()) { alert('No response.'); return; }
+    document.getElementById('inputStatus').textContent = 'Generating PDF...';
+    html2pdf().set({
+        margin: 0.5,
+        filename: 'lexsarthi_response.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    }).from(chatArea).save().then(() => {
+        document.getElementById('inputStatus').textContent = '✅ PDF downloaded!';
+    }).catch(() => {
+        document.getElementById('inputStatus').textContent = '❌ PDF failed.';
+    });
+}
+function clearResponse() {
+    const chatArea = document.getElementById('chatArea');
+    const welcome = document.getElementById('defaultWelcome');
+    if (chatArea) chatArea.innerHTML = '';
+    if (welcome) welcome.style.display = 'block';
+    document.getElementById('inputStatus').textContent = '';
+    // Reset Oracle sequence when chat is cleared
+    resetOracleSequence();
+}
+
+// ---- Modals ----
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showLogin() { openModal('loginModal'); }
+function toggleSettings() {
+    document.getElementById('settingsPanel').classList.toggle('open');
+}
+
+// ---- Payment ----
+function showPayment() { openModal('paymentModal'); checkLifetime(); }
+function selectPlan(plan) { document.getElementById('paymentPlan').value = plan; }
+async function processPayment() {
+    const token = getToken();
+    if (!token) { alert('Login first'); return; }
+    const tier = document.getElementById('paymentPlan').value;
+    const status = document.getElementById('payment-status');
+    if (status) status.textContent = 'Creating order...';
+    try {
+        const res = await fetch(`${API_BASE}/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ tier })
+        });
+        const data = await res.json();
+        if (!res.ok) { if (status) status.textContent = '❌ ' + data.detail; return; }
+        const options = {
+            key: data.razorpay_key,
+            amount: data.amount,
+            currency: 'INR',
+            name: 'LexSarthi',
+            order_id: data.order_id,
+            handler: async function(response) {
+                const vRes = await fetch(`${API_BASE}/verify-payment`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: new URLSearchParams({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                });
+                const vData = await vRes.json();
+                if (vRes.ok) {
+                    if (status) status.textContent = '✅ Success! You are ' + vData.tier;
+                    closeModal('paymentModal');
+                    checkPremium();
+                } else {
+                    if (status) status.textContent = '❌ ' + vData.detail;
+                }
+            },
+            prefill: { email: (await (await fetch(`${API_BASE}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } })).json()).email || '' },
+            theme: { color: '#d4a853' }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } catch(e) { if (status) status.textContent = '❌ ' + e.message; }
+}
+async function checkLifetime() {
+    try {
+        const res = await fetch(`${API_BASE}/lifetime-count`);
+        const data = await res.json();
+        const el = document.getElementById('lifetimeCount');
+        if (el) el.textContent = `(${data.remaining} left)`;
+    } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const token = getToken();
+    if (token) checkPremium();
+    const input = document.getElementById('queryInput');
+    if (input) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuery();
+            }
+        });
+    }
+    resetOracleSequence();
+});
+</script>
+</body>
+</html>
