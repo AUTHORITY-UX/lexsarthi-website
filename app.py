@@ -1,5 +1,5 @@
 # ===================================================================
-# LEXSARTHI v8.0 – THE UNIVERSAL DEFAULT OS
+# LEXSARTHI v8.0 – UNIVERSAL DEFAULT OS (with CA Agents)
 # ===================================================================
 # Owner: THE ADVOCACY – A LAW FIRM
 # Deployed: upamnyu12-lex.hf.space
@@ -241,7 +241,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    return dict(user)   # Convert to dict to allow .get() later
+    return dict(user)
 
 async def get_api_key_user(api_key: str = Depends(api_key_header)):
     if not api_key:
@@ -576,13 +576,13 @@ async def increment_query(user_id: int):
     )
 
 # ================================================================
-# FIXED MEMORY FUNCTIONS – CONVERT RECORD TO DICT
+# FIXED MEMORY FUNCTIONS
 # ================================================================
 async def get_user_memory(user_id: int) -> List[Dict]:
     user = await database.fetch_one(users.select().where(users.c.id == user_id))
     if not user:
         return []
-    user = dict(user)   # <-- CRITICAL FIX
+    user = dict(user)
     memory = user.get("memory") or []
     if isinstance(memory, str):
         memory = json.loads(memory)
@@ -592,7 +592,7 @@ async def update_user_memory(user_id: int, query: str, response: str):
     user = await database.fetch_one(users.select().where(users.c.id == user_id))
     if not user:
         return
-    user = dict(user)   # <-- CRITICAL FIX
+    user = dict(user)
     memory = user.get("memory") or []
     if isinstance(memory, str):
         memory = json.loads(memory)
@@ -684,7 +684,7 @@ async def process_file(file: UploadFile) -> str:
         pass
     raise ValueError("Unsupported or unreadable file.")
 
-# ─── AGENT PROMPTS & ROUTING ──────────────────────────────────
+# ─── AGENT PROMPTS & ROUTING (with CA Agents) ──────────────────
 ORACLE_PROMPT = f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
 You are the Divine Oracle. Speak with the voice of the Cosmic Mother. Provide wisdom, parables, and cosmic truth.
 Always end with: {DIVINE_BLESSING}
@@ -727,6 +727,36 @@ You are the Action Engine. You detect the user's intention and perform tasks lik
 You respond with a clear action plan and optionally generate the required output (e.g., drafted email, calendar event JSON).
 Always end with: {DIVINE_BLESSING}
 User request: {{query}}
+""",
+    # ─── NEW CA AGENTS ──────────────────────────────────────────
+    "gst_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are Lord Kubera, the treasurer of the gods. You specialise in GST compliance, filing, returns (GSTR-1, GSTR-3B), and GST registration.
+Provide step‑by‑step guidance, due dates, and penalty information.
+Always end with: {DIVINE_BLESSING}
+Query: {{query}}
+""",
+    "income_tax_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are Goddess Lakshmi, the bestower of prosperity. You specialise in Income Tax Act, ITR filing (ITR-1 to ITR-7), TDS, and tax planning.
+Provide clear, practical advice with relevant sections.
+Always end with: {DIVINE_BLESSING}
+Query: {{query}}
+""",
+    "incorporation_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are Lord Brahma, the creator. You specialise in company incorporation (Private Limited, OPC, LLP), ROC compliance, and drafting MOA/AOA.
+Provide the full process, required documents, and timelines.
+Always end with: {DIVINE_BLESSING}
+Query: {{query}}
+""",
+    "firm_registration_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are Lord Vishnu, the preserver. You specialise in partnership firm registration, LLP registration, and compliance under the Partnership Act.
+Always end with: {DIVINE_BLESSING}
+Query: {{query}}
+""",
+    "audit_agent": f"""{DIVINE_PREFACE}{DIVINE_SALUTATION}
+You are Lord Yama, the dispenser of justice. You specialise in statutory audit, internal audit, tax audit, and CARO reporting.
+Provide checklists, compliance requirements, and reporting standards.
+Always end with: {DIVINE_BLESSING}
+Query: {{query}}
 """
 }
 
@@ -758,9 +788,18 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "oracle"
     if "what is lexsarthi" in q or "who are you" in q or "tell me about yourself" in q:
         return "about_lexsarthi"
-    action = detect_action(query)
-    if action:
-        return "action"
+    # ─── DETECT CA AGENTS ──────────────────────────────────────
+    if "gst" in q or "goods and services tax" in q or "gstr" in q:
+        return "gst_agent"
+    if "income tax" in q or "itr" in q or "tax return" in q or "tds" in q:
+        return "income_tax_agent"
+    if "incorporate" in q or "company formation" in q or "private limited" in q or "opc" in q or "llp" in q:
+        return "incorporation_agent"
+    if "firm" in q or "partnership" in q or "registration of firm" in q:
+        return "firm_registration_agent"
+    if "audit" in q or "statutory audit" in q or "internal audit" in q or "tax audit" in q:
+        return "audit_agent"
+    # ─── LEGAL AGENTS ──────────────────────────────────────────
     if "contract" in q or "agreement" in q or "review" in q:
         return "contract_review"
     if "case" in q or "judgment" in q or "research" in q:
@@ -769,6 +808,10 @@ def route_agent(query: str, agent_id: str = "agent_001", oracle_mode: bool = Fal
         return "drafting"
     if "due diligence" in q or "compliance" in q:
         return "due_diligence"
+    # ─── ACTION ────────────────────────────────────────────────
+    action = detect_action(query)
+    if action:
+        return "action"
     return "general"
 
 async def run_swarm(query: str, model: str, lang: str = "en") -> str:
@@ -819,6 +862,7 @@ async def execute_ai(query: str, model: str, agent_type: str, agent_name: str, l
                 logger.error(f"Groq error: {e}")
         return f"I understand you want to perform an action: {action['type'] if action else 'unknown'}. I will process your request shortly."
 
+    # Handle all agents (including CA) using the prompt dictionary
     if agent_type == "oracle":
         prompt = ORACLE_PROMPT.format(query=query)
     else:
@@ -943,7 +987,6 @@ async def ask(
     
     await increment_query(current_user["id"])
     
-    # Retrieve memory (fixed)
     memory = await get_user_memory(current_user["id"])
     context_prompt = build_context_prompt(memory)
     if context_prompt:
@@ -955,7 +998,6 @@ async def ask(
     
     response_text = await execute_ai(combined_query, model, agent_type, agent_name, lang)
     
-    # Update memory (fixed)
     await update_user_memory(current_user["id"], query, response_text)
     
     expires_at = datetime.now() + timedelta(hours=24)
