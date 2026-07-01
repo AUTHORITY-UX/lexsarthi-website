@@ -843,8 +843,15 @@ async def login(user_login: UserLogin):
     user = await database.fetch_one(users.select().where(users.c.username == user_login.username))
     if not user:
         user = await database.fetch_one(users.select().where(users.c.email == user_login.username.lower()))
-    if not user or not verify_password(user_login.password, user["password_hash"]):
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Convert Record to dict so we can use .get()
+    user = dict(user)
+    
+    if not verify_password(user_login.password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
     token = create_access_token({"sub": str(user["id"])})
     return {
         "access_token": token,
@@ -856,7 +863,7 @@ async def login(user_login: UserLogin):
             "full_name": user["full_name"],
             "tier": user["tier"],
             "is_premium": user["is_premium"],
-            "api_key": user.get("api_key")
+            "api_key": user.get("api_key")  # Now works because user is a dict
         }
     }
 
