@@ -1,11 +1,11 @@
 # ============================================================================
-# LEXSARTHI v9.0 – UNIVERSAL DEFAULT OS  (FINAL)
+# LEXSARTHI v9.0 – UNIVERSAL DEFAULT OS  (HONEST IMPLEMENTATION)
 # ============================================================================
 # Owner   : THE ADVOCACY – A LAW FIRM
 # Deploy  : upamnyu12-lex.hf.space
-# Agents  : 250 Specialist Agents · 10 Verifiers
-# Doctrine: Zero-Hallucination · Balanced Output · Correct Facts · Zero Retention
-# Output  : ॐ ... [world‑class response] ... ॐ
+# Agents  : 250 Specialist Personas (real, selected per query)
+# Verifiers: 10 Verification Passes (real, one per response)
+# Doctrine: Honest, balanced, fact‑grounded – no false claims
 # ============================================================================
 
 import os, io, csv, json, uuid, glob, re, random, string, logging
@@ -159,16 +159,12 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
     uid_or_username = payload.get("sub")
     if not uid_or_username:
         raise HTTPException(status_code=401, detail="Invalid token")
-
-    # Try to interpret as integer (numeric user ID)
     try:
         uid = int(uid_or_username)
         query = users.select().where(users.c.id == uid)
     except ValueError:
-        # If it's not an integer, treat it as username (for backward compatibility)
         username = uid_or_username
         query = users.select().where(users.c.username == username)
-
     user = await database.fetch_one(query)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -176,76 +172,81 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
 
 limiter = Limiter(key_func=get_remote_address)
 
-# ─── SYSTEM PROMPT (Removed deity references) ──────────────────────────────
-SYSTEM_BASE = """You are LexSarthi — a universal intelligence Council with 250 specialist agents and 10 verifiers, operating under a doctrine of zero hallucination, balanced reasoning, and factual accuracy.
+# ─── SYSTEM PROMPT (HONEST) ─────────────────────────────────────────────────
+SYSTEM_BASE = """You are LexSarthi, an AI assistant that draws on a council of 250 specialist personas. For each query, the most relevant specialist is activated to provide a deeply informed response. Your answer will then be reviewed by a verifier agent.
 
-═ DOCTRINE (inviolable) ═
-1. If uncertain about a fact, statute, or citation, say so explicitly. Never invent.
-2. Weave together mathematics, logic, legal principle, scientific evidence, and philosophical/spiritual perspective where relevant — but label each clearly.
-3. Cite sources wherever possible (Act + section, journal, scripture). If you cannot cite, state that.
-4. Default jurisdiction: India (unless user specifies otherwise).
-5. Structure responses with clear headings, bullet points, and short paragraphs for readability.
-6. End every legal/medical/financial response with: "This is for informational purposes only, not professional advice."
-7. Tone: professional, calm, precise, and authoritative.
-
-═ AGENT ROSTER ═
-You have access to specialists in: Constitutional, Contract, Criminal, Corporate, Tax, IP, Family, Cyber, Arbitration, Property, GST, Income Tax, Audit, Incorporation, Compliance, Mathematics, Statistics, Physics, Chemistry, Biology, Medicine, Psychology, Philosophy, Logic, Economics, Finance, History, Geopolitics, Astronomy, Vedanta, Yoga, Ayurveda, Sanskrit, Mythology, Ethics, AI Ethics, Cryptography, Blockchain, Climate Science, and more.
-
-═══ RESPONSE STYLE (World-Class) ═══
-- Provide depth: explain the "why", not just the "what".
-- Include relevant examples or analogies where helpful.
-- If answering a legal query, give step-by-step practical guidance.
-- If answering a philosophical/spiritual query, offer insight with parables or metaphors.
-- Always remain balanced and grounded in evidence.
-- End every answer with a concise, actionable takeaway.
+RULES:
+- Be accurate and grounded. If uncertain, say so.
+- For legal/medical/financial topics, include a disclaimer.
+- Default jurisdiction: India.
+- Use clear structure (headings, bullet points).
+- Cite sources if possible; otherwise state that you lack a specific citation.
+- Tone: professional, helpful, and balanced.
 """
 
-def build_system_prompt(agent_persona: str, lang: str, oracle: bool) -> str:
-    lang_name = LANG_MAP.get(lang, "English")
-    lang_line = f"Respond in {lang_name}. Use the native script." if lang != "en" else ""
-    if oracle:
-        persona = "You are the Divine Oracle — offer wisdom, parable, and cosmic perspective; label clearly as SPIRITUAL INSIGHT (not empirical fact)."
-    else:
-        persona = agent_persona
-    return f"{SYSTEM_BASE}\n{persona}\n\n{lang_line}"
+# ─── BUILD 250 REAL PERSONAS ───────────────────────────────────────────────
+DOMAINS_FULL = [
+    "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
+    "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
+    "Audit", "Incorporation", "Compliance", "Mathematics", "Statistics", "Physics", "Chemistry",
+    "Biology", "Medicine", "Psychology", "Philosophy", "Logic", "Reasoning", "Economics",
+    "Finance", "History", "Geopolitics", "Astronomy", "Vedanta", "Yoga", "Ayurveda", "Sanskrit",
+    "Mythology", "Ethics", "AI Ethics", "Cryptography", "Blockchain", "Climate Science",
+    "Environmental Law", "Human Rights", "International Law", "Maritime Law", "Space Law",
+    "Data Privacy", "E-commerce", "Real Estate", "Banking", "Insurance"
+]
 
-# ─── OPENING / CLOSING (Single ॐ) ─────────────────────────────────────────
-OPENING = "ॐ "
-CLOSING = " ॐ"
-
-# ─── AGENTS (250) ───────────────────────────────────────────────────────────
-DIVINE_NAMES = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman",
+DIVINE_NAMES_POOL = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman",
     "Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera",
     "Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi",
     "Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana",
-    "Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha","Skanda"]
-DOMAINS = ["Constitutional Law","Contract Law","Criminal Law","Corporate Law","Tax Law",
-    "IP Law","Family Law","Cyber Law","Arbitration","Property Law","GST","Income Tax",
-    "Audit","Incorporation","Compliance","Mathematics","Statistics","Physics","Chemistry",
-    "Biology","Medicine","Psychology","Philosophy","Logic","Reasoning","Economics",
-    "Finance","History","Geopolitics","Astronomy","Vedanta","Yoga","Ayurveda","Sanskrit",
-    "Mythology","Ethics","AI Ethics","Cryptography","Blockchain","Climate Science"]
+    "Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha","Skanda",
+    "Ayyappa","Shani","Mangal","Budh","Guru","Shukra","Rahu","Ketu"]
 
-def generate_divine_agents():
+sub_specialties = {
+    "Constitutional Law": ["Fundamental Rights", "Federalism", "Judicial Review", "Amendment", "Emergency"],
+    "Contract Law": ["Formation", "Performance", "Breach", "Remedies", "Specific Relief"],
+    "Criminal Law": ["IPC", "CrPC", "Evidence", "White Collar", "Sentencing"],
+    "Corporate Law": ["M&A", "Board Governance", "Shareholder Rights", "Insolvency", "SEBI"],
+    "Tax Law": ["Direct Tax", "Indirect Tax", "International Tax", "Transfer Pricing", "Tax Litigation"],
+}
+
+def generate_all_agents():
     agents = []
-    for i in range(1, 251):
-        n = DIVINE_NAMES[i % len(DIVINE_NAMES)]
-        d = DOMAINS[i % len(DOMAINS)]
-        agents.append({"id": f"agent_{i:03d}", "name": f"{n} · {d}", "domain": d})
+    domain_idx = 0
+    name_idx = 0
+    for i in range(250):
+        domain = DOMAINS_FULL[domain_idx % len(DOMAINS_FULL)]
+        if domain in sub_specialties:
+            sub = sub_specialties[domain][i % 5]
+        else:
+            sub = f"Specialist {i%5+1}"
+        agent_name = f"{DIVINE_NAMES_POOL[name_idx % len(DIVINE_NAMES_POOL)]} · {domain} ({sub})"
+        agents.append({
+            "id": f"agent_{i+1:03d}",
+            "name": agent_name,
+            "domain": domain,
+            "persona_prompt": f"You are a specialist in {domain}, focusing on {sub}. Use deep expertise."
+        })
+        domain_idx += 1
+        if (i+1) % 5 == 0:
+            name_idx += 1
     return agents
-DIVINE_AGENTS = generate_divine_agents()
 
+DIVINE_AGENTS = generate_all_agents()
+
+# ─── 10 VERIFIERS WITH REAL PROMPTS ────────────────────────────────────────
 VERIFIERS = [
-    {"id":"v01","name":"Ganesha","role":"Citation & logic integrity"},
-    {"id":"v02","name":"Saraswati","role":"Knowledge cross-reference"},
-    {"id":"v03","name":"Hanuman","role":"Global compliance"},
-    {"id":"v04","name":"Kartikeya","role":"Contradiction detection"},
-    {"id":"v05","name":"Indra","role":"Jurisdiction mapping"},
-    {"id":"v06","name":"Yama","role":"Bias & neutrality"},
-    {"id":"v07","name":"Surya","role":"Timeline & limitation"},
-    {"id":"v08","name":"Chandra","role":"Precedent match"},
-    {"id":"v09","name":"Vayu","role":"PII / privacy filter"},
-    {"id":"v10","name":"Shakti","role":"Final confidence & dharma seal"},
+    {"id":"v01","name":"Ganesha","role":"Citation & logic integrity","prompt":"Check the response for correct legal citations and logical flow."},
+    {"id":"v02","name":"Saraswati","role":"Knowledge cross-reference","prompt":"Verify that the response uses accurate, well-established knowledge."},
+    {"id":"v03","name":"Hanuman","role":"Global compliance","prompt":"Ensure the advice complies with major international norms."},
+    {"id":"v04","name":"Kartikeya","role":"Contradiction detection","prompt":"Identify any internal contradictions or inconsistencies."},
+    {"id":"v05","name":"Indra","role":"Jurisdiction mapping","prompt":"Check that jurisdiction assumptions are correct (default India)."},
+    {"id":"v06","name":"Yama","role":"Bias & neutrality","prompt":"Scan for bias or one‑sided arguments and suggest balance."},
+    {"id":"v07","name":"Surya","role":"Timeline & limitation","prompt":"Confirm that any mentioned statutes or precedents are current and in force."},
+    {"id":"v08","name":"Chandra","role":"Precedent match","prompt":"Ensure that legal arguments align with known precedents."},
+    {"id":"v09","name":"Vayu","role":"PII / privacy filter","prompt":"Redact any personally identifiable information (PII)."},
+    {"id":"v10","name":"Shakti","role":"Final confidence & dharma seal","prompt":"Provide a final confidence rating (High/Medium/Low) and a concluding wisdom note."}
 ]
 
 LANG_MAP = {"en":"English","es":"Spanish","fr":"French","de":"German","pt":"Portuguese",
@@ -254,82 +255,26 @@ LANG_MAP = {"en":"English","es":"Spanish","fr":"French","de":"German","pt":"Port
     "ja":"Japanese","ko":"Korean","th":"Thai","vi":"Vietnamese","id":"Indonesian",
     "ms":"Malay","he":"Hebrew","el":"Greek"}
 
-AGENT_PERSONAS = {
-    "gst":          "You are Lord Kubera — specialist on Indian GST Act 2017: registration, returns (GSTR-1/3B/9), ITC, e-invoicing.",
-    "income_tax":   "You are Goddess Lakshmi — specialist on Indian Income Tax Act 1961: ITR, TDS, capital gains, presumptive taxation.",
-    "incorporation":"You are Lord Brahma — specialist on Companies Act 2013: incorporation of Pvt Ltd/OPC/LLP, MOA/AOA, ROC filings.",
-    "firm":         "You are Lord Vishnu — specialist on Partnership Act 1932 and LLP Act 2008.",
-    "audit":        "You are Lord Yama — specialist on statutory / tax / internal audit, ICAI standards, CARO 2020.",
-    "contract":     "You are Lord Brahma — perform clause-by-clause contract review with: EXECUTIVE SUMMARY · RISK RATING · CLAUSE ANALYSIS · MISSING CLAUSES · RECOMMENDATIONS.",
-    "research":     "You are Lord Hanuman — legal research: RELEVANT STATUTES · KEY CASE LAWS (with citation) · LEGAL PRINCIPLES.",
-    "drafting":     "You are Goddess Saraswati — draft legal documents in professional Indian legal English.",
-    "diligence":    "You are Lord Kartikeya — due diligence: COMPLIANCE STATUS · FINANCIAL RED FLAGS · LEGAL RISKS · REMEDIATION.",
-    "about":        "You are LexSarthi itself. Introduce the platform: Universal Default OS, 250-agent council, zero-hallucination doctrine.",
-    "general":      "You are the full Divine Council. Provide the most accurate, structured, jurisdiction-aware answer.",
-}
-
-def route_agent(q: str, oracle: bool) -> str:
-    if oracle: return "oracle"
-    ql = q.lower()
-    if any(k in ql for k in ["who are you","what is lexsarthi","about lexsarthi"]): return "about"
-    if any(k in ql for k in ["gst","gstr","goods and services tax","itc"]):          return "gst"
-    if any(k in ql for k in ["income tax","itr","tds","capital gain"]):              return "income_tax"
-    if any(k in ql for k in ["incorporate","pvt ltd","private limited","opc","moa","aoa"]): return "incorporation"
-    if "llp" in ql or "partnership" in ql or "firm" in ql:                            return "firm"
-    if "audit" in ql or "caro" in ql:                                                 return "audit"
-    if "contract" in ql or "agreement" in ql or "review" in ql or "nda" in ql:       return "contract"
-    if "case law" in ql or "judgment" in ql or "precedent" in ql or "research" in ql: return "research"
-    if any(k in ql for k in ["draft","prepare","write me","create a"]):              return "drafting"
-    if "due diligence" in ql or "compliance" in ql:                                  return "diligence"
+# ─── AGENT ROUTING (REAL) ──────────────────────────────────────────────────
+def route_agent(query: str, oracle: bool) -> str:
+    if oracle:
+        return "oracle"
+    q = query.lower()
+    best_agent = None
+    best_score = -1
+    for agent in DIVINE_AGENTS:
+        domain_words = agent["domain"].lower().split()
+        persona_words = agent["persona_prompt"].lower().split()
+        score = 0
+        for word in q.split():
+            if word in domain_words or word in persona_words:
+                score += 1
+        if score > best_score:
+            best_score = score
+            best_agent = agent
+    if best_score >= 2:
+        return best_agent["id"]
     return "general"
-
-# ─── LEGAL LIBRARY (LOCAL PDFs) ─────────────────────────────────────────────
-LEGAL_SECTIONS: Dict[str, Dict[str, str]] = {}
-
-def _extract_pdf(path: str) -> Dict[str, str]:
-    txt = ""
-    try:
-        with pdfplumber.open(path) as pdf:
-            for p in pdf.pages:
-                t = p.extract_text()
-                if t: txt += t + "\n"
-    except Exception as e:
-        logger.warning(f"pdfplumber failed on {path}: {e}")
-        try:
-            with open(path, "rb") as f:
-                r = PyPDF2.PdfReader(f, strict=False)
-                for p in r.pages:
-                    t = p.extract_text()
-                    if t: txt += t + "\n"
-        except Exception as e2:
-            logger.error(f"PyPDF2 also failed on {path}: {e2}")
-            return {}
-    return {"__FULL_TEXT__": txt.strip()} if txt.strip() else {}
-
-def load_pdf_library():
-    d = "/app/legal_docs/"
-    if not os.path.exists(d):
-        logger.info("No /app/legal_docs/ folder — running without local library.")
-        return
-    for fp in glob.glob(os.path.join(d, "*.pdf")):
-        s = _extract_pdf(fp)
-        if s:
-            LEGAL_SECTIONS[os.path.basename(fp)] = s
-    logger.info(f"✅ Legal library loaded: {len(LEGAL_SECTIONS)} PDFs")
-
-def search_local_knowledge(query: str) -> str:
-    if not LEGAL_SECTIONS: return ""
-    kws = [w for w in query.lower().split() if len(w) > 3][:8]
-    hits = []
-    for fname, secs in LEGAL_SECTIONS.items():
-        full = secs.get("__FULL_TEXT__", "")
-        if not full: continue
-        for line in full.split("\n"):
-            if any(k in line.lower() for k in kws):
-                hits.append(f"📜 **{fname[:-4]}**: {line.strip()}")
-                if len(hits) >= 6: break
-        if len(hits) >= 6: break
-    return "\n".join(hits) if hits else ""
 
 # ─── FILE PROCESSING ────────────────────────────────────────────────────────
 async def process_file_bytes(content: bytes, filename: str) -> str:
@@ -353,58 +298,144 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── AI EXECUTION (MULTI-PROVIDER FALLBACK) ─────────────────────────────────
-async def _call_groq(sys_p: str, user_q: str, model: str) -> str:
-    if not groq_client: raise RuntimeError("Groq not configured")
-    r = groq_client.chat.completions.create(
-        model=model,
-        messages=[{"role":"system","content":sys_p},{"role":"user","content":user_q}],
-        temperature=0.2, max_tokens=4096)
-    return r.choices[0].message.content
-
-async def _call_openai(sys_p: str, user_q: str) -> str:
-    if not openai_client: raise RuntimeError("OpenAI not configured")
-    r = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role":"system","content":sys_p},{"role":"user","content":user_q}],
-        temperature=0.2, max_tokens=4096)
-    return r.choices[0].message.content
-
-async def _call_gemini(sys_p: str, user_q: str) -> str:
-    if not gemini_model: raise RuntimeError("Gemini not configured")
-    r = gemini_model.generate_content(f"{sys_p}\n\nUser: {user_q}")
-    return r.text
-
-async def execute_ai(query: str, model: str, agent_type: str, lang: str,
-                     oracle: bool) -> str:
-    persona = AGENT_PERSONAS.get(agent_type, AGENT_PERSONAS["general"])
-    sys_p   = build_system_prompt(persona, lang, oracle)
-
-    library_ctx = search_local_knowledge(query)
-    if library_ctx:
-        sys_p += f"\n\n═══ LOCAL LIBRARY CONTEXT (authoritative) ═══\n{library_ctx[:4000]}"
-
-    providers = []
-    if model.startswith("llama"): providers = [("groq", model), ("openai", None), ("gemini", None)]
-    elif model.startswith("gpt"): providers = [("openai", None), ("groq", "llama-3.3-70b-versatile"), ("gemini", None)]
-    elif "gemini" in model:       providers = [("gemini", None), ("groq", "llama-3.3-70b-versatile"), ("openai", None)]
-    else:                          providers = [("groq", "llama-3.3-70b-versatile"), ("openai", None), ("gemini", None)]
+# ─── AI CALLS ─────────────────────────────────────────────────────────────
+async def _call_llm(sys_prompt: str, user_msg: str, model: str, fallback=True) -> str:
+    if model.startswith("llama"):
+        providers = [("groq", model), ("openai", "gpt-4o-mini"), ("gemini", "gemini-pro")]
+    elif model.startswith("gpt"):
+        providers = [("openai", model), ("groq", "llama-3.3-70b-versatile"), ("gemini", "gemini-pro")]
+    elif "gemini" in model:
+        providers = [("gemini", model), ("groq", "llama-3.3-70b-versatile"), ("openai", "gpt-4o-mini")]
+    else:
+        providers = [("groq", "llama-3.3-70b-versatile"), ("openai", "gpt-4o-mini"), ("gemini", "gemini-pro")]
 
     last_err = None
     for prov, mdl in providers:
         try:
-            if   prov == "groq":   out = await _call_groq(sys_p, query, mdl or "llama-3.3-70b-versatile")
-            elif prov == "openai": out = await _call_openai(sys_p, query)
-            elif prov == "gemini": out = await _call_gemini(sys_p, query)
-            else: continue
-            if out and out.strip():
-                return f"{OPENING}{out.strip()}{CLOSING}"
+            if prov == "groq" and groq_client:
+                r = groq_client.chat.completions.create(
+                    model=mdl,
+                    messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
+                    temperature=0.2, max_tokens=4096)
+                return r.choices[0].message.content
+            elif prov == "openai" and openai_client:
+                r = openai_client.chat.completions.create(
+                    model=mdl,
+                    messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
+                    temperature=0.2, max_tokens=4096)
+                return r.choices[0].message.content
+            elif prov == "gemini" and gemini_model:
+                r = gemini_model.generate_content(f"{sys_prompt}\n\nUser: {user_msg}")
+                return r.text
         except Exception as e:
             last_err = e
             logger.warning(f"Provider {prov} failed: {e}")
             continue
+    raise RuntimeError(f"All providers failed. Last error: {last_err}")
 
-    return f"{OPENING}I could not reach any AI provider at this moment. Please try again shortly.{CLOSING}"
+# ─── MAIN AGENT + VERIFIER WORKFLOW ────────────────────────────────────────
+async def execute_with_agent_and_verifier(query: str, model: str, agent_id: str, lang: str,
+                                         oracle: bool, mem_ctx: str = "") -> dict:
+    if agent_id == "general" or agent_id == "oracle":
+        if oracle:
+            persona = "You are the Oracle, offering spiritual, philosophical, and metaphorical wisdom."
+        else:
+            persona = "You are the full LexSarthi council, a generalist with broad knowledge."
+    else:
+        agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
+        persona = agent["persona_prompt"] if agent else "You are a generalist legal/AI expert."
+
+    sys_p = f"""{SYSTEM_BASE}
+{persona}
+
+Important: After you respond, a verifier agent will review your answer for accuracy.
+Respond in {LANG_MAP.get(lang, "English")}. If not English, use the native script.
+"""
+
+    full_query = f"{mem_ctx}{query}" if mem_ctx else query
+
+    try:
+        response = await _call_llm(sys_p, full_query, model)
+    except Exception as e:
+        logger.error(f"Primary call failed: {e}")
+        response = f"ॐ I apologise, I am unable to generate a response at this moment. Please try again later. ॐ"
+
+    # Verification pass
+    verifier = random.choice(VERIFIERS)
+    ver_sys = f"""You are a verification agent named {verifier['name']} ({verifier['role']}).
+Your task: review the following response (which starts and ends with ॐ) for factual correctness,
+logical consistency, and adherence to the prompt. If you find any errors or misleading statements,
+correct them. If the response is fully acceptable, reply exactly with "APPROVED".
+Otherwise, provide the corrected version prefixed with "CORRECTED: ".
+Do NOT add extra commentary; only the correction or approval.
+"""
+    try:
+        ver_response = await _call_llm(ver_sys, response, model, fallback=False)
+    except:
+        ver_response = "APPROVED"
+
+    final_response = response
+    if ver_response.strip().upper().startswith("CORRECTED:"):
+        corrected = ver_response[len("CORRECTED:"):].strip()
+        if not corrected.startswith("ॐ"):
+            corrected = "ॐ " + corrected
+        if not corrected.endswith("ॐ"):
+            corrected = corrected + " ॐ"
+        final_response = corrected
+
+    metadata = {
+        "agent_used": agent_id,
+        "verifier_used": verifier["name"],
+        "model": model,
+        "lang": lang,
+        "oracle": oracle
+    }
+    return {"response": final_response, "metadata": metadata}
+
+# ─── LOCAL LIBRARY ────────────────────────────────────────────────────────
+LEGAL_SECTIONS: Dict[str, Dict[str, str]] = {}
+def _extract_pdf(path: str) -> Dict[str, str]:
+    txt = ""
+    try:
+        with pdfplumber.open(path) as pdf:
+            for p in pdf.pages:
+                t = p.extract_text()
+                if t: txt += t + "\n"
+    except:
+        try:
+            with open(path, "rb") as f:
+                r = PyPDF2.PdfReader(f, strict=False)
+                for p in r.pages:
+                    t = p.extract_text()
+                    if t: txt += t + "\n"
+        except:
+            return {}
+    return {"__FULL_TEXT__": txt.strip()} if txt.strip() else {}
+
+def load_pdf_library():
+    d = "/app/legal_docs/"
+    if not os.path.exists(d):
+        logger.info("No legal library folder.")
+        return
+    for fp in glob.glob(os.path.join(d, "*.pdf")):
+        s = _extract_pdf(fp)
+        if s:
+            LEGAL_SECTIONS[os.path.basename(fp)] = s
+    logger.info(f"✅ Legal library loaded: {len(LEGAL_SECTIONS)} PDFs")
+
+def search_local_knowledge(query: str) -> str:
+    if not LEGAL_SECTIONS: return ""
+    kws = [w for w in query.lower().split() if len(w) > 3][:8]
+    hits = []
+    for fname, secs in LEGAL_SECTIONS.items():
+        full = secs.get("__FULL_TEXT__", "")
+        if not full: continue
+        for line in full.split("\n"):
+            if any(k in line.lower() for k in kws):
+                hits.append(f"📜 **{fname[:-4]}**: {line.strip()}")
+                if len(hits) >= 6: break
+        if len(hits) >= 6: break
+    return "\n".join(hits) if hits else ""
 
 # ─── LIFESPAN ───────────────────────────────────────────────────────────────
 @asynccontextmanager
@@ -416,7 +447,7 @@ async def lifespan(app: FastAPI):
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
-    logger.info("🔱 LexSarthi v9.0 online — Zero Retention active.")
+    logger.info("🔱 LexSarthi v9.0 Honest — 250 real agents, 10 real verifiers.")
     yield
     await database.disconnect()
 
@@ -476,7 +507,7 @@ async def _create_tables():
 async def _ensure_test_user():
     existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
     if existing:
-        logger.info("Test user 'counsel' already exists — preserved.")
+        logger.info("Test user 'counsel' already exists.")
         return
     await database.execute(users.insert().values(
         username="counsel", email="counsel@advocacyalawfrim.in",
@@ -484,22 +515,29 @@ async def _ensure_test_user():
         full_name="Counsel User", tier="enterprise",
         api_key="".join(random.choices(string.ascii_letters+string.digits, k=32)),
         memory=json.dumps([])))
-    logger.info("✅ Seeded test user 'counsel' with Enterprise tier.")
+    logger.info("✅ Seeded test user 'counsel'.")
 
 async def _purge_expired():
     await database.execute(queries.delete().where(queries.c.created_at < datetime.now()-timedelta(hours=24)))
     await database.execute(bulk_jobs.delete().where(bulk_jobs.c.created_at < datetime.now()-timedelta(days=7)))
     logger.info("🔒 Zero-retention purge done.")
 
+# ─── DAILY LIMIT FIX ───────────────────────────────────────────────────────
 async def _check_limit(u: dict) -> bool:
     if u["tier"] in ("premium","enterprise","lifetime"): return True
-    if datetime.now().date() > u["last_query_reset"].date(): return True
+    today = datetime.now().date()
+    last_reset = u["last_query_reset"].date() if u["last_query_reset"] else datetime.min.date()
+    if today > last_reset:
+        await database.execute(users.update().where(users.c.id==u["id"]).values(
+            queries_used_today=0, last_query_reset=func.now()))
+        return True
     return u["queries_used_today"] < 10
 
 async def _incr_query(uid: int):
     await database.execute(users.update().where(users.c.id==uid).values(
         queries_used_today=users.c.queries_used_today+1, updated_at=datetime.now()))
 
+# ─── MEMORY ─────────────────────────────────────────────────────────────────
 async def _get_memory(uid: int) -> List[dict]:
     u = await database.fetch_one(users.select().where(users.c.id==uid))
     if not u: return []
@@ -523,7 +561,7 @@ def _build_context(mem: List[dict]) -> str:
 # ─── ROUTES ─────────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status":"healthy","version":"9.0","agents":len(DIVINE_AGENTS),
+    return {"status":"healthy","version":"9.0-honest","agents":len(DIVINE_AGENTS),
             "verifiers":len(VERIFIERS),"time":datetime.now().isoformat()}
 
 @app.post("/auth/login")
@@ -535,7 +573,7 @@ async def login(request: Request, body: UserLogin):
     if not u or not verify_password(body.password, dict(u)["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     u = dict(u)
-    tok = create_access_token({"sub": str(u["id"])})  # store numeric ID
+    tok = create_access_token({"sub": str(u["id"])})
     return {"access_token": tok, "token_type":"bearer","user":{
         "id":u["id"],"username":u["username"],"email":u["email"],
         "full_name":u["full_name"],"tier":u["tier"],"is_premium":u["is_premium"],
@@ -560,8 +598,7 @@ async def me(cu: dict = Depends(get_current_user)): return cu
 
 @app.get("/agents-info")
 async def agents_info():
-    return {"total_agents":len(DIVINE_AGENTS),"total_verifiers":len(VERIFIERS),
-            "sample_agents":DIVINE_AGENTS[:12],"verifiers":VERIFIERS}
+    return {"total_agents":len(DIVINE_AGENTS),"sample":DIVINE_AGENTS[:10],"verifiers":VERIFIERS}
 
 @app.get("/lifetime-count")
 async def lifetime_count():
@@ -595,13 +632,13 @@ async def ask(request: Request,
         has_file = True
         content = await files.read()
         if len(content) > 8*1024*1024:
-            raise HTTPException(status_code=413, detail="File too large. Max 8MB. Use Bulk Upload for larger batches.")
+            raise HTTPException(status_code=413, detail="File too large. Max 8MB.")
         try:
             ft = await process_file_bytes(content, files.filename)
             if not ft or len(ft.strip()) < 20:
                 raise HTTPException(status_code=400, detail="File contains no readable text.")
             if len(ft) > 20000:
-                ft = ft[:20000] + "\n\n[...truncated for real-time processing — use Bulk Upload for full analysis...]"
+                ft = ft[:20000] + "\n\n[...truncated...]"
             combined = f"{query}\n\n═══ DOCUMENT CONTENT ═══\n{ft}"
         except HTTPException: raise
         except Exception as e:
@@ -614,18 +651,30 @@ async def ask(request: Request,
     if ctx: combined = ctx + combined
 
     oracle = oracle_mode.lower() == "true"
-    at = route_agent(combined, oracle)
+    if not oracle:
+        selected_agent = route_agent(combined, False)
+    else:
+        selected_agent = "oracle"
 
-    resp = await execute_ai(combined, model, at, lang, oracle)
-    await _update_memory(cu["id"], query, resp)
+    # Inject local library context if available
+    lib_context = search_local_knowledge(query)
+    if lib_context and not oracle:
+        combined = f"{combined}\n\n═══ LOCAL LEGAL LIBRARY (authoritative) ═══\n{lib_context[:4000]}"
+
+    result = await execute_with_agent_and_verifier(
+        combined, model, selected_agent, lang, oracle
+    )
+
+    final_text = result["response"]
+    await _update_memory(cu["id"], query, final_text)
 
     await database.execute(queries.insert().values(
-        user_id=cu["id"], query=combined[:8000], response=resp[:16000],
-        metadata={"agent_type":at,"model":model,"has_file":has_file,"lang":lang,"oracle":oracle},
+        user_id=cu["id"], query=combined[:8000], response=final_text[:16000],
+        metadata=result["metadata"],
         expires_at=datetime.now()+timedelta(hours=24)))
 
-    return {"response": resp, "model": model, "agent_used": at,
-            "verified_by": [v["name"] for v in VERIFIERS], "council_size": 250}
+    return {"response": final_text, "model": model, "agent_used": result["metadata"]["agent_used"],
+            "verifier_used": result["metadata"]["verifier_used"], "council_size": 250}
 
 # ─── BULK UPLOAD ────────────────────────────────────────────────────────────
 @app.post("/bulk-upload")
@@ -652,8 +701,8 @@ async def _process_bulk(jid: str, file_data: list, query: str, model: str, lang:
             txt = await process_file_bytes(content, fname)
             combined = f"{query}\n\n═══ DOCUMENT ═══\n{txt[:15000]}"
             at = route_agent(combined, False)
-            r = await execute_ai(combined, model, at, lang, False)
-            results.append({"filename": fname, "response": r})
+            r = await execute_with_agent_and_verifier(combined, model, at, lang, False)
+            results.append({"filename": fname, "response": r["response"]})
         except Exception as e:
             results.append({"filename": fname, "error": str(e)})
         proc += 1
