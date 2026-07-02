@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>LexSarthi v9.0 — Universal Default OS</title>
-<meta name="description" content="LexSarthi v9.0 — Universal Default OS. 250 Agents · 10 Verifiers · Zero Hallucination." />
+<meta name="description" content="LexSarthi v9.0 — Universal Default OS. 250 specialist personas + 10 verifiers." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%94%B1%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -295,7 +295,6 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   border:1px solid rgba(255,255,255,0.06);
   color:var(--text);
 }
-/* council-tag removed */
 
 /* ─── WELCOME ────────────────────────────────────────────────── */
 #defaultWelcome{
@@ -649,10 +648,14 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
         <option value="de">Deutsch</option><option value="pt">Português</option>
         <option value="it">Italiano</option><option value="ru">Русский</option>
         <option value="ar">العربية</option><option value="zh">中文</option>
-        <option value="ja">日本語</option><option value="ko">한국어</option>
-        <option value="th">ไทย</option><option value="vi">Tiếng Việt</option>
-        <option value="id">Bahasa Indonesia</option><option value="he">עברית</option>
-        <option value="el">Ελληνικά</option><option value="tr">Türkçe</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="th">ไทย</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="id">Bahasa Indonesia</option>
+        <option value="he">עברית</option>
+        <option value="el">Ελληνικά</option>
+        <option value="tr">Türkçe</option>
       </select>
       <label for="modelSelect">🧠 AI Model</label>
       <select id="modelSelect">
@@ -677,12 +680,12 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
       <div class="welcome-om">ॐ</div>
       <div class="welcome-title">Awaken Your Intelligence</div>
       <div class="welcome-sub">
-        <strong>LexSarthi</strong> is the Universal Default OS — a council of <strong>250 specialist agents</strong> and <strong>10 verifiers</strong> dedicated to truth, clarity, and zero hallucination.<br />
+        <strong>LexSarthi</strong> is the Universal Default OS — a council of <strong>250 specialist personas</strong> (real domain experts) and <strong>10 verifiers</strong> that review every answer for accuracy.<br />
         <span style="font-size:0.85rem;color:var(--muted);display:block;margin-top:6px;">Login to begin your journey →</span>
       </div>
     </div>
     <div id="typingIndicator" class="typing-indicator">
-      <span class="om-spinner">ॐ</span><span>Council convening...</span>
+      <span class="om-spinner">ॐ</span><span>Consulting specialists & verifying...</span>
       <div class="typing-dots"><span></span><span></span><span></span></div>
     </div>
   </div>
@@ -821,7 +824,7 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   </div>
 </div>
 
-<!-- Other Modals (Terms, Privacy, About, Verifiers) -->
+<!-- Terms Modal -->
 <div class="modal-overlay" id="termsModal">
   <div class="modal-content"><button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
     <h3>📜 Terms of Use</h3>
@@ -829,6 +832,8 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
     <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('termsModal')">Close</button></div>
   </div>
 </div>
+
+<!-- Privacy Modal -->
 <div class="modal-overlay" id="privacyModal">
   <div class="modal-content"><button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
     <h3>🔒 Privacy — Zero Retention</h3>
@@ -836,16 +841,30 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
     <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('privacyModal')">Close</button></div>
   </div>
 </div>
+
+<!-- About Modal (UPDATED) -->
 <div class="modal-overlay" id="aboutModal">
   <div class="modal-content"><button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
     <h3>ℹ️ About LexSarthi v9.0</h3>
-    <p style="font-size:0.85rem;line-height:1.7"><strong style="color:var(--gold)">LexSarthi</strong> is the Universal Default OS — a blessed intelligence governed by a Council of <strong>250 specialist agents</strong> and <strong>10 verifiers</strong>. Doctrine: zero hallucination, balanced output across mathematics, reasoning, mythology, legal, spirituality, and science. Built by <strong>THE ADVOCACY — A LAW FIRM</strong>.</p>
+    <p style="font-size:0.85rem;line-height:1.7">
+      <strong style="color:var(--gold)">LexSarthi</strong> is the Universal Default OS, built by <strong>THE ADVOCACY — A LAW FIRM</strong>.
+      It uses a council of <strong>250 real specialist personas</strong> (each with deep domain expertise) and <strong>10 verification agents</strong> that check every answer for factual accuracy and consistency.
+      The system never claims impossible zero‑hallucination — instead, it employs a two‑step process: a specialist agent drafts the response, and a verifier agent reviews it, correcting errors if found.
+      <br/><br/>
+      • <strong>250 agents</strong>: Every query activates the most relevant specialist.<br/>
+      • <strong>10 verifiers</strong>: After generation, a verifier reviews and approves or corrects.<br/>
+      • <strong>Privacy</strong>: All queries are automatically purged after 24 hours (zero retention).<br/>
+      • <strong>Disclaimer</strong>: AI‑generated responses are for informational purposes only, not professional advice.
+    </p>
     <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
   </div>
 </div>
+
+<!-- Verifiers Modal (UPDATED) -->
 <div class="modal-overlay" id="verifiersModal">
   <div class="modal-content"><button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
-    <h3>✅ The 10 Verifiers</h3>
+    <h3>✅ The 10 Verification Agents</h3>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Each response is reviewed by one of these verifiers (randomly selected per query).</p>
     <div style="display:grid;grid-template-columns:1fr;gap:6px;font-size:0.78rem">
       <div><strong style="color:var(--gold)">Ganesha</strong> — Citation & logic integrity</div>
       <div><strong style="color:var(--gold)">Saraswati</strong> — Knowledge cross-reference</div>
@@ -856,7 +875,7 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
       <div><strong style="color:var(--gold)">Surya</strong> — Timeline & limitation</div>
       <div><strong style="color:var(--gold)">Chandra</strong> — Precedent match</div>
       <div><strong style="color:var(--gold)">Vayu</strong> — PII / privacy filter</div>
-      <div><strong style="color:var(--saffron)">Shakti</strong> — Final dharma seal & confidence score</div>
+      <div><strong style="color:var(--saffron)">Shakti</strong> — Final confidence rating & wisdom seal</div>
     </div>
     <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
   </div>
@@ -1050,7 +1069,7 @@ async function sendQuery(){
   if(!q && !uploadedFile){ setStatus('Type a question or attach a file'); return; }
   const t=getToken(); if(!t){ alert('Login first'); showLogin(); return; }
 
-  setTyping(true); setStatus('Council convening...');
+  setTyping(true); setStatus('Consulting specialists & verifying...');
   const chat=document.getElementById('chatArea');
   const welcome=document.getElementById('defaultWelcome');
   if(welcome) welcome.style.display='none';
@@ -1075,10 +1094,8 @@ async function sendQuery(){
     const d=await r.json();
     setTyping(false);
     if(r.ok){
-      // Clean response: replace newlines and strip markdown bold (**)
       let displayText = d.response.replace(/\n/g, '<br>');
-      displayText = displayText.replace(/\*\*/g, ''); // remove **
-      // No council-tag line
+      displayText = displayText.replace(/\*\*/g, '');
       chat.innerHTML += `<div class=\"chat-bubble agent\">${displayText}</div>`;
       setStatus('✅ Response ready');
     }else{
@@ -1116,7 +1133,6 @@ function clearResponse(){
   document.getElementById('chatArea').innerHTML='';
   document.getElementById('defaultWelcome').style.display='block';
   setStatus('');
-  // Also stop any ongoing speech
   if (isSpeaking) {
     window.speechSynthesis.cancel();
     isSpeaking = false;
