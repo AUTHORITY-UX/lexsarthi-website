@@ -34,16 +34,16 @@ html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
   min-height:100vh;overflow-x:hidden;font-size:15px;line-height:1.55;position:relative}
 body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
 
-/* ─── MOON ────────────────────────────────────────────────────── */
+/* ─── MOON (top-left) ──────────────────────────────────────────── */
 .moon{
   position:fixed;
-  bottom:10%;
-  right:5%;
-  width:25vmin;
-  height:25vmin;
+  top:5%;
+  left:5%;
+  width:18vmin;
+  height:18vmin;
   border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, rgba(255,240,200,0.3), rgba(200,180,150,0.05));
-  box-shadow:0 0 80px rgba(255,240,200,0.1), inset 0 0 60px rgba(255,255,255,0.03);
+  background:radial-gradient(circle at 30% 30%, rgba(255,240,200,0.25), rgba(200,180,150,0.05));
+  box-shadow:0 0 60px rgba(255,240,200,0.08), inset 0 0 40px rgba(255,255,255,0.03);
   pointer-events:none;
   z-index:0;
   border:1px solid rgba(255,255,255,0.02);
@@ -77,16 +77,20 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   100%{transform:translate(-50%,-50%) scale(5); opacity:0.03}
 }
 
-/* ─── 5D OM (background, reduced to 40%) ────────────────────── */
+/* ─── 5D OM (top, visible) ────────────────────────────────────── */
 .om-5d-wrapper{
-  position:fixed; top:50%; left:50%;
-  transform:translate(-50%,-50%);
+  position:fixed;
+  top:10%;
+  left:50%;
+  transform:translateX(-50%);
   z-index:0;
   pointer-events:none;
-  width:40vmin;
-  height:40vmin;
+  width:30vmin;
+  height:30vmin;
   perspective:800px;
-  display:flex; align-items:center; justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .om-5d{
   width:100%; height:100%;
@@ -101,7 +105,7 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
 .om-face-5d{
   position:absolute; width:100%; height:100%;
   font-family:'Noto Serif Devanagari',serif;
-  font-size:16vmin;
+  font-size:14vmin;
   color:var(--gold);
   display:flex; align-items:center; justify-content:center;
   text-shadow:0 0 40px rgba(212,175,55,0.2);
@@ -110,12 +114,12 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   border:1px solid rgba(212,175,55,0.05);
   backface-visibility:hidden;
 }
-.om-face-5d.front  {transform:translateZ(calc(40vmin / 2))}
-.om-face-5d.back   {transform:rotateY(180deg) translateZ(calc(40vmin / 2))}
-.om-face-5d.left   {transform:rotateY(-90deg) translateZ(calc(40vmin / 2))}
-.om-face-5d.right  {transform:rotateY(90deg) translateZ(calc(40vmin / 2))}
-.om-face-5d.top    {transform:rotateX(90deg) translateZ(calc(40vmin / 2))}
-.om-face-5d.bottom {transform:rotateX(-90deg) translateZ(calc(40vmin / 2))}
+.om-face-5d.front  {transform:translateZ(calc(30vmin / 2))}
+.om-face-5d.back   {transform:rotateY(180deg) translateZ(calc(30vmin / 2))}
+.om-face-5d.left   {transform:rotateY(-90deg) translateZ(calc(30vmin / 2))}
+.om-face-5d.right  {transform:rotateY(90deg) translateZ(calc(30vmin / 2))}
+.om-face-5d.top    {transform:rotateX(90deg) translateZ(calc(30vmin / 2))}
+.om-face-5d.bottom {transform:rotateX(-90deg) translateZ(calc(30vmin / 2))}
 
 /* ─── STARS ────────────────────────────────────────────────────── */
 .stars{position:fixed; inset:0; pointer-events:none; z-index:0}
@@ -133,6 +137,7 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   letter-spacing:4px;
   margin:20px 0 8px;
   text-shadow:0 0 30px rgba(212,175,55,0.2);
+  padding-top:calc(30vmin + 20px); /* space for the OM */
 }
 
 /* ─── MAIN UI ────────────────────────────────────────────────── */
@@ -294,7 +299,7 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   opacity:0.8;
 }
 
-/* ─── WELCOME (with mini 5D OM) ────────────────────────────── */
+/* ─── WELCOME ────────────────────────────────────────────────── */
 #defaultWelcome{
   display:flex;
   flex-direction:column;
@@ -305,10 +310,10 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
   color:var(--text);
 }
 .welcome-om{
-  font-size:3rem;
+  font-size:2.5rem;
   color:var(--gold);
   margin-bottom:6px;
-  text-shadow:0 0 50px rgba(212,175,55,0.3);
+  text-shadow:0 0 40px rgba(212,175,55,0.3);
   animation:pulseOm 3s ease-in-out infinite;
   font-family:'Noto Serif Devanagari',serif;
 }
@@ -586,24 +591,24 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
 
 /* ─── RESPONSIVE ────────────────────────────────────────────────── */
 @media(max-width:520px){
-  .om-5d-wrapper{width:50vmin;height:50vmin}
-  .om-face-5d{font-size:20vmin}
+  .om-5d-wrapper{width:40vmin;height:40vmin}
+  .om-face-5d{font-size:18vmin}
   .brand-name{font-size:1.2rem}
   .container{padding:0 10px 10px}
   .chat-container{max-height:40vh}
-  .moon{width:30vmin;height:30vmin}
+  .moon{width:22vmin;height:22vmin}
 }
 </style>
 </head>
 <body>
 
-<!-- ─── MOON ────────────────────────────────────────────────── -->
+<!-- ─── MOON (top-left) ──────────────────────────────────────── -->
 <div class="moon"></div>
 
 <!-- ─── INFINITE RINGS ────────────────────────────────────────── -->
 <div class="infinite-rings" id="ringContainer"></div>
 
-<!-- ─── 5D OM (background, reduced to 40%) ────────────────────── -->
+<!-- ─── 5D OM (top, visible) ──────────────────────────────────── -->
 <div class="om-5d-wrapper">
   <div class="om-5d">
     <div class="om-face-5d front">ॐ</div>
@@ -861,6 +866,11 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
 
 <script>
 // ============================================================
+// HARDCODE API_BASE TO HUGGING FACE BACKEND
+// ============================================================
+const API_BASE = 'https://upamnyu12-lex.hf.space';
+
+// ============================================================
 // INFINITE RINGS
 // ============================================================
 (function(){
@@ -884,7 +894,6 @@ body{background:radial-gradient(ellipse at center,#141428 0%,#0a0a0f 80%);}
 // ============================================================
 // LEXSARTHI v9.0 FRONTEND ENGINE
 // ============================================================
-const API_BASE = window.location.origin;
 let uploadedFile = null;
 
 function getToken(){ return localStorage.getItem('lex_token'); }
