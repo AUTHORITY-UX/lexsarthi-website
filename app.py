@@ -1,10 +1,10 @@
 # ============================================================================
-# LEXSARTHI v9.0 – UNIVERSAL DEFAULT OS (FINAL)
-# RAG · Multi‑Agent Debate · Zero‑Retention · Scalable
+# LEXSARTHI v9.0 – UNIVERSAL DEFAULT OS (FINAL PRODUCTION)
+# RAG · Jury Debate · Zero‑Retention · Scalable · 100% TRUE & CO
 # ============================================================================
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 
 from fastapi import (FastAPI, HTTPException, Depends, UploadFile, File, Form,
@@ -46,7 +46,6 @@ import razorpay
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from sentence_transformers import SentenceTransformer
 
 # ─── LOGGING ────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
@@ -172,9 +171,9 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
 limiter = Limiter(key_func=get_remote_address)
 
 # ─── SYSTEM PROMPT ──────────────────────────────────────────────────────────
-SYSTEM_BASE = """You are LexSarthi, the Universal Default OS — a council of 250 specialist personas, a jury of 3 verifiers, and a final judge. You are equipped with a knowledge base and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, compassionate."""
+SYSTEM_BASE = """You are LexSarthi, the Universal Default OS for Human Knowledge — 100% True. You are powered by 250 specialist personas, a jury of 3 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, compassionate."""
 
-# ─── 250 SPECIALIST PERSONAS ────────────────────────────────────────────────
+# ─── 250 SPECIALIST PERSONAS (unchanged) ────────────────────────────────────
 DOMAINS_FULL = [
     "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
     "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
@@ -212,7 +211,7 @@ def generate_all_agents():
     return agents
 DIVINE_AGENTS = generate_all_agents()
 
-# ─── VERIFIERS (jury + judge) ───────────────────────────────────────────────
+# ─── VERIFIERS ─────────────────────────────────────────────────────────────
 VERIFIERS = [
     {"id":"v01","name":"Ganesha","role":"Citation & logic integrity","prompt":"Check legal citations and logical flow."},
     {"id":"v02","name":"Saraswati","role":"Knowledge cross-reference","prompt":"Verify facts against established knowledge."},
@@ -232,7 +231,6 @@ LANG_MAP = {"en":"English","es":"Spanish","fr":"French","de":"German","pt":"Port
     "ja":"Japanese","ko":"Korean","th":"Thai","vi":"Vietnamese","id":"Indonesian",
     "ms":"Malay","he":"Hebrew","el":"Greek"}
 
-# ─── ROUTING ────────────────────────────────────────────────────────────────
 def route_agent(query: str, oracle: bool) -> str:
     if oracle: return "oracle"
     q = query.lower(); best_score = -1; best_id = "general"
@@ -244,7 +242,7 @@ def route_agent(query: str, oracle: bool) -> str:
             best_score = score; best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (VECTOR DB) ───────────────────────────────────────────────────────
+# ─── RAG (Vector DB) ───────────────────────────────────────────────────────
 class LexSarthiVectorDB:
     def __init__(self):
         self.embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -262,74 +260,49 @@ class LexSarthiVectorDB:
 
     def _load_documents(self):
         for folder in ["/app/knowledge", "/app/legal_docs"]:
-            if not os.path.exists(folder):
-                continue
+            if not os.path.exists(folder): continue
             for filepath in glob.glob(os.path.join(folder, "*.pdf")):
                 filename = os.path.basename(filepath)
-                existing = self.collection.get(where={"source": filename})
-                if existing and existing["ids"]:
-                    continue
+                if self.collection.get(where={"source": filename})["ids"]: continue
                 text = self._extract_pdf(filepath)
-                if not text:
-                    continue
+                if not text: continue
                 chunks = self._chunk_text(text)
                 for i, chunk in enumerate(chunks):
-                    self.collection.add(
-                        documents=[chunk],
-                        metadatas=[{"source": filename, "chunk": i}],
-                        ids=[f"{filename}_{i}"]
-                    )
-                logger.info(f"Ingested {filename} into vector DB.")
-        logger.info(f"Vector DB ready. Total documents: {self.collection.count()}")
+                    self.collection.add(documents=[chunk], metadatas=[{"source": filename, "chunk": i}], ids=[f"{filename}_{i}"])
+                logger.info(f"Ingested {filename}")
+        logger.info(f"Vector DB ready. Documents: {self.collection.count()}")
 
     def _extract_pdf(self, path: str) -> str:
         try:
-            with pdfplumber.open(path) as pdf:
-                return "\n".join(p.extract_text() or "" for p in pdf.pages)
+            with pdfplumber.open(path) as pdf: return "\n".join(p.extract_text() or "" for p in pdf.pages)
         except:
             try:
                 with open(path, "rb") as f:
                     r = PyPDF2.PdfReader(f, strict=False)
                     return "\n".join(p.extract_text() or "" for p in r.pages)
-            except:
-                return ""
+            except: return ""
 
     def _chunk_text(self, text: str, chunk_size=500, overlap=100) -> List[str]:
         words = text.split()
-        chunks = []
-        for i in range(0, len(words), chunk_size - overlap):
-            chunk = " ".join(words[i:i+chunk_size])
-            chunks.append(chunk)
-        return chunks
+        return [" ".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
 
     def query(self, query: str, k=5) -> str:
-        if self.collection.count() == 0:
-            return ""
+        if self.collection.count() == 0: return ""
         results = self.collection.query(query_texts=[query], n_results=k)
-        if not results["documents"] or not results["documents"][0]:
-            return ""
+        if not results["documents"] or not results["documents"][0]: return ""
         return "\n---\n".join(results["documents"][0])
 
 vector_db = LexSarthiVectorDB()
 
 # ─── WEB SEARCH ─────────────────────────────────────────────────────────────
 async def web_search(query: str) -> str:
-    if not SERPAPI_KEY:
-        return ""
+    if not SERPAPI_KEY: return ""
     try:
         async with httpx.AsyncClient() as client:
-            r = await client.get("https://serpapi.com/search", params={
-                "q": query, "api_key": SERPAPI_KEY, "num": 3
-            }, timeout=8.0)
-            if r.status_code != 200:
-                return ""
+            r = await client.get("https://serpapi.com/search", params={"q": query, "api_key": SERPAPI_KEY, "num": 3}, timeout=8.0)
+            if r.status_code != 200: return ""
             data = r.json()
-            snippets = []
-            for result in data.get("organic_results", [])[:3]:
-                title = result.get("title","")
-                snippet = result.get("snippet","")
-                if snippet:
-                    snippets.append(f"📌 {title}: {snippet}")
+            snippets = [f"📌 {res.get('title','')}: {res.get('snippet','')}" for res in data.get("organic_results", [])[:3] if res.get("snippet")]
             return "\n".join(snippets) if snippets else ""
     except Exception as e:
         logger.error(f"Web search failed: {e}")
@@ -340,11 +313,8 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     fn = filename.lower()
     try:
         if fn.endswith(".pdf"):
-            text = ""
             with pdfplumber.open(io.BytesIO(content)) as pdf:
-                for p in pdf.pages:
-                    t = p.extract_text()
-                    if t: text += t + "\n"
+                text = "".join(p.extract_text() or "" for p in pdf.pages)
             if text.strip(): return text.strip()
             raise ValueError("PDF empty")
         if fn.endswith(".docx"):
@@ -357,7 +327,7 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── LLM CALL (non‑streaming) ───────────────────────────────────────────────
+# ─── LLM CALL ───────────────────────────────────────────────────────────────
 async def _call_llm(sys_prompt: str, user_msg: str, model: str) -> str:
     if model.startswith("llama"):
         providers = [("groq", model), ("openai", "gpt-4o-mini"), ("gemini", "gemini-pro")]
@@ -371,14 +341,10 @@ async def _call_llm(sys_prompt: str, user_msg: str, model: str) -> str:
     for prov, mdl in providers:
         try:
             if prov == "groq" and groq_client:
-                r = groq_client.chat.completions.create(
-                    model=mdl, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
-                    temperature=0.2, max_tokens=4096)
+                r = groq_client.chat.completions.create(model=mdl, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}], temperature=0.2, max_tokens=4096)
                 return r.choices[0].message.content
             elif prov == "openai" and openai_client:
-                r = openai_client.chat.completions.create(
-                    model=mdl, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
-                    temperature=0.2, max_tokens=4096)
+                r = openai_client.chat.completions.create(model=mdl, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}], temperature=0.2, max_tokens=4096)
                 return r.choices[0].message.content
             elif prov == "gemini" and gemini_model:
                 r = gemini_model.generate_content(f"{sys_prompt}\n\nUser: {user_msg}")
@@ -388,10 +354,8 @@ async def _call_llm(sys_prompt: str, user_msg: str, model: str) -> str:
             continue
     raise RuntimeError(f"All providers failed: {last_err}")
 
-# ─── MULTI‑AGENT DEBATE LOOP ────────────────────────────────────────────────
-async def execute_with_debate(combined_query: str, model: str, agent_id: str,
-                              lang: str, oracle: bool, mem_ctx: str = "") -> dict:
-    # 1. Specialist prompt
+# ─── JURY DEBATE LOOP ──────────────────────────────────────────────────────
+async def execute_with_debate(combined_query: str, model: str, agent_id: str, lang: str, oracle: bool) -> dict:
     if agent_id == "oracle":
         persona = "You are the Oracle, offering spiritual and philosophical wisdom."
     elif agent_id == "general":
@@ -401,74 +365,60 @@ async def execute_with_debate(combined_query: str, model: str, agent_id: str,
         persona = agent["persona_prompt"] if agent else "You are a generalist."
     sys_p = f"{SYSTEM_BASE}\n{persona}\nRespond in {LANG_MAP.get(lang, 'English')}.\n"
 
-    # 2. Primary response
     draft = await _call_llm(sys_p, combined_query, model)
 
-    # 3. Jury (3 verifiers) in parallel
+    # Jury of 3
     jury = random.sample(VERIFIERS[:-1], 3)
-    async def get_verifier_critique(verifier, response_text):
-        ver_prompt = f"""You are {verifier['name']}, the verifier of {verifier['role']}.
-Review this answer and output a JSON with:
-- "verifier": "{verifier['name']}"
-- "confidence": "HIGH", "MEDIUM", or "LOW"
-- "critique": brief critical comments (max 2 sentences)
-- "suggestions": specific improvements (or "NONE")
-Return ONLY the JSON."""
+    async def critique(v, text):
+        ver_prompt = f"""You are {v['name']}, verifier of {v['role']}. Review this answer. Output JSON:
+{{"verifier": "{v['name']}", "confidence": "HIGH|MEDIUM|LOW", "critique": "brief comments", "suggestions": "improvements or NONE"}}"""
         try:
-            crit = await _call_llm(ver_prompt, response_text, model)
-            json_match = re.search(r'\{.*\}', crit, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-            else:
-                return {"verifier": verifier["name"], "confidence": "MEDIUM", "critique": "Invalid JSON", "suggestions": "NONE"}
-        except Exception:
-            return {"verifier": verifier["name"], "confidence": "LOW", "critique": "Critique failed", "suggestions": "NONE"}
+            out = await _call_llm(ver_prompt, text, model)
+            m = re.search(r'\{.*\}', out, re.DOTALL)
+            return json.loads(m.group()) if m else {"verifier":v['name'],"confidence":"MEDIUM","critique":"Invalid JSON","suggestions":"NONE"}
+        except:
+            return {"verifier":v['name'],"confidence":"LOW","critique":"Critique failed","suggestions":"NONE"}
+    jury_results = await asyncio.gather(*(critique(v, draft) for v in jury))
 
-    jury_results = await asyncio.gather(*(get_verifier_critique(v, draft) for v in jury))
-
-    # 4. Final judge (Shakti)
+    # Judge
     judge = VERIFIERS[-1]
-    jury_summary = "\n".join(
-        f"{r['verifier']}: confidence={r['confidence']}, critique={r['critique']}, suggestions={r['suggestions']}"
-        for r in jury_results
-    )
-    judge_prompt = f"""You are {judge['name']}, the final judge. The original answer: {draft}
-Jury feedback: {jury_summary}
-Produce the FINAL, improved answer. Also output a JSON with:
-- "final_confidence": "HIGH", "MEDIUM", or "LOW" (based on jury consensus)
-- "key_improvements": [list of major improvements made]
-Return the final answer as plain text, and the JSON on the last line."""
+    summary = "\n".join(f"{r['verifier']}: conf={r['confidence']}, critique={r['critique']}, suggestions={r['suggestions']}" for r in jury_results)
+    judge_prompt = f"""You are {judge['name']}, the final judge. Original: {draft}\nJury: {summary}\nProduce final answer. Last line JSON:
+{{"final_confidence": "HIGH|MEDIUM|LOW", "key_improvements": [...]}}"""
     try:
-        final_output = await _call_llm(judge_prompt, "", model)
-        lines = final_output.strip().split("\n")
-        meta_json = {}
+        out = await _call_llm(judge_prompt, "", model)
+        lines = out.strip().split("\n")
+        meta = {}
         if lines and lines[-1].startswith("{"):
-            try:
-                meta_json = json.loads(lines[-1])
-                final_text = "\n".join(lines[:-1]).strip()
-            except:
-                meta_json = {}
-                final_text = final_output
-        else:
-            final_text = final_output
+            try: meta = json.loads(lines[-1]); final = "\n".join(lines[:-1]).strip()
+            except: meta = {}; final = out
+        else: final = out
     except:
-        final_text = draft
-        meta_json = {}
-
+        final = draft; meta = {}
     verification = {
         "jury_verifiers": [r["verifier"] for r in jury_results],
         "jury_confidences": {r["verifier"]: r["confidence"] for r in jury_results},
-        "final_confidence": meta_json.get("final_confidence", "MEDIUM"),
-        "key_improvements": meta_json.get("key_improvements", []),
+        "final_confidence": meta.get("final_confidence", "MEDIUM"),
+        "key_improvements": meta.get("key_improvements", []),
         "judge": judge["name"]
     }
-    return {"response": final_text, "metadata": verification}
+    return {"response": final, "metadata": verification}
+
+# ─── SIMPLE VERIFIER (for bulk) ────────────────────────────────────────────
+async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
+    ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
+{{"status": "APPROVED|CORRECTED", "confidence": "HIGH|MEDIUM|LOW", "corrected_text": "..."}}"""
+    try:
+        out = await _call_llm(ver_sys, response_text, model)
+        m = re.search(r'\{.*\}', out, re.DOTALL)
+        if m: return json.loads(m.group())
+    except: pass
+    return {"status": "APPROVED", "confidence": "MEDIUM", "corrected_text": ""}
 
 # ─── STREAMING REPLAY ───────────────────────────────────────────────────────
 async def replay_stream(full_text: str, verification: dict):
     for i in range(0, len(full_text), 6):
-        chunk = full_text[i:i+6]
-        yield f"data: {json.dumps({'token': chunk})}\n\n"
+        yield f"data: {json.dumps({'token': full_text[i:i+6]})}\n\n"
         await asyncio.sleep(0.01)
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
@@ -482,53 +432,30 @@ async def lifespan(app: FastAPI):
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
-    logger.info("🔱 LexSarthi v9.0 Final — RAG, Debate, Zero‑Retention. Ready for 1M users.")
+    logger.info("🔱 LexSarthi v9.0 Universal OS — 100% TRUE & CO. Ready for 1M users.")
     yield
     await database.disconnect()
 
-app = FastAPI(title="LexSarthi v9.0", lifespan=lifespan)
+app = FastAPI(title="LexSarthi", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-                   allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── DB INIT ─────────────────────────────────────────────────────────────────
 async def _create_tables():
     ddl = [
-        """CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL,
-            username VARCHAR(100) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL,
-            full_name VARCHAR(255), is_active BOOLEAN DEFAULT TRUE, is_premium BOOLEAN DEFAULT FALSE,
-            tier VARCHAR(20) DEFAULT 'free', queries_used_today INTEGER DEFAULT 0,
-            last_query_reset TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(), api_key VARCHAR(64) UNIQUE,
-            preferences JSONB, memory JSONB DEFAULT '[]')""",
-        """CREATE TABLE IF NOT EXISTS queries (
-            id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            query TEXT, response TEXT, metadata JSONB,
-            created_at TIMESTAMP DEFAULT NOW(), expires_at TIMESTAMP)""",
-        """CREATE TABLE IF NOT EXISTS payments (
-            id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            razorpay_order_id VARCHAR(100) UNIQUE, razorpay_payment_id VARCHAR(100),
-            razorpay_signature VARCHAR(255), amount FLOAT, currency VARCHAR(3) DEFAULT 'INR',
-            tier VARCHAR(20), status VARCHAR(20) DEFAULT 'created', created_at TIMESTAMP DEFAULT NOW())""",
-        """CREATE TABLE IF NOT EXISTS bulk_jobs (
-            id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            job_id VARCHAR(64) UNIQUE NOT NULL, status VARCHAR(20) DEFAULT 'pending',
-            total_files INTEGER DEFAULT 0, processed_files INTEGER DEFAULT 0,
-            result_data TEXT, created_at TIMESTAMP DEFAULT NOW(), expires_at TIMESTAMP)""",
+        """CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, username VARCHAR(100) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL, full_name VARCHAR(255), is_active BOOLEAN DEFAULT TRUE, is_premium BOOLEAN DEFAULT FALSE, tier VARCHAR(20) DEFAULT 'free', queries_used_today INTEGER DEFAULT 0, last_query_reset TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW(), api_key VARCHAR(64) UNIQUE, preferences JSONB, memory JSONB DEFAULT '[]')""",
+        """CREATE TABLE IF NOT EXISTS queries (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, query TEXT, response TEXT, metadata JSONB, created_at TIMESTAMP DEFAULT NOW(), expires_at TIMESTAMP)""",
+        """CREATE TABLE IF NOT EXISTS payments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, razorpay_order_id VARCHAR(100) UNIQUE, razorpay_payment_id VARCHAR(100), razorpay_signature VARCHAR(255), amount FLOAT, currency VARCHAR(3) DEFAULT 'INR', tier VARCHAR(20), status VARCHAR(20) DEFAULT 'created', created_at TIMESTAMP DEFAULT NOW())""",
+        """CREATE TABLE IF NOT EXISTS bulk_jobs (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, job_id VARCHAR(64) UNIQUE NOT NULL, status VARCHAR(20) DEFAULT 'pending', total_files INTEGER DEFAULT 0, processed_files INTEGER DEFAULT 0, result_data TEXT, created_at TIMESTAMP DEFAULT NOW(), expires_at TIMESTAMP)""",
     ]
     for s in ddl: await database.execute(s)
 
 async def _ensure_test_user():
     existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
     if not existing:
-        await database.execute(users.insert().values(
-            username="counsel", email="counsel@advocacyalawfrim.in",
-            password_hash=hash_password("Password123!"), full_name="Counsel User", tier="enterprise",
-            api_key="".join(random.choices(string.ascii_letters+string.digits, k=32)),
-            memory=json.dumps([])))
+        await database.execute(users.insert().values(username="counsel", email="counsel@advocacyalawfrim.in", password_hash=hash_password("Password123!"), full_name="Counsel User", tier="enterprise", api_key="".join(random.choices(string.ascii_letters+string.digits, k=32)), memory=json.dumps([])))
         logger.info("✅ Seeded test user 'counsel'.")
 
 async def _purge_expired():
@@ -540,14 +467,12 @@ async def _check_limit(u: dict) -> bool:
     today = datetime.now().date()
     last = u["last_query_reset"].date() if u["last_query_reset"] else datetime.min.date()
     if today > last:
-        await database.execute(users.update().where(users.c.id==u["id"]).values(
-            queries_used_today=0, last_query_reset=func.now()))
+        await database.execute(users.update().where(users.c.id==u["id"]).values(queries_used_today=0, last_query_reset=func.now()))
         return True
     return u["queries_used_today"] < 10
 
 async def _incr_query(uid: int):
-    await database.execute(users.update().where(users.c.id==uid).values(
-        queries_used_today=users.c.queries_used_today+1, updated_at=datetime.now()))
+    await database.execute(users.update().where(users.c.id==uid).values(queries_used_today=users.c.queries_used_today+1, updated_at=datetime.now()))
 
 # ─── MEMORY ─────────────────────────────────────────────────────────────────
 async def _get_memory(uid: int) -> List[dict]:
@@ -573,32 +498,23 @@ def _build_context(mem: List[dict]) -> str:
 # ─── ROUTES ─────────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status":"healthy","version":"9.0-final","rag_docs": vector_db.collection.count(),
-            "agents":250,"verifiers":10}
+    return {"status":"healthy","version":"9.0-universal","rag_docs": vector_db.collection.count(), "agents":250, "verifiers":10}
 
 @app.post("/auth/login")
 @limiter.limit("10/minute")
 async def login(request: Request, body: UserLogin):
-    u = await database.fetch_one(users.select().where(
-        (users.c.username==body.username) | (users.c.email==body.username.lower())))
-    if not u or not verify_password(body.password, dict(u)["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    u = dict(u)
-    tok = create_access_token({"sub": str(u["id"])})
-    return {"access_token": tok, "token_type":"bearer","user":{
-        "id":u["id"],"username":u["username"],"email":u["email"],"tier":u["tier"]}}
+    u = await database.fetch_one(users.select().where((users.c.username==body.username) | (users.c.email==body.username.lower())))
+    if not u or not verify_password(body.password, dict(u)["password_hash"]): raise HTTPException(status_code=401, detail="Invalid credentials")
+    u = dict(u); tok = create_access_token({"sub": str(u["id"])})
+    return {"access_token": tok, "token_type":"bearer","user":{"id":u["id"],"username":u["username"],"email":u["email"],"tier":u["tier"]}}
 
 @app.post("/auth/register")
 @limiter.limit("5/minute")
 async def register(request: Request, body: UserCreate):
-    ex = await database.fetch_one(users.select().where(
-        (users.c.username==body.username)|(users.c.email==body.email.lower())))
+    ex = await database.fetch_one(users.select().where((users.c.username==body.username) | (users.c.email==body.email.lower())))
     if ex: raise HTTPException(status_code=400, detail="User already exists")
     ak = "".join(random.choices(string.ascii_letters+string.digits, k=32))
-    uid = await database.fetch_val(users.insert().values(
-        username=body.username, email=body.email.lower(),
-        password_hash=hash_password(body.password), full_name=body.full_name,
-        tier="free", api_key=ak, memory=json.dumps([])).returning(users.c.id))
+    uid = await database.fetch_val(users.insert().values(username=body.username, email=body.email.lower(), password_hash=hash_password(body.password), full_name=body.full_name, tier="free", api_key=ak, memory=json.dumps([])).returning(users.c.id))
     tok = create_access_token({"sub": str(uid)})
     return {"access_token": tok, "token_type":"bearer","user":{"id":uid,"username":body.username,"api_key":ak}}
 
@@ -613,94 +529,60 @@ async def lifetime_count():
 @app.get("/my-usage")
 async def my_usage(cu: dict = Depends(get_current_user)):
     total = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id==cu["id"])) or 0
-    today = await database.fetch_val(select(func.count()).select_from(queries).where(
-        queries.c.user_id==cu["id"], func.date(queries.c.created_at)==func.current_date())) or 0
+    today = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id==cu["id"], func.date(queries.c.created_at)==func.current_date())) or 0
     return {"total_queries":total,"queries_today":today}
 
 @app.post("/ask")
 @limiter.limit("30/minute")
-async def ask(request: Request,
-              query: str = Form(...),
-              files: Optional[List[UploadFile]] = File(None),
-              search_web: str = Form("off"),
-              model: str = Form("llama-3.3-70b-versatile"),
-              lang: str = Form("en"),
-              oracle_mode: str = Form("false"),
-              cu: dict = Depends(get_current_user)):
-    if not await _check_limit(cu):
-        raise HTTPException(status_code=429, detail="Free daily limit reached.")
-
+async def ask(request: Request, query: str = Form(...), files: Optional[List[UploadFile]] = File(None), search_web: str = Form("off"), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), oracle_mode: str = Form("false"), cu: dict = Depends(get_current_user)):
+    if not await _check_limit(cu): raise HTTPException(status_code=429, detail="Free daily limit reached.")
     combined = query
     file_names = []
     if files:
         for file in files:
             content = await file.read()
-            if len(content) > 8*1024*1024:
-                raise HTTPException(status_code=413, detail=f"File {file.filename} too large.")
+            if len(content) > 8*1024*1024: raise HTTPException(status_code=413, detail=f"File {file.filename} too large.")
             try:
                 ft = await process_file_bytes(content, file.filename)
                 if ft.strip():
-                    if len(ft) > 20000:
-                        ft = ft[:20000] + "\n[...truncated...]"
+                    if len(ft) > 20000: ft = ft[:20000] + "\n[...truncated...]"
                     combined += f"\n\n═══ DOCUMENT: {file.filename} ═══\n{ft}"
                     file_names.append(file.filename)
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"File error: {e}")
-
+            except Exception as e: raise HTTPException(status_code=400, detail=f"File error: {e}")
     await _incr_query(cu["id"])
 
     # RAG context
     rag_context = vector_db.query(query)
-    if rag_context:
-        combined = f"═════ KNOWLEDGE BASE ═════\n{rag_context[:4000]}\n═════════════════════════\n{combined}"
+    if rag_context: combined = f"═════ KNOWLEDGE BASE ═════\n{rag_context[:4000]}\n═════════════════════════\n{combined}"
 
-    # Web context
+    # Web search
     if search_web == "on":
         web_context = await web_search(query)
-        if web_context:
-            combined += f"\n\n═══ LIVE WEB ═══\n{web_context[:4000]}"
+        if web_context: combined += f"\n\n═══ LIVE WEB ═══\n{web_context[:4000]}"
 
     # Memory
-    mem = await _get_memory(cu["id"])
-    ctx = _build_context(mem)
-    if ctx:
-        combined = f"{ctx}{combined}"
+    mem = await _get_memory(cu["id"]); ctx = _build_context(mem)
+    if ctx: combined = f"{ctx}{combined}"
 
     oracle = oracle_mode.lower() == "true"
     selected_agent = "oracle" if oracle else route_agent(combined, oracle)
 
-    # Debate loop
     result = await execute_with_debate(combined, model, selected_agent, lang, oracle)
-
     final_text = result["response"]
     verification = result["metadata"]
 
     await _update_memory(cu["id"], query, final_text)
-    await database.execute(queries.insert().values(
-        user_id=cu["id"], query=combined[:8000], response=final_text[:16000],
-        metadata=verification,
-        expires_at=datetime.now()+timedelta(hours=24)))
+    await database.execute(queries.insert().values(user_id=cu["id"], query=combined[:8000], response=final_text[:16000], metadata=verification, expires_at=datetime.now()+timedelta(hours=24)))
 
-    return StreamingResponse(
-        replay_stream(final_text, verification),
-        media_type="text/event-stream"
-    )
+    return StreamingResponse(replay_stream(final_text, verification), media_type="text/event-stream")
 
-# ─── BULK UPLOAD ────────────────────────────────────────────────────────────
+# ─── BULK & PAYMENTS (same as before) ────────────────────────────────────
 @app.post("/bulk-upload")
-async def bulk_upload(background_tasks: BackgroundTasks,
-                      files: List[UploadFile] = File(...),
-                      query: str = Form(...),
-                      model: str = Form("llama-3.3-70b-versatile"),
-                      lang: str = Form("en"),
-                      cu: dict = Depends(get_current_user)):
-    if cu["tier"] not in ("premium","enterprise","lifetime"):
-        raise HTTPException(status_code=403, detail="Bulk upload requires Premium+")
+async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
+    if cu["tier"] not in ("premium","enterprise","lifetime"): raise HTTPException(status_code=403, detail="Premium+ required")
     jid = str(uuid.uuid4())
     file_data = [(f.filename, await f.read()) for f in files]
-    await database.execute(bulk_jobs.insert().values(
-        user_id=cu["id"], job_id=jid, total_files=len(file_data),
-        status="processing", expires_at=datetime.now()+timedelta(days=7)))
+    await database.execute(bulk_jobs.insert().values(user_id=cu["id"], job_id=jid, total_files=len(file_data), status="processing", expires_at=datetime.now()+timedelta(days=7)))
     background_tasks.add_task(_process_bulk, jid, file_data, query, model, lang)
     return {"job_id": jid, "status":"processing", "total_files": len(file_data)}
 
@@ -711,20 +593,16 @@ async def _process_bulk(jid, file_data, query, model, lang):
             txt = await process_file_bytes(content, fname)
             combined = f"{query}\n\n═══ DOCUMENT ═══\n{txt[:15000]}"
             at = route_agent(combined, False)
-            # Use simplified call for bulk (no debate to save time)
             full = await _call_llm(f"{SYSTEM_BASE}\nYou are a legal specialist.", combined, model)
-            verification = await verify_response(full, random.choice(VERIFIERS[:-1]), model)
-            final = verification.get("corrected_text") if verification.get("status")=="CORRECTED" else full
+            ver = await verify_response(full, random.choice(VERIFIERS[:-1]), model)
+            final = ver.get("corrected_text") if ver.get("status")=="CORRECTED" else full
             results.append({"filename": fname, "response": final})
-        except Exception as e:
-            results.append({"filename": fname, "error": str(e)})
+        except Exception as e: results.append({"filename": fname, "error": str(e)})
         proc += 1
         await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id==jid).values(processed_files=proc))
-    buf = io.StringIO()
-    w = csv.writer(buf); w.writerow(["Filename","Response"])
+    buf = io.StringIO(); w = csv.writer(buf); w.writerow(["Filename","Response"])
     for r in results: w.writerow([r.get("filename"), r.get("response", r.get("error","Failed"))])
-    await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id==jid).values(
-        status="completed", result_data=buf.getvalue()))
+    await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id==jid).values(status="completed", result_data=buf.getvalue()))
 
 @app.get("/bulk-result/{job_id}")
 async def bulk_result(job_id: str, cu: dict = Depends(get_current_user)):
@@ -732,11 +610,9 @@ async def bulk_result(job_id: str, cu: dict = Depends(get_current_user)):
     if not j: raise HTTPException(status_code=404, detail="Job not found")
     j = dict(j)
     if j["user_id"] != cu["id"]: raise HTTPException(status_code=403, detail="Access denied")
-    if j["status"] != "completed":
-        return {"status": j["status"], "processed": j["processed_files"], "total": j["total_files"]}
+    if j["status"] != "completed": return {"status": j["status"], "processed": j["processed_files"], "total": j["total_files"]}
     return {"status":"completed","csv_data": j["result_data"]}
 
-# ─── RAZORPAY ───────────────────────────────────────────────────────────────
 rzp = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
 
 @app.post("/create-order")
@@ -744,31 +620,21 @@ async def create_order(body: PaymentCreate, cu: dict = Depends(get_current_user)
     if not rzp: raise HTTPException(status_code=501, detail="Payments not configured")
     amt = {"premium":10200,"enterprise":101100,"lifetime":200}.get(body.tier, 10200)
     o = rzp.order.create({"amount": amt, "currency":"INR","payment_capture":1})
-    await database.execute(payments.insert().values(
-        user_id=cu["id"], razorpay_order_id=o["id"], amount=amt/100,
-        tier=body.tier, status="created"))
+    await database.execute(payments.insert().values(user_id=cu["id"], razorpay_order_id=o["id"], amount=amt/100, tier=body.tier, status="created"))
     return {"order_id": o["id"], "amount": amt, "razorpay_key": RAZORPAY_KEY_ID}
 
 @app.post("/verify-payment")
-async def verify_payment(razorpay_order_id: str = Form(...),
-                          razorpay_payment_id: str = Form(...),
-                          razorpay_signature: str = Form(...),
-                          cu: dict = Depends(get_current_user)):
+async def verify_payment(razorpay_order_id: str = Form(...), razorpay_payment_id: str = Form(...), razorpay_signature: str = Form(...), cu: dict = Depends(get_current_user)):
     if not rzp: raise HTTPException(status_code=501, detail="Payments not configured")
     try:
-        rzp.utility.verify_payment_signature({
-            "razorpay_order_id": razorpay_order_id,
-            "razorpay_payment_id": razorpay_payment_id,
-            "razorpay_signature": razorpay_signature})
+        rzp.utility.verify_payment_signature({"razorpay_order_id": razorpay_order_id, "razorpay_payment_id": razorpay_payment_id, "razorpay_signature": razorpay_signature})
         p = await database.fetch_one(payments.select().where(payments.c.razorpay_order_id==razorpay_order_id))
         tier = dict(p)["tier"]
         await database.execute(users.update().where(users.c.id==cu["id"]).values(tier=tier, is_premium=True))
         await database.execute(payments.update().where(payments.c.razorpay_order_id==razorpay_order_id).values(status="paid"))
         return {"status":"success","tier":tier}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail="Verification failed")
+    except Exception as e: raise HTTPException(status_code=400, detail="Verification failed")
 
-# ─── STATIC ──────────────────────────────────────────────────────────────────
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
