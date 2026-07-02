@@ -20,3 +20,5 @@ puremagic==1.28
 slowapi==0.1.9
 email-validator==2.1.1
 pdfplumber==0.10.3   # <-- ADD THIS
+chromadb
+sentence-transformers
