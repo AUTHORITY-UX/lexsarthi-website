@@ -263,20 +263,11 @@ def route_agent(query: str, oracle: bool) -> str:
             best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (pgvector) ────────────────────────────────────────────────────
+# ─── RAG (pgvector) with local embeddings ──────────────────────────────
 async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
-    if not OPENAI_API_KEY:
-        logger.warning("OPENAI_API_KEY not set, returning empty chunks")
-        return []
-    try:
-        response = openai_client.embeddings.create(
-            model="text-embedding-3-small",
-            input=query
-        )
-        query_embedding = response.data[0].embedding
-    except Exception as e:
-        logger.error(f"Embedding failed: {e}")
-        return []
+    """Retrieve top_k chunks from knowledge_chunks using local embeddings."""
+    # Generate embedding using the local model
+    query_embedding = embedding_model.encode(query).tolist()
 
     if conn is None:
         async with pg_pool.acquire() as conn:
