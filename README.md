@@ -99,4 +99,4 @@ Built with a **zero‑retention privacy policy** (all data auto‑deletes within
 
 ---
 
-## 📁 Repository Structure
+## 📁 Repository Structure 
