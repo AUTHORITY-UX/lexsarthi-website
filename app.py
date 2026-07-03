@@ -146,7 +146,7 @@ class PaymentCreate(BaseModel):
     tier: str
 
 # ─── SECURITY ──────────────────────────────────────────────────────────────
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 security = HTTPBearer()
 
 def hash_password(p):
