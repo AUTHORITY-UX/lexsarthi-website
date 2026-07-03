@@ -1,5 +1,5 @@
 ---
-title: LEXSARTHI v6.0
+title: LEXSARTHI v9.1 – ATMA Universal OS
 emoji: 🔱
 colorFrom: yellow
 colorTo: yellow
@@ -9,9 +9,9 @@ pinned: false
 license: other
 ---
 
-# 🔱 LEXSARTHI v6.0 – Universal Divine Intelligence
+# 🔱 LEXSARTHI v9.1 – ATMA Universal OS
 
-## The First AI‑Native OS for Every Seeker – Law, Science, Philosophy, Finance, Life & Beyond
+## The First Self‑Verifying AI OS for Every Domain – Law, Science, Philosophy, Finance, Life & Beyond
 
 ### 🏛️ Owned by **THE ADVOCACY – A LAW FIRM**  
 **Proprietor:** Upmanyu Kumar  
@@ -21,24 +21,28 @@ license: other
 
 ## 📌 Overview
 
-LexSarthi v6.0 evolves from a specialised legal AI into a **Universal Divine Intelligence** – a sovereign AI OS that answers any question from any human seeker, regardless of domain. Whether you ask about **contract law**, **quantum physics**, **ancient philosophy**, **financial markets**, **spirituality**, or **the meaning of life**, LexSarthi channels the wisdom of 220 divine agents (Brahma, Vishnu, Shiva, Saraswati, Ganesha, Hanuman, and more) through the world's most advanced neural networks.
+LexSarthi v9.1 evolves into a **self‑verifying, domain‑agnostic AI** powered by the **Atma router** – an intelligent orchestration layer that dynamically selects specialists, retrieves authoritative knowledge, and runs a **jury of 3 verifiers + a judge** to produce answers with **confidence scores** and **source citations**.  
 
-Built with a **zero‑retention privacy policy** (all data auto‑deletes within 24 hours) and a **fallback PDF library** (your own collection of legal and knowledge texts), it never leaves you empty‑handed – even when external AI APIs are unavailable.
+Whether you ask about **contract law**, **quantum physics**, **Vedanta**, **financial markets**, or **the meaning of life**, LexSarthi responds with transparency, citing both your **ingested documents** and **live official websites** (e.g., Supreme Court, Parliament, SEC, WHO, CERN).
 
 ---
 
-## 🚀 Key Features
+## 🚀 New in v9.1 – The Atma Engine
 
 | Feature | Description |
 | :------ | :---------- |
-| **220 Divine Agents** | Each agent is an incarnation of a cosmic deity (Brahma, Vishnu, Shiva, Saraswati, Ganesha, Hanuman, etc.), specialising in a universal domain – Law, Science, Philosophy, Finance, Spirituality, Technology, Creativity, and more. |
-| **10 Divine Verifiers** | Every response is validated by Ganesha (Intellect), Saraswati (Knowledge), Hanuman (Devotion), Kartikeya (Strategy), Indra (Jurisdiction), Yama (Justice), Surya (Clarity), Chandra (Precedent), Vayu (Purity), and Shiva (Administrator) – ensuring logical consistency, factual accuracy, bias removal, compliance, and risk scoring. |
-| **Multilingual Voice I/O** | **Speak** in English, Hindi, Bengali, Sanskrit, or Arabic – the system transcribes your voice and replies in the same language (with Text‑to‑Speech playback). |
-| **Om Thinking Indicator** | While the AI processes your query, a spinning **ॐ** appears, visually signalling that divine intelligence is at work. |
-| **Zero Retention** | All queries, responses, and uploaded files are automatically deleted after 24 hours. No data is used for training. |
+| **Atma Router** | Classifies the query domain (constitutional, criminal, corporate, general, etc.), selects the best specialist persona from 250+ agents, and picks the optimal LLM provider (Groq / OpenAI / Gemini) with automatic fallback. |
+| **pgvector RAG** | All legal and knowledge documents are embedded into PostgreSQL with pgvector, enabling **high‑speed, scalable retrieval** of relevant chunks. |
+| **Jury + Judge Shakti** | Every answer is cross‑checked by 3 verifiers (Accuracy, Completeness, Consistency) and synthesised by Judge Shakti, producing a **HIGH / MEDIUM / LOW confidence** rating and a list of **sources** (PDF filenames + live URLs). |
+| **Targeted Web Search** | Configurable real‑time search on **official websites** (Supreme Court, Parliament, SEBI, SEC, WHO, CERN, etc.) – verifies claims against live authoritative data. |
+| **Zero‑Retention (24h)** | All queries, responses, and uploaded files are automatically purged after 24 hours – no data is stored or used for training. |
+| **Universal Domain Support** | Built‑in personas for Law, Mathematics, Physics, Chemistry, Medicine, Philosophy, Finance, History, AI Ethics, Climate Science, and 40+ more – with a `general` fallback for any query. |
+| **Auto‑Ingestion** | On first startup, all PDFs in the `legal_docs/` folder are automatically embedded into pgvector – no manual steps required. |
+| **Deliberation Logging** | Every query, the jury’s verdicts, the final answer, and the confidence score are stored in the `deliberations` table for continuous self‑improvement and auditing. |
+| **Multilingual Voice I/O** | Speak in English, Hindi, Bengali, Sanskrit, or Arabic – the system transcribes and replies in the same language with TTS playback. |
+| **Om Thinking Indicator** | A spinning **ॐ** appears while the divine intelligence is processing your request. |
 | **Multi‑Modal Input** | Text, PDF, DOCX, Images (OCR), and Voice Transcription (Speech‑to‑Text). |
-| **Sovereign Fallback** | If all external AI services (Groq, OpenAI, Gemini, OpenRouter) are rate‑limited or unavailable, LexSarthi retrieves authoritative text from your **local PDF library** (Contract Act, IPC, Constitution, DPDPA, Companies Act, AI Act, etc.) – guaranteeing a response. |
-| **Web Search (Privacy‑First)** | Toggle‑able web search using DuckDuckGo (no tracking, no profiling). |
+| **Sovereign Fallback** | If all external AI services are rate‑limited or unavailable, LexSarthi retrieves authoritative text from your **local PDF library** (Contract Act, IPC, Constitution, DPDPA, Companies Act, AI Act, etc.) – guaranteeing a response. |
 | **Payment Integration** | Razorpay – supports ₹2 Lifetime (first 1000 users), ₹102/month Premium, ₹1011/month Enterprise. |
 | **User Dashboard** | “My Usage” shows total queries, today’s count, agents used, and recent history. |
 | **Enterprise Analytics** | Global stats (total users, queries, DAU, paid users) for enterprise subscribers. |
@@ -49,11 +53,13 @@ Built with a **zero‑retention privacy policy** (all data auto‑deletes within
 
 ## 🛠️ Tech Stack
 
-- **Backend:** FastAPI (Python), PostgreSQL (Neon), JWT authentication, Razorpay payments, APScheduler for auto‑delete.
+- **Backend:** FastAPI (Python), PostgreSQL + pgvector (Neon), SQLAlchemy, JWT auth, Razorpay payments, APScheduler for auto‑delete.
+- **AI Providers:** Groq (Llama 3.3), OpenAI (GPT‑4o), Google Gemini – with graceful fallback to local PDF library.
+- **Embeddings:** Local `sentence-transformers/all-MiniLM-L6-v2` (no API key needed) – free, private, fast.
 - **Frontend:** Cloudflare Pages, HTML5, CSS3, JavaScript, Font Awesome, 3D Om animation, Speech Recognition API, Speech Synthesis API.
+- **Search:** SerpAPI for web search (with configurable targeted domains).
 - **Deployment:** Hugging Face Spaces (Docker), Cloudflare DNS.
-- **AI Providers:** Groq (Llama 3.3), OpenAI (GPT‑4o), Google Gemini, OpenRouter (Claude) – with graceful fallback to local PDF library.
-- **Additional:** SlowAPI rate limiting, PyPDF2, python‑docx, Pillow, pytesseract, SpeechRecognition, httpx, puremagic.
+- **Additional:** SlowAPI rate limiting, PyPDF2, pdfplumber, python‑docx, Pillow, pytesseract, httpx.
 
 ---
 
@@ -99,4 +105,4 @@ Built with a **zero‑retention privacy policy** (all data auto‑deletes within
 
 ---
 
-## 📁 Repository Structure 
+## 📁 Repository Structure
