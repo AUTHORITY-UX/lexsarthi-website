@@ -437,9 +437,9 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
 # ─── INGESTION FUNCTION (shared) ────────────────────────────────────
 async def run_ingestion_job():
     """Ingest all PDFs from legal_docs/ into knowledge_chunks (idempotent)."""
-    from pypdf import PdfReader
+    import json, glob, asyncpg, openai
+    import pdfplumber          # use pdfplumber (already in requirements)
     from tqdm import tqdm
-    import asyncpg, openai, json, glob
 
     PDF_DIR = "legal_docs"
     CHUNK_SIZE = 800
@@ -462,10 +462,9 @@ async def run_ingestion_job():
         return resp.data[0].embedding
 
     async def ingest_pdf(file_path, conn):
-        reader = PdfReader(file_path)
-        full_text = ""
-        for page in reader.pages:
-            full_text += page.extract_text() + "\n"
+        # Use pdfplumber instead of pypdf
+        with pdfplumber.open(file_path) as pdf:
+            full_text = "".join(page.extract_text() or "" for page in pdf.pages)
         if not full_text.strip():
             return 0
         chunks = chunk_text(full_text)
@@ -504,7 +503,6 @@ async def run_ingestion_job():
         logger.info(f"✅ Ingestion complete. Added {total} new chunks.")
     finally:
         await conn.close()
-
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
