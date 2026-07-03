@@ -1,7 +1,19 @@
-# ============================================================================
-# LEXSARTHI v9.1 – ATMA ROUTER INTEGRATION (pgvector + Targeted Web + Jury)
-# RAG · Self‑Verification · Zero‑Retention · 100% TRUE & CO
-# ============================================================================
+# =============================================================================
+# LEGAL NOTICE
+# =============================================================================
+# LEXSARTHI v9.1 – ATMA Universal OS
+# Owned by: THE ADVOCACY – A LAW FIRM
+# Proprietor: Upmanyu Kumar
+# UDYAM: UP-09-0043193
+# PAN: CHFPK3464A
+#
+# This software and all associated materials are proprietary and confidential.
+# Unauthorised copying, distribution, modification, or use of this software
+# without explicit written permission from THE ADVOCACY is strictly prohibited.
+#
+# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# =============================================================================
+
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -71,6 +83,10 @@ gemini_model  = None
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel("gemini-pro")
+
+# ─── LOCAL EMBEDDING MODEL (free, no API key) ──────────────────────────
+from sentence_transformers import SentenceTransformer
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # ─── DATABASE (SQLAlchemy) ──────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=2, max_size=20)
@@ -265,17 +281,16 @@ def route_agent(query: str, oracle: bool) -> str:
 
 # ─── RAG (pgvector) with local embeddings ──────────────────────────────
 async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
-    """Retrieve top_k chunks from knowledge_chunks using local embeddings."""
-    # Generate embedding using the local model
     query_embedding = embedding_model.encode(query).tolist()
+    query_embedding_str = json.dumps(query_embedding)   # pgvector expects a string
 
     if conn is None:
         async with pg_pool.acquire() as conn:
-            return await _fetch_chunks(conn, query_embedding, top_k)
+            return await _fetch_chunks(conn, query_embedding_str, top_k)
     else:
-        return await _fetch_chunks(conn, query_embedding, top_k)
+        return await _fetch_chunks(conn, query_embedding_str, top_k)
 
-async def _fetch_chunks(conn, embedding, top_k):
+async def _fetch_chunks(conn, embedding_str: str, top_k: int):
     rows = await conn.fetch(
         """
         SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
@@ -283,7 +298,7 @@ async def _fetch_chunks(conn, embedding, top_k):
         ORDER BY embedding <=> $1
         LIMIT $2
         """,
-        embedding, top_k
+        embedding_str, top_k
     )
     return [
         {
@@ -335,7 +350,6 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
 
 # ─── LLM CALL (for bulk upload) ──────────────────────────────────────
 async def _call_llm(sys_prompt: str, user_msg: str, model: str) -> str:
-    # Simplified fallback – you can replace with your full implementation
     try:
         if model.startswith("llama") and groq_client:
             r = groq_client.chat.completions.create(
@@ -425,17 +439,16 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
 
-# ─── INGESTION FUNCTION (shared) ────────────────────────────────────
+# ─── INGESTION FUNCTION (with string conversion) ──────────────────────
 async def run_ingestion_job():
-    import json, glob, asyncpg, pdfplumber
+    import pdfplumber, json, glob, asyncpg
     from tqdm import tqdm
-    from sentence_transformers import SentenceTransformer
 
     PDF_DIR = "legal_docs"
     CHUNK_SIZE = 800
     OVERLAP = 150
     DATABASE_URL = os.getenv("DATABASE_URL")
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")   # local & free
+    # Use the global embedding_model
 
     def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
         words = text.split()
@@ -445,9 +458,6 @@ async def run_ingestion_job():
             if chunk:
                 chunks.append(chunk)
         return chunks
-
-    def get_embedding(text):
-        return embed_model.encode(text).tolist()
 
     async def ingest_pdf(file_path, conn):
         with pdfplumber.open(file_path) as pdf:
@@ -465,11 +475,12 @@ async def run_ingestion_job():
             return 0
         inserted = 0
         for idx, chunk in enumerate(tqdm(chunks, desc=f"Embedding {source}")):
-            emb = get_embedding(chunk)
+            emb = embedding_model.encode(chunk).tolist()
+            emb_str = json.dumps(emb)   # convert to string for pgvector
             meta = {"source": source, "chunk_index": idx, "total_chunks": len(chunks)}
             await conn.execute(
                 "INSERT INTO knowledge_chunks (content, metadata, embedding) VALUES ($1, $2, $3)",
-                chunk, json.dumps(meta), emb
+                chunk, json.dumps(meta), emb_str
             )
             inserted += 1
         return inserted
@@ -490,6 +501,7 @@ async def run_ingestion_job():
         logger.info(f"✅ Ingestion complete. Added {total} new chunks.")
     finally:
         await conn.close()
+
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -528,7 +540,6 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ─── DB INIT ────────────────────────────────────────────────────────────
 async def _create_tables():
     await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-    
     ddl = [
         """CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -579,7 +590,7 @@ async def _create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
         )""",
-        # ─── New pgvector tables ──────────────────────────────────────────
+        # ─── New pgvector tables with vector(384) ────────────────────────
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
             id SERIAL PRIMARY KEY,
             content TEXT NOT NULL,
@@ -605,7 +616,6 @@ async def _create_tables():
         """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp 
             ON deliberations(timestamp)"""
     ]
-
     for stmt in ddl:
         await database.execute(stmt)
 
@@ -782,7 +792,6 @@ async def _process_bulk(jid, file_data, query, model, lang):
         try:
             txt = await process_file_bytes(content, fname)
             combined = f"{query}\n\n═══ DOCUMENT ═══\n{txt[:15000]}"
-            # Use a simple route for bulk – no Atma, just direct LLM + single verifier
             agent_id = route_agent(combined, oracle=False)
             if agent_id == "oracle":
                 persona = "You are the Oracle, offering spiritual and philosophical wisdom."
@@ -878,3 +887,4 @@ if os.path.exists("static"):
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
+
