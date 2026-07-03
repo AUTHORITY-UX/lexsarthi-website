@@ -2,6 +2,11 @@
 # LEXSARTHI v9.1 – ATMA ROUTER INTEGRATION (pgvector + Targeted Web + Jury)
 # RAG · Self‑Verification · Zero‑Retention · 100% TRUE & CO
 # ============================================================================
+import asyncpg
+import openai
+import glob
+from pypdf import PdfReader
+from tqdm import tqdm
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -329,7 +334,71 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
     }
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
+async def run_ingestion_job():
+    """Ingest all PDFs from legal_docs/ into knowledge_chunks (idempotent)."""
+    PDF_DIR = "legal_docs"
+    CHUNK_SIZE = 800
+    OVERLAP = 150
+    EMBEDDING_MODEL = "text-embedding-3-small"
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
+    def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
+        words = text.split()
+        chunks = []
+        for i in range(0, len(words), chunk_size - overlap):
+            chunk = " ".join(words[i:i+chunk_size])
+            if chunk:
+                chunks.append(chunk)
+        return chunks
+
+    def get_embedding(text):
+        resp = openai.embeddings.create(model=EMBEDDING_MODEL, input=text)
+        return resp.data[0].embedding
+
+    async def ingest_pdf(file_path, conn):
+        reader = PdfReader(file_path)
+        full_text = ""
+        for page in reader.pages:
+            full_text += page.extract_text() + "\n"
+        if not full_text.strip():
+            return 0
+        chunks = chunk_text(full_text)
+        source = os.path.basename(file_path)
+        existing = await conn.fetchval(
+            "SELECT COUNT(*) FROM knowledge_chunks WHERE metadata->>'source' = $1",
+            source
+        )
+        if existing:
+            logger.info(f"📁 {source} already has {existing} chunks. Skipping.")
+            return 0
+        inserted = 0
+        for idx, chunk in enumerate(tqdm(chunks, desc=f"Embedding {source}")):
+            emb = get_embedding(chunk)
+            meta = {"source": source, "chunk_index": idx, "total_chunks": len(chunks)}
+            await conn.execute(
+                "INSERT INTO knowledge_chunks (content, metadata, embedding) VALUES ($1, $2, $3)",
+                chunk, json.dumps(meta), emb
+            )
+            inserted += 1
+        return inserted
+
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        pdf_files = glob.glob(os.path.join(PDF_DIR, "*.pdf"))
+        if not pdf_files:
+            logger.warning("No PDFs found in legal_docs/ – skipping ingestion.")
+            return
+        total = 0
+        for pdf in pdf_files:
+            try:
+                n = await ingest_pdf(pdf, conn)
+                total += n
+            except Exception as e:
+                logger.error(f"❌ Error processing {pdf}: {e}")
+        logger.info(f"✅ Ingestion complete. Added {total} new chunks.")
+    finally:
+        await conn.close()
 # ─── LIFESPAN ──────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -345,6 +414,14 @@ async def lifespan(app: FastAPI):
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
     logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
+    # Check if knowledge_chunks is empty and run ingestion if needed
+async with pg_pool.acquire() as conn:
+    count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
+    if count == 0:
+        logger.info("📚 knowledge_chunks is empty – running auto‑ingestion...")
+        await run_ingestion_job()
+    else:
+        logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping auto‑ingestion.")
     yield
     await database.disconnect()
     await pg_pool.close()
