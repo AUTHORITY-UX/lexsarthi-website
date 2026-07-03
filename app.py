@@ -357,7 +357,10 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── DB INIT ─────────────────────────────────────────────────────────────────
 async def _create_tables():
-    # Existing tables (users, queries, payments, bulk_jobs)
+    # Ensure pgvector extension exists (must be before any vector column)
+    await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+    # Existing tables (users, queries, payments, bulk_jobs) – keep your definitions
     ddl = [
         """CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -408,7 +411,7 @@ async def _create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
         )""",
-        # New pgvector tables
+        # ─── New pgvector tables ──────────────────────────────────────────
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
             id SERIAL PRIMARY KEY,
             content TEXT NOT NULL,
@@ -416,7 +419,8 @@ async def _create_tables():
             embedding vector(1536) NOT NULL
         )""",
         """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-            ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)""",
+            ON knowledge_chunks 
+            USING hnsw (embedding vector_cosine_ops)""",
         """CREATE TABLE IF NOT EXISTS deliberations (
             id SERIAL PRIMARY KEY,
             query TEXT NOT NULL,
@@ -430,10 +434,13 @@ async def _create_tables():
             sources JSONB,
             timestamp TIMESTAMPTZ DEFAULT NOW()
         )""",
-        """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp ON deliberations(timestamp)"""
+        """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp 
+            ON deliberations(timestamp)"""
     ]
+
     for stmt in ddl:
         await database.execute(stmt)
+           
 
 async def _ensure_test_user():
     existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
