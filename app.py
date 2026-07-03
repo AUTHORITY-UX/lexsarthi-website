@@ -577,15 +577,14 @@ async def _create_tables():
             result_data TEXT,
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
-        )""",
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
-            id SERIAL PRIMARY KEY,
-            content TEXT NOT NULL,
-            metadata JSONB NOT NULL,
-            embedding vector(1536) NOT NULL
-        )""",
-        """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-            ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)""",
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    metadata JSONB NOT NULL,
+    embedding vector(384) NOT NULL
+)""",
+"""CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
+    ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)""",
         """CREATE TABLE IF NOT EXISTS deliberations (
             id SERIAL PRIMARY KEY,
             query TEXT NOT NULL,
