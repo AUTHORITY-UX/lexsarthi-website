@@ -436,17 +436,15 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
 
 # ─── INGESTION FUNCTION (shared) ────────────────────────────────────
 async def run_ingestion_job():
-    """Ingest all PDFs from legal_docs/ into knowledge_chunks (idempotent)."""
-    import json, glob, asyncpg, openai
-    import pdfplumber          # use pdfplumber (already in requirements)
+    import json, glob, asyncpg, pdfplumber
     from tqdm import tqdm
+    from sentence_transformers import SentenceTransformer
 
     PDF_DIR = "legal_docs"
     CHUNK_SIZE = 800
     OVERLAP = 150
-    EMBEDDING_MODEL = "text-embedding-3-small"
     DATABASE_URL = os.getenv("DATABASE_URL")
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    embed_model = SentenceTransformer("all-MiniLM-L6-v2")   # local & free
 
     def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
         words = text.split()
@@ -458,11 +456,9 @@ async def run_ingestion_job():
         return chunks
 
     def get_embedding(text):
-        resp = openai.embeddings.create(model=EMBEDDING_MODEL, input=text)
-        return resp.data[0].embedding
+        return embed_model.encode(text).tolist()
 
     async def ingest_pdf(file_path, conn):
-        # Use pdfplumber instead of pypdf
         with pdfplumber.open(file_path) as pdf:
             full_text = "".join(page.extract_text() or "" for page in pdf.pages)
         if not full_text.strip():
