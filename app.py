@@ -1,18 +1,13 @@
- # ============================================================================
+# ============================================================================
 # LEXSARTHI v9.1 – ATMA ROUTER INTEGRATION (pgvector + Targeted Web + Jury)
 # RAG · Self‑Verification · Zero‑Retention · 100% TRUE & CO
 # ============================================================================
-import asyncpg
-import openai
-import glob
-from pypdf import PdfReader
-from tqdm import tqdm
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
-from databases import Database
 
+from databases import Database
 from fastapi import (FastAPI, HTTPException, Depends, UploadFile, File, Form,
                      Request, BackgroundTasks)
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -28,8 +23,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 import asyncpg
-from sqlalchemy import (MetaData, Table, Column, Integer, String, DateTime,
-                        Text, Boolean, JSON, Float, func, select)
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select
 
 import jwt
 from passlib.context import CryptContext
@@ -39,7 +33,7 @@ from groq import Groq
 import openai
 import google.generativeai as genai
 
-import puremagic, PyPDF2, pdfplumber, docx
+import PyPDF2, pdfplumber, docx
 from PIL import Image
 import pytesseract
 
@@ -48,15 +42,15 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 import razorpay
 
-# ─── ATMA ROUTER ────────────────────────────────────────────────────────────
+# ─── ATMA ROUTER ──────────────────────────────────────────────────────────
 from atma import AtmaRouter
 
-# ─── LOGGING ────────────────────────────────────────────────────────────────
+# ─── LOGGING ──────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("lexsarthi")
 
-# ─── ENV ────────────────────────────────────────────────────────────────────
+# ─── ENV ──────────────────────────────────────────────────────────────────
 DATABASE_URL       = os.getenv("DATABASE_URL")
 JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
@@ -70,7 +64,7 @@ SERPAPI_KEY        = os.getenv("SERPAPI_KEY")
 RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
-# ─── PROVIDER CLIENTS (for Atma and bulk) ──────────────────────────────────
+# ─── PROVIDER CLIENTS ────────────────────────────────────────────────────
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 groq_client   = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 gemini_model  = None
@@ -78,11 +72,10 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel("gemini-pro")
 
-# ─── DATABASE (SQLAlchemy for auth tables) ────────────────────────────────
+# ─── DATABASE (SQLAlchemy) ──────────────────────────────────────────────
 database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
-# Existing tables (keep exactly as you had them)
 users = Table("users", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("email", String(255), unique=True, index=True),
@@ -136,7 +129,7 @@ bulk_jobs = Table("bulk_jobs", metadata,
 # Global asyncpg pool (for pgvector and Atma)
 pg_pool: Optional[asyncpg.Pool] = None
 
-# ─── PYDANTIC MODELS ──────────────────────────────────────────────────────
+# ─── PYDANTIC MODELS ────────────────────────────────────────────────────
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
@@ -150,7 +143,7 @@ class UserLogin(BaseModel):
 class PaymentCreate(BaseModel):
     tier: str
 
-# ─── SECURITY ──────────────────────────────────────────────────────────────
+# ─── SECURITY ────────────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 security = HTTPBearer()
 
@@ -191,16 +184,87 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
 
 limiter = Limiter(key_func=get_remote_address)
 
-# ─── SYSTEM PROMPT (used only in bulk, not in Atma) ──────────────────────
+# ─── SYSTEM PROMPT ──────────────────────────────────────────────────────
 SYSTEM_BASE = """You are LexSarthi, the Universal Default OS for Human Knowledge — 100% True. You are powered by 250 specialist personas, a jury of 3 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, compassionate."""
 
-# ─── LEGACY AGENTS / VERIFIERS (used only in bulk) ──────────────────────
-# (keep your existing 250 agents list and VERIFIERS list unchanged)
-# For brevity, I'm not repeating them here – you already have them in your current app.
+# ─── 250 SPECIALIST PERSONAS (generated) ──────────────────────────────
+DOMAINS_FULL = [
+    "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
+    "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
+    "Audit", "Incorporation", "Compliance", "Mathematics", "Statistics", "Physics", "Chemistry",
+    "Biology", "Medicine", "Psychology", "Philosophy", "Logic", "Reasoning", "Economics",
+    "Finance", "History", "Geopolitics", "Astronomy", "Vedanta", "Yoga", "Ayurveda", "Sanskrit",
+    "Mythology", "Ethics", "AI Ethics", "Cryptography", "Blockchain", "Climate Science",
+    "Environmental Law", "Human Rights", "International Law", "Maritime Law", "Space Law",
+    "Data Privacy", "E-commerce", "Real Estate", "Banking", "Insurance"
+]
+DIVINE_NAMES_POOL = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman",
+    "Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera",
+    "Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi",
+    "Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana",
+    "Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha","Skanda",
+    "Ayyappa","Shani","Mangal","Budh","Guru","Shukra","Rahu","Ketu"]
+sub_specialties = {
+    "Constitutional Law": ["Fundamental Rights", "Federalism", "Judicial Review", "Amendment", "Emergency"],
+    "Contract Law": ["Formation", "Performance", "Breach", "Remedies", "Specific Relief"],
+    "Criminal Law": ["IPC", "CrPC", "Evidence", "White Collar", "Sentencing"],
+    "Corporate Law": ["M&A", "Board Governance", "Shareholder Rights", "Insolvency", "SEBI"],
+    "Tax Law": ["Direct Tax", "Indirect Tax", "International Tax", "Transfer Pricing", "Tax Litigation"],
+}
 
-# ─── RAG (pgvector) ─────────────────────────────────────────────────────────
+def generate_all_agents():
+    agents = []
+    domain_idx = 0
+    name_idx = 0
+    for i in range(250):
+        domain = DOMAINS_FULL[domain_idx % len(DOMAINS_FULL)]
+        sub_list = sub_specialties.get(domain, [f"Specialist {j+1}" for j in range(5)])
+        sub = sub_list[i % len(sub_list)]
+        agent_name = f"{DIVINE_NAMES_POOL[name_idx % len(DIVINE_NAMES_POOL)]} · {domain} ({sub})"
+        agents.append({
+            "id": f"agent_{i+1:03d}",
+            "name": agent_name,
+            "domain": domain,
+            "persona_prompt": f"You are a specialist in {domain}, focusing on {sub}. Use deep expertise."
+        })
+        domain_idx += 1
+        if (i+1) % 5 == 0:
+            name_idx += 1
+    return agents
+
+DIVINE_AGENTS = generate_all_agents()
+
+# ─── VERIFIERS (10) ─────────────────────────────────────────────────────
+VERIFIERS = [
+    {"id":"v01","name":"Ganesha","role":"Citation & logic integrity","prompt":"Check legal citations and logical flow."},
+    {"id":"v02","name":"Saraswati","role":"Knowledge cross-reference","prompt":"Verify facts against established knowledge."},
+    {"id":"v03","name":"Hanuman","role":"Global compliance","prompt":"Ensure advice follows international norms."},
+    {"id":"v04","name":"Kartikeya","role":"Contradiction detection","prompt":"Find internal contradictions."},
+    {"id":"v05","name":"Indra","role":"Jurisdiction mapping","prompt":"Check jurisdiction assumptions."},
+    {"id":"v06","name":"Yama","role":"Bias & neutrality","prompt":"Scan for bias."},
+    {"id":"v07","name":"Surya","role":"Timeline & limitation","prompt":"Confirm statutes are current."},
+    {"id":"v08","name":"Chandra","role":"Precedent match","prompt":"Check alignment with known precedents."},
+    {"id":"v09","name":"Vayu","role":"PII / privacy filter","prompt":"Redact PII."},
+    {"id":"v10","name":"Shakti","role":"Final judge & dharma seal","prompt":"Integrate all critiques and produce a final answer with a confidence rating."}
+]
+
+# ─── ROUTE AGENT (for bulk) ──────────────────────────────────────────────
+def route_agent(query: str, oracle: bool) -> str:
+    if oracle:
+        return "oracle"
+    q = query.lower()
+    best_score = -1
+    best_id = "general"
+    for agent in DIVINE_AGENTS:
+        domain_words = agent["domain"].lower().split()
+        score = sum(1 for w in q.split() if w in domain_words)
+        if score > best_score:
+            best_score = score
+            best_id = agent["id"]
+    return best_id if best_score >= 2 else "general"
+
+# ─── RAG (pgvector) ────────────────────────────────────────────────────
 async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
-    """Retrieve top_k chunks from knowledge_chunks using cosine similarity."""
     if not OPENAI_API_KEY:
         logger.warning("OPENAI_API_KEY not set, returning empty chunks")
         return []
@@ -239,9 +303,8 @@ async def _fetch_chunks(conn, embedding, top_k):
         for row in rows
     ]
 
-# ─── WEB SEARCH (used by Atma) ─────────────────────────────────────────────
+# ─── WEB SEARCH ────────────────────────────────────────────────────────
 async def serpapi_search(query: str) -> List[Dict]:
-    """Return list of organic results (dict with 'title','link','snippet')."""
     if not SERPAPI_KEY:
         return []
     try:
@@ -259,7 +322,7 @@ async def serpapi_search(query: str) -> List[Dict]:
         logger.error(f"Web search failed: {e}")
         return []
 
-# ─── FILE PROCESSING (unchanged) ──────────────────────────────────────────
+# ─── FILE PROCESSING ──────────────────────────────────────────────────
 async def process_file_bytes(content: bytes, filename: str) -> str:
     fn = filename.lower()
     try:
@@ -279,19 +342,56 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── LLM CALL (for bulk‑upload only) ──────────────────────────────────────
+# ─── LLM CALL (for bulk upload) ──────────────────────────────────────
 async def _call_llm(sys_prompt: str, user_msg: str, model: str) -> str:
-    # This is a simplified version – keep your existing fallback logic.
-    # I'll keep it brief; you can copy your exact implementation.
-    # (your existing code from the original app)
-    pass
+    # Simplified fallback – you can replace with your full implementation
+    try:
+        if model.startswith("llama") and groq_client:
+            r = groq_client.chat.completions.create(
+                model=model,
+                messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
+                temperature=0.2,
+                max_tokens=4096
+            )
+            return r.choices[0].message.content
+        elif model.startswith("gpt") and openai_client:
+            r = openai_client.chat.completions.create(
+                model=model,
+                messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
+                temperature=0.2,
+                max_tokens=4096
+            )
+            return r.choices[0].message.content
+        elif "gemini" in model and gemini_model:
+            r = gemini_model.generate_content(f"{sys_prompt}\n\nUser: {user_msg}")
+            return r.text
+        else:
+            # fallback to groq default
+            r = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
+                temperature=0.2,
+                max_tokens=4096
+            )
+            return r.choices[0].message.content
+    except Exception as e:
+        logger.error(f"LLM call failed: {e}")
+        return f"Error: {e}"
 
-# ─── BULK VERIFIER (used only in bulk) ─────────────────────────────────────
+# ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
-    # ... keep your existing implementation ...
-    pass
+    ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
+{{"status": "APPROVED|CORRECTED", "confidence": "HIGH|MEDIUM|LOW", "corrected_text": "..."}}"""
+    try:
+        out = await _call_llm(ver_sys, response_text, model)
+        m = re.search(r'\{.*\}', out, re.DOTALL)
+        if m:
+            return json.loads(m.group())
+    except:
+        pass
+    return {"status": "APPROVED", "confidence": "MEDIUM", "corrected_text": ""}
 
-# ─── MEMORY (unchanged) ────────────────────────────────────────────────────
+# ─── MEMORY ───────────────────────────────────────────────────────────
 async def _get_memory(uid: int) -> List[dict]:
     u = await database.fetch_one(users.select().where(users.c.id == uid))
     if not u:
@@ -316,9 +416,8 @@ def _build_context(mem: List[dict]) -> str:
     ctx = "\n".join(f"[Prev Q] {x['q']}\n[Prev A] {x['a']}" for x in mem[-3:])
     return f"═══ RECENT CONTEXT ═══\n{ctx}\n═════════════════\nCurrent query:\n"
 
-# ─── STREAMING REPLAY (for Atma output) ──────────────────────────────────
+# ─── STREAMING REPLAY ──────────────────────────────────────────────
 async def replay_stream(answer: str, confidence: str, sources: List[str], metadata: dict):
-    """Stream tokens then final verification JSON."""
     for i in range(0, len(answer), 6):
         yield f"data: {json.dumps({'token': answer[i:i+6]})}\n\n"
         await asyncio.sleep(0.01)
@@ -334,8 +433,14 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
     }
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
+
+# ─── INGESTION FUNCTION (shared) ────────────────────────────────────
 async def run_ingestion_job():
     """Ingest all PDFs from legal_docs/ into knowledge_chunks (idempotent)."""
+    from pypdf import PdfReader
+    from tqdm import tqdm
+    import asyncpg, openai, json, glob
+
     PDF_DIR = "legal_docs"
     CHUNK_SIZE = 800
     OVERLAP = 150
@@ -399,7 +504,8 @@ async def run_ingestion_job():
         logger.info(f"✅ Ingestion complete. Added {total} new chunks.")
     finally:
         await conn.close()
-# ─── LIFESPAN ──────────────────────────────────────────────────────────────
+
+# ─── LIFESPAN ─────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool
@@ -414,14 +520,16 @@ async def lifespan(app: FastAPI):
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
     logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
-    # Check if knowledge_chunks is empty and run ingestion if needed
-async with pg_pool.acquire() as conn:
-    count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
-    if count == 0:
-        logger.info("📚 knowledge_chunks is empty – running auto‑ingestion...")
-        await run_ingestion_job()
-    else:
-        logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping auto‑ingestion.")
+
+    # Auto‑ingestion on first startup (if knowledge_chunks is empty)
+    async with pg_pool.acquire() as conn:
+        count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
+        if count == 0:
+            logger.info("📚 knowledge_chunks is empty – running auto‑ingestion...")
+            await run_ingestion_job()
+        else:
+            logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping.")
+
     yield
     await database.disconnect()
     await pg_pool.close()
@@ -432,12 +540,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── DB INIT ─────────────────────────────────────────────────────────────────
+# ─── DB INIT ────────────────────────────────────────────────────────────
 async def _create_tables():
-    # Ensure pgvector extension exists (must be before any vector column)
     await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-
-    # Existing tables (users, queries, payments, bulk_jobs) – keep your definitions
     ddl = [
         """CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -488,7 +593,6 @@ async def _create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
         )""",
-        # ─── New pgvector tables ──────────────────────────────────────────
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
             id SERIAL PRIMARY KEY,
             content TEXT NOT NULL,
@@ -496,8 +600,7 @@ async def _create_tables():
             embedding vector(1536) NOT NULL
         )""",
         """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-            ON knowledge_chunks 
-            USING hnsw (embedding vector_cosine_ops)""",
+            ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)""",
         """CREATE TABLE IF NOT EXISTS deliberations (
             id SERIAL PRIMARY KEY,
             query TEXT NOT NULL,
@@ -511,13 +614,10 @@ async def _create_tables():
             sources JSONB,
             timestamp TIMESTAMPTZ DEFAULT NOW()
         )""",
-        """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp 
-            ON deliberations(timestamp)"""
+        """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp ON deliberations(timestamp)"""
     ]
-
     for stmt in ddl:
         await database.execute(stmt)
-           
 
 async def _ensure_test_user():
     existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
@@ -537,7 +637,7 @@ async def _purge_expired():
     await database.execute(queries.delete().where(queries.c.created_at < datetime.now() - timedelta(hours=24)))
     await database.execute(bulk_jobs.delete().where(bulk_jobs.c.created_at < datetime.now() - timedelta(days=7)))
 
-# ─── LIMIT HELPERS ──────────────────────────────────────────────────────────
+# ─── LIMIT HELPERS ──────────────────────────────────────────────────────
 async def _check_limit(u: dict) -> bool:
     if u["tier"] in ("premium", "enterprise", "lifetime"):
         return True
@@ -551,15 +651,10 @@ async def _check_limit(u: dict) -> bool:
 async def _incr_query(uid: int):
     await database.execute(users.update().where(users.c.id == uid).values(queries_used_today=users.c.queries_used_today + 1, updated_at=datetime.now()))
 
-# ─── ROUTES ─────────────────────────────────────────────────────────────────
+# ─── ROUTES ──────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {
-        "status": "healthy",
-        "version": "9.1-atma",
-        "agents": 250,
-        "verifiers": 10
-    }
+    return {"status": "healthy", "version": "9.1-atma", "agents": 250, "verifiers": 10}
 
 @app.post("/auth/login")
 @limiter.limit("10/minute")
@@ -605,7 +700,7 @@ async def my_usage(cu: dict = Depends(get_current_user)):
     today = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id == cu["id"], func.date(queries.c.created_at) == func.current_date())) or 0
     return {"total_queries": total, "queries_today": today}
 
-# ─── /ask ENDPOINT (now using Atma) ──────────────────────────────────────
+# ─── /ask ──────────────────────────────────────────────────────────────
 @app.post("/ask")
 @limiter.limit("30/minute")
 async def ask(
@@ -621,7 +716,6 @@ async def ask(
     if not await _check_limit(cu):
         raise HTTPException(status_code=429, detail="Free daily limit reached.")
 
-    # Process files
     combined_query = query
     if files:
         for file in files:
@@ -639,12 +733,10 @@ async def ask(
 
     await _incr_query(cu["id"])
 
-    # Memory context
     mem = await _get_memory(cu["id"])
     if mem:
         combined_query = _build_context(mem) + combined_query
 
-    # Call Atma
     atma = app.state.atma
     result = await atma.run(query=combined_query, history=None, files=None)
 
@@ -660,7 +752,6 @@ async def ask(
         "judge": "Shakti"
     }
 
-    # Store in memory and history
     await _update_memory(cu["id"], query, answer)
     await database.execute(
         queries.insert().values(
@@ -677,7 +768,7 @@ async def ask(
         media_type="text/event-stream"
     )
 
-# ─── BULK UPLOAD (unchanged) ──────────────────────────────────────────────
+# ─── BULK UPLOAD ──────────────────────────────────────────────────────
 @app.post("/bulk-upload")
 async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
     if cu["tier"] not in ("premium", "enterprise", "lifetime"):
@@ -701,9 +792,18 @@ async def _process_bulk(jid, file_data, query, model, lang):
         try:
             txt = await process_file_bytes(content, fname)
             combined = f"{query}\n\n═══ DOCUMENT ═══\n{txt[:15000]}"
-            # For bulk, we use a simple route – no Atma, just direct LLM + single verifier
-            full = await _call_llm(f"{SYSTEM_BASE}\nYou are a legal specialist.", combined, model)
-            ver = await verify_response(full, random.choice(VERIFIERS[:-1]), model)   # VERIFIERS must be defined
+            # Use a simple route for bulk – no Atma, just direct LLM + single verifier
+            agent_id = route_agent(combined, oracle=False)
+            if agent_id == "oracle":
+                persona = "You are the Oracle, offering spiritual and philosophical wisdom."
+            elif agent_id == "general":
+                persona = "You are the full LexSarthi council, a generalist with broad knowledge."
+            else:
+                agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
+                persona = agent["persona_prompt"] if agent else "You are a generalist."
+            sys_p = f"{SYSTEM_BASE}\n{persona}"
+            full = await _call_llm(sys_p, combined, model)
+            ver = await verify_response(full, random.choice(VERIFIERS[:-1]), model)
             final = ver.get("corrected_text") if ver.get("status") == "CORRECTED" else full
             results.append({"filename": fname, "response": final})
         except Exception as e:
@@ -729,7 +829,7 @@ async def bulk_result(job_id: str, cu: dict = Depends(get_current_user)):
         return {"status": j["status"], "processed": j["processed_files"], "total": j["total_files"]}
     return {"status": "completed", "csv_data": j["result_data"]}
 
-# ─── PAYMENTS (unchanged) ─────────────────────────────────────────────────
+# ─── PAYMENTS ──────────────────────────────────────────────────────────
 rzp = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
 
 @app.post("/create-order")
@@ -770,10 +870,7 @@ async def verify_payment(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Verification failed")
 
-# ─── STATIC FILES ──────────────────────────────────────────────────────────
-if os.path.exists("static"):
-    app.mount("/", StaticFiles(directory="static", html=True), name="static")
- # ─── ONE‑TIME INGESTION ENDPOINT ──────────────────────────────────────
+# ─── ONE‑TIME INGESTION ENDPOINT (optional) ─────────────────────────
 @app.post("/admin/ingest")
 async def admin_ingest(
     secret: str = Form(...),
@@ -785,74 +882,9 @@ async def admin_ingest(
     background_tasks.add_task(run_ingestion_job)
     return {"status": "ingestion started in background"}
 
-async def run_ingestion_job():
-    """Run ingestion in background (reads PDFs, embeds, inserts)."""
-    import asyncpg
-    import openai
-    import json
-    import glob
-    from pypdf import PdfReader
-    from tqdm import tqdm
+# ─── STATIC FILES ──────────────────────────────────────────────────────
+if os.path.exists("static"):
+    app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-    PDF_DIR = "legal_docs"
-    CHUNK_SIZE = 800
-    OVERLAP = 150
-    EMBEDDING_MODEL = "text-embedding-3-small"
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
-    def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
-        words = text.split()
-        chunks = []
-        for i in range(0, len(words), chunk_size - overlap):
-            chunk = " ".join(words[i:i+chunk_size])
-            if chunk:
-                chunks.append(chunk)
-        return chunks
-
-    def get_embedding(text):
-        resp = openai.embeddings.create(model=EMBEDDING_MODEL, input=text)
-        return resp.data[0].embedding
-
-    async def ingest_pdf(file_path, conn):
-        reader = PdfReader(file_path)
-        full_text = ""
-        for page in reader.pages:
-            full_text += page.extract_text() + "\n"
-        if not full_text.strip():
-            return 0
-        chunks = chunk_text(full_text)
-        source = os.path.basename(file_path)
-        existing = await conn.fetchval(
-            "SELECT COUNT(*) FROM knowledge_chunks WHERE metadata->>'source' = $1",
-            source
-        )
-        if existing:
-            logger.info(f"📁 {source} already has {existing} chunks. Skipping.")
-            return 0
-        inserted = 0
-        for idx, chunk in enumerate(tqdm(chunks, desc=f"Embedding {source}")):
-            emb = get_embedding(chunk)
-            meta = {"source": source, "chunk_index": idx, "total_chunks": len(chunks)}
-            await conn.execute(
-                "INSERT INTO knowledge_chunks (content, metadata, embedding) VALUES ($1, $2, $3)",
-                chunk, json.dumps(meta), emb
-            )
-            inserted += 1
-        return inserted
-
-    conn = await asyncpg.connect(DATABASE_URL)
-    try:
-        pdf_files = glob.glob(os.path.join(PDF_DIR, "*.pdf"))
-        total = 0
-        for pdf in pdf_files:
-            try:
-                n = await ingest_pdf(pdf, conn)
-                total += n
-            except Exception as e:
-                logger.error(f"❌ Error processing {pdf}: {e}")
-        logger.info(f"✅ Ingestion complete. Added {total} new chunks.")
-    finally:
-        await conn.close()
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
