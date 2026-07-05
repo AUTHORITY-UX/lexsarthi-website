@@ -32,7 +32,8 @@ class AtmaRouter:
         files: Optional[List[Any]] = None,
         provider: str = "openrouter",
         temperature: float = 0.7,
-        top_k: int = 3
+        top_k: int = 3,
+        custom_system_prompt: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Main entry point for a query.
@@ -58,10 +59,14 @@ Question: {query}
 Provide a detailed, accurate answer citing the sources above.
 If you are unsure, say so clearly.
 """
-        system_prompt = (
-            "You are LexSarthi, a universal AI assistant. Use the provided context to answer. "
-            "Cite your sources. If the context is insufficient, use your general knowledge but note it."
-        )
+        # Use custom system prompt if provided, else default
+        if custom_system_prompt:
+            system_prompt = custom_system_prompt
+        else:
+            system_prompt = (
+                "You are LexSarthi, a universal AI assistant. Use the provided context to answer. "
+                "Cite your sources. If the context is insufficient, use your general knowledge but note it."
+            )
 
         # 3. Initial answer (primary LLM)
         initial_answer = await self.call_llm(
