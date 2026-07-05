@@ -1,10 +1,8 @@
-# atma.py – LexSarthi v9.1 Atma Router
+# atma.py – LexSarthi v10
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 
-import json
-import logging
-from typing import List, Dict, Any, Optional, Callable, Awaitable
-import asyncio
+import json, logging, asyncio, re
+from typing import List, Dict, Optional, Callable, Awaitable, Any
 import asyncpg
 
 logger = logging.getLogger("lexsarthi")
@@ -27,38 +25,19 @@ class AtmaRouter:
         self.serpapi_search = serpapi_search_func
         self.call_llm = call_llm_func
 
-        # 250 personas (from app.py – can be injected, but we keep a stub for standalone)
-        self.agents = self._generate_agents()
-        self.verifiers = self._get_verifiers()
-
-    def _generate_agents(self) -> List[Dict]:
-        # Minimal stub – in real usage, these come from app.py
-        # But we keep them here for self‑contained testing.
-        # They will be overridden by the app's own list if passed differently.
-        # We'll just return a few to avoid bloating.
-        return [
-            {"id": "general", "name": "Generalist", "domain": "General", "persona_prompt": "You are a generalist."}
-        ]
-
-    def _get_verifiers(self) -> List[Dict]:
-        return [
-            {"id": "v01", "name": "Ganesha", "role": "Citation & logic"},
-            {"id": "v02", "name": "Saraswati", "role": "Knowledge cross‑reference"},
-            {"id": "v03", "name": "Shakti", "role": "Final judge"}
-        ]
-
     async def run(
         self,
         query: str,
         history: Optional[List[Dict]] = None,
         files: Optional[List[Any]] = None,
-        provider: str = "groq",
+        provider: str = "openrouter",
         temperature: float = 0.7,
-        top_k: int = 5
+        top_k: int = 3
     ) -> Dict[str, Any]:
         """
         Main entry point for a query.
-        Returns dict with 'answer', 'confidence', 'sources', 'domain', 'persona', 'provider'.
+        Returns dict with 'answer', 'confidence', 'sources', 'domain', 'persona', 'provider',
+        'jury_verifiers', and 'jury_confidences'.
         """
         logger.info(f"AtmaRouter: Processing query: {query[:100]}...")
 
@@ -71,7 +50,7 @@ class AtmaRouter:
 
         # 2. Build the full prompt
         user_prompt = f"""
-Context from legal documents:
+Context from legal/knowledge documents:
 {context_text}
 
 Question: {query}
@@ -80,7 +59,7 @@ Provide a detailed, accurate answer citing the sources above.
 If you are unsure, say so clearly.
 """
         system_prompt = (
-            "You are LexSarthi, a legal AI assistant. Use the provided context to answer. "
+            "You are LexSarthi, a universal AI assistant. Use the provided context to answer. "
             "Cite your sources. If the context is insufficient, use your general knowledge but note it."
         )
 
@@ -93,14 +72,15 @@ If you are unsure, say so clearly.
             history=history
         )
 
-        # 4. Jury verification (run 3 random verifiers in parallel)
+        # 4. Jury verification (run 3 verifiers in parallel)
+        verifiers = self._get_verifiers()
         verifier_prompts = [
             f"You are {v['name']} ({v['role']}). Verify the answer below. Return JSON with keys: 'status' ('APPROVED' or 'NEEDS_CORRECTION'), 'confidence' (0-1), and 'comment' (string). Answer: {initial_answer}"
-            for v in self.verifiers[:3]
+            for v in verifiers[:3]
         ]
         verifier_tasks = [
             self.call_llm(
-                system_prompt="You are a strict legal verifier. Return valid JSON only.",
+                system_prompt="You are a strict verifier. Return valid JSON only.",
                 user_message=vp,
                 provider=provider,
                 temperature=0.2
@@ -118,7 +98,7 @@ If you are unsure, say so clearly.
                 data = json.loads(resp)
                 verifier_results.append(data)
             except json.JSONDecodeError:
-                # If not JSON, treat as approved with medium confidence
+                # Fallback: treat as approved with medium confidence
                 verifier_results.append({
                     "status": "APPROVED",
                     "confidence": 0.5,
@@ -155,26 +135,29 @@ Respond with ONLY the JSON object.
             confidence = judge_data.get("confidence", "MEDIUM")
             sources = judge_data.get("sources", [])
         except json.JSONDecodeError:
-            # If judge didn't return valid JSON, treat the whole response as the answer
             logger.warning("Judge did not return valid JSON. Using raw response.")
             final_answer = judge_response
             confidence = "MEDIUM"
-            # extract sources from the text if possible
-            sources = []
-            # simple extraction – look for "source" or "citation" mentions
-            import re
-            matches = re.findall(r'(?:source|citation)[:\s]+([^.,]+)', final_answer, re.IGNORECASE)
-            sources = matches if matches else ["Unknown"]
+            # simple source extraction from text
+            sources = re.findall(r'(?:source|citation)[:\s]+([^.,]+)', final_answer, re.IGNORECASE) or ["Unknown"]
 
         # 7. Build result
         result = {
             "answer": final_answer,
             "confidence": confidence,
             "sources": sources,
-            "domain": "general",   # could be detected by a classifier later
+            "domain": "general",   # could be enhanced with a classifier
             "persona": "Generalist",
             "provider": provider,
-            "jury_verifiers": [v["name"] for v in self.verifiers[:3]],
+            "jury_verifiers": [v["name"] for v in verifiers[:3]],
             "jury_confidences": [r.get("confidence", 0) for r in verifier_results]
         }
         return result
+
+    def _get_verifiers(self) -> List[Dict]:
+        """Return the 3 verifiers used in the jury."""
+        return [
+            {"id": "v01", "name": "Ganesha", "role": "Citation & logic integrity"},
+            {"id": "v02", "name": "Saraswati", "role": "Knowledge cross-reference"},
+            {"id": "v03", "name": "Hanuman", "role": "Global compliance & consistency"}
+        ]
