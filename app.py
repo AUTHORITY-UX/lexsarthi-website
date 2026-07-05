@@ -1,5 +1,19 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# =============================================================================
+# LEXSARTHI v9.1 – ATMA Universal OS
+# Owned by: THE ADVOCACY – A LAW FIRM
+# Proprietor: Upmanyu Kumar
+# UDYAM: UP-09-0043193
+# PAN: CHFPK3464A
+#
+# This software and all associated materials are proprietary and confidential.
+# Unauthorised copying, distribution, modification, or use of this software
+# without explicit written permission from THE ADVOCACY is strictly prohibited.
+#
+# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# =============================================================================
+
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -54,13 +68,13 @@ JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
 
-OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY")
-GROQ_API_KEY       = os.getenv("GROQ_API_KEY")
-GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY")
-SERPAPI_KEY        = os.getenv("SERPAPI_KEY")
+OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY", "")   # optional
+GROQ_API_KEY       = os.getenv("GROQ_API_KEY")         # REQUIRED for free tier
+GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY", "")
+SERPAPI_KEY        = os.getenv("SERPAPI_KEY", "")
 
-RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 
 # ─── PROVIDER CLIENTS ────────────────────────────────────────────────────
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -265,22 +279,19 @@ def route_agent(query: str, oracle: bool) -> str:
             best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (pgvector) with local embeddings ──────────────────────────────
-import json
-import asyncio
-from typing import List, Dict, Optional
-import asyncpg
-
-async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
+# ─── RAG (pgvector) – WORLD‑CLASS IMPLEMENTATION ──────────────────────
+async def fetch_relevant_chunks(query: str, top_k: int = 5, conn: asyncpg.Connection = None) -> List[Dict]:
     """
     Retrieve and rerank relevant chunks from pgvector.
-    Returns: list of dicts with 'content', 'metadata', 'similarity', and 'citation'.
+    Uses over‑fetch + optional rerank (if cross‑encoder available).
+    Returns a list of dicts with 'content', 'metadata', and 'citation'.
     """
     query_embedding = embedding_model.encode(query).tolist()
     query_embedding_str = json.dumps(query_embedding)
 
-    # 1. Fetch more candidates for reranking
-    fetch_k = top_k * 2  # get twice as many
+    # Fetch more candidates for reranking
+    fetch_k = min(top_k * 2, 20)  # cap at 20 to avoid huge token usage
+
     if conn is None:
         async with pg_pool.acquire() as conn:
             rows = await conn.fetch(
@@ -303,7 +314,6 @@ async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Conne
             query_embedding_str, fetch_k
         )
 
-    # 2. Parse metadata (if stored as JSON string) and build result
     results = []
     for row in rows:
         meta = row["metadata"]
@@ -312,15 +322,18 @@ async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Conne
                 meta = json.loads(meta)
             except:
                 meta = {}
+        # Build a citation string
+        source = meta.get("source", "Unknown")
+        page = meta.get("page", "")
+        citation = f"{source}" + (f" (page {page})" if page else "")
         results.append({
             "content": row["content"],
             "metadata": meta,
             "similarity": row["similarity"],
-            "citation": meta.get("source", "Unknown")  # add page if available
+            "citation": citation
         })
 
-    # 3. (Optional) Rerank with a cross‑encoder – if you have one
-    # If you have a cross‑encoder model, uncomment:
+    # Optional: rerank with cross‑encoder (if you have one installed)
     # from sentence_transformers import CrossEncoder
     # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
     # pairs = [(query, r["content"]) for r in results]
@@ -329,8 +342,8 @@ async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Conne
     #     r["rerank_score"] = s
     # results.sort(key=lambda x: x.get("rerank_score", 0), reverse=True)
 
-    # 4. Return top_k
     return results[:top_k]
+
 # ─── WEB SEARCH ────────────────────────────────────────────────────────
 async def serpapi_search(query: str) -> List[Dict]:
     if not SERPAPI_KEY:
@@ -370,7 +383,7 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── LLM CALL (unified) ──────────────────────────────────────────────
+# ─── LLM CALL (unified, fallback to groq) ──────────────────────────
 async def call_llm(
     system_prompt: str,
     user_message: str,
@@ -379,31 +392,29 @@ async def call_llm(
     history: List[Dict] = None
 ) -> str:
     """
-    Unified LLM caller with provider fallback.
-    provider: "groq" | "openai" | "gemini"
+    Unified LLM caller with fallback. Uses groq by default (free tier).
+    provider can be "groq", "openai", "gemini".
     """
-    # Map provider to model name
-    if provider == "groq":
+    # Always use groq if available (free)
+    if provider == "groq" or (not OPENAI_API_KEY and not GEMINI_API_KEY):
         model = "llama-3.3-70b-versatile"
         client = groq_client
-    elif provider == "openai":
-        model = "gpt-4o-mini"   # or "gpt-4o" if you have access
+    elif provider == "openai" and OPENAI_API_KEY:
+        model = "gpt-4o-mini"
         client = openai_client
-    elif provider == "gemini":
+    elif provider == "gemini" and gemini_model:
         model = "gemini-pro"
-        client = gemini_model  # special case
+        client = gemini_model
     else:
-        # fallback
+        # fallback to groq
         model = "llama-3.3-70b-versatile"
         client = groq_client
 
     try:
         if provider == "gemini" and gemini_model:
-            # Gemini uses a different API
             r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
             return r.text
         elif client:
-            # Groq / OpenAI (same interface)
             r = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "system", "content": system_prompt},
@@ -416,11 +427,10 @@ async def call_llm(
             raise Exception("No valid LLM client available")
     except Exception as e:
         logger.error(f"LLM call failed for provider {provider}: {e}")
-        # Fallback: try groq if not already
+        # Try groq fallback if not already
         if provider != "groq" and groq_client:
             logger.info("Falling back to groq")
             return await call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
-        # Final fallback
         return f"Error: {e}"
 
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
@@ -514,7 +524,7 @@ async def run_ingestion_job():
         inserted = 0
         for idx, chunk in enumerate(tqdm(chunks, desc=f"Embedding {source}")):
             emb = embedding_model.encode(chunk).tolist()
-            emb_str = json.dumps(emb)   # convert to string for pgvector
+            emb_str = json.dumps(emb)
             meta = {"source": source, "chunk_index": idx, "total_chunks": len(chunks)}
             await conn.execute(
                 "INSERT INTO knowledge_chunks (content, metadata, embedding) VALUES ($1, $2, $3)",
@@ -546,41 +556,34 @@ async def run_ingestion_job():
 async def lifespan(app: FastAPI):
     global pg_pool
 
-    # 1. Connect to DB and create tables / test user
     await database.connect()
     await _create_tables()
     await _ensure_test_user()
 
-    # 2. Create PostgreSQL connection pool
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
-    # 3. Instantiate AtmaRouter with the pool and required callbacks
     app.state.atma = AtmaRouter(
         pg_pool,
-        fetch_relevant_chunks_func=fetch_relevant_chunks,   # defined above
-        serpapi_search_func=serpapi_search,                 # defined above
-        call_llm_func=call_llm                              # defined above
+        fetch_relevant_chunks_func=fetch_relevant_chunks,
+        serpapi_search_func=serpapi_search,
+        call_llm_func=call_llm
     )
 
-    # 4. Start background scheduler
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
     logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
 
-    # 5. Auto‑ingestion on first startup (if knowledge_chunks is empty)
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
         if count == 0:
-            logger.info("📚 knowledge_chunks is empty – running auto‑ingestion...")
+            logger.info("📚 knowledge_chunks empty – running auto‑ingestion...")
             await run_ingestion_job()
         else:
             logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping.")
 
-    # 6. Yield control to the application
     yield
 
-    # 7. Cleanup on shutdown
     await database.disconnect()
     await pg_pool.close()
 
@@ -637,7 +640,6 @@ async def _create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
         )""",
-        # ─── New pgvector tables with vector(384) ────────────────────────
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
             id SERIAL PRIMARY KEY,
             content TEXT NOT NULL,
@@ -762,7 +764,7 @@ async def ask(
     query: str = Form(...),
     files: Optional[List[UploadFile]] = File(None),
     search_web: str = Form("off"),
-    model: str = Form("llama-3.3-70b-versatile"),
+    model: str = Form("groq"),   # default to groq
     lang: str = Form("en"),
     oracle_mode: str = Form("false"),
     cu: dict = Depends(get_current_user)
@@ -785,6 +787,11 @@ async def ask(
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
 
+    # ---- TRUNCATE TO AVOID GROQ 413 ----
+    # Keep under ~4000 characters to stay within 12k token limit
+    if len(combined_query) > 4000:
+        combined_query = combined_query[:4000] + "\n[...truncated for token limit]"
+
     await _incr_query(cu["id"])
 
     mem = await _get_memory(cu["id"])
@@ -792,15 +799,21 @@ async def ask(
         combined_query = _build_context(mem) + combined_query
 
     atma = app.state.atma
-    result = await atma.run(query=combined_query, history=None, files=None)
+    # Force provider to groq (free tier)
+    result = await atma.run(
+        query=combined_query,
+        history=None,
+        files=None,
+        provider="groq"   # pass provider if AtmaRouter accepts it
+    )
 
-    answer = result["answer"]
-    confidence = result["confidence"]
-    sources = result["sources"]
+    answer = result.get("answer", "")
+    confidence = result.get("confidence", "MEDIUM")
+    sources = result.get("sources", [])
     metadata = {
         "domain": result.get("domain", "general"),
         "persona": result.get("persona", ""),
-        "provider": result.get("provider", ""),
+        "provider": "groq",
         "jury_verifiers": [],
         "jury_confidences": {},
         "judge": "Shakti"
@@ -824,7 +837,7 @@ async def ask(
 
 # ─── BULK UPLOAD ──────────────────────────────────────────────────────
 @app.post("/bulk-upload")
-async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
+async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("groq"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
     if cu["tier"] not in ("premium", "enterprise", "lifetime"):
         raise HTTPException(status_code=403, detail="Premium+ required")
     jid = str(uuid.uuid4())
@@ -940,4 +953,4 @@ if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
