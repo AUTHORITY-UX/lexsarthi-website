@@ -1,7 +1,7 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10 – Universal OS with OpenRouter, Redis Cache, 1M‑User Scale
+# LEXSARTHI v10 – Universal OS with Adaptive Profiling, OpenRouter, Redis Cache
 # =============================================================================
 
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, hashlib
@@ -79,12 +79,14 @@ if GEMINI_API_KEY:
 
 # ─── REDIS CACHE ─────────────────────────────────────────────────────────
 redis_client = None
-if REDIS_URL:
+if REDIS_URL and (REDIS_URL.startswith("redis://") or REDIS_URL.startswith("rediss://") or REDIS_URL.startswith("unix://")):
     try:
         redis_client = redis.from_url(REDIS_URL, decode_responses=True)
         logger.info("✅ Redis connected for caching.")
     except Exception as e:
         logger.warning(f"⚠️ Redis connection failed: {e}")
+else:
+    logger.warning("⚠️ REDIS_URL not set or invalid scheme. Caching disabled.")
 
 # ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
 from sentence_transformers import SentenceTransformer
@@ -109,6 +111,7 @@ users = Table("users", metadata,
     Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
     Column("api_key", String(64), nullable=True, unique=True),
     Column("preferences", JSON, nullable=True),
+    Column("profile", JSON, server_default='{"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}'),
     Column("memory", JSON, server_default="[]"),
 )
 queries = Table("queries", metadata,
@@ -467,6 +470,99 @@ async def call_llm(
 
     return "I'm sorry, but I'm currently unable to process your request. Please try again later."
 
+# ─── USER PROFILE INFERENCE ──────────────────────────────────────────
+async def infer_user_profile(query: str, history: List[Dict] = None) -> Dict[str, str]:
+    """Analyze the user's query to infer role, age_group, expertise, tone."""
+    history_text = ""
+    if history and len(history) > 0:
+        last_three = history[-3:] if len(history) >= 3 else history
+        history_text = "\n".join([f"Q: {h.get('query','')}\nA: {h.get('response','')}" for h in last_three])
+
+    system_prompt = """You are a profile inference engine. Analyze the user's query and infer their profile.
+Return a JSON object with exactly these keys:
+- "role" (string): e.g., lawyer, judge, farmer, child, teenager, student, psychologist, senior_citizen, scientist, general.
+- "age_group" (string): child, teen, adult, senior.
+- "expertise" (string): beginner, intermediate, expert.
+- "tone" (string): professional, simple, playful, compassionate, academic.
+
+Rules:
+- If the query uses legal terms (e.g., IPC, Section, Contract, Act), set role to "lawyer" or "judge".
+- If the query asks about farming, crops, or weather, set role to "farmer".
+- If the query is very simple or uses childish language, set age_group to "child" and tone to "playful".
+- If the query asks about mental health, psychology, or emotions, set role to "psychologist" or "student".
+- If the query is highly technical (quantum physics, advanced math), set expertise to "expert".
+- If the query is about retirement, pension, or health, set age_group to "senior" and tone to "compassionate".
+- If unsure, use "general", "adult", "intermediate", "professional".
+
+Respond with ONLY the JSON object. No extra text.
+"""
+    user_message = f"Query: {query}\n\nHistory: {history_text if history_text else 'None'}"
+
+    try:
+        response_text = await call_llm(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            provider="groq",  # cheapest/fastest
+            temperature=0.2,
+            use_cache=False
+        )
+        match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if match:
+            profile = json.loads(match.group())
+            default = {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
+            for key in default:
+                if key not in profile:
+                    profile[key] = default[key]
+            return profile
+    except Exception as e:
+        logger.error(f"Profile inference failed: {e}")
+
+    return {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
+
+def build_adaptive_system_prompt(profile: Dict[str, str], base_prompt: str = SYSTEM_BASE) -> str:
+    """Modify the base system prompt based on inferred profile."""
+    role = profile.get("role", "general")
+    age_group = profile.get("age_group", "adult")
+    expertise = profile.get("expertise", "intermediate")
+    tone = profile.get("tone", "professional")
+
+    tone_instructions = {
+        "professional": "Use formal, precise language. Cite sources clearly.",
+        "simple": "Use very simple words. Avoid jargon. Short sentences.",
+        "playful": "Be fun, engaging, and use analogies. Make it enjoyable.",
+        "compassionate": "Be warm, patient, and reassuring. Repeat key points."
+    }
+    tone_text = tone_instructions.get(tone, "Use professional language.")
+
+    expertise_text = {
+        "beginner": "Explain concepts from the ground up. Avoid assumptions of prior knowledge.",
+        "intermediate": "Provide balanced detail – not too basic, not too advanced.",
+        "expert": "Use technical terms freely. Provide deep, rigorous analysis."
+    }.get(expertise, "Provide balanced detail.")
+
+    age_text = {
+        "child": "The user is a child. Use very simple, playful language. No scary terms.",
+        "teen": "The user is a teenager. Be respectful and engaging, avoid overly complex jargon.",
+        "adult": "Standard adult communication.",
+        "senior": "The user is elderly. Be very clear, speak slowly (if voice), repeat key information."
+    }.get(age_group, "Standard adult communication.")
+
+    adaptive_prompt = f"""{base_prompt}
+
+ADAPTIVE INSTRUCTIONS (based on inferred user profile):
+- Inferred Role: {role}
+- Inferred Age Group: {age_group}
+- Inferred Expertise: {expertise}
+- Desired Tone: {tone}
+
+{age_text}
+{expertise_text}
+{tone_text}
+
+Always maintain your core values: accuracy, citation, and transparency. Adjust only the delivery.
+"""
+    return adaptive_prompt
+
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
     ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
@@ -505,6 +601,25 @@ def _build_context(mem: List[dict]) -> str:
     ctx = "\n".join(f"[Prev Q] {x['q']}\n[Prev A] {x['a']}" for x in mem[-3:])
     return f"═══ RECENT CONTEXT ═══\n{ctx}\n═════════════════\nCurrent query:\n"
 
+async def _get_profile(uid: int) -> dict:
+    u = await database.fetch_one(users.select().where(users.c.id == uid))
+    if not u:
+        return {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
+    p = dict(u).get("profile") or {}
+    if isinstance(p, str):
+        try:
+            p = json.loads(p)
+        except:
+            p = {}
+    default = {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
+    for key in default:
+        if key not in p:
+            p[key] = default[key]
+    return p
+
+async def _update_profile(uid: int, profile: dict):
+    await database.execute(users.update().where(users.c.id == uid).values(profile=json.dumps(profile)))
+
 # ─── STREAMING REPLAY ──────────────────────────────────────────────
 async def replay_stream(answer: str, confidence: str, sources: List[str], metadata: dict):
     for i in range(0, len(answer), 6):
@@ -519,6 +634,7 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
         "domain": metadata.get("domain", "general"),
         "persona": metadata.get("persona", ""),
         "provider": metadata.get("provider", ""),
+        "inferred_profile": metadata.get("inferred_profile", {})
     }
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
@@ -639,6 +755,7 @@ async def _create_tables():
             updated_at TIMESTAMP DEFAULT NOW(),
             api_key VARCHAR(64) UNIQUE,
             preferences JSONB,
+            profile JSONB DEFAULT '{"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}',
             memory JSONB DEFAULT '[]'
         )""",
         """CREATE TABLE IF NOT EXISTS queries (
@@ -701,6 +818,12 @@ async def _create_tables():
     for stmt in ddl:
         await database.execute(stmt)
 
+    # Ensure profile column exists (in case table was created without it)
+    try:
+        await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile JSONB DEFAULT '{\"role\":\"general\",\"age_group\":\"adult\",\"expertise\":\"intermediate\",\"tone\":\"professional\"}'")
+    except Exception as e:
+        logger.warning(f"Could not add profile column: {e}")
+
 async def _ensure_test_user():
     existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
     if not existing:
@@ -711,6 +834,7 @@ async def _ensure_test_user():
             full_name="Counsel User",
             tier="enterprise",
             api_key="".join(random.choices(string.ascii_letters + string.digits, k=32)),
+            profile=json.dumps({"role":"lawyer","age_group":"adult","expertise":"expert","tone":"professional"}),
             memory=json.dumps([])
         ))
         logger.info("✅ Seeded test user 'counsel'.")
@@ -743,7 +867,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ─── ROUTES ──────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "version": "10-atma-openrouter", "agents": 250, "verifiers": 10}
+    return {"status": "healthy", "version": "10-atma-openrouter-adaptive", "agents": 250, "verifiers": 10}
 
 @app.post("/auth/login")
 @limiter.limit("10/minute")
@@ -769,6 +893,7 @@ async def register(request: Request, body: UserCreate):
         full_name=body.full_name,
         tier="free",
         api_key=ak,
+        profile=json.dumps({"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}),
         memory=json.dumps([])
     ).returning(users.c.id))
     tok = create_access_token({"sub": str(uid)})
@@ -820,21 +945,34 @@ async def ask(
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
 
+    # Truncate to avoid token limits
     if len(combined_query) > 2000:
         combined_query = combined_query[:2000] + "\n[...truncated for token limit]"
 
     await _incr_query(cu["id"])
 
+    # Get user's memory
     mem = await _get_memory(cu["id"])
     if mem:
         combined_query = _build_context(mem) + combined_query
 
+    # 1. Infer user profile from the query and history
+    profile = await infer_user_profile(combined_query, history=mem)
+    # Save profile to user's preferences (optional)
+    await _update_profile(cu["id"], profile)
+
+    # 2. Build adaptive system prompt
+    adaptive_system_prompt = build_adaptive_system_prompt(profile)
+
+    # 3. Inject profile into query for AtmaRouter (or pass as custom_system_prompt)
+    # We'll use the adaptive prompt by passing it to AtmaRouter's new parameter
     atma = app.state.atma
     result = await atma.run(
         query=combined_query,
         history=None,
         files=None,
-        provider=model
+        provider=model,
+        custom_system_prompt=adaptive_system_prompt  # AtmaRouter must accept this
     )
 
     answer = result.get("answer", "")
@@ -844,9 +982,10 @@ async def ask(
         "domain": result.get("domain", "general"),
         "persona": result.get("persona", ""),
         "provider": model,
-        "jury_verifiers": [],
-        "jury_confidences": {},
-        "judge": "Shakti"
+        "jury_verifiers": result.get("jury_verifiers", []),
+        "jury_confidences": result.get("jury_confidences", {}),
+        "judge": "Shakti",
+        "inferred_profile": profile
     }
 
     await _update_memory(cu["id"], query, answer)
