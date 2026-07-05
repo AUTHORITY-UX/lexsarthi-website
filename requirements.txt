@@ -19,6 +19,7 @@ pytesseract==0.3.10
 puremagic==1.28
 slowapi==0.1.9
 email-validator==2.1.1
-pdfplumber==0.10.3   # <-- ADD THIS
-chromadb
-sentence-transformers 
+pdfplumber==0.10.3      # essential for PDF text extraction
+sentence-transformers==2.3.0   # local embeddings
+redis==5.0.1            # for semantic caching (if you use REDIS_URL)
+tqdm==4.66.2            # for ingestion progress bars
