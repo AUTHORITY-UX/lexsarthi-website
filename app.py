@@ -523,19 +523,32 @@ async def run_ingestion_job():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool
+
+    # 1. Connect to DB and create tables / test user
     await database.connect()
     await _create_tables()
     await _ensure_test_user()
 
+    # 2. Create PostgreSQL connection pool
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
-    app.state.atma = AtmaRouter(pg_pool)
 
+    # 3. Instantiate AtmaRouter with the pool and required callbacks
+    app.state.atma = AtmaRouter(
+        pg_pool,
+        fetch_relevant_chunks_func=fetch_relevant_chunks,   # your RAG function
+        serpapi_search_func=serpapi_search,                 # your SerpAPI wrapper
+        call_llm_func=call_llm                              # your multi-LLM caller
+    )
+    # If your router expects positional arguments only, use:
+    # app.state.atma = AtmaRouter(pg_pool, fetch_relevant_chunks, serpapi_search, call_llm)
+
+    # 4. Start background scheduler
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
     logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
 
-    # Auto‑ingestion on first startup (if knowledge_chunks is empty)
+    # 5. Auto‑ingestion on first startup (if knowledge_chunks is empty)
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
         if count == 0:
@@ -544,15 +557,12 @@ async def lifespan(app: FastAPI):
         else:
             logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping.")
 
+    # 6. Yield control to the application
     yield
+
+    # 7. Cleanup on shutdown
     await database.disconnect()
     await pg_pool.close()
-
-app = FastAPI(title="LexSarthi", lifespan=lifespan)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── DB INIT ────────────────────────────────────────────────────────────
 async def _create_tables():
