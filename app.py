@@ -519,7 +519,19 @@ async def run_ingestion_job():
     finally:
         await conn.close()
 
+async def fetch_relevant_chunks(query: str, top_k: int = 5):
+    # your existing vector search code using pgpool
+    ...
+
+async def serpapi_search(query: str):
+    # your SerpAPI integration (or return empty if not used)
+    ...
+
+async def call_llm(prompt: str, provider: str = "openai", temperature: float = 0.7, history: list = None):
+    # your multi-LLM caller
+    ...
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool
