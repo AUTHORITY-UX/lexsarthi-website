@@ -1,19 +1,5 @@
 # =============================================================================
-# LEGAL NOTICE
-# =============================================================================
-# LEXSARTHI v9.1 – ATMA Universal OS
-# Owned by: THE ADVOCACY – A LAW FIRM
-# Proprietor: Upmanyu Kumar
-# UDYAM: UP-09-0043193
-# PAN: CHFPK3464A
-#
-# This software and all associated materials are proprietary and confidential.
-# Unauthorised copying, distribution, modification, or use of this software
-# without explicit written permission from THE ADVOCACY is strictly prohibited.
-#
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
-# =============================================================================
-
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -348,8 +334,8 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── LLM CALL (for bulk upload) ──────────────────────────────────────
-async def _call_llm(
+# ─── LLM CALL (unified) ──────────────────────────────────────────────
+async def call_llm(
     system_prompt: str,
     user_message: str,
     provider: str = "groq",
@@ -397,15 +383,16 @@ async def _call_llm(
         # Fallback: try groq if not already
         if provider != "groq" and groq_client:
             logger.info("Falling back to groq")
-            return await _call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
+            return await call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
         # Final fallback
         return f"Error: {e}"
+
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
     ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
 {{"status": "APPROVED|CORRECTED", "confidence": "HIGH|MEDIUM|LOW", "corrected_text": "..."}}"""
     try:
-        out = await _call_llm(ver_sys, response_text, model)
+        out = await call_llm(ver_sys, response_text, model)
         m = re.search(r'\{.*\}', out, re.DOTALL)
         if m:
             return json.loads(m.group())
@@ -456,7 +443,7 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
 
-# ─── INGESTION FUNCTION (with string conversion) ──────────────────────
+# ─── INGESTION FUNCTION ──────────────────────────────────────────────
 async def run_ingestion_job():
     import pdfplumber, json, glob, asyncpg
     from tqdm import tqdm
@@ -464,8 +451,6 @@ async def run_ingestion_job():
     PDF_DIR = "legal_docs"
     CHUNK_SIZE = 800
     OVERLAP = 150
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    # Use the global embedding_model
 
     def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
         words = text.split()
@@ -519,17 +504,6 @@ async def run_ingestion_job():
     finally:
         await conn.close()
 
-async def fetch_relevant_chunks(query: str, top_k: int = 5):
-    # your existing vector search code using pgpool
-    ...
-
-async def serpapi_search(query: str):
-    # your SerpAPI integration (or return empty if not used)
-    ...
-
-async def call_llm(prompt: str, provider: str = "openai", temperature: float = 0.7, history: list = None):
-    # your multi-LLM caller
-    ...
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
 
 @asynccontextmanager
@@ -547,12 +521,10 @@ async def lifespan(app: FastAPI):
     # 3. Instantiate AtmaRouter with the pool and required callbacks
     app.state.atma = AtmaRouter(
         pg_pool,
-        fetch_relevant_chunks_func=fetch_relevant_chunks,   # your RAG function
-        serpapi_search_func=serpapi_search,                 # your SerpAPI wrapper
-        call_llm_func=call_llm                              # your multi-LLM caller
+        fetch_relevant_chunks_func=fetch_relevant_chunks,   # defined above
+        serpapi_search_func=serpapi_search,                 # defined above
+        call_llm_func=call_llm                              # defined above
     )
-    # If your router expects positional arguments only, use:
-    # app.state.atma = AtmaRouter(pg_pool, fetch_relevant_chunks, serpapi_search, call_llm)
 
     # 4. Start background scheduler
     sched = AsyncIOScheduler()
@@ -689,6 +661,13 @@ async def _check_limit(u: dict) -> bool:
 
 async def _incr_query(uid: int):
     await database.execute(users.update().where(users.c.id == uid).values(queries_used_today=users.c.queries_used_today + 1, updated_at=datetime.now()))
+
+# ─── APP INSTANCE ────────────────────────────────────────────────────────
+app = FastAPI(title="LexSarthi", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── ROUTES ──────────────────────────────────────────────────────────────
 @app.get("/health")
@@ -840,7 +819,7 @@ async def _process_bulk(jid, file_data, query, model, lang):
                 agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
                 persona = agent["persona_prompt"] if agent else "You are a generalist."
             sys_p = f"{SYSTEM_BASE}\n{persona}"
-            full = await _call_llm(sys_p, combined, model)
+            full = await call_llm(sys_p, combined, model)
             ver = await verify_response(full, random.choice(VERIFIERS[:-1]), model)
             final = ver.get("corrected_text") if ver.get("status") == "CORRECTED" else full
             results.append({"filename": fname, "response": final})
@@ -926,4 +905,3 @@ if os.path.exists("static"):
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
-
