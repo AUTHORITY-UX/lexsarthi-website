@@ -5,31 +5,12 @@ import logging
 import asyncio
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-import openai
-import groq
-import google.generativeai as genai
 import asyncpg
 from pydantic import BaseModel
 
-# Import your existing utilities (assuming they are in app.py or a shared module)
-# We'll assume these functions are available globally:
-#   - fetch_relevant_chunks(query, top_k)
-#   - serpapi_search(query)
-#   - call_llm(system_prompt, user_message, provider, temperature, history)
-# If not, you'll need to pass them as dependencies.
-
 logger = logging.getLogger("lexsarthi.atma")
 
-# ---- Configuration ----
-# Read targeted domains from environment, with a sensible default
-DEFAULT_DOMAINS = [
-    "supremecourtofindia.nic.in",
-    "highcourt.nic.in",
-]
-TARGETED_DOMAINS = os.getenv("TARGETED_SEARCH_DOMAINS", ",".join(DEFAULT_DOMAINS))
-TARGETED_DOMAINS_LIST = [d.strip() for d in TARGETED_DOMAINS.split(",") if d.strip()]
-
-PROVIDER_ORDER = ["groq", "openai", "gemini"]
+# ─── Configuration ─────────────────────────────────────────────────────
 DOMAIN_PERSONAS = {
     "constitutional": {
         "name": "Constitutional Scholar",
@@ -73,9 +54,7 @@ KEYWORD_DOMAINS = {
 VERIFIER_PROMPTS = [
     """You are Verifier 1 – Accuracy. Check if the following claim is **fully supported** by the provided authoritative text (chunks from Supreme Court drafts, legal documents, AND the official website snippets). 
     Return a verdict: SUPPORTED, PARTIALLY_SUPPORTED, or NOT_SUPPORTED. Explain in one sentence.""",
-    
     """You are Verifier 2 – Completeness. Does the claim omit any important legal nuance that is present in the source material (including official websites)? Answer YES/NO and give a brief reason.""",
-    
     """You are Verifier 3 – Consistency. Does the claim contradict any part of the provided legal texts or the official website content? Answer YES/NO and point out the discrepancy if any."""
 ]
 
@@ -91,21 +70,32 @@ class DeliberationRecord(BaseModel):
     sources: List[Dict[str, str]]
     timestamp: datetime
 
+# ─── Main Router ──────────────────────────────────────────────────────
 class AtmaRouter:
-    def __init__(self, db_pool: asyncpg.Pool):
+    def __init__(
+        self,
+        db_pool: asyncpg.Pool,
+        fetch_relevant_chunks_func,
+        serpapi_search_func,
+        call_llm_func
+    ):
         self.db_pool = db_pool
+        self.fetch_relevant_chunks = fetch_relevant_chunks_func
+        self.serpapi_search = serpapi_search_func
+        self.call_llm = call_llm_func
 
     async def _targeted_search(self, query: str) -> List[Dict]:
-        """Perform site‑restricted search on each configured domain."""
-        if not TARGETED_DOMAINS_LIST:
+        """Perform site‑restricted search on configured domains."""
+        domains_str = os.getenv("TARGETED_SEARCH_DOMAINS", "")
+        if not domains_str:
             return []
+        domains = [d.strip() for d in domains_str.split(",") if d.strip()]
         all_results = []
-        for domain in TARGETED_DOMAINS_LIST:
+        for domain in domains:
             search_q = f"{query} site:{domain}"
             try:
-                results = await serpapi_search(search_q)   # assumes this is async
+                results = await self.serpapi_search(search_q)
                 if results:
-                    # keep top 2 per domain to avoid overwhelming context
                     all_results.extend(results[:2])
             except Exception as e:
                 logger.warning(f"Targeted search failed for {domain}: {e}")
@@ -125,22 +115,19 @@ class AtmaRouter:
         persona = self._select_persona(domain)
         provider = self._select_provider(query, domain)
 
-        # 2. Retrieve authoritative chunks from pgvector (SC drafts + constitution)
-        chunks = await fetch_relevant_chunks(query, top_k=10)
+        # 2. Retrieve authoritative chunks from pgvector
+        chunks = await self.fetch_relevant_chunks(query, top_k=10)
 
         # 3. Web search: general + targeted
         web_results = []
         if os.getenv("ENABLE_WEB_SEARCH", "true").lower() == "true":
-            # General search
-            general = await serpapi_search(query) if callable(serpapi_search) else []
+            general = await self.serpapi_search(query)
             web_results.extend(general[:3])
-
-            # Targeted search (if domains are configured)
             if os.getenv("ENABLE_TARGETED_SEARCH", "true").lower() == "true":
                 targeted = await self._targeted_search(query)
-                web_results.extend(targeted[:5])   # keep top 5 from targeted
+                web_results.extend(targeted[:5])
 
-        # 4. Build context for the LLM
+        # 4. Build context
         context_text = "\n".join([f"[{c['metadata'].get('source','Unknown')}] {c['content']}" for c in chunks])
         web_text = "\n".join([f"[Web] {r.get('snippet', '')} (Source: {r.get('link', '')})" for r in web_results[:5]])
 
@@ -152,7 +139,7 @@ class AtmaRouter:
 
         # 5. Initial answer (with provider fallback)
         try:
-            initial_answer = await call_llm(
+            initial_answer = await self.call_llm(
                 system_prompt=system_prompt,
                 user_message=user_message,
                 provider=provider,
@@ -161,14 +148,14 @@ class AtmaRouter:
         except Exception as e:
             logger.warning(f"Provider {provider} failed: {e}. Falling back.")
             provider = "openai" if provider != "openai" else "gemini"
-            initial_answer = await call_llm(
+            initial_answer = await self.call_llm(
                 system_prompt=system_prompt,
                 user_message=user_message,
                 provider=provider,
                 history=history
             )
 
-        # 6. Jury verification (3 verifiers + judge)
+        # 6. Jury verification
         verifier_results = []
         for v_prompt in VERIFIER_PROMPTS:
             verifier_msg = f"""
@@ -186,7 +173,7 @@ class AtmaRouter:
             Provide verdict in JSON format: {{"verdict": "...", "reason": "..."}}
             """
             try:
-                verdict_json = await call_llm(
+                verdict_json = await self.call_llm(
                     system_prompt="You are a strict legal verifier. Output only JSON.",
                     user_message=verifier_msg,
                     provider="groq",
@@ -197,8 +184,7 @@ class AtmaRouter:
                 verdict = {"verdict": "ERROR", "reason": str(e)}
             verifier_results.append(verdict)
 
-        # 7. Judge Shakti – synthesises final answer & confidence
-        # Collect source names from both chunks and web results
+        # 7. Judge Shakti
         chunk_sources = list(set([c['metadata'].get('source', 'Unknown') for c in chunks]))
         web_sources = [r.get('link', '') for r in web_results[:5] if r.get('link')]
         all_sources = chunk_sources + web_sources
@@ -212,7 +198,7 @@ class AtmaRouter:
         Verifier results: {json.dumps(verifier_results)}
         All authoritative sources (chunks + web): {json.dumps(all_sources)}
         """
-        judge_response = await call_llm(
+        judge_response = await self.call_llm(
             system_prompt="You are the final judge. Output only JSON.",
             user_message=judge_prompt,
             provider="openai",
@@ -244,7 +230,7 @@ class AtmaRouter:
             "provider": provider
         }
 
-    # ---- Helper methods (static) ----
+    # ─── Helper methods ──────────────────────────────────────────────────
     @staticmethod
     def _classify_domain(query: str) -> str:
         q = query.lower()
@@ -259,7 +245,6 @@ class AtmaRouter:
 
     @staticmethod
     def _select_provider(query: str, domain: str) -> str:
-        # simple rule: long queries use OpenAI, else Groq
         return "openai" if len(query) > 500 else "groq"
 
     async def _store_deliberation(self, record: DeliberationRecord):
