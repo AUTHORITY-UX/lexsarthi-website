@@ -349,40 +349,57 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
         raise ValueError(f"Unable to read {filename}: {e}")
 
 # ─── LLM CALL (for bulk upload) ──────────────────────────────────────
-async def _call_llm(sys_prompt: str, user_msg: str, model: str) -> str:
-    try:
-        if model.startswith("llama") and groq_client:
-            r = groq_client.chat.completions.create(
-                model=model,
-                messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
-                temperature=0.2,
-                max_tokens=4096
-            )
-            return r.choices[0].message.content
-        elif model.startswith("gpt") and openai_client:
-            r = openai_client.chat.completions.create(
-                model=model,
-                messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
-                temperature=0.2,
-                max_tokens=4096
-            )
-            return r.choices[0].message.content
-        elif "gemini" in model and gemini_model:
-            r = gemini_model.generate_content(f"{sys_prompt}\n\nUser: {user_msg}")
-            return r.text
-        else:
-            # fallback to groq default
-            r = groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role":"system","content":sys_prompt},{"role":"user","content":user_msg}],
-                temperature=0.2,
-                max_tokens=4096
-            )
-            return r.choices[0].message.content
-    except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-        return f"Error: {e}"
+async def _call_llm(
+    system_prompt: str,
+    user_message: str,
+    provider: str = "groq",
+    temperature: float = 0.7,
+    history: List[Dict] = None
+) -> str:
+    """
+    Unified LLM caller with provider fallback.
+    provider: "groq" | "openai" | "gemini"
+    """
+    # Map provider to model name
+    if provider == "groq":
+        model = "llama-3.3-70b-versatile"
+        client = groq_client
+    elif provider == "openai":
+        model = "gpt-4o-mini"   # or "gpt-4o" if you have access
+        client = openai_client
+    elif provider == "gemini":
+        model = "gemini-pro"
+        client = gemini_model  # special case
+    else:
+        # fallback
+        model = "llama-3.3-70b-versatile"
+        client = groq_client
 
+    try:
+        if provider == "gemini" and gemini_model:
+            # Gemini uses a different API
+            r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
+            return r.text
+        elif client:
+            # Groq / OpenAI (same interface)
+            r = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": system_prompt},
+                          {"role": "user", "content": user_message}],
+                temperature=temperature,
+                max_tokens=4096
+            )
+            return r.choices[0].message.content
+        else:
+            raise Exception("No valid LLM client available")
+    except Exception as e:
+        logger.error(f"LLM call failed for provider {provider}: {e}")
+        # Fallback: try groq if not already
+        if provider != "groq" and groq_client:
+            logger.info("Falling back to groq")
+            return await _call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
+        # Final fallback
+        return f"Error: {e}"
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
     ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
