@@ -1,20 +1,10 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v9.1 – ATMA Universal OS
-# Owned by: THE ADVOCACY – A LAW FIRM
-# Proprietor: Upmanyu Kumar
-# UDYAM: UP-09-0043193
-# PAN: CHFPK3464A
-#
-# This software and all associated materials are proprietary and confidential.
-# Unauthorised copying, distribution, modification, or use of this software
-# without explicit written permission from THE ADVOCACY is strictly prohibited.
-#
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# LEXSARTHI v10 – Universal OS with OpenRouter, Redis Cache, 1M‑User Scale
 # =============================================================================
 
-import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
+import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
@@ -44,6 +34,7 @@ import httpx
 from groq import Groq
 import openai
 import google.generativeai as genai
+import redis.asyncio as redis
 
 import PyPDF2, pdfplumber, docx
 from PIL import Image
@@ -68,12 +59,14 @@ JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
 
-OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY", "")   # optional
-GROQ_API_KEY       = os.getenv("GROQ_API_KEY")         # REQUIRED for free tier
+OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY", "")
+GROQ_API_KEY       = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY", "")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 SERPAPI_KEY        = os.getenv("SERPAPI_KEY", "")
 
-RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
+REDIS_URL          = os.getenv("REDIS_URL")
+RAZORPAY_KEY_ID    = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 
 # ─── PROVIDER CLIENTS ────────────────────────────────────────────────────
@@ -84,7 +77,16 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel("gemini-pro")
 
-# ─── LOCAL EMBEDDING MODEL (free, no API key) ──────────────────────────
+# ─── REDIS CACHE ─────────────────────────────────────────────────────────
+redis_client = None
+if REDIS_URL:
+    try:
+        redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        logger.info("✅ Redis connected for caching.")
+    except Exception as e:
+        logger.warning(f"⚠️ Redis connection failed: {e}")
+
+# ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
 from sentence_transformers import SentenceTransformer
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -142,7 +144,6 @@ bulk_jobs = Table("bulk_jobs", metadata,
     Column("expires_at", DateTime),
 )
 
-# Global asyncpg pool (for pgvector and Atma)
 pg_pool: Optional[asyncpg.Pool] = None
 
 # ─── PYDANTIC MODELS ────────────────────────────────────────────────────
@@ -279,18 +280,12 @@ def route_agent(query: str, oracle: bool) -> str:
             best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (pgvector) – WORLD‑CLASS IMPLEMENTATION ──────────────────────
-async def fetch_relevant_chunks(query: str, top_k: int = 5, conn: asyncpg.Connection = None) -> List[Dict]:
-    """
-    Retrieve and rerank relevant chunks from pgvector.
-    Uses over‑fetch + optional rerank (if cross‑encoder available).
-    Returns a list of dicts with 'content', 'metadata', and 'citation'.
-    """
+# ─── RAG (pgvector) with local embeddings ──────────────────────────────
+async def fetch_relevant_chunks(query: str, top_k: int = 3, conn: asyncpg.Connection = None) -> List[Dict]:
     query_embedding = embedding_model.encode(query).tolist()
     query_embedding_str = json.dumps(query_embedding)
 
-    # Fetch more candidates for reranking
-    fetch_k = min(top_k * 2, 20)  # cap at 20 to avoid huge token usage
+    fetch_k = min(top_k * 2, 10)
 
     if conn is None:
         async with pg_pool.acquire() as conn:
@@ -322,7 +317,6 @@ async def fetch_relevant_chunks(query: str, top_k: int = 5, conn: asyncpg.Connec
                 meta = json.loads(meta)
             except:
                 meta = {}
-        # Build a citation string
         source = meta.get("source", "Unknown")
         page = meta.get("page", "")
         citation = f"{source}" + (f" (page {page})" if page else "")
@@ -332,15 +326,6 @@ async def fetch_relevant_chunks(query: str, top_k: int = 5, conn: asyncpg.Connec
             "similarity": row["similarity"],
             "citation": citation
         })
-
-    # Optional: rerank with cross‑encoder (if you have one installed)
-    # from sentence_transformers import CrossEncoder
-    # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    # pairs = [(query, r["content"]) for r in results]
-    # scores = cross_encoder.predict(pairs)
-    # for r, s in zip(results, scores):
-    #     r["rerank_score"] = s
-    # results.sort(key=lambda x: x.get("rerank_score", 0), reverse=True)
 
     return results[:top_k]
 
@@ -383,55 +368,104 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── LLM CALL (unified, fallback to groq) ──────────────────────────
+# ─── UNIFIED LLM CALL with OpenRouter + Redis Cache ──────────────────
 async def call_llm(
     system_prompt: str,
     user_message: str,
-    provider: str = "groq",
+    provider: str = "openrouter",
     temperature: float = 0.7,
-    history: List[Dict] = None
+    history: List[Dict] = None,
+    use_cache: bool = True
 ) -> str:
-    """
-    Unified LLM caller with fallback. Uses groq by default (free tier).
-    provider can be "groq", "openai", "gemini".
-    """
-    # Always use groq if available (free)
-    if provider == "groq" or (not OPENAI_API_KEY and not GEMINI_API_KEY):
-        model = "llama-3.3-70b-versatile"
-        client = groq_client
-    elif provider == "openai" and OPENAI_API_KEY:
-        model = "gpt-4o-mini"
-        client = openai_client
-    elif provider == "gemini" and gemini_model:
-        model = "gemini-pro"
-        client = gemini_model
-    else:
-        # fallback to groq
-        model = "llama-3.3-70b-versatile"
-        client = groq_client
+    cache_key = None
+    if use_cache and redis_client:
+        content = system_prompt + user_message + (str(history) if history else "")
+        cache_key = f"llm_cache:{hashlib.sha256(content.encode()).hexdigest()}"
+        cached = await redis_client.get(cache_key)
+        if cached:
+            logger.info("✅ Cache hit for LLM call")
+            return cached
 
-    try:
-        if provider == "gemini" and gemini_model:
-            r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
-            return r.text
-        elif client:
-            r = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": system_prompt},
-                          {"role": "user", "content": user_message}],
+    if provider == "openrouter" and OPENROUTER_API_KEY:
+        model = "meta-llama/llama-3-70b-instruct"
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_message}
+                        ],
+                        "temperature": temperature,
+                        "max_tokens": 4096
+                    }
+                )
+                if resp.status_code == 200:
+                    result = resp.json()["choices"][0]["message"]["content"]
+                    if cache_key and redis_client:
+                        await redis_client.setex(cache_key, 86400, result)
+                    return result
+                else:
+                    logger.error(f"OpenRouter error: {resp.text}")
+        except Exception as e:
+            logger.error(f"OpenRouter failed: {e}")
+
+    # Fallback: Groq
+    if groq_client:
+        try:
+            r = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
                 temperature=temperature,
                 max_tokens=4096
             )
-            return r.choices[0].message.content
-        else:
-            raise Exception("No valid LLM client available")
-    except Exception as e:
-        logger.error(f"LLM call failed for provider {provider}: {e}")
-        # Try groq fallback if not already
-        if provider != "groq" and groq_client:
-            logger.info("Falling back to groq")
-            return await call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
-        return f"Error: {e}"
+            result = r.choices[0].message.content
+            if cache_key and redis_client:
+                await redis_client.setex(cache_key, 86400, result)
+            return result
+        except Exception as e:
+            logger.error(f"Groq fallback failed: {e}")
+
+    # Fallback: OpenAI
+    if openai_client:
+        try:
+            r = openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=temperature,
+                max_tokens=4096
+            )
+            result = r.choices[0].message.content
+            if cache_key and redis_client:
+                await redis_client.setex(cache_key, 86400, result)
+            return result
+        except Exception as e:
+            logger.error(f"OpenAI fallback failed: {e}")
+
+    # Fallback: Gemini
+    if gemini_model:
+        try:
+            r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
+            result = r.text
+            if cache_key and redis_client:
+                await redis_client.setex(cache_key, 86400, result)
+            return result
+        except Exception as e:
+            logger.error(f"Gemini fallback failed: {e}")
+
+    return "I'm sorry, but I'm currently unable to process your request. Please try again later."
 
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
@@ -551,7 +585,6 @@ async def run_ingestion_job():
         await conn.close()
 
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool
@@ -572,7 +605,7 @@ async def lifespan(app: FastAPI):
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
-    logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v10 — Ready for 1M users.")
 
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
@@ -710,7 +743,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ─── ROUTES ──────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "version": "9.1-atma", "agents": 250, "verifiers": 10}
+    return {"status": "healthy", "version": "10-atma-openrouter", "agents": 250, "verifiers": 10}
 
 @app.post("/auth/login")
 @limiter.limit("10/minute")
@@ -764,7 +797,7 @@ async def ask(
     query: str = Form(...),
     files: Optional[List[UploadFile]] = File(None),
     search_web: str = Form("off"),
-    model: str = Form("groq"),   # default to groq
+    model: str = Form("openrouter"),
     lang: str = Form("en"),
     oracle_mode: str = Form("false"),
     cu: dict = Depends(get_current_user)
@@ -787,10 +820,8 @@ async def ask(
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
 
-    # ---- TRUNCATE TO AVOID GROQ 413 ----
-    # Keep under ~4000 characters to stay within 12k token limit
-    if len(combined_query) > 4000:
-        combined_query = combined_query[:4000] + "\n[...truncated for token limit]"
+    if len(combined_query) > 2000:
+        combined_query = combined_query[:2000] + "\n[...truncated for token limit]"
 
     await _incr_query(cu["id"])
 
@@ -799,12 +830,11 @@ async def ask(
         combined_query = _build_context(mem) + combined_query
 
     atma = app.state.atma
-    # Force provider to groq (free tier)
     result = await atma.run(
         query=combined_query,
         history=None,
         files=None,
-        provider="groq"   # pass provider if AtmaRouter accepts it
+        provider=model
     )
 
     answer = result.get("answer", "")
@@ -813,7 +843,7 @@ async def ask(
     metadata = {
         "domain": result.get("domain", "general"),
         "persona": result.get("persona", ""),
-        "provider": "groq",
+        "provider": model,
         "jury_verifiers": [],
         "jury_confidences": {},
         "judge": "Shakti"
@@ -837,7 +867,7 @@ async def ask(
 
 # ─── BULK UPLOAD ──────────────────────────────────────────────────────
 @app.post("/bulk-upload")
-async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("groq"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
+async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("openrouter"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
     if cu["tier"] not in ("premium", "enterprise", "lifetime"):
         raise HTTPException(status_code=403, detail="Premium+ required")
     jid = str(uuid.uuid4())
@@ -953,4 +983,4 @@ if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
