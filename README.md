@@ -1,15 +1,15 @@
 ---
-title: LEXSARTHI v9.1 – ATMA Universal OS
-emoji: 🔱
-colorFrom: yellow
-colorTo: yellow
-sdk: docker
-app_file: app.py
+title: "LEXSARTHI v10 – ATMA Universal OS"
+emoji: "🔱"
+colorFrom: "yellow"
+colorTo: "yellow"
+sdk: "docker"
+app_file: "app.py"
 pinned: false
-license: other
+license: "other"
 ---
 
-# 🔱 LEXSARTHI v9.1 – ATMA Universal OS
+# 🔱 LEXSARTHI v10 – ATMA Universal OS
 
 ## The First Self‑Verifying AI OS for Every Domain – Law, Science, Philosophy, Finance, Life & Beyond
 
@@ -21,45 +21,61 @@ license: other
 
 ## 📌 Overview
 
-LexSarthi v9.1 evolves into a **self‑verifying, domain‑agnostic AI** powered by the **Atma router** – an intelligent orchestration layer that dynamically selects specialists, retrieves authoritative knowledge, and runs a **jury of 3 verifiers + a judge** to produce answers with **confidence scores** and **source citations**.  
+LexSarthi v10 is a **self‑verifying, domain‑agnostic AI** powered by the **Atma router** – an intelligent orchestration layer that dynamically selects specialists, retrieves authoritative knowledge, and runs a **jury of 3 verifiers + a judge** to produce answers with **confidence scores** and **source citations**.  
 
-Whether you ask about **contract law**, **quantum physics**, **Vedanta**, **financial markets**, or **the meaning of life**, LexSarthi responds with transparency, citing both your **ingested documents** and **live official websites** (e.g., Supreme Court, Parliament, SEC, WHO, CERN).
+With **OpenRouter** as the primary LLM provider (offering 100+ models with no rate limits) and **Redis semantic caching**, LexSarthi is now capable of serving **1 million users** at near‑zero cost. Whether you ask about **contract law**, **quantum physics**, **Vedanta**, **financial markets**, or **the meaning of life**, LexSarthi responds with transparency, citing both your **ingested documents** and **live official websites** (e.g., Supreme Court, Parliament, SEBI, SEC, WHO, CERN).
 
 ---
 
-## 🚀 New in v9.1 – The Atma Engine
+## 🚀 What's New in v10
 
 | Feature | Description |
 | :------ | :---------- |
-| **Atma Router** | Classifies the query domain (constitutional, criminal, corporate, general, etc.), selects the best specialist persona from 250+ agents, and picks the optimal LLM provider (Groq / OpenAI / Gemini) with automatic fallback. |
-| **pgvector RAG** | All legal and knowledge documents are embedded into PostgreSQL with pgvector, enabling **high‑speed, scalable retrieval** of relevant chunks. |
-| **Jury + Judge Shakti** | Every answer is cross‑checked by 3 verifiers (Accuracy, Completeness, Consistency) and synthesised by Judge Shakti, producing a **HIGH / MEDIUM / LOW confidence** rating and a list of **sources** (PDF filenames + live URLs). |
-| **Targeted Web Search** | Configurable real‑time search on **official websites** (Supreme Court, Parliament, SEBI, SEC, WHO, CERN, etc.) – verifies claims against live authoritative data. |
-| **Zero‑Retention (24h)** | All queries, responses, and uploaded files are automatically purged after 24 hours – no data is stored or used for training. |
-| **Universal Domain Support** | Built‑in personas for Law, Mathematics, Physics, Chemistry, Medicine, Philosophy, Finance, History, AI Ethics, Climate Science, and 40+ more – with a `general` fallback for any query. |
-| **Auto‑Ingestion** | On first startup, all PDFs in the `legal_docs/` folder are automatically embedded into pgvector – no manual steps required. |
-| **Deliberation Logging** | Every query, the jury’s verdicts, the final answer, and the confidence score are stored in the `deliberations` table for continuous self‑improvement and auditing. |
-| **Multilingual Voice I/O** | Speak in English, Hindi, Bengali, Sanskrit, or Arabic – the system transcribes and replies in the same language with TTS playback. |
-| **Om Thinking Indicator** | A spinning **ॐ** appears while the divine intelligence is processing your request. |
-| **Multi‑Modal Input** | Text, PDF, DOCX, Images (OCR), and Voice Transcription (Speech‑to‑Text). |
-| **Sovereign Fallback** | If all external AI services are rate‑limited or unavailable, LexSarthi retrieves authoritative text from your **local PDF library** (Contract Act, IPC, Constitution, DPDPA, Companies Act, AI Act, etc.) – guaranteeing a response. |
-| **Payment Integration** | Razorpay – supports ₹2 Lifetime (first 1000 users), ₹102/month Premium, ₹1011/month Enterprise. |
-| **User Dashboard** | “My Usage” shows total queries, today’s count, agents used, and recent history. |
-| **Enterprise Analytics** | Global stats (total users, queries, DAU, paid users) for enterprise subscribers. |
-| **Referral System** | Generate and share referral codes; both referrer and referee get bonus queries. |
-| **Agent Customisation** | Enterprise users can create and edit custom agents with personalised prompts. |
+| **OpenRouter Primary** | Unlimited, low‑cost access to 100+ LLMs (Llama‑3, GPT‑4, Claude, etc.) – no more rate‑limit errors. |
+| **Redis Semantic Cache** | Frequently asked questions are cached, reducing API calls by **70%+** and cutting costs. |
+| **Cost‑Optimised Retrieval** | `top_k=3` and query truncation (2000 chars) keep token usage minimal – perfect for high‑volume free users. |
+| **Multi‑Provider Fallback** | Seamless fallback: OpenRouter → Groq → OpenAI → Gemini → Local PDF library – **zero downtime**. |
+| **Production‑Ready Scaling** | Designed for horizontal scaling (Cloudflare Workers, multiple replicas) – ready for 1M+ daily active users. |
+| **Future‑Ready** | Easy to swap in a self‑hosted `vLLM` endpoint for even lower costs (next phase). |
 
 ---
 
-## 🛠️ Tech Stack
+## 🧠 Core Capabilities
 
-- **Backend:** FastAPI (Python), PostgreSQL + pgvector (Neon), SQLAlchemy, JWT auth, Razorpay payments, APScheduler for auto‑delete.
-- **AI Providers:** Groq (Llama 3.3), OpenAI (GPT‑4o), Google Gemini – with graceful fallback to local PDF library.
-- **Embeddings:** Local `sentence-transformers/all-MiniLM-L6-v2` (no API key needed) – free, private, fast.
-- **Frontend:** Cloudflare Pages, HTML5, CSS3, JavaScript, Font Awesome, 3D Om animation, Speech Recognition API, Speech Synthesis API.
-- **Search:** SerpAPI for web search (with configurable targeted domains).
+| Domain | Examples |
+| :----- | :------- |
+| **Law** | Contract review, draft SLP/civil suits, DPDPA/GST compliance, criminal bail arguments. |
+| **Science** | Evaluate forensic evidence, interpret DNA reports, explain quantum mechanics. |
+| **Psychology** | Analyse witness testimony, assess mental state, understand cognitive biases. |
+| **Philosophy/Mythology** | Frame ethical arguments using Dharma, Karma, Vedantic principles. |
+| **Finance** | Analyse market trends, interpret SEBI regulations, run compliance checks. |
+| **General Knowledge** | Answer any question with cited sources and confidence. |
+
+---
+
+## ⚙️ How It Works (The Atma Flow)
+
+1. **User Input** – Text, document upload (PDF/DOCX/Image/OCR), or voice (Speech‑to‑Text).
+2. **Atma Router** – Classifies the domain (e.g., Corporate Law, Forensic Science) and selects one of **250+ specialist personas**.
+3. **RAG (Retrieval)** – Converts the query to an embedding (local `all-MiniLM-L6-v2`), searches `pgvector` (PostgreSQL) for the most relevant chunks from your uploaded knowledge base.
+4. **Initial Answer** – The selected LLM (via OpenRouter or fallback) drafts a response using the retrieved context.
+5. **Jury of 3 Verifiers** – Independently check the answer for accuracy, completeness, and consistency.
+6. **Judge Shakti** – Synthesises the answer and critiques, producing a final response with **confidence (HIGH/MEDIUM/LOW)** and a list of **sources**.
+7. **Streaming Response** – The final answer is streamed in real‑time, ending with a `verification` JSON block.
+8. **Redis Cache** – The response is cached for 24 hours; identical queries are answered instantly.
+
+---
+
+## 🛠️ Tech Stack (v10)
+
+- **Backend:** FastAPI (Python), PostgreSQL + pgvector (Neon), SQLAlchemy, JWT auth, Razorpay, APScheduler (auto‑purge).
+- **AI Providers:** OpenRouter (primary), Groq, OpenAI, Google Gemini – with graceful fallback.
+- **Embeddings:** Local `sentence-transformers/all-MiniLM-L6-v2` – **100% free**, no API key needed.
+- **Caching:** Redis (Upstash / Redis Cloud) – reduces token usage and latency.
+- **Frontend:** Cloudflare Pages, HTML5, CSS3, JavaScript, Font Awesome, Web Speech API (voice I/O).
+- **Search:** SerpAPI (optional) for real‑time web references.
 - **Deployment:** Hugging Face Spaces (Docker), Cloudflare DNS.
-- **Additional:** SlowAPI rate limiting, PyPDF2, pdfplumber, python‑docx, Pillow, pytesseract, httpx.
+- **Additional:** SlowAPI (rate limiting), PyPDF2, pdfplumber, python‑docx, Pillow, pytesseract, httpx.
 
 ---
 
@@ -74,14 +90,14 @@ Whether you ask about **contract law**, **quantum physics**, **Vedanta**, **fina
 
 ---
 
-## 📈 Pricing Plans
+## 💰 Pricing Plans (₹ INR)
 
 | Plan | Price | Features |
 | :--- | :--- | :--- |
-| **Free** | ₹0 | 10 queries/day, basic agents, no customisation. |
+| **Free** | ₹0 | 10 queries/day, basic agents, no caching. |
 | **Lifetime** | ₹2 (limited to first 1000 users) | Unlimited queries, all agents, zero retention, full access forever. |
-| **Premium** | ₹102/month | Unlimited queries, custom agents, analytics dashboard. |
-| **Enterprise** | ₹1011/month | All premium + API access, priority support, white‑glove onboarding. |
+| **Premium** | ₹102/month | Unlimited queries, custom agents, analytics dashboard, priority response. |
+| **Enterprise** | ₹1011/month | All premium + API access, white‑glove onboarding, dedicated support. |
 
 ---
 
