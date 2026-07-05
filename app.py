@@ -266,35 +266,71 @@ def route_agent(query: str, oracle: bool) -> str:
     return best_id if best_score >= 2 else "general"
 
 # ─── RAG (pgvector) with local embeddings ──────────────────────────────
-async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
-    query_embedding = embedding_model.encode(query).tolist()
-    query_embedding_str = json.dumps(query_embedding)   # pgvector expects a string
+import json
+import asyncio
+from typing import List, Dict, Optional
+import asyncpg
 
+async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
+    """
+    Retrieve and rerank relevant chunks from pgvector.
+    Returns: list of dicts with 'content', 'metadata', 'similarity', and 'citation'.
+    """
+    query_embedding = embedding_model.encode(query).tolist()
+    query_embedding_str = json.dumps(query_embedding)
+
+    # 1. Fetch more candidates for reranking
+    fetch_k = top_k * 2  # get twice as many
     if conn is None:
         async with pg_pool.acquire() as conn:
-            return await _fetch_chunks(conn, query_embedding_str, top_k)
+            rows = await conn.fetch(
+                """
+                SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
+                FROM knowledge_chunks
+                ORDER BY embedding <=> $1
+                LIMIT $2
+                """,
+                query_embedding_str, fetch_k
+            )
     else:
-        return await _fetch_chunks(conn, query_embedding_str, top_k)
+        rows = await conn.fetch(
+            """
+            SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
+            FROM knowledge_chunks
+            ORDER BY embedding <=> $1
+            LIMIT $2
+            """,
+            query_embedding_str, fetch_k
+        )
 
-async def _fetch_chunks(conn, embedding_str: str, top_k: int):
-    rows = await conn.fetch(
-        """
-        SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
-        FROM knowledge_chunks
-        ORDER BY embedding <=> $1
-        LIMIT $2
-        """,
-        embedding_str, top_k
-    )
-    return [
-        {
+    # 2. Parse metadata (if stored as JSON string) and build result
+    results = []
+    for row in rows:
+        meta = row["metadata"]
+        if isinstance(meta, str):
+            try:
+                meta = json.loads(meta)
+            except:
+                meta = {}
+        results.append({
             "content": row["content"],
-            "metadata": row["metadata"],
-            "similarity": row["similarity"]
-        }
-        for row in rows
-    ]
+            "metadata": meta,
+            "similarity": row["similarity"],
+            "citation": meta.get("source", "Unknown")  # add page if available
+        })
 
+    # 3. (Optional) Rerank with a cross‑encoder – if you have one
+    # If you have a cross‑encoder model, uncomment:
+    # from sentence_transformers import CrossEncoder
+    # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    # pairs = [(query, r["content"]) for r in results]
+    # scores = cross_encoder.predict(pairs)
+    # for r, s in zip(results, scores):
+    #     r["rerank_score"] = s
+    # results.sort(key=lambda x: x.get("rerank_score", 0), reverse=True)
+
+    # 4. Return top_k
+    return results[:top_k]
 # ─── WEB SEARCH ────────────────────────────────────────────────────────
 async def serpapi_search(query: str) -> List[Dict]:
     if not SERPAPI_KEY:
