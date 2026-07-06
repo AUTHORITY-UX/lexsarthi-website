@@ -600,7 +600,6 @@ async def _store_domain_analytics(domain: str, status: dict):
     """, domain, status["status_code"], status["response_time"], status["ssl_expiry"], status["dns_resolves"])
 
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool, redis_pool
@@ -612,25 +611,25 @@ async def lifespan(app: FastAPI):
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
     # ─── Redis (optional) ──────────────────────────────────────────────────
-if REDIS_URL:
-    try:
-        clean_url = REDIS_URL
-        if "redis-cli --tls -u " in clean_url:
-            clean_url = clean_url.split("redis-cli --tls -u ")[-1]
-        # Upstash uses TLS, so convert redis:// to rediss:// if needed
-        if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
-            clean_url = clean_url.replace("redis://", "rediss://", 1)
-        # Create Redis client directly (async)
-        redis_client = redis.from_url(clean_url, decode_responses=True, max_connections=10)
-        await redis_client.ping()
-        redis_pool = redis_client   # store client reference
-        logger.info("✅ Redis connected successfully")
-    except Exception as e:
-        logger.error(f"❌ Redis connection failed: {e}")
+    if REDIS_URL:
+        try:
+            clean_url = REDIS_URL
+            if "redis-cli --tls -u " in clean_url:
+                clean_url = clean_url.split("redis-cli --tls -u ")[-1]
+            # Upstash uses TLS, so convert redis:// to rediss:// if needed
+            if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
+                clean_url = clean_url.replace("redis://", "rediss://", 1)
+            # Create Redis client directly (async)
+            redis_client = redis.from_url(clean_url, decode_responses=True, max_connections=10)
+            await redis_client.ping()
+            redis_pool = redis_client   # store client reference
+            logger.info("✅ Redis connected successfully")
+        except Exception as e:
+            logger.error(f"❌ Redis connection failed: {e}")
+            redis_pool = None
+    else:
         redis_pool = None
-else:
-    redis_pool = None
-    logger.warning("⚠️ REDIS_URL not set – caching disabled")
+        logger.warning("⚠️ REDIS_URL not set – caching disabled")
 
     app.state.atma = AtmaRouter(
         pg_pool,
@@ -659,8 +658,7 @@ else:
     if pg_pool:
         await pg_pool.close()
     if redis_pool:
-        await redis_pool.disconnect()
-
+        await redis_pool.close()
 # ─── DB INIT ────────────────────────────────────────────────────────────
 async def _create_tables():
     await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
