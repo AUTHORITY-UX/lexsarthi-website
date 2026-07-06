@@ -1533,7 +1533,8 @@ async def get_drafts(
         query += " AND status = $2"
         params.append(status)
     query += " ORDER BY created_at DESC"
-    rows = await database.fetch_all(query, *params)
+    # 🔥 FIX: pass params directly, not with * expansion
+    rows = await database.fetch_all(query, params)
     return [dict(r) for r in rows]
 
 @app.get("/drafts/{draft_id}")
