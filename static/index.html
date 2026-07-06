@@ -2,23 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LexSarthi — The Verdict Engine</title>
-  <meta name="description" content="LexSarthi — self‑verifying AI with 250 specialists, jury of 10, zero retention." />
-  <link rel="canonical" href="https://www.advocacyalawfrim.in/" />
-  <meta property="og:title" content="LexSarthi — The Verdict Engine" />
-  <meta property="og:description" content="Jury‑verified answers from 150+ trusted domains." />
-  <meta property="og:url" content="https://www.advocacyalawfrim.in/" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="description" content="Self‑verifying AI for legal & professional advisory." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%94%B1%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Serif+Devanagari:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <!-- Google tag (gtag.js) – replace G-XXXXXXXX with your ID -->
+  <!-- GA4 (keep if you want) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QVFXGG86FZ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -27,697 +21,573 @@
     gtag('config', 'G-QVFXGG86FZ');
   </script>
   <style>
-    /* ===== ROOT ===== */
+    /* ===== RESET & ROOT ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0a0a0f;
-      --panel: rgba(20,20,32,0.75);
+      --panel: rgba(20,20,32,0.7);
       --panel-2: #1a1a2a;
-      --border: rgba(212,175,55,0.2);
+      --border: rgba(212,175,55,0.15);
       --gold: #d4af37;
-      --gold-soft: rgba(212,175,55,0.12);
-      --saffron: #ff9933;
+      --gold-soft: rgba(212,175,55,0.1);
       --text: #f0ede8;
       --muted: #8a8a95;
       --ok: #34d399;
       --err: #ff6b6b;
-      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
-    * { box-sizing:border-box; margin:0; padding:0; }
     html, body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      overflow-x: hidden;
+      background: radial-gradient(ellipse at 30% 20%, #1a1a30 0%, #0a0a0f 80%);
       font-size: 15px;
       line-height: 1.55;
-      position: relative;
     }
-    body { background: radial-gradient(ellipse at 30% 20%, #1a1a30 0%, #0a0a0f 80%); }
 
-    /* ===== BACKGROUND DECORATIONS ===== */
-    .moon { position:fixed; top:5%; left:5%; width:22vmin; height:22vmin; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(255,240,200,0.25), rgba(200,180,150,0.05)); box-shadow:0 0 60px rgba(255,240,200,0.08), inset 0 0 40px rgba(255,255,255,0.03); pointer-events:none; z-index:0; border:1px solid rgba(255,255,255,0.02); }
-    .moon::after { content:''; position:absolute; top:10%; left:20%; width:40%; height:40%; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.05), transparent); }
-    .infinite-rings { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:0; overflow:hidden; }
-    .ring-bg { position:absolute; top:50%; left:50%; border-radius:50%; border:1px solid rgba(212,175,55,0.08); transform:translate(-50%,-50%) scale(0.5); animation:ringExpand var(--duration) ease-out infinite alternate; opacity:0; }
-    @keyframes ringExpand { 0% { transform:translate(-50%,-50%) scale(0.2); opacity:0.2; } 100% { transform:translate(-50%,-50%) scale(5); opacity:0.03; } }
-    .om-5d-wrapper { position:fixed; top:10%; left:50%; transform:translateX(-50%); z-index:0; pointer-events:none; width:30vmin; height:30vmin; perspective:800px; display:flex; align-items:center; justify-content:center; }
-    .om-5d { width:100%; height:100%; transform-style:preserve-3d; animation:spin5d 20s linear infinite; position:relative; }
-    @keyframes spin5d { 0% { transform:rotateY(0) rotateX(15deg); } 100% { transform:rotateY(360deg) rotateX(15deg); } }
-    .om-face-5d { position:absolute; width:100%; height:100%; font-family:'Noto Serif Devanagari',serif; font-size:14vmin; color:var(--gold); display:flex; align-items:center; justify-content:center; text-shadow:0 0 40px rgba(212,175,55,0.2); background:rgba(10,10,15,0.05); border-radius:20%; border:1px solid rgba(212,175,55,0.05); backface-visibility:hidden; }
-    .om-face-5d.front { transform:translateZ(calc(30vmin / 2)); }
-    .om-face-5d.back { transform:rotateY(180deg) translateZ(calc(30vmin / 2)); }
-    .om-face-5d.left { transform:rotateY(-90deg) translateZ(calc(30vmin / 2)); }
-    .om-face-5d.right { transform:rotateY(90deg) translateZ(calc(30vmin / 2)); }
-    .om-face-5d.top { transform:rotateX(90deg) translateZ(calc(30vmin / 2)); }
-    .om-face-5d.bottom { transform:rotateX(-90deg) translateZ(calc(30vmin / 2)); }
+    /* ===== DECORATIONS (subdued) ===== */
+    .moon { position:fixed; top:5%; left:5%; width:22vmin; height:22vmin; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(255,240,200,0.2), rgba(200,180,150,0.05)); box-shadow:0 0 60px rgba(255,240,200,0.08); pointer-events:none; z-index:0; border:1px solid rgba(255,255,255,0.02); }
     .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
-    .star { position:absolute; background:#fff; border-radius:50%; opacity:0.4; animation:twinkle var(--duration) infinite ease-in-out; }
+    .star { position:absolute; background:#fff; border-radius:50%; opacity:0.4; animation:twinkle 3s infinite ease-in-out; }
     @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.7; } }
 
-    /* ===== LAYOUT ===== */
-    .container { position:relative; z-index:2; max-width:960px; margin:0 auto; padding:0 16px 80px 16px; display:flex; flex-direction:column; min-height:100vh; }
-
-    /* ===== HEADER ===== */
-    .header { background:rgba(20,20,32,0.6); backdrop-filter:blur(18px); border:1px solid var(--border); border-radius:18px; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:12px 0; box-shadow:var(--shadow); }
-    .brand-name { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:800; color:var(--gold); letter-spacing:2px; text-shadow:0 0 30px rgba(212,175,55,0.15); }
-    .brand-name small { font-size:0.9rem; font-weight:400; color:var(--muted); letter-spacing:1px; margin-left:8px; }
-    .version-badge { background:var(--gold-soft); border:1px solid var(--border); color:var(--gold); padding:2px 10px; border-radius:999px; font-size:0.55rem; font-weight:700; margin-left:8px; letter-spacing:1px; vertical-align:middle; }
-    .premium-badge, .enterprise-badge { display:none; background:var(--gold-soft); color:var(--gold); border:1px solid var(--gold); padding:1px 10px; border-radius:999px; font-size:0.55rem; margin-left:6px; vertical-align:middle; }
-    .enterprise-badge { background:rgba(124,58,237,0.15); color:#a78bfa; border-color:#7c3aed; }
-    .header-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-    .btn { border:none; cursor:pointer; font-family:inherit; font-weight:600; border-radius:30px; transition:transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease; letter-spacing:0.3px; padding:6px 16px; font-size:0.75rem; }
-    .btn:hover { transform:translateY(-2px); }
-    .btn-gold { background:linear-gradient(135deg,#d4af37,#b8901e); color:#1a1a1a; box-shadow:0 4px 12px rgba(212,175,55,0.3); }
-    .btn-outline { background:transparent; color:var(--gold); border:1px solid var(--gold); }
-    .btn-outline:hover { background:var(--gold-soft); }
-    .btn-sm { padding:4px 12px; font-size:0.65rem; }
-    .settings-btn { background:transparent; color:var(--gold); border:1px solid var(--border); border-radius:30px; padding:6px 12px; cursor:pointer; font-size:0.8rem; }
-    .settings-btn:hover { background:var(--gold-soft); }
-    .settings-panel { display:none; position:absolute; top:calc(100% + 8px); right:16px; background:var(--panel-2); border:1px solid var(--border); border-radius:14px; padding:14px; width:230px; z-index:100; box-shadow:0 12px 40px rgba(0,0,0,0.6); backdrop-filter:blur(12px); }
-    .settings-panel.open { display:block; }
-
-    /* ===== HERO ===== */
-    .hero { background:rgba(20,20,32,0.5); backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:24px; padding:20px 24px 16px; margin-bottom:16px; text-align:center; box-shadow:var(--shadow); }
-    .hero-tagline { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:800; color:var(--gold); line-height:1.1; text-shadow:0 0 40px rgba(212,175,55,0.2); letter-spacing:1px; }
-    .hero-tagline span { color:#fff; background:linear-gradient(135deg,#fff,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .hero-sub { font-size:1rem; color:var(--muted); margin:8px 0 4px; font-weight:300; }
-    .hero-sub strong { color:var(--text); font-weight:600; }
-    .hero-cta { margin-top:10px; }
-    .btn-hero { background:linear-gradient(135deg,#d4af37,#b8901e); border:none; color:#1a1a1a; padding:12px 36px; border-radius:60px; font-weight:800; font-size:1.1rem; cursor:pointer; box-shadow:0 8px 24px rgba(212,175,55,0.4); transition:all 0.25s ease; letter-spacing:1.5px; animation:pulseGlow 2.5s ease-in-out infinite; font-family:'Inter',sans-serif; display:inline-flex; align-items:center; gap:10px; }
-    .btn-hero i { font-size:1.2rem; }
-    @keyframes pulseGlow { 0%,100% { box-shadow:0 8px 24px rgba(212,175,55,0.4); transform:scale(1); } 50% { box-shadow:0 8px 48px rgba(212,175,55,0.7); transform:scale(1.03); } }
-    .btn-hero:hover { transform:scale(1.06); box-shadow:0 12px 48px rgba(212,175,55,0.7); animation:none; }
-    .hero-secure-tag { margin-top:8px; font-size:0.75rem; color:var(--ok); letter-spacing:0.5px; font-weight:500; }
-    .hero-secure-tag i { margin-right:6px; color:var(--gold); }
-
-    /* ===== MODE TOGGLES ===== */
-    .mode-toggle-bar { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:12px; }
-    .mode-btn { background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 14px; border-radius:30px; font-size:0.7rem; font-weight:600; cursor:pointer; transition:all 0.2s ease; font-family:inherit; }
-    .mode-btn.active { background:var(--gold-soft); border-color:var(--gold); color:var(--gold); box-shadow:0 0 20px rgba(212,175,55,0.1); }
-    .mode-btn:hover { border-color:var(--gold); }
-    .mode-toggle-label { display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; color:var(--muted); border:1px solid var(--border); padding:4px 14px; border-radius:30px; cursor:pointer; transition:background 0.2s; background:transparent; font-weight:600; }
-    .mode-toggle-label:hover { background:var(--gold-soft); }
-    .mode-toggle-label input { accent-color:var(--gold); margin-right:4px; }
-    .mode-toggle-label.oracle { color:var(--saffron); border-color:rgba(255,153,51,0.3); }
-    .mode-toggle-label.open-web { color:var(--ok); border-color:rgba(52,211,153,0.2); }
-
-    /* ===== CHAT ===== */
-    .chat-container { flex:1; background:rgba(20,20,32,0.45); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:18px; padding:16px; overflow-y:auto; min-height:200px; max-height:50vh; margin-bottom:14px; box-shadow:var(--shadow); }
-    #chatArea { display:flex; flex-direction:column; gap:8px; }
-    .chat-bubble { max-width:88%; padding:10px 16px; border-radius:14px; font-size:0.9rem; line-height:1.6; animation:slideUp 0.3s ease-out; word-wrap:break-word; }
-    @keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    .chat-bubble.user { align-self:flex-end; background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.05)); border:1px solid var(--border); color:#f5f2e8; }
-    .chat-bubble.agent { align-self:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:var(--text); }
-    #defaultWelcome { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px 12px; color:var(--text); }
-    .welcome-om { font-size:2.5rem; color:var(--gold); margin-bottom:4px; text-shadow:0 0 40px rgba(212,175,55,0.3); animation:pulseOm 3s ease-in-out infinite; font-family:'Noto Serif Devanagari',serif; }
-    @keyframes pulseOm { 0%,100% { transform:scale(1); opacity:0.8; } 50% { transform:scale(1.1); opacity:1; } }
-    .welcome-title { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:600; color:var(--gold); }
-    .welcome-sub { font-size:0.9rem; color:var(--muted); max-width:480px; margin:0 auto; line-height:1.6; }
-    .welcome-sub strong { color:var(--text); }
-    .typing-indicator { display:none; align-items:center; gap:8px; padding:8px 12px; color:var(--muted); font-size:0.8rem; }
-    .typing-indicator.active { display:flex; }
-    .typing-dots span { width:6px; height:6px; background:var(--gold); border-radius:50%; display:inline-block; margin:0 2px; animation:dotBounce 1.4s infinite ease-in-out both; }
-    .typing-dots span:nth-child(1) { animation-delay:0s; }
-    .typing-dots span:nth-child(2) { animation-delay:0.2s; }
-    .typing-dots span:nth-child(3) { animation-delay:0.4s; }
-    @keyframes dotBounce { 0%,80%,100% { transform:scale(0); } 40% { transform:scale(1); } }
-    .om-spinner { display:inline-block; font-family:'Noto Serif Devanagari',serif; color:var(--gold); animation:spinOm 1.5s linear infinite; }
-    @keyframes spinOm { 0% { transform:rotate(0); } 100% { transform:rotate(360deg); } }
-    .verification-badge { margin-top:8px; padding:6px 12px; background:rgba(0,0,0,0.25); border-radius:12px; display:inline-block; border:1px solid var(--border); }
-
-    /* ===== INPUT ===== */
-    .input-card { background:rgba(20,20,32,0.6); backdrop-filter:blur(14px); border:1px solid var(--border); border-radius:18px; padding:14px; margin-bottom:12px; box-shadow:var(--shadow); }
-    .query-input { width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); padding:10px 14px; border-radius:12px; font-family:inherit; font-size:0.9rem; resize:vertical; min-height:65px; outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
-    .query-input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
-    .input-tools { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center; }
-    .tool-btn { background:transparent; color:var(--gold); border:1px solid var(--border); padding:4px 12px; border-radius:30px; font-size:0.7rem; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; transition:background 0.2s, border-color 0.2s; }
-    .tool-btn:hover { background:var(--gold-soft); border-color:var(--gold); }
-    .template-select-wrapper { display:flex; align-items:center; gap:4px; background:transparent; border:1px solid var(--border); border-radius:30px; padding:0 6px; }
-    .template-select-wrapper select { background:transparent; border:none; color:var(--gold); font-family:inherit; font-size:0.7rem; padding:4px 0; outline:none; cursor:pointer; }
-    .template-select-wrapper select option { background:#1a1a2a; color:#f0ede8; }
-    .send-btn { margin-left:auto; background:linear-gradient(135deg,#d4af37,#b8901e); color:#1a1a1a; border:none; padding:6px 20px; border-radius:30px; font-weight:700; cursor:pointer; font-size:0.8rem; transition:transform 0.15s, box-shadow 0.2s; box-shadow:0 4px 12px rgba(212,175,55,0.2); }
-    .send-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(212,175,55,0.3); }
-    .file-preview { display:none; margin-top:6px; padding:6px 12px; background:var(--gold-soft); border:1px solid var(--border); border-radius:30px; font-size:0.7rem; color:var(--gold); align-items:center; justify-content:space-between; }
-    .file-preview.show { display:flex; }
-    .file-preview .remove { cursor:pointer; color:var(--muted); }
-    .file-preview .remove:hover { color:var(--err); }
-
-    .quick-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
-    .quick-section-title { width:100%; font-size:0.6rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin:4px 0 2px; }
-    .quick-btn { background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); padding:4px 12px; border-radius:30px; font-size:0.65rem; cursor:pointer; font-family:inherit; transition:all 0.2s ease; }
-    .quick-btn:hover { background:var(--gold-soft); color:var(--gold); border-color:var(--gold); transform:translateY(-1px); }
-    .quick-btn-oracle { border-color:rgba(255,153,51,0.2); color:#ffbf80; }
-    .quick-btn-oracle:hover { background:rgba(255,153,51,0.1); color:var(--saffron); }
-    .status-text { font-size:0.7rem; color:var(--muted); margin-top:6px; text-align:center; min-height:1.2em; }
-
-    /* ===== OUTPUT TOOLS ===== */
-    .output-tools { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin:8px 0; }
-    .share-btn { background:transparent; border:1px solid var(--border); color:var(--text); padding:4px 12px; border-radius:30px; font-size:0.7rem; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; transition:background 0.2s, border-color 0.2s; }
-    .share-btn:hover { background:var(--gold-soft); border-color:var(--gold); }
-
-    /* ===== FOOTER ===== */
-    .footer { margin-top:auto; padding:10px 0; border-top:1px solid var(--border); text-align:center; font-size:0.6rem; color:var(--muted); }
-    .footer-links a { color:var(--muted); cursor:pointer; margin:0 6px; text-decoration:none; font-size:0.6rem; }
-    .footer-links a:hover { color:var(--gold); }
-    .footer-badges { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:4px; }
-    .footer-badge { display:inline-block; background:rgba(52,211,153,0.06); border:1px solid rgba(52,211,153,0.15); color:var(--ok); padding:2px 10px; border-radius:999px; font-size:0.5rem; }
-    .footer-badge.gold { border-color:rgba(212,175,55,0.2); color:var(--gold); }
-    .copyright-notice { font-size:0.55rem; color:#555; margin-top:4px; }
-    .copyright-notice strong { color:var(--muted); font-weight:500; }
-
-    /* ===== MODALS ===== */
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:999; display:none; align-items:center; justify-content:center; padding:16px; }
-    .modal-overlay.active { display:flex; }
-    .modal-content { background:var(--panel-2); border:1px solid var(--border); border-radius:18px; padding:24px; max-width:680px; width:100%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:var(--shadow); }
-    .modal-content h3 { color:var(--gold); margin-bottom:12px; font-family:'Cormorant Garamond',serif; font-size:1.3rem; display:flex; align-items:center; justify-content:space-between; }
-    .modal-content .close-btn { background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; padding:0 8px; }
-    .modal-content .close-btn:hover { color:var(--text); }
-    .modal-content input { width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); border-radius:10px; margin-bottom:10px; font-family:inherit; font-size:0.85rem; }
-    .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
-
-    /* ===== DOMAIN HEALTH TABLE ===== */
-    .domain-table { width:100%; font-size:0.75rem; border-collapse:collapse; margin-top:8px; }
-    .domain-table th { text-align:left; padding:6px 8px; color:var(--gold); border-bottom:1px solid var(--border); font-weight:600; position:sticky; top:0; background:var(--panel-2); z-index:2; }
-    .domain-table td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.03); }
-    .domain-table tr:hover { background:rgba(255,255,255,0.03); }
-    .status-badge { display:inline-block; padding:1px 8px; border-radius:30px; font-size:0.6rem; font-weight:600; }
-    .status-badge.up { background:rgba(52,211,153,0.15); color:var(--ok); }
-    .status-badge.down { background:rgba(255,107,107,0.15); color:var(--err); }
-    .domain-search { width:100%; padding:6px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); border-radius:10px; font-size:0.75rem; margin-bottom:10px; outline:none; }
-    .domain-search:focus { border-color:var(--gold); }
-    .domain-stats { display:flex; gap:12px; font-size:0.7rem; color:var(--muted); margin-bottom:10px; flex-wrap:wrap; }
-    .domain-stats span { background:rgba(255,255,255,0.04); padding:2px 10px; border-radius:30px; }
-    .domain-stats .up-count { color:var(--ok); }
-    .domain-stats .down-count { color:var(--err); }
-    .domain-stats .total-count { color:var(--gold); }
-
-    /* ===== BLOG GENERATOR ===== */
-    .blog-gen-box { background:rgba(20,20,32,0.5); backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:18px; padding:16px 20px; margin-top:16px; }
-    .blog-gen-box .blog-input-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
-    .blog-gen-box .blog-input-row .blog-input { flex:1; min-width:200px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:12px; font-family:inherit; font-size:0.85rem; min-height:40px; outline:none; }
-    .blog-gen-box .blog-input-row .blog-input:focus { border-color:var(--gold); }
-    .blog-gen-box .blog-output { margin-top:10px; padding:12px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border); max-height:400px; overflow-y:auto; display:none; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; color:var(--text); }
-
-    /* ===== MOBILE BOTTOM NAV ===== */
-    .mobile-bottom-nav {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(20,20,32,0.9);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid var(--border);
-      padding: 6px 0 env(safe-area-inset-bottom, 6px) 0;
-      z-index: 100;
-      justify-content: space-around;
-    }
-    .mobile-nav-item {
+    /* ===== CONTAINER ===== */
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px 16px 80px;
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 20px;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 2px;
+    }
+    .brand small { font-size: 0.9rem; color: var(--muted); margin-left: 8px; letter-spacing: 1px; }
+    .version { background: var(--gold-soft); border: 1px solid var(--border); color: var(--gold); padding: 2px 8px; border-radius: 999px; font-size: 0.55rem; font-weight: 600; margin-left: 8px; }
+    .badge { display: none; background: var(--gold-soft); color: var(--gold); border: 1px solid var(--gold); padding: 1px 8px; border-radius: 999px; font-size: 0.55rem; margin-left: 6px; }
+    .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 30px;
+      padding: 6px 14px;
+      font-size: 0.7rem;
+      transition: all 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #1a1a1a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
+    .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+    .btn-outline:hover { background: var(--gold-soft); }
+    .btn-sm { padding: 4px 10px; font-size: 0.65rem; }
+    .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; }
+    .btn-icon:hover { background: var(--gold-soft); }
+
+    /* ===== CHAT AREA ===== */
+    .chat-area {
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      flex: 1;
+      max-height: 55vh;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    #chat { display: flex; flex-direction: column; gap: 8px; }
+    .msg {
+      max-width: 90%;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      animation: fadeIn 0.3s ease;
+    }
+    .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05)); border: 1px solid var(--border); }
+    .msg.agent { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+    .msg .badge-verify {
+      margin-top: 8px;
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      font-size: 0.65rem;
+      border: 1px solid var(--border);
+      display: inline-block;
+    }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+    /* ===== WELCOME ===== */
+    .welcome {
+      text-align: center;
+      padding: 30px 12px;
+      color: var(--text);
+    }
+    .welcome .om { font-size: 3rem; color: var(--gold); font-family: 'Noto Serif Devanagari', serif; animation: pulse 3s infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity:0.8; } 50% { transform: scale(1.1); opacity:1; } }
+    .welcome h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--gold); margin: 6px 0; }
+    .welcome p { color: var(--muted); max-width: 400px; margin: 0 auto; font-size: 0.95rem; }
+    .welcome p strong { color: var(--text); }
+
+    /* ===== INPUT SECTION ===== */
+    .input-area {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 8px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .input-row textarea {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 56px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-row textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
+    .input-row .send {
+      background: linear-gradient(135deg, #d4af37, #b8901e);
+      color: #1a1a1a;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .input-row .send:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
+
+    .input-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .tool-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .tool-label:hover { background: var(--gold-soft); }
+    .tool-label input[type="checkbox"] { accent-color: var(--gold); margin-right: 2px; }
+    .tool-select {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 4px 10px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+    .tool-select option { background: #1a1a2a; color: #f0ede8; }
+
+    .file-preview {
+      display: none;
+      margin-top: 6px;
+      padding: 4px 12px;
+      background: var(--gold-soft);
+      border-radius: 30px;
+      font-size: 0.7rem;
+      color: var(--gold);
+      align-items: center;
+      gap: 8px;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview .remove { cursor: pointer; color: var(--muted); font-size: 0.8rem; }
+
+    /* ===== TYPING ===== */
+    .typing {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .typing.active { display: flex; }
+    .typing .dots span {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: dotBounce 1.4s infinite;
+    }
+    .typing .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    /* ===== OUTPUT TOOLS (small icons) ===== */
+    .output-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+      margin: 8px 0;
+    }
+    .output-tools .btn-icon { font-size: 0.65rem; padding: 4px 10px; }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      margin-top: auto;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.6rem;
+      color: var(--muted);
+    }
+    .footer a { color: var(--muted); cursor: pointer; margin: 0 6px; text-decoration: none; }
+    .footer a:hover { color: var(--gold); }
+    .footer .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
+    .footer .badge { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.15); color: var(--ok); padding: 2px 10px; border-radius: 999px; font-size: 0.5rem; }
+    .footer .badge.gold { border-color: rgba(212,175,55,0.2); color: var(--gold); }
+
+    /* ===== MODALS ===== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 16px;
+    }
+    .modal.open { display: flex; }
+    .modal-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .modal-box .close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
       background: none;
       border: none;
       color: var(--muted);
-      font-size: 0.5rem;
-      font-family: inherit;
+      font-size: 1.4rem;
       cursor: pointer;
-      padding: 4px 8px;
-      transition: color 0.2s;
     }
-    .mobile-nav-item i { font-size: 1.2rem; margin-bottom: 2px; }
-    .mobile-nav-item.active { color: var(--gold); }
-    .mobile-nav-item:hover { color: var(--gold); }
-    @media (max-width: 480px) {
-      .container { padding-bottom: 70px; }
-      .mobile-bottom-nav { display: flex; }
-      .header { flex-direction: column; padding: 10px; }
-      .brand-name { font-size: 1.2rem; }
-      .header-actions { width: 100%; justify-content: center; }
-      .hero-tagline { font-size: 1.6rem; }
-      .hero-sub { font-size: 0.85rem; }
-      .btn-hero { padding: 10px 20px; font-size: 0.9rem; width: 100%; justify-content: center; }
-      .mode-toggle-bar { gap: 4px; }
-      .mode-btn, .mode-toggle-label { font-size: 0.6rem; padding: 3px 10px; }
-      .chat-container { max-height: 35vh; min-height: 120px; padding: 10px; }
-      .chat-bubble { font-size: 0.8rem; max-width: 95%; }
-      .input-card { padding: 10px; }
-      .query-input { min-height: 50px; font-size: 0.85rem; }
-      .input-tools { gap: 4px; }
-      .tool-btn { font-size: 0.6rem; padding: 3px 10px; }
-      .send-btn { font-size: 0.7rem; padding: 4px 14px; }
-      .quick-btn { font-size: 0.6rem; padding: 3px 8px; }
-      .output-tools { gap: 3px; }
-      .output-tools .tool-btn, .share-btn { font-size: 0.6rem; padding: 3px 8px; }
-      .footer { font-size: 0.5rem; }
-      .domain-table { font-size: 0.6rem; }
-      .domain-table th, .domain-table td { padding: 3px 5px; }
-      .modal-content { padding: 16px; margin: 10px; max-width: 100%; }
-      .blog-gen-box .blog-input-row { flex-direction: column; align-items: stretch; }
-      .blog-gen-box .blog-input-row .btn-hero { width: 100%; justify-content: center; }
+    .modal-box .close:hover { color: var(--text); }
+    .modal-box h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; margin-bottom: 12px; }
+    .modal-box input, .modal-box textarea {
+      width: 100%;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-family: inherit;
+      font-size: 0.85rem;
     }
+    .modal-box .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .status-text { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 6px; }
+
+    /* ===== DOMAIN HEALTH TABLE ===== */
+    .domain-table { width:100%; font-size:0.7rem; border-collapse:collapse; margin-top:8px; }
+    .domain-table th { text-align:left; padding:4px 6px; color:var(--gold); border-bottom:1px solid var(--border); }
+    .domain-table td { padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.03); }
+    .status-badge { display:inline-block; padding:1px 8px; border-radius:30px; font-size:0.55rem; font-weight:600; }
+    .status-badge.up { background:rgba(52,211,153,0.15); color:var(--ok); }
+    .status-badge.down { background:rgba(255,107,107,0.15); color:var(--err); }
+    .domain-search { width:100%; padding:6px 10px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); border-radius:8px; font-size:0.7rem; margin-bottom:8px; outline:none; }
+    .domain-search:focus { border-color:var(--gold); }
+    .domain-stats { display:flex; gap:12px; font-size:0.65rem; color:var(--muted); margin-bottom:8px; flex-wrap:wrap; }
 
     /* ===== DRAFTS LIST ===== */
-    .draft-item { background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; margin-bottom:8px; border:1px solid var(--border); }
-    .draft-item .draft-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; }
-    .draft-item .draft-title { color:var(--gold); font-size:0.85rem; font-weight:600; }
-    .draft-item .draft-status { font-size:0.6rem; padding:2px 10px; border-radius:30px; background:rgba(255,255,255,0.05); }
-    .draft-item .draft-preview { font-size:0.7rem; color:var(--muted); margin:4px 0; }
+    .draft-item { background:rgba(255,255,255,0.03); border-radius:12px; padding:10px; margin-bottom:6px; border:1px solid var(--border); }
+    .draft-item .draft-title { color:var(--gold); font-weight:600; font-size:0.85rem; }
+    .draft-item .draft-status { font-size:0.6rem; padding:2px 8px; border-radius:30px; background:rgba(255,255,255,0.05); }
     .draft-item .draft-actions { margin-top:6px; display:flex; gap:4px; flex-wrap:wrap; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 520px) {
+      .container { padding: 10px 10px 70px; }
+      .brand { font-size: 1.4rem; }
+      .header-actions .btn { font-size: 0.6rem; padding: 4px 8px; }
+      .input-row { flex-direction: column; align-items: stretch; }
+      .input-row .send { width: 100%; justify-content: center; height: 44px; }
+      .chat-area { max-height: 45vh; }
+      .modal-box { padding: 16px; }
+    }
   </style>
 </head>
 <body>
-  <!-- Background Decorations -->
+
+  <!-- Decorations -->
   <div class="moon"></div>
-  <div class="infinite-rings" id="ringContainer"></div>
-  <div class="om-5d-wrapper">
-    <div class="om-5d">
-      <div class="om-face-5d front">ॐ</div>
-      <div class="om-face-5d back">ॐ</div>
-      <div class="om-face-5d left">ॐ</div>
-      <div class="om-face-5d right">ॐ</div>
-      <div class="om-face-5d top">ॐ</div>
-      <div class="om-face-5d bottom">ॐ</div>
-    </div>
-  </div>
-  <div class="stars" id="starsContainer"></div>
+  <div class="stars" id="stars"></div>
 
   <div class="container">
+
     <!-- HEADER -->
-    <div class="header">
-      <div class="brand-name">
-        LEXSARTHI <small>the verdict engine</small>
-        <span class="version-badge">v10.0</span>
-        <span id="premiumBadge" class="premium-badge">⭐ PREMIUM</span>
-        <span id="enterpriseBadge" class="enterprise-badge">🏢 ENTERPRISE</span>
+    <header class="header">
+      <div class="brand">
+        LEXSARTHI <small>verdict engine</small>
+        <span class="version">v10.0</span>
+        <span id="premiumBadge" class="badge">⭐ PREMIUM</span>
+        <span id="enterpriseBadge" class="badge">🏢 ENTERPRISE</span>
       </div>
       <div class="header-actions">
-        <button class="btn btn-outline btn-sm" onclick="showDomainHealth()">
-          <i class="fas fa-heartbeat"></i> Health
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="showDrafts()">
-          <i class="fas fa-file-alt"></i> Drafts
-        </button>
-        <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
-        <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
-        <button class="btn btn-gold btn-sm" onclick="showPayment()">💳 Plans</button>
-        <button class="btn btn-outline btn-sm" onclick="showMyUsage()">📊 Usage</button>
+        <button class="btn btn-icon" onclick="showDomainHealth()" title="Domain Health"><i class="fas fa-heartbeat"></i></button>
+        <button class="btn btn-icon" onclick="showDrafts()" title="Drafts"><i class="fas fa-file-alt"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
+        <button class="btn btn-gold btn-sm" onclick="showPayment()">Plans</button>
+        <button class="btn btn-outline btn-sm" onclick="showMyUsage()">Usage</button>
       </div>
-      <div class="settings-panel" id="settingsPanel">
-        <label for="langSelect">🌐 Language</label>
-        <select id="langSelect">
-          <option value="en">English</option><option value="hi">हिन्दी</option><option value="sa">संस्कृतम्</option><option value="bn">বাংলা</option>
-          <option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option>
-          <option value="it">Italiano</option><option value="ru">Русский</option><option value="ar">العربية</option><option value="zh">中文</option>
-          <option value="ja">日本語</option><option value="ko">한국어</option><option value="th">ไทย</option><option value="vi">Tiếng Việt</option>
-          <option value="id">Bahasa Indonesia</option><option value="he">עברית</option><option value="el">Ελληνικά</option><option value="tr">Türkçe</option>
-        </select>
-        <label for="modelSelect">🧠 AI Model</label>
-        <select id="modelSelect">
-          <option value="llama-3.3-70b-versatile">Groq · Llama 3.3 70B</option>
-          <option value="gpt-4o-mini">OpenAI · GPT-4o mini</option>
-          <option value="gemini-pro">Google · Gemini Pro</option>
-        </select>
-        <hr style="border:none; border-top:1px solid var(--border); margin:10px 0;" />
-        <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center; font-size:0.6rem">
-          <a onclick="openModal('termsModal')" style="color:var(--gold);cursor:pointer">Terms</a> ·
-          <a onclick="openModal('privacyModal')" style="color:var(--gold);cursor:pointer">Privacy</a> ·
-          <a onclick="openModal('aboutModal')" style="color:var(--gold);cursor:pointer">About</a> ·
-          <a onclick="openModal('verifiersModal')" style="color:var(--gold);cursor:pointer">Verifiers</a>
+    </header>
+
+    <!-- CHAT AREA -->
+    <div class="chat-area" id="chatArea">
+      <div id="chat">
+        <div class="welcome" id="welcome">
+          <div class="om">ॐ</div>
+          <h1>Ask me anything</h1>
+          <p>Powered by <strong>The Advocacy – A Law Firm</strong><br>
+          <span style="color:var(--muted);font-size:0.85rem;">Verified answers from 150+ trusted domains</span></p>
+          <p style="font-size:0.8rem;margin-top:6px;color:var(--gold);">Log in to start</p>
         </div>
       </div>
-    </div>
-
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-tagline">The <span>Verdict</span> Engine</div>
-      <div class="hero-sub">Ask. Analyze. Get a verified answer.</div>
-      <div class="hero-cta">
-        <button class="btn-hero" onclick="document.getElementById('queryInput').focus()">
-          <i class="fas fa-rocket"></i> Start – It's Free
-        </button>
-      </div>
-      <div class="hero-secure-tag"><i class="fas fa-user-secret"></i> Zero retention. Your data is never stored.</div>
-      <div class="mode-toggle-bar">
-        <button class="mode-btn active" data-mode="general" onclick="setMode('general')"><i class="fas fa-globe-asia"></i> General</button>
-        <button class="mode-btn" data-mode="legal" onclick="setMode('legal')"><i class="fas fa-gavel"></i> Legal Pro</button>
-        <label class="mode-toggle-label oracle"><input type="checkbox" id="oracleModeToggle" /> 🕉️ Oracle</label>
-        <label class="mode-toggle-label"><input type="checkbox" id="webSearchToggle" checked /> 🌐 Web</label>
-        <label class="mode-toggle-label open-web"><input type="checkbox" id="unrestrictedSearch" /> 🌍 Open Web</label>
-      </div>
-    </div>
-
-    <!-- CHAT -->
-    <div class="chat-container" id="chatContainer">
-      <div id="chatArea"></div>
-      <div id="defaultWelcome">
-        <div class="welcome-om">ॐ</div>
-        <div class="welcome-title">Ask me anything</div>
-        <div class="welcome-sub">
-          Powered by <strong>The Advocacy – A Law Firm</strong><br>
-          <span style="color:var(--muted);font-size:0.85rem;">Verified answers from 150+ trusted domains</span><br>
-          <span style="color:var(--gold);font-size:0.85rem;font-weight:500;">Please log in to start.</span>
-        </div>
-      </div>
-      <div id="typingIndicator" class="typing-indicator">
-        <span class="om-spinner">ॐ</span><span>Consulting specialists & jury…</span>
-        <div class="typing-dots"><span></span><span></span><span></span></div>
+      <div class="typing" id="typing">
+        <span style="font-family:'Noto Serif Devanagari';color:var(--gold);">ॐ</span>
+        <span>Consulting specialists & jury</span>
+        <div class="dots"><span></span><span></span><span></span></div>
       </div>
     </div>
 
     <!-- INPUT -->
-    <div class="input-card">
-      <div class="input-tools" style="margin-bottom:6px; flex-wrap:wrap;">
-        <div class="template-select-wrapper">
-          <i class="fas fa-file-alt" style="color:var(--gold);"></i>
-          <select id="templateSelect" onchange="onTemplateSelect(this.value)">
-            <option value="">Template</option>
-            <option value="demand_letter">📄 Demand Letter</option>
-            <option value="nda">🤝 NDA</option>
-            <option value="motion_to_modify">⚖️ Motion to Modify</option>
-            <option value="employment_contract">💼 Employment Contract</option>
-            <option value="contract_review">🔍 Contract Review</option>
-          </select>
-        </div>
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="queryInput" rows="1" placeholder="Type your question…"></textarea>
+        <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
       </div>
-      <textarea class="query-input" id="queryInput" placeholder="Ask anything — Law, Science, Philosophy, Finance…"></textarea>
       <div class="input-tools">
-        <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF
-          <input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleFileUpload(this)" /></label>
-        <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
-        <label class="tool-btn"><i class="fas fa-layer-group"></i> Bulk
-          <input type="file" id="bulkUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleBulkUpload(this)" /></label>
-        <button class="send-btn" onclick="sendQuery()"><i class="fas fa-paper-plane"></i> Analyze</button>
+        <label class="tool-label"><i class="fas fa-file-pdf"></i> PDF
+          <input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleFileUpload(this)" />
+        </label>
+        <button class="tool-label" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
+        <label class="tool-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
+        <label class="tool-label oracle"><input type="checkbox" id="oracleModeToggle" /> 🕉️ Oracle</label>
+        <label class="tool-label"><input type="checkbox" id="unrestrictedSearch" /> 🌍 Open</label>
+        <select class="tool-select" id="templateSelect" onchange="onTemplateSelect(this.value)">
+          <option value="">Template</option>
+          <option value="demand_letter">📄 Demand Letter</option>
+          <option value="nda">🤝 NDA</option>
+          <option value="motion_to_modify">⚖️ Motion</option>
+          <option value="employment_contract">💼 Employment</option>
+          <option value="contract_review">🔍 Contract Review</option>
+        </select>
       </div>
       <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
-      <div class="quick-actions" id="quickActions"></div>
-      <div class="status-text" id="inputStatus"></div>
+      <div id="status" class="status-text"></div>
     </div>
 
     <!-- OUTPUT TOOLS -->
     <div class="output-tools">
-      <button class="tool-btn" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
-      <button class="tool-btn" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
-      <button class="tool-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-      <button class="tool-btn speak-btn" onclick="speakResponse()"><i class="fas fa-volume-up"></i> Speak</button>
-      <button class="share-btn" onclick="shareResponse()"><i class="fas fa-share-alt"></i> Share</button>
-      <button class="tool-btn" onclick="clearResponse()"><i class="fas fa-trash"></i> Clear</button>
-    </div>
-
-    <!-- BLOG GENERATOR -->
-    <div class="blog-gen-box">
-      <div class="blog-input-row">
-        <input id="blogTopic" class="blog-input" placeholder="Blog topic (e.g., AI in legal research)" />
-        <button class="btn-hero" onclick="generateBlog()" style="padding:10px 24px;font-size:0.9rem;background:linear-gradient(135deg,#d4af37,#b8901e);">
-          <i class="fas fa-pen-fancy"></i> Generate Blog
-        </button>
-      </div>
-      <div id="blogOutput" class="blog-output"></div>
-      <div id="blogStatus" class="status-text"></div>
+      <button class="btn-icon" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
+      <button class="btn-icon" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
+      <button class="btn-icon" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+      <button class="btn-icon speak-btn" onclick="speakResponse()"><i class="fas fa-volume-up"></i> Speak</button>
+      <button class="btn-icon" onclick="shareResponse()"><i class="fas fa-share-alt"></i> Share</button>
+      <button class="btn-icon" onclick="clearChat()"><i class="fas fa-trash"></i> Clear</button>
     </div>
 
     <!-- FOOTER -->
-    <div class="footer">
-      <div class="footer-links">
+    <footer class="footer">
+      <div>
         <a onclick="openModal('termsModal')">Terms</a> ·
         <a onclick="openModal('privacyModal')">Privacy</a> ·
         <a onclick="openModal('aboutModal')">About</a> ·
-        <a onclick="openModal('verifiersModal')">Verifiers</a> ·
-        <a onclick="showMyUsage()">Usage</a> ·
-        <a onclick="showPayment()">Plans</a>
+        <a onclick="openModal('verifiersModal')">Verifiers</a>
       </div>
-      <div class="footer-badges">
-        <span class="footer-badge">🔒 Zero Retention · DPDPA</span>
-        <span class="footer-badge gold">⚖️ 150+ Trusted Domains</span>
-        <span class="footer-badge">✅ Jury Verified</span>
+      <div class="badges">
+        <span class="badge">🔒 Zero Retention · DPDPA</span>
+        <span class="badge gold">⚖️ 150+ Trusted Domains</span>
+        <span class="badge">✅ Jury Verified</span>
       </div>
-      <div class="copyright-notice">© 2026 LexSarthi · <strong>THE ADVOCACY — A LAW FIRM</strong></div>
-    </div>
-  </div>
-
-  <!-- MOBILE BOTTOM NAV -->
-  <div class="mobile-bottom-nav">
-    <button class="mobile-nav-item active" onclick="switchMobileTab('chat')" data-tab="chat">
-      <i class="fas fa-comment"></i> Chat
-    </button>
-    <button class="mobile-nav-item" onclick="switchMobileTab('blog')" data-tab="blog">
-      <i class="fas fa-pen-fancy"></i> Blog
-    </button>
-    <button class="mobile-nav-item" onclick="switchMobileTab('health')" data-tab="health">
-      <i class="fas fa-heartbeat"></i> Health
-    </button>
-    <button class="mobile-nav-item" onclick="switchMobileTab('drafts')" data-tab="drafts">
-      <i class="fas fa-file-alt"></i> Drafts
-    </button>
+      <div style="margin-top:4px;font-size:0.55rem;color:#555;">© 2026 LexSarthi · <strong style="color:var(--muted);">THE ADVOCACY — A LAW FIRM</strong></div>
+    </footer>
   </div>
 
   <!-- ===== MODALS ===== -->
-  <!-- Domain Health Modal -->
-  <div class="modal-overlay" id="domainHealthModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('domainHealthModal')">&times;</button>
-      <h3><span><i class="fas fa-heartbeat" style="color:var(--ok);"></i> Domain Health</span>
-        <button class="btn btn-outline btn-sm" onclick="loadDomainHealth()" style="font-size:0.65rem;"><i class="fas fa-sync-alt"></i> Refresh</button>
-      </h3>
-      <div id="domainHealthContent"><div style="text-align:center;padding:20px;color:var(--muted);"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>Loading...</div></div>
-    </div>
-  </div>
 
-  <!-- Login Modal -->
-  <div class="modal-overlay" id="loginModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+  <!-- Login -->
+  <div class="modal" id="loginModal">
+    <div class="modal-box">
+      <button class="close" onclick="closeModal('loginModal')">&times;</button>
       <h3>🔐 Login / Register</h3>
-      <input id="login-email" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
-      <input id="login-password" type="password" placeholder="Password" value="Password123!" />
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-gold btn-sm" onclick="handleLogin()" style="flex:1;padding:8px">Login</button>
-        <button class="btn btn-outline btn-sm" onclick="handleRegister()" style="flex:1;padding:8px">Register</button>
+      <input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
+      <input id="loginPassword" type="password" placeholder="Password" value="Password123!" />
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;padding:8px;">Login</button>
+        <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;padding:8px;">Register</button>
       </div>
-      <div id="login-status" class="status-text"></div>
+      <div id="loginStatus" class="status-text"></div>
     </div>
   </div>
 
-  <!-- Usage Modal -->
-  <div class="modal-overlay" id="myUsageModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('myUsageModal')">&times;</button>
+  <!-- Usage -->
+  <div class="modal" id="usageModal">
+    <div class="modal-box">
+      <button class="close" onclick="closeModal('usageModal')">&times;</button>
       <h3>📊 My Usage</h3>
-      <div id="myUsageContent"><p style="color:var(--muted)">Loading...</p></div>
+      <div id="usageContent"><p style="color:var(--muted);">Loading...</p></div>
     </div>
   </div>
 
-  <!-- Payment Modal -->
-  <div class="modal-overlay" id="paymentModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
+  <!-- Payment -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-box">
+      <button class="close" onclick="closeModal('paymentModal')">&times;</button>
       <h3>💳 Choose Your Plan</h3>
-      <div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer">
-        <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.65rem;color:var(--muted)">(first 1000)</span>
-        <span id="lifetimeCount" style="float:right;font-size:0.7rem;color:var(--gold)"></span>
+      <div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer;">
+        <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.65rem;color:var(--muted);">(first 1000)</span>
+        <span id="lifetimeCount" style="float:right;font-size:0.7rem;color:var(--gold);"></span>
       </div>
-      <div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer">
+      <div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer;">
         <strong>⭐ ₹102 / month · Premium</strong>
       </div>
-      <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer">
+      <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer;">
         <strong>🏢 ₹1011 / month · Enterprise</strong>
       </div>
       <input type="hidden" id="paymentPlan" value="lifetime" />
-      <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:10px;margin-top:8px">Subscribe Securely</button>
-      <div id="payment-status" class="status-text"></div>
-      <div style="margin-top:10px;font-size:0.6rem;color:var(--muted);text-align:center">🔒 Powered by Razorpay</div>
+      <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:10px;margin-top:8px;">Subscribe Securely</button>
+      <div id="paymentStatus" class="status-text"></div>
     </div>
   </div>
 
-  <!-- Template Modal -->
-  <div class="modal-overlay" id="templateModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('templateModal')">&times;</button>
-      <h3 id="templateModalTitle">📄 Generate Document</h3>
-      <div id="templateFields"></div>
-      <button class="btn btn-gold" onclick="generateFromTemplate()" style="width:100%;padding:10px;margin-top:12px;">
-        <i class="fas fa-file-alt"></i> Generate
-      </button>
-      <div id="templateStatus" class="status-text"></div>
+  <!-- Domain Health -->
+  <div class="modal" id="domainHealthModal">
+    <div class="modal-box">
+      <button class="close" onclick="closeModal('domainHealthModal')">&times;</button>
+      <h3><i class="fas fa-heartbeat" style="color:var(--ok);"></i> Domain Health</h3>
+      <div id="domainHealthContent"><p style="color:var(--muted);">Loading...</p></div>
     </div>
   </div>
 
-  <!-- Drafts Modal -->
-  <div class="modal-overlay" id="draftsModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('draftsModal')">&times;</button>
+  <!-- Drafts -->
+  <div class="modal" id="draftsModal">
+    <div class="modal-box">
+      <button class="close" onclick="closeModal('draftsModal')">&times;</button>
       <h3>📑 My Drafts</h3>
       <div id="draftsList"><p style="color:var(--muted);">Loading...</p></div>
     </div>
   </div>
 
-  <!-- Legal Modals -->
-  <div class="modal-overlay" id="termsModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
-      <h3>📜 Terms of Use</h3>
-      <p style="font-size:0.85rem;color:var(--text);line-height:1.6">AI‑generated responses are informational only, not professional advice. Always verify with a qualified professional.</p>
-      <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('termsModal')">Close</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="privacyModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
-      <h3>🔒 Privacy — Zero Retention</h3>
-      <p style="font-size:0.85rem;line-height:1.6">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p>
-      <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('privacyModal')">Close</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="aboutModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
-      <h3>ℹ️ About LexSarthi</h3>
-      <p style="font-size:0.85rem;line-height:1.7">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. Features 250 specialist personas, jury of 10, zero retention.</p>
-      <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="verifiersModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
-      <h3>✅ The 10 Verifiers</h3>
-      <div style="display:grid;grid-template-columns:1fr;gap:6px;font-size:0.78rem">
-        <div><strong style="color:var(--gold)">Ganesha</strong> — Citation & logic</div>
-        <div><strong style="color:var(--gold)">Saraswati</strong> — Knowledge cross‑reference</div>
-        <div><strong style="color:var(--gold)">Hanuman</strong> — Global compliance</div>
-        <div><strong style="color:var(--gold)">Kartikeya</strong> — Contradiction detection</div>
-        <div><strong style="color:var(--gold)">Indra</strong> — Jurisdiction mapping</div>
-        <div><strong style="color:var(--gold)">Yama</strong> — Bias & neutrality</div>
-        <div><strong style="color:var(--gold)">Surya</strong> — Timeline & limitation</div>
-        <div><strong style="color:var(--gold)">Chandra</strong> — Precedent match</div>
-        <div><strong style="color:var(--gold)">Vayu</strong> — PII / privacy filter</div>
-        <div><strong style="color:var(--saffron)">Shakti</strong> — Final judge</div>
-      </div>
-      <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
+  <!-- Template Modal (for filling fields) -->
+  <div class="modal" id="templateModal">
+    <div class="modal-box">
+      <button class="close" onclick="closeModal('templateModal')">&times;</button>
+      <h3 id="templateTitle">📄 Generate Document</h3>
+      <div id="templateFields"></div>
+      <button class="btn btn-gold" onclick="generateFromTemplate()" style="width:100%;padding:10px;margin-top:8px;">Generate</button>
+      <div id="templateStatus" class="status-text"></div>
     </div>
   </div>
 
+  <!-- Static modals (Terms, Privacy, About, Verifiers) -->
+  <div class="modal" id="termsModal"><div class="modal-box"><button class="close" onclick="closeModal('termsModal')">&times;</button><h3>📜 Terms</h3><p style="font-size:0.85rem;color:var(--text);">AI‑generated responses are informational only, not professional advice.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div></div></div>
+  <div class="modal" id="privacyModal"><div class="modal-box"><button class="close" onclick="closeModal('privacyModal')">&times;</button><h3>🔒 Privacy</h3><p style="font-size:0.85rem;line-height:1.6;">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div></div></div>
+  <div class="modal" id="aboutModal"><div class="modal-box"><button class="close" onclick="closeModal('aboutModal')">&times;</button><h3>ℹ️ About</h3><p style="font-size:0.85rem;line-height:1.7;">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. Features 250 specialist personas, jury of 10, zero retention.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('aboutModal')">Close</button></div></div></div>
+  <div class="modal" id="verifiersModal"><div class="modal-box"><button class="close" onclick="closeModal('verifiersModal')">&times;</button><h3>✅ The 10 Verifiers</h3><div style="display:grid;grid-template-columns:1fr;gap:4px;font-size:0.78rem;"><div><strong style="color:var(--gold);">Ganesha</strong> — Citation & logic</div><div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑reference</div><div><strong style="color:var(--gold);">Hanuman</strong> — Global compliance</div><div><strong style="color:var(--gold);">Kartikeya</strong> — Contradictions</div><div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div><div><strong style="color:var(--gold);">Yama</strong> — Bias & neutrality</div><div><strong style="color:var(--gold);">Surya</strong> — Timelines</div><div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div><div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div><div><strong style="color:var(--saffron);">Shakti</strong> — Final judge</div></div><div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div></div></div>
+
+  <!-- ===== JAVASCRIPT ===== -->
   <script>
     // ============================================================
-    // API_BASE
+    // API BASE
     // ============================================================
     const API_BASE = 'https://upamnyu12-LEX.hf.space';
 
     // ============================================================
     // STATE
     // ============================================================
-    let currentMode = 'general';
     let uploadedFiles = [];
     let isSpeaking = false;
-    let queryCount = 0;
     let currentTemplate = null;
+    let isProcessing = false;
 
     // ============================================================
-    // TOKEN / AUTH
+    // UTILITY
     // ============================================================
     function getToken(){ return localStorage.getItem('lex_token'); }
-
-    function setTyping(a){ document.getElementById('typingIndicator').classList.toggle('active', a); }
-    function openModal(id){ document.getElementById(id).classList.add('active'); }
-    function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-    function showLogin(){ openModal('loginModal'); }
-    function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
-    function setStatus(t){ document.getElementById('inputStatus').textContent = t || ''; }
-
-    // ============================================================
-    // MODES
-    // ============================================================
-    const generalQuickActions = [
-      { icon: '📚', label: 'Explain Quantum Physics', prompt: 'Explain quantum physics in simple terms.' },
-      { icon: '🧮', label: 'Solve a Math Problem', prompt: 'Solve: 2x + 5 = 15. Show steps.' },
-      { icon: '💊', label: 'Explain this Disease', prompt: 'Explain what diabetes is and how it affects the body.' },
-      { icon: '🧘', label: 'How to Reduce Stress', prompt: 'Give me 5 practical ways to reduce stress daily.' },
-      { icon: '✍️', label: 'Write a Story', prompt: 'Write a short story about a robot who learns to feel.' },
-      { icon: '🌍', label: 'History of India', prompt: 'Give a brief history of India in 200 words.' },
-      { icon: '💡', label: 'Philosophy of Life', prompt: 'What is the philosophy of Stoicism in simple terms?' },
-    ];
-    const legalQuickActions = [
-      { icon: '📄', label: 'Contract Review', prompt: 'Review this contract clause-by-clause and identify risks.' },
-      { icon: '📝', label: 'Draft NDA', prompt: 'Draft a mutual NDA under Indian law.' },
-      { icon: '🔍', label: 'Case Research', prompt: 'Research recent Supreme Court case laws on privacy.' },
-      { icon: '📊', label: 'GST Filing', prompt: 'How to file GSTR-3B for a small business?' },
-      { icon: '📋', label: 'Statutory Audit', prompt: 'Explain the process of statutory audit under Companies Act 2013.' },
-      { icon: '🏛️', label: 'Constitutional Law', prompt: 'Explain the basic structure doctrine in Indian Constitutional Law.' },
-      { icon: '⚖️', label: 'SEBI Compliance', prompt: 'What are the compliance requirements for a listed company under SEBI?' },
-    ];
-
-    function setMode(mode) {
-      currentMode = mode;
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-      renderQuickActions();
-    }
-    function renderQuickActions() {
-      const container = document.getElementById('quickActions');
-      const actions = currentMode === 'general' ? generalQuickActions : legalQuickActions;
-      const title = currentMode === 'general' ? '🌍 General Knowledge' : '⚖️ Legal & Professional';
-      let html = `<span class="quick-section-title">${title}</span>`;
-      actions.forEach(a => {
-        html += `<button class="quick-btn" onclick="quickAction('${a.prompt.replace(/'/g, "\\'")}')">${a.icon} ${a.label}</button>`;
-      });
-      html += `<span class="quick-section-title">🕉️ Oracle Wisdom</span>`;
-      html += `<button class="quick-btn quick-btn-oracle" onclick="oracleAsk('What is the meaning of life?')">🌺 Life</button>`;
-      html += `<button class="quick-btn quick-btn-oracle" onclick="oracleAsk('How to find inner peace?')">🕊️ Peace</button>`;
-      html += `<button class="quick-btn quick-btn-oracle" onclick="oracleAsk('How to overcome fear and anxiety?')">🔥 Fear</button>`;
-      container.innerHTML = html;
-    }
-    function quickAction(p){ const i=document.getElementById('queryInput'); i.value=p; i.focus(); sendQuery(); }
-    function oracleAsk(q){ document.getElementById('oracleModeToggle').checked=true; quickAction(q); }
-
-    // ============================================================
-    // VOICE & SPEAK
-    // ============================================================
-    const LANG_VOICE = {en:'en-US',hi:'hi-IN',sa:'hi-IN',bn:'bn-IN',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR',it:'it-IT',ru:'ru-RU',ar:'ar-SA',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR',th:'th-TH',vi:'vi-VN',id:'id-ID',he:'he-IL',el:'el-GR',tr:'tr-TR'};
-    function startVoice() {
-      try {
-        const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!R) { setStatus('❌ Voice not supported'); return; }
-        const r = new R();
-        r.lang = LANG_VOICE[document.getElementById('langSelect').value] || 'en-US';
-        r.continuous = false; r.interimResults = false;
-        const btn = document.getElementById('voiceBtn');
-        r.onstart = () => { btn.innerHTML = '<i class="fas fa-microphone-slash"></i>'; setStatus('🎤 Listening...'); };
-        r.onresult = e => { document.getElementById('queryInput').value = e.results[0][0].transcript; setStatus('✅ Captured'); };
-        r.onerror = () => { setStatus('❌ Voice error'); };
-        r.onend = () => { btn.innerHTML = '<i class="fas fa-microphone"></i>'; };
-        r.start();
-      } catch(e) { setStatus('❌ ' + e.message); }
-    }
-    function speakResponse() {
-      const t = document.getElementById('chatArea').innerText || '';
-      if (!t.trim()) { alert('Nothing to speak.'); return; }
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-        document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak';
-        setStatus('🔇 Stopped');
-        return;
-      }
-      const u = new SpeechSynthesisUtterance(t.slice(0,3000));
-      u.lang = LANG_VOICE[document.getElementById('langSelect').value] || 'en-US';
-      u.rate = 0.85; u.pitch = 0.9;
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => v.name.includes('Google US English') && v.name.includes('Female')) || voices.find(v => v.name.includes('Samantha')) || voices.find(v => v.lang.startsWith('en'));
-      if (preferredVoice) u.voice = preferredVoice;
-      u.onend = () => { isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; setStatus('🔊 Finished'); };
-      u.onerror = () => { isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; setStatus('❌ Speech error'); };
-      window.speechSynthesis.speak(u);
-      isSpeaking = true;
-      document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-stop"></i> Stop';
-      setStatus('🔊 Speaking...');
-    }
+    function setTyping(active){ document.getElementById('typing').classList.toggle('active', active); }
+    function openModal(id){ document.getElementById(id).classList.add('open'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+    function setStatus(t){ document.getElementById('status').textContent = t || ''; }
 
     // ============================================================
     // LOGIN / REGISTER / USAGE
     // ============================================================
     async function handleLogin() {
-      const email = document.getElementById('login-email').value;
-      const pass = document.getElementById('login-password').value;
-      const s = document.getElementById('login-status');
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+      const s = document.getElementById('loginStatus');
       s.textContent = 'Logging in...';
       try {
         const r = await fetch(`${API_BASE}/auth/login`, {
@@ -734,14 +604,13 @@
         } else {
           s.textContent = '❌ ' + (d.detail || 'Login failed');
         }
-      } catch(e) {
-        s.textContent = '❌ Network error';
-      }
+      } catch(e) { s.textContent = '❌ Network error'; }
     }
+
     async function handleRegister() {
-      const email = document.getElementById('login-email').value;
-      const pass = document.getElementById('login-password').value;
-      const s = document.getElementById('login-status');
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+      const s = document.getElementById('loginStatus');
       s.textContent = 'Registering...';
       try {
         const r = await fetch(`${API_BASE}/auth/register`, {
@@ -760,10 +629,9 @@
         } else {
           s.textContent = '❌ ' + (d.detail || 'Registration failed');
         }
-      } catch(e) {
-        s.textContent = '❌ Network error';
-      }
+      } catch(e) { s.textContent = '❌ Network error'; }
     }
+
     async function checkPremium() {
       const t = getToken();
       if (!t) return;
@@ -774,41 +642,43 @@
         if (r.ok) {
           const d = await r.json();
           if (['premium','enterprise','lifetime'].includes(d.tier)) {
-            document.getElementById('premiumBadge').style.display = 'inline-block';
+            document.getElementById('premiumBadge').style.display = 'inline';
           }
           if (d.tier === 'enterprise') {
-            document.getElementById('enterpriseBadge').style.display = 'inline-block';
+            document.getElementById('enterpriseBadge').style.display = 'inline';
           }
         }
       } catch(e) {}
     }
+
     async function showMyUsage() {
       const t = getToken();
       if (!t) { alert('Login first'); showLogin(); return; }
-      openModal('myUsageModal');
+      openModal('usageModal');
       try {
         const r = await fetch(`${API_BASE}/my-usage`, {
           headers: { 'Authorization': `Bearer ${t}` }
         });
         const d = await r.json();
-        document.getElementById('myUsageContent').innerHTML = `
+        document.getElementById('usageContent').innerHTML = `
           <p>Total Queries: <strong>${d.total_queries}</strong></p>
           <p>Today: <strong>${d.queries_today}</strong></p>
         `;
       } catch(e) {
-        document.getElementById('myUsageContent').innerHTML = '<p style="color:var(--err)">Error loading</p>';
+        document.getElementById('usageContent').innerHTML = '<p style="color:var(--err);">Error loading</p>';
       }
     }
+
+    function showLogin(){ openModal('loginModal'); }
 
     // ============================================================
     // FILE UPLOAD
     // ============================================================
     function handleFileUpload(inp) {
       uploadedFiles = Array.from(inp.files);
-      if (uploadedFiles.length > 0) {
-        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFiles.length} file(s): ${uploadedFiles.map(f => f.name).join(', ')}`;
+      if (uploadedFiles.length) {
+        document.getElementById('filePreviewText').textContent = `📎 ${uploadedFiles.length} file(s): ${uploadedFiles.map(f=>f.name).join(', ')}`;
         document.getElementById('filePreview').classList.add('show');
-        setStatus(`📄 Attached: ${uploadedFiles.map(f => f.name).join(', ')}`);
       } else {
         clearFilePreview();
       }
@@ -818,33 +688,103 @@
       document.getElementById('filePreview').classList.remove('show');
       document.getElementById('pdfUpload').value = '';
     }
-    async function handleBulkUpload(inp) {
-      const t = getToken();
-      if (!t) { alert('Login first'); showLogin(); return; }
-      const files = inp.files;
-      if (!files.length) return;
-      const fd = new FormData();
-      for (const f of files) fd.append('files', f);
-      fd.append('query', document.getElementById('queryInput').value || 'Analyze these documents');
-      fd.append('model', document.getElementById('modelSelect').value);
-      fd.append('lang', document.getElementById('langSelect').value);
-      setStatus(`📦 Processing ${files.length} files...`);
+
+    // ============================================================
+    // VOICE
+    // ============================================================
+    const LANG_VOICE = {en:'en-US',hi:'hi-IN',sa:'hi-IN',bn:'bn-IN',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR',it:'it-IT',ru:'ru-RU',ar:'ar-SA',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR',th:'th-TH',vi:'vi-VN',id:'id-ID',he:'he-IL',el:'el-GR',tr:'tr-TR'};
+    function startVoice() {
       try {
-        const r = await fetch(`${API_BASE}/bulk-upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${t}` },
-          body: fd
-        });
-        const d = await r.json();
-        if (r.ok) {
-          setStatus(`✅ Job ${d.job_id.slice(0,8)}... queued (${d.total_files} files)`);
-        } else {
-          setStatus('❌ ' + (d.detail || 'Bulk failed'));
-        }
-      } catch(e) {
-        setStatus('❌ ' + e.message);
+        const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!R) { setStatus('❌ Voice not supported'); return; }
+        const r = new R();
+        r.lang = LANG_VOICE[document.getElementById('langSelect')?.value] || 'en-US';
+        r.continuous = false; r.interimResults = false;
+        const btn = document.getElementById('voiceBtn');
+        r.onstart = () => { btn.innerHTML = '<i class="fas fa-microphone-slash"></i>'; setStatus('🎤 Listening...'); };
+        r.onresult = e => { document.getElementById('queryInput').value = e.results[0][0].transcript; setStatus('✅ Captured'); };
+        r.onerror = () => { setStatus('❌ Voice error'); };
+        r.onend = () => { btn.innerHTML = '<i class="fas fa-microphone"></i>'; };
+        r.start();
+      } catch(e) { setStatus('❌ ' + e.message); }
+    }
+
+    // ============================================================
+    // SPEAK
+    // ============================================================
+    function speakResponse() {
+      const t = document.getElementById('chat').innerText || '';
+      if (!t.trim()) { alert('Nothing to speak.'); return; }
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+        setStatus('🔇 Stopped');
+        return;
       }
-      inp.value = '';
+      const u = new SpeechSynthesisUtterance(t.slice(0,3000));
+      u.lang = LANG_VOICE[document.getElementById('langSelect')?.value] || 'en-US';
+      u.rate = 0.85; u.pitch = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => v.name.includes('Google US English') && v.name.includes('Female')) || voices.find(v => v.name.includes('Samantha')) || voices.find(v => v.lang.startsWith('en'));
+      if (preferredVoice) u.voice = preferredVoice;
+      u.onend = () => { isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; setStatus('🔊 Finished'); };
+      u.onerror = () => { isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; setStatus('❌ Speech error'); };
+      window.speechSynthesis.speak(u);
+      isSpeaking = true;
+      document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-stop"></i> Stop';
+      setStatus('🔊 Speaking...');
+    }
+
+    // ============================================================
+    // COPY / DOWNLOAD / SHARE / CLEAR
+    // ============================================================
+    function copyResponse() {
+      const t = document.getElementById('chat').innerText || '';
+      navigator.clipboard.writeText(t).then(() => setStatus('✅ Copied'));
+    }
+    function downloadTXT() {
+      const t = document.getElementById('chat').innerText || '';
+      const b = new Blob([t], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'lexsarthi.txt';
+      a.click();
+    }
+    function downloadPDF() {
+      const el = document.getElementById('chat');
+      if (!el.innerText.trim()) { alert('Nothing to export'); return; }
+      setStatus('Generating PDF...');
+      html2pdf().set({
+        margin: 0.5,
+        filename: 'lexsarthi.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      }).from(el).save().then(() => setStatus('✅ PDF ready')).catch(() => setStatus('❌ PDF failed'));
+    }
+    function shareResponse() {
+      const t = document.getElementById('chat').innerText || '';
+      if (!t.trim()) { alert('Nothing to share.'); return; }
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: 'LexSarthi', text: t.slice(0,1000) + '...', url: url }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(`LexSarthi:\n${t.slice(0,500)}...\n${url}`).then(() => setStatus('📋 Shared'));
+      }
+    }
+    function clearChat() {
+      document.getElementById('chat').innerHTML = `
+        <div class="welcome" id="welcome">
+          <div class="om">ॐ</div>
+          <h1>Ask me anything</h1>
+          <p>Powered by <strong>The Advocacy – A Law Firm</strong><br>
+          <span style="color:var(--muted);font-size:0.85rem;">Verified answers from 150+ trusted domains</span></p>
+          <p style="font-size:0.8rem;margin-top:6px;color:var(--gold);">Log in to start</p>
+        </div>
+      `;
+      if (isSpeaking) { window.speechSynthesis.cancel(); isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; }
+      setStatus('');
     }
 
     // ============================================================
@@ -852,13 +792,13 @@
     // ============================================================
     async function loadDomainHealth() {
       const container = document.getElementById('domainHealthContent');
-      container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>Loading...</div>`;
+      container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
       try {
-        const response = await fetch(`${API_BASE}/domain-status`);
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
-        if (!data || data.length === 0) {
-          container.innerHTML = `<p style="color:var(--muted);text-align:center;">No domain data available. Background scan may not have run yet.</p>`;
+        const r = await fetch(`${API_BASE}/domain-status`);
+        if (!r.ok) throw new Error('Fetch failed');
+        const data = await r.json();
+        if (!data || !data.length) {
+          container.innerHTML = '<p style="color:var(--muted);">No data yet. Background scan will run.</p>';
           return;
         }
         const total = data.length;
@@ -866,35 +806,32 @@
         const down = total - up;
         let html = `
           <div class="domain-stats">
-            <span class="total-count">📊 Total: ${total}</span>
-            <span class="up-count">✅ Up: ${up}</span>
-            <span class="down-count">❌ Down: ${down}</span>
+            <span>📊 Total: ${total}</span>
+            <span style="color:var(--ok);">✅ Up: ${up}</span>
+            <span style="color:var(--err);">❌ Down: ${down}</span>
           </div>
           <input class="domain-search" id="domainSearch" placeholder="🔍 Filter domains..." oninput="filterDomainTable()" />
-          <div style="max-height:400px;overflow-y:auto;">
+          <div style="max-height:300px;overflow-y:auto;">
             <table class="domain-table">
-              <thead><tr><th>Domain</th><th>Status</th><th>Response</th><th>SSL Expiry</th><th>DNS</th><th>Last Checked</th></tr></thead>
+              <thead><tr><th>Domain</th><th>Status</th><th>Response</th></tr></thead>
               <tbody id="domainTableBody">
         `;
         data.forEach(d => {
           const isUp = d.status_code === 200;
-          const statusBadge = isUp ? '<span class="status-badge up">✅ UP</span>' : `<span class="status-badge down">❌ ${d.status_code || 'ERR'}</span>`;
-          const dnsBadge = d.dns_resolves ? '✅' : '❌';
-          const responseTime = d.response_time ? `${(d.response_time * 1000).toFixed(0)}ms` : '—';
-          const sslExpiry = d.ssl_expiry ? new Date(d.ssl_expiry).toLocaleDateString() : '—';
-          const lastChecked = d.last_checked ? new Date(d.last_checked).toLocaleString() : '—';
-          html += `<tr data-domain="${d.domain}"><td><strong>${d.domain}</strong></td><td>${statusBadge}</td><td>${responseTime}</td><td>${sslExpiry}</td><td>${dnsBadge}</td><td style="font-size:0.6rem;color:var(--muted);">${lastChecked}</td></tr>`;
+          const badge = isUp ? '<span class="status-badge up">✅ UP</span>' : `<span class="status-badge down">❌ ${d.status_code || 'ERR'}</span>`;
+          const time = d.response_time ? `${(d.response_time*1000).toFixed(0)}ms` : '—';
+          html += `<tr data-domain="${d.domain}"><td><strong>${d.domain}</strong></td><td>${badge}</td><td>${time}</td></tr>`;
         });
-        html += `</tbody></table></div><div style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">↻ Scans run automatically every hour.</div>`;
+        html += `</tbody></table></div><div style="font-size:0.6rem;color:var(--muted);margin-top:6px;">↻ Scans hourly</div>`;
         container.innerHTML = html;
       } catch(e) {
-        container.innerHTML = `<p style="color:var(--err);text-align:center;">❌ Error loading: ${e.message}</p>`;
+        container.innerHTML = `<p style="color:var(--err);">❌ Error: ${e.message}</p>`;
       }
     }
     function filterDomainTable() {
-      const query = document.getElementById('domainSearch').value.toLowerCase();
+      const q = document.getElementById('domainSearch').value.toLowerCase();
       document.querySelectorAll('#domainTableBody tr').forEach(row => {
-        row.style.display = row.getAttribute('data-domain').toLowerCase().includes(query) ? '' : 'none';
+        row.style.display = row.getAttribute('data-domain').toLowerCase().includes(q) ? '' : 'none';
       });
     }
     function showDomainHealth() {
@@ -908,8 +845,8 @@
     async function onTemplateSelect(value) {
       if (!value) return;
       try {
-        const response = await fetch(`${API_BASE}/api/templates`);
-        const data = await response.json();
+        const r = await fetch(`${API_BASE}/api/templates`);
+        const data = await r.json();
         const template = data.templates.find(t => t.id === value);
         if (!template) return;
         currentTemplate = template;
@@ -927,13 +864,13 @@
           container.appendChild(label);
           container.appendChild(input);
         });
-        document.getElementById('templateModalTitle').textContent = `📄 ${template.name}`;
+        document.getElementById('templateTitle').textContent = `📄 ${template.name}`;
         openModal('templateModal');
         document.getElementById('templateSelect').value = '';
-      } catch(e) {
-        setStatus('❌ Error loading template: ' + e.message);
-      }
+        document.getElementById('templateStatus').textContent = '';
+      } catch(e) { setStatus('❌ Error loading template'); }
     }
+
     async function generateFromTemplate() {
       if (!currentTemplate) return;
       const data = {};
@@ -944,15 +881,20 @@
       document.getElementById('templateStatus').textContent = 'Generating...';
       try {
         const t = getToken();
-        const response = await fetch(`${API_BASE}/api/templates/${currentTemplate.id}/generate`, {
+        if (!t) { alert('Login first'); showLogin(); return; }
+        const r = await fetch(`${API_BASE}/api/templates/${currentTemplate.id}/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
           body: JSON.stringify(data)
         });
-        if (!response.ok) throw new Error('Generation failed');
-        const result = await response.json();
-        document.getElementById('templateStatus').textContent = '✅ Generated! Saving to drafts...';
-        const draftResp = await fetch(`${API_BASE}/drafts`, {
+        if (!r.ok) throw new Error('Generation failed');
+        const result = await r.json();
+        // Add to chat as agent message
+        appendMessage('agent', result.document);
+        closeModal('templateModal');
+        setStatus('✅ Template generated!');
+        // Also save as draft automatically
+        await fetch(`${API_BASE}/drafts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
           body: JSON.stringify({
@@ -961,15 +903,8 @@
             template_id: currentTemplate.id
           })
         });
-        if (draftResp.ok) {
-          document.getElementById('templateStatus').textContent = '✅ Saved to drafts!';
-          setTimeout(() => closeModal('templateModal'), 1500);
-        } else {
-          document.getElementById('templateStatus').textContent = '✅ Generated, but failed to save. Copy the document.';
-        }
-        document.querySelector('#templateModal .btn-gold').style.display = 'none';
       } catch(e) {
-        document.getElementById('templateStatus').textContent = '❌ Error: ' + e.message;
+        document.getElementById('templateStatus').textContent = '❌ ' + e.message;
       }
     }
 
@@ -977,18 +912,19 @@
     // DRAFTS
     // ============================================================
     function showDrafts() { openModal('draftsModal'); loadDrafts(); }
+
     async function loadDrafts() {
       const container = document.getElementById('draftsList');
       container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
       try {
         const t = getToken();
-        if (!t) { container.innerHTML = '<p style="color:var(--err);">Please login first.</p>'; return; }
-        const response = await fetch(`${API_BASE}/drafts`, {
+        if (!t) { container.innerHTML = '<p style="color:var(--err);">Please login.</p>'; return; }
+        const r = await fetch(`${API_BASE}/drafts`, {
           headers: { 'Authorization': `Bearer ${t}` }
         });
-        const drafts = await response.json();
+        const drafts = await r.json();
         if (!drafts.length) {
-          container.innerHTML = '<p style="color:var(--muted);">No drafts yet. Generate one from a template!</p>';
+          container.innerHTML = '<p style="color:var(--muted);">No drafts yet. Use a template!</p>';
           return;
         }
         let html = '';
@@ -996,11 +932,11 @@
           const statusColor = d.status === 'approved' ? 'var(--ok)' : d.status === 'rejected' ? 'var(--err)' : d.status === 'revised' ? 'var(--saffron)' : 'var(--gold)';
           html += `
             <div class="draft-item">
-              <div class="draft-header">
+              <div style="display:flex;justify-content:space-between;">
                 <span class="draft-title">${d.title}</span>
                 <span class="draft-status" style="color:${statusColor};">${d.status}</span>
               </div>
-              <div class="draft-preview">${d.content ? d.content.slice(0,150) + '...' : 'No content'}</div>
+              <div style="font-size:0.7rem;color:var(--muted);margin:4px 0;">${d.content ? d.content.slice(0,120)+'...' : ''}</div>
               <div style="font-size:0.6rem;color:var(--muted);">${new Date(d.created_at).toLocaleString()}</div>
               <div class="draft-actions">
                 <button class="btn btn-outline btn-sm" onclick="viewDraft(${d.id})" style="font-size:0.6rem;">View</button>
@@ -1018,14 +954,16 @@
         container.innerHTML = `<p style="color:var(--err);">Error: ${e.message}</p>`;
       }
     }
+
     async function viewDraft(id) {
       const t = getToken();
-      const response = await fetch(`${API_BASE}/drafts/${id}`, {
+      const r = await fetch(`${API_BASE}/drafts/${id}`, {
         headers: { 'Authorization': `Bearer ${t}` }
       });
-      const draft = await response.json();
-      alert('Draft content:\n\n' + draft.content);
+      const d = await r.json();
+      alert('Draft content:\n\n' + d.content);
     }
+
     async function approveDraft(id) {
       if (!confirm('Approve this draft?')) return;
       const t = getToken();
@@ -1035,6 +973,7 @@
       });
       loadDrafts();
     }
+
     async function rejectDraft(id) {
       const reason = prompt('Reason for rejection:');
       if (reason === null) return;
@@ -1046,50 +985,59 @@
       });
       loadDrafts();
     }
+
     async function improveDraft(id) {
       const instructions = prompt('Instructions for improvement:', 'Make this more professional and legally precise.');
       if (instructions === null) return;
       const t = getToken();
-      const response = await fetch(`${API_BASE}/drafts/${id}/improve`, {
+      const r = await fetch(`${API_BASE}/drafts/${id}/improve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
         body: JSON.stringify({ instructions })
       });
-      const result = await response.json();
+      const result = await r.json();
       alert('Original:\n\n' + result.original + '\n\nImproved:\n\n' + result.improved);
       loadDrafts();
     }
 
     // ============================================================
-    // SEND QUERY
+    // SEND QUERY (MAIN)
     // ============================================================
     async function sendQuery() {
+      if (isProcessing) return;
       const q = document.getElementById('queryInput').value.trim();
-      if (!q && uploadedFiles.length === 0) { setStatus('Type a question or attach files'); return; }
+      if (!q && !uploadedFiles.length) {
+        setStatus('Please type a question or attach a file.');
+        return;
+      }
       const t = getToken();
       if (!t) { alert('Login first'); showLogin(); return; }
+
+      isProcessing = true;
       setTyping(true);
-      setStatus('Consulting specialists & jury…');
-      const chat = document.getElementById('chatArea');
-      const welcome = document.getElementById('defaultWelcome');
+      setStatus('Analyzing...');
+      const chat = document.getElementById('chat');
+      const welcome = document.getElementById('welcome');
       if (welcome) welcome.style.display = 'none';
+
+      // Add user message
       const oracle = document.getElementById('oracleModeToggle').checked;
-      const unrestricted = document.getElementById('unrestrictedSearch').checked;
-      let userHtml = (oracle ? '🔮 ' : '') + (q || '📎 Files attached');
+      let userMsg = (oracle ? '🔮 ' : '') + (q || '📎 Files attached');
       if (uploadedFiles.length) {
-        userHtml += `<br><span style="font-size:0.65rem;color:var(--gold)">📎 ${uploadedFiles.map(f => f.name).join(', ')}</span>`;
+        userMsg += `<br><span style="font-size:0.65rem;color:var(--gold);">📎 ${uploadedFiles.map(f=>f.name).join(', ')}</span>`;
       }
-      chat.innerHTML += `<div class="chat-bubble user">${userHtml}</div>`;
-      chat.scrollTop = chat.scrollHeight;
+      appendMessage('user', userMsg);
+
       const fd = new FormData();
       fd.append('query', q || 'Analyze uploaded documents');
       uploadedFiles.forEach(f => fd.append('files', f));
       fd.append('search_web', document.getElementById('webSearchToggle').checked ? 'on' : 'off');
-      fd.append('model', document.getElementById('modelSelect').value);
-      fd.append('lang', document.getElementById('langSelect').value);
+      fd.append('model', 'llama-3.3-70b-versatile');
+      fd.append('lang', 'en');
       fd.append('oracle_mode', oracle ? 'true' : 'false');
-      fd.append('unrestricted', unrestricted ? 'true' : 'false');
+      fd.append('unrestricted', document.getElementById('unrestrictedSearch').checked ? 'true' : 'false');
       fd.append('agent_id', 'agent_001');
+
       try {
         const response = await fetch(`${API_BASE}/ask`, {
           method: 'POST',
@@ -1099,166 +1047,22 @@
         if (!response.ok) {
           const err = await response.json();
           setTyping(false);
-          chat.innerHTML += `<div class="chat-bubble agent" style="color:var(--err)">${err.detail || 'Server error'}</div>`;
-          setStatus('❌ ' + (err.detail || 'Error'));
+          appendMessage('agent', `❌ ${err.detail || 'Server error'}`);
+          setStatus('Error');
+          isProcessing = false;
           return;
         }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let agentBubble = null;
-        let finalVerification = null;
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const text = decoder.decode(value, { stream: true });
-          const lines = text.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const dataStr = line.slice(6);
-              if (dataStr === '[DONE]') break;
-              try {
-                const data = JSON.parse(dataStr);
-                if (data.token && !agentBubble) {
-                  agentBubble = document.createElement('div');
-                  agentBubble.className = 'chat-bubble agent';
-                  chat.appendChild(agentBubble);
-                }
-                if (data.token && agentBubble) {
-                  const tokenHtml = data.token.replace(/\n/g, '<br>');
-                  agentBubble.innerHTML += tokenHtml;
-                  chat.scrollTop = chat.scrollHeight;
-                }
-                if (data.verification) {
-                  finalVerification = data.verification;
-                }
-              } catch(e) {}
-            }
-          }
-        }
-        setTyping(false);
-        if (agentBubble && finalVerification) {
-          const badge = document.createElement('div');
-          badge.className = 'verification-badge';
-          const confColor = finalVerification.final_confidence === 'HIGH' ? 'var(--ok)' :
-                            finalVerification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
-          const verifierList = finalVerification.jury_verifiers.join(', ');
-          badge.innerHTML = `
-            <div style="font-size:0.7rem; color:var(--text);">
-              <span style="color:${confColor}; font-weight:bold;">✓ Jury Verified</span> – ${finalVerification.final_confidence} confidence
-            </div>
-            <div style="font-size:0.6rem; color:var(--muted);">Reviewed by: ${verifierList}</div>
-            <div style="font-size:0.6rem; color:var(--muted);">Judge: ${finalVerification.judge}</div>
-          `;
-          agentBubble.appendChild(badge);
-          chat.scrollTop = chat.scrollHeight;
-        }
-        if (agentBubble) { setStatus('✅ Response ready'); } else { setStatus('⚠️ No response'); }
-        // Track free queries for lead capture
-        queryCount++;
-        if (queryCount === 3 && !localStorage.getItem('lead_captured')) {
-          const leadEmail = prompt('Enjoying LexSarthi? Subscribe for weekly legal AI insights (no spam):');
-          if (leadEmail && leadEmail.includes('@')) {
-            try {
-              await fetch(`${API_BASE}/capture-lead`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: leadEmail })
-              });
-              localStorage.setItem('lead_captured', 'true');
-              setStatus('✅ Subscribed!');
-            } catch(e) { /* ignore */ }
-          }
-        }
-      } catch(e) {
-        setTyping(false);
-        chat.innerHTML += `<div class="chat-bubble agent" style="color:var(--err)">Network error: ${e.message}</div>`;
-        setStatus('❌ Network error');
-      }
-      clearFilePreview();
-      document.getElementById('queryInput').value = '';
-    }
-
-    // ============================================================
-    // OUTPUT TOOLS
-    // ============================================================
-    function copyResponse() {
-      navigator.clipboard.writeText(document.getElementById('chatArea').innerText || '').then(() => setStatus('✅ Copied'));
-    }
-    function downloadTXT() {
-      const txt = document.getElementById('chatArea').innerText || '';
-      const b = new Blob([txt], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(b);
-      a.download = 'lexsarthi.txt';
-      a.click();
-    }
-    function downloadPDF() {
-      const el = document.getElementById('chatArea');
-      if (!el.innerText.trim()) { alert('Nothing to export'); return; }
-      setStatus('Generating PDF...');
-      html2pdf().set({
-        margin: 0.5,
-        filename: 'lexsarthi.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      }).from(el).save().then(() => setStatus('✅ PDF ready')).catch(() => setStatus('❌ PDF failed'));
-    }
-    function clearResponse() {
-      document.getElementById('chatArea').innerHTML = '';
-      document.getElementById('defaultWelcome').style.display = 'block';
-      setStatus('');
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-        document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak';
-      }
-    }
-    function shareResponse() {
-      const text = document.getElementById('chatArea').innerText;
-      if (!text.trim()) { alert('Nothing to share.'); return; }
-      const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: 'LexSarthi AI Advisory', text: text.slice(0,1000) + '...', url: url }).catch(() => {});
-      } else {
-        const shareText = `Check out this answer from LexSarthi:\n\n${text.slice(0,500)}...\n\n${url}`;
-        navigator.clipboard.writeText(shareText).then(() => setStatus('📋 Shared! Copied to clipboard.')).catch(() => alert('Share not supported.'));
-      }
-    }
-
-    // ============================================================
-    // BLOG GENERATOR
-    // ============================================================
-    async function generateBlog() {
-      const topic = document.getElementById('blogTopic').value.trim();
-      if (!topic) { setStatus('Please enter a blog topic.'); return; }
-      const t = getToken();
-      if (!t) { alert('Login first'); showLogin(); return; }
-      const output = document.getElementById('blogOutput');
-      output.style.display = 'block';
-      output.innerHTML = '<span style="color:var(--gold);">⏳ Generating blog...</span>';
-      document.getElementById('blogStatus').textContent = 'Writing...';
-      const prompt = `Write a comprehensive, 800-word blog post on "${topic}" for a professional audience. Use markdown for headings. Include an introduction, 3-4 body sections, conclusion, and a call to action mentioning LexSarthi.`;
-      const fd = new FormData();
-      fd.append('query', prompt);
-      fd.append('model', document.getElementById('modelSelect').value || 'llama-3.3-70b-versatile');
-      fd.append('search_web', 'on');
-      fd.append('oracle_mode', 'false');
-      fd.append('unrestricted', 'false');
-      try {
-        const response = await fetch(`${API_BASE}/ask`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${t}` },
-          body: fd
-        });
-        if (!response.ok) throw new Error(await response.text());
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
         let fullText = '';
+        let verification = null;
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const chunk = decoder.decode(value);
+          const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split('\n');
           for (const line of lines) {
             if (line.startsWith('data: ')) {
@@ -1268,63 +1072,76 @@
                 const parsed = JSON.parse(data);
                 if (parsed.token) {
                   fullText += parsed.token;
-                  output.innerHTML = fullText.replace(/\n/g, '<br>');
+                  if (!agentBubble) {
+                    agentBubble = document.createElement('div');
+                    agentBubble.className = 'msg agent';
+                    chat.appendChild(agentBubble);
+                  }
+                  const tokenHtml = parsed.token.replace(/\n/g, '<br>');
+                  agentBubble.innerHTML += tokenHtml;
+                  chat.scrollTop = chat.scrollHeight;
+                }
+                if (parsed.verification) {
+                  verification = parsed.verification;
                 }
               } catch(e) {}
             }
           }
         }
-        document.getElementById('blogStatus').textContent = '✅ Blog generated! Copy and publish.';
+
+        setTyping(false);
+        if (agentBubble && verification) {
+          const badge = document.createElement('div');
+          badge.className = 'badge-verify';
+          const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
+                            verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
+          const verifierList = verification.jury_verifiers.join(', ');
+          badge.innerHTML = `
+            <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence} confidence
+            <span style="color:var(--muted);font-size:0.6rem;"> · ${verifierList}</span>
+          `;
+          agentBubble.appendChild(badge);
+          chat.scrollTop = chat.scrollHeight;
+        }
+        setStatus('✅ Ready');
       } catch(e) {
-        output.innerHTML = `❌ Error: ${e.message}`;
-        document.getElementById('blogStatus').textContent = '❌ Failed to generate.';
+        setTyping(false);
+        appendMessage('agent', `❌ Network error: ${e.message}`);
+        setStatus('Error');
       }
+      clearFilePreview();
+      document.getElementById('queryInput').value = '';
+      isProcessing = false;
     }
 
-    // ============================================================
-    // MOBILE NAV
-    // ============================================================
-    function switchMobileTab(tab) {
-      document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
-      document.querySelector(`.mobile-nav-item[data-tab="${tab}"]`)?.classList.add('active');
-      const chat = document.getElementById('chatContainer');
-      const blog = document.querySelector('.blog-gen-box');
-      const healthBtn = document.querySelector('.btn[onclick*="showDomainHealth"]');
-      const draftsBtn = document.querySelector('.btn[onclick*="showDrafts"]');
-      if (tab === 'chat') {
-        chat.style.display = 'block';
-        blog.style.display = 'none';
-      } else if (tab === 'blog') {
-        chat.style.display = 'none';
-        blog.style.display = 'block';
-      } else if (tab === 'health') {
-        chat.style.display = 'none';
-        blog.style.display = 'none';
-        showDomainHealth();
-      } else if (tab === 'drafts') {
-        chat.style.display = 'none';
-        blog.style.display = 'none';
-        showDrafts();
-      }
+    function appendMessage(role, content) {
+      const chat = document.getElementById('chat');
+      const welcome = document.getElementById('welcome');
+      if (welcome) welcome.style.display = 'none';
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.innerHTML = content;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
     }
 
     // ============================================================
     // PAYMENTS
     // ============================================================
-    function showPayment() { openModal('paymentModal'); checkLifetime(); }
-    function selectPlan(p) { document.getElementById('paymentPlan').value = p; }
-    async function checkLifetime() {
+    function showPayment(){ openModal('paymentModal'); checkLifetime(); }
+    function selectPlan(p){ document.getElementById('paymentPlan').value = p; }
+    async function checkLifetime(){
       try {
         const r = await fetch(`${API_BASE}/lifetime-count`);
         const d = await r.json();
         document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
-      } catch(e) {}
+      } catch(e){}
     }
-    async function processPayment() {
+    async function processPayment(){
       const t = getToken();
       if (!t) { alert('Login first'); return; }
       const tier = document.getElementById('paymentPlan').value;
-      const s = document.getElementById('payment-status');
+      const s = document.getElementById('paymentStatus');
       s.textContent = 'Creating order...';
       try {
         const r = await fetch(`${API_BASE}/create-order`, {
@@ -1362,54 +1179,42 @@
           theme: { color: '#d4af37' }
         };
         new Razorpay(opts).open();
-      } catch(e) {
-        s.textContent = '❌ ' + e.message;
-      }
+      } catch(e) { s.textContent = '❌ ' + e.message; }
     }
+
+    // ============================================================
+    // STARS BACKGROUND
+    // ============================================================
+    (function() {
+      const container = document.getElementById('stars');
+      for (let i=0; i<80; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const sz = Math.random() * 2 + 0.5;
+        s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*5}s;`;
+        container.appendChild(s);
+      }
+    })();
 
     // ============================================================
     // INIT
     // ============================================================
     document.addEventListener('DOMContentLoaded', () => {
       if (getToken()) checkPremium();
-      const inp = document.getElementById('queryInput');
-      inp.addEventListener('keydown', e => {
+      const input = document.getElementById('queryInput');
+      input.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           sendQuery();
         }
       });
-      setMode('general');
+      document.getElementById('sendBtn').addEventListener('click', sendQuery);
+      // Auto-resize textarea
+      input.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      });
       window.speechSynthesis.getVoices();
-
-      // Background rings
-      (function() {
-        const container = document.getElementById('ringContainer');
-        for (let i = 0; i < 40; i++) {
-          const ring = document.createElement('div');
-          ring.className = 'ring-bg';
-          const size = 80 + Math.random() * 350;
-          const duration = 6 + Math.random() * 10;
-          const delay = (i / 40) * 14;
-          ring.style.width = size + 'px';
-          ring.style.height = size + 'px';
-          ring.style.setProperty('--duration', duration + 's');
-          ring.style.animationDelay = delay + 's';
-          ring.style.borderColor = `rgba(212,175,55,${0.04 + Math.random() * 0.12})`;
-          container.appendChild(ring);
-        }
-      })();
-      // Stars
-      (function() {
-        const c = document.getElementById('starsContainer');
-        for (let i = 0; i < 80; i++) {
-          const s = document.createElement('div');
-          s.className = 'star';
-          const sz = Math.random() * 2 + 0.5;
-          s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random() * 100}%;top:${Math.random() * 100}%;--duration:${Math.random() * 3 + 2}s;animation-delay:${Math.random() * 5}s;`;
-          c.appendChild(s);
-        }
-      })();
     });
   </script>
 </body>
