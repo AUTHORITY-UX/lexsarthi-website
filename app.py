@@ -407,8 +407,9 @@ async def _fetch_chunks(conn, embedding_str: str, top_k: int):
     return [
         {
             "content": row["content"],
-            "citation": row["metadata"].get("source", "Unknown"),
-            "metadata": row["metadata"],
+            # Handle metadata if it's a string (JSON) or a dict
+            "metadata": row["metadata"] if isinstance(row["metadata"], dict) else json.loads(row["metadata"]),
+            "citation": row["metadata"].get("source", "Unknown") if isinstance(row["metadata"], dict) else json.loads(row["metadata"]).get("source", "Unknown"),
             "similarity": row["similarity"]
         }
         for row in rows
