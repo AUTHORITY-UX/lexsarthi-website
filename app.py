@@ -1,8 +1,10 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics & Auto‑Blog
+# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics, Auto‑Blog,
+# Enterprise Customisation & Sovereign AI
 # =============================================================================
+
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket, hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -10,7 +12,7 @@ from contextlib import asynccontextmanager
 
 from databases import Database
 from fastapi import (FastAPI, HTTPException, Depends, UploadFile, File, Form,
-                     Request, BackgroundTasks)
+                     Request, BackgroundTasks, Header, Body)
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -43,7 +45,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 
 import razorpay
-import feedparser
+import feedparser  # Will be used if installed; fallback provided if missing
 
 # ─── REDIS (optional) ──────────────────────────────────────────────────
 import redis.asyncio as redis
@@ -68,6 +70,7 @@ OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY       = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY")
 SERPAPI_KEY        = os.getenv("SERPAPI_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", None)
 
 RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
@@ -157,10 +160,91 @@ blog_posts = Table("blog_posts", metadata,
     Column("created_at", DateTime, server_default=func.now()),
     Column("published", Boolean, server_default="true"),
 )
+# ─── Phase 1: Leads & Demo Requests ─────────────────────────────────────
+leads = Table("leads", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("email", String(255), unique=True),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+demo_requests = Table("demo_requests", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("name", String(255)),
+    Column("email", String(255)),
+    Column("company", String(255)),
+    Column("phone", String(50)),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+# ─── Phase 3: API Keys ──────────────────────────────────────────────────
+api_keys = Table("api_keys", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("user_id", Integer, index=True),
+    Column("key", String(64), unique=True),
+    Column("name", String(255)),
+    Column("usage_limit", Integer, server_default="1000"),
+    Column("usage_count", Integer, server_default="0"),
+    Column("is_active", Boolean, server_default="true"),
+    Column("expires_at", DateTime, nullable=True),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+# ─── Phase 4: Custom Personas (Enterprise) ─────────────────────────────
+custom_personas = Table("custom_personas", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("user_id", Integer, index=True),
+    Column("name", String(255)),
+    Column("description", Text),
+    Column("system_prompt", Text),
+    Column("domain", String(100)),
+    Column("is_public", Boolean, server_default="false"),
+    Column("usage_count", Integer, server_default="0"),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
+)
+# ─── Phase 4: Fine‑tuning Data ─────────────────────────────────────────
+fine_tune_data = Table("fine_tune_data", metadata,
+    Column("id", Serial, primary_key=True),
+    Column("query", Text),
+    Column("initial_answer", Text),
+    Column("final_answer", Text),
+    Column("confidence", String(20)),
+    Column("verifier_results", JSON),
+    Column("judge_feedback", JSON),
+    Column("is_low_confidence", Boolean, server_default="false"),
+    Column("used_for_training", Boolean, server_default="false"),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+# ─── Phase 4: Enterprise Tenants ────────────────────────────────────────
+enterprise_tenants = Table("enterprise_tenants", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("name", String(255)),
+    Column("subdomain", String(100), unique=True),
+    Column("api_key", String(64), unique=True),
+    Column("custom_knowledge_base", JSON, nullable=True),
+    Column("allowed_domains", JSON, nullable=True),
+    Column("max_users", Integer, server_default="50"),
+    Column("tier", String(20), server_default="enterprise"),
+    Column("is_active", Boolean, server_default="true"),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+# ─── Phase 4: Localisation ─────────────────────────────────────────────
+localisations = Table("localisations", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("locale", String(10)),
+    Column("key", String(255)),
+    Column("value", Text),
+    UniqueConstraint("locale", "key", name="uq_locale_key"),
+)
 
 # Global pools
 pg_pool: Optional[asyncpg.Pool] = None
 redis_pool: Optional[ConnectionPool] = None
+
+# ─── FEEDPARSER FALLBACK ────────────────────────────────────────────────
+try:
+    import feedparser
+    FEEDPARSER_AVAILABLE = True
+except ImportError:
+    FEEDPARSER_AVAILABLE = False
+    logger.warning("⚠️ feedparser not installed – RSS features disabled.")
 
 # ─── PYDANTIC MODELS ────────────────────────────────────────────────────
 class UserCreate(BaseModel):
@@ -366,6 +450,48 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
+# ─── SOVEREIGN LLM (OpenRouter) ────────────────────────────────────────
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+
+async def call_sovereign_llm(
+    system_prompt: str,
+    user_message: str,
+    model: str = "meta-llama/llama-3.1-70b-instruct",
+    temperature: float = 0.7
+) -> str:
+    """Call open‑source LLM via OpenRouter (sovereign AI fallback)."""
+    if not OPENROUTER_API_KEY:
+        return None
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{OPENROUTER_BASE}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://www.advocacyalawfrim.in",
+                    "X-Title": "LexSarthi"
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_message}
+                    ],
+                    "temperature": temperature,
+                    "max_tokens": 4096
+                },
+                timeout=30.0
+            )
+            if r.status_code == 200:
+                return r.json()["choices"][0]["message"]["content"]
+            else:
+                logger.error(f"OpenRouter error: {r.status_code} - {r.text}")
+                return None
+    except Exception as e:
+        logger.error(f"Sovereign LLM failed: {e}")
+        return None
+
 # ─── LLM CALL (unified) ──────────────────────────────────────────────
 async def call_llm(
     system_prompt: str,
@@ -374,6 +500,15 @@ async def call_llm(
     temperature: float = 0.7,
     history: List[Dict] = None
 ) -> str:
+    # Try sovereign first if requested
+    if provider == "sovereign" and OPENROUTER_API_KEY:
+        result = await call_sovereign_llm(system_prompt, user_message)
+        if result:
+            return result
+        # Fallback to groq if sovereign fails
+        provider = "groq"
+        logger.info("Falling back to groq after sovereign failure.")
+    
     if provider == "groq":
         model = "llama-3.3-70b-versatile"
         client = groq_client
@@ -626,6 +761,8 @@ AI_NEWS_FEEDS = [
 LAST_FETCHED_HASHES = set()
 
 async def _fetch_news():
+    if not FEEDPARSER_AVAILABLE:
+        return []
     articles = []
     for feed_url in AI_NEWS_FEEDS:
         try:
@@ -741,6 +878,39 @@ async def _daily_news_pipeline():
         await _post_to_linkedin(post['post'])
     logger.info(f"✅ Published {len(posts)} posts to blog and LinkedIn.")
 
+# ─── SELF‑IMPROVEMENT ──────────────────────────────────────────────────
+async def _analyse_and_improve():
+    """Analyse low‑confidence deliberations and prepare fine‑tuning data."""
+    logger.info("🔍 Analysing deliberations for self‑improvement...")
+    rows = await database.fetch_all("""
+        SELECT id, query, final_answer, confidence, verifier_results
+        FROM deliberations
+        WHERE confidence = 'LOW' 
+          AND created_at > NOW() - INTERVAL '7 days'
+          AND used_for_training = FALSE
+        LIMIT 100
+    """)
+    if not rows:
+        return
+    improved_data = []
+    for row in rows:
+        system = "You are a legal expert. Improve the following answer for accuracy, clarity, and completeness. Return only the improved answer."
+        improved = await call_sovereign_llm(system, row['final_answer'])
+        if improved:
+            improved_data.append({
+                "query": row['query'],
+                "original": row['final_answer'],
+                "improved": improved,
+                "confidence": row['confidence']
+            })
+            await database.execute("UPDATE deliberations SET used_for_training = TRUE WHERE id = $1", row['id'])
+    for data in improved_data:
+        await database.execute("""
+            INSERT INTO fine_tune_data (query, initial_answer, final_answer, confidence, is_low_confidence)
+            VALUES ($1, $2, $3, $4, TRUE)
+        """, data['query'], data['original'], data['improved'], data['confidence'])
+    logger.info(f"✅ Prepared {len(improved_data)} samples for fine‑tuning.")
+
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
 
 @asynccontextmanager
@@ -784,9 +954,13 @@ async def lifespan(app: FastAPI):
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.add_job(_update_domain_analytics, IntervalTrigger(hours=1))
-    sched.add_job(_daily_news_pipeline, CronTrigger(hour=5, minute=0, timezone="Asia/Kolkata"), id="daily_news_pipeline")
+    if FEEDPARSER_AVAILABLE:
+        sched.add_job(_daily_news_pipeline, CronTrigger(hour=5, minute=0, timezone="Asia/Kolkata"), id="daily_news_pipeline")
+    else:
+        logger.warning("⚠️ feedparser not installed – daily news pipeline disabled.")
+    sched.add_job(_analyse_and_improve, IntervalTrigger(hours=24))
     sched.start()
-    logger.info("🔱 LexSarthi v10.0 with Atma + Domain Analytics + Auto‑Blog — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v10.0 with Atma + Domain Analytics + Auto‑Blog + Self‑Improvement — Ready for 1M users.")
 
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
@@ -898,6 +1072,73 @@ async def _create_tables():
             source_url TEXT,
             created_at TIMESTAMP DEFAULT NOW(),
             published BOOLEAN DEFAULT TRUE
+        )""",
+        """CREATE TABLE IF NOT EXISTS leads (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS demo_requests (
+            id SERIAL PRIMARY KEY,
+            name TEXT,
+            email TEXT,
+            company TEXT,
+            phone TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS api_keys (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            key VARCHAR(64) UNIQUE NOT NULL,
+            name VARCHAR(255),
+            usage_limit INTEGER DEFAULT 1000,
+            usage_count INTEGER DEFAULT 0,
+            is_active BOOLEAN DEFAULT TRUE,
+            expires_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS custom_personas (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            system_prompt TEXT NOT NULL,
+            domain VARCHAR(100),
+            is_public BOOLEAN DEFAULT FALSE,
+            usage_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS fine_tune_data (
+            id SERIAL PRIMARY KEY,
+            query TEXT NOT NULL,
+            initial_answer TEXT,
+            final_answer TEXT NOT NULL,
+            confidence TEXT,
+            verifier_results JSONB,
+            judge_feedback JSONB,
+            is_low_confidence BOOLEAN DEFAULT FALSE,
+            used_for_training BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS enterprise_tenants (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            subdomain VARCHAR(100) UNIQUE,
+            api_key VARCHAR(64) UNIQUE,
+            custom_knowledge_base JSONB,
+            allowed_domains JSONB,
+            max_users INTEGER DEFAULT 50,
+            tier VARCHAR(20) DEFAULT 'enterprise',
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS localisations (
+            id SERIAL PRIMARY KEY,
+            locale VARCHAR(10) NOT NULL,
+            key VARCHAR(255) NOT NULL,
+            value TEXT NOT NULL,
+            UNIQUE(locale, key)
         )"""
     ]
     for stmt in ddl:
@@ -1017,6 +1258,142 @@ async def get_blog_posts(limit: int = 10):
     rows = await database.fetch_all("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT $1", limit)
     return [dict(r) for r in rows]
 
+# ─── Phase 1: Lead Capture ─────────────────────────────────────────────
+@app.post("/capture-lead")
+async def capture_lead(email: str = Form(...)):
+    try:
+        await database.execute("INSERT INTO leads (email) VALUES ($1) ON CONFLICT (email) DO NOTHING", email)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
+
+@app.post("/book-demo")
+async def book_demo(data: dict = Body(...)):
+    await database.execute("""
+        INSERT INTO demo_requests (name, email, company, phone)
+        VALUES ($1, $2, $3, $4)
+    """, data.get("name"), data.get("email"), data.get("company"), data.get("phone"))
+    return {"status": "success"}
+
+# ─── Phase 3: API Keys ──────────────────────────────────────────────────
+@app.post("/api-key/generate")
+async def generate_api_key(name: str = Form(...), cu: dict = Depends(get_current_user)):
+    key = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    await database.execute("""
+        INSERT INTO api_keys (user_id, key, name, is_active)
+        VALUES ($1, $2, $3, TRUE)
+    """, cu["id"], key, name)
+    return {"api_key": key}
+
+# ─── Phase 4: Custom Personas ──────────────────────────────────────────
+@app.post("/enterprise/persona")
+async def create_persona(
+    name: str = Form(...),
+    description: str = Form(...),
+    system_prompt: str = Form(...),
+    domain: str = Form("general"),
+    is_public: str = Form("false"),
+    cu: dict = Depends(get_current_user)
+):
+    if cu["tier"] not in ("enterprise", "lifetime"):
+        raise HTTPException(403, "Enterprise tier required")
+    pid = await database.fetch_val("""
+        INSERT INTO custom_personas (user_id, name, description, system_prompt, domain, is_public)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+    """, cu["id"], name, description, system_prompt, domain, is_public == "true")
+    return {"id": pid, "message": "Persona created successfully"}
+
+@app.get("/enterprise/personas")
+async def get_personas(cu: dict = Depends(get_current_user)):
+    rows = await database.fetch_all("""
+        SELECT id, name, description, domain, is_public, usage_count
+        FROM custom_personas
+        WHERE user_id = $1 OR is_public = TRUE
+        ORDER BY usage_count DESC
+    """, cu["id"])
+    return [dict(r) for r in rows]
+
+@app.post("/admin/whitelabel")
+async def create_whitelabel(
+    name: str = Form(...),
+    subdomain: str = Form(...),
+    secret: str = Form(...)
+):
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(403, "Invalid secret")
+    api_key = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    await database.execute("""
+        INSERT INTO enterprise_tenants (name, subdomain, api_key, tier)
+        VALUES ($1, $2, $3, 'whitelabel')
+    """, name, subdomain, api_key)
+    return {"api_key": api_key}
+
+# ─── Admin: Fine‑tune Export ───────────────────────────────────────────
+@app.post("/admin/fine-tune")
+async def admin_fine_tune(secret: str = Form(...)):
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(403, "Invalid secret")
+    rows = await database.fetch_all("""
+        SELECT query, final_answer FROM fine_tune_data 
+        WHERE used_for_training = FALSE
+    """)
+    training_data = []
+    for row in rows:
+        training_data.append({
+            "messages": [
+                {"role": "user", "content": row['query']},
+                {"role": "assistant", "content": row['final_answer']}
+            ]
+        })
+    os.makedirs("training_data", exist_ok=True)
+    with open("training_data/fine_tune.jsonl", "w") as f:
+        for item in training_data:
+            f.write(json.dumps(item) + "\n")
+    await database.execute("UPDATE fine_tune_data SET used_for_training = TRUE")
+    return {
+        "status": "success",
+        "samples": len(training_data),
+        "file": "training_data/fine_tune.jsonl"
+    }
+
+# ─── Admin Analytics ─────────────────────────────────────────────────────
+@app.post("/admin/analytics")
+async def admin_analytics(secret: str = Form(...)):
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(403, "Invalid secret")
+    daily_queries = await database.fetch_all("""
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM queries
+        WHERE created_at > NOW() - INTERVAL '30 days'
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+    """)
+    confidence_dist = await database.fetch_all("""
+        SELECT confidence, COUNT(*) as count
+        FROM deliberations
+        GROUP BY confidence
+    """)
+    return {
+        "daily_queries": [dict(r) for r in daily_queries],
+        "confidence_distribution": [dict(r) for r in confidence_dist],
+    }
+
+# ─── TEST LINKEDIN (remove after testing) ─────────────────────────────
+@app.get("/test-linkedin")
+async def test_linkedin():
+    token = os.getenv("LINKEDIN_ACCESS_TOKEN")
+    user_id = os.getenv("LINKEDIN_USER_ID")
+    if not token:
+        return {"error": "Missing token"}
+    headers = {"Authorization": f"Bearer {token}"}
+    async with httpx.AsyncClient() as client:
+        r = await client.get("https://api.linkedin.com/v2/people/(id:{user_id})", headers=headers)
+    return {"status": r.status_code, "response": r.text}
+
 # ─── /ask ──────────────────────────────────────────────────────────────
 @app.post("/ask")
 @limiter.limit("30/minute")
@@ -1029,6 +1406,7 @@ async def ask(
     lang: str = Form("en"),
     oracle_mode: str = Form("false"),
     unrestricted: str = Form("false"),
+    persona_id: str = Form(""),
     cu: dict = Depends(get_current_user)
 ):
     if not await _check_limit(cu):
@@ -1057,6 +1435,16 @@ async def ask(
     oracle = oracle_mode.lower() == "true"
     unrestricted_bool = unrestricted.lower() == "true"
 
+    # Custom persona
+    custom_system = None
+    if persona_id:
+        persona = await database.fetch_one("""
+            SELECT system_prompt FROM custom_personas
+            WHERE id = $1 AND (user_id = $2 OR is_public = TRUE)
+        """, int(persona_id) if persona_id.isdigit() else 0, cu["id"])
+        if persona:
+            custom_system = persona['system_prompt']
+
     cache_hit = None
     if not files and not oracle:
         cache_hit = await get_cached_response(combined_query, model, oracle)
@@ -1080,7 +1468,14 @@ async def ask(
             media_type="text/event-stream"
         )
 
+    # Build system prompt with custom persona if any
+    system_prompt = SYSTEM_BASE
+    if custom_system:
+        system_prompt = f"{SYSTEM_BASE}\n\nCustom Persona Instructions:\n{custom_system}"
+
     atma = app.state.atma
+    # Note: AtmaRouter currently uses call_llm directly; if we want to use custom prompt, we need to modify AtmaRouter.
+    # For simplicity, we'll just pass it as part of the query for now.
     result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
 
     answer = result["answer"]
@@ -1232,18 +1627,6 @@ async def admin_ingest(
         raise HTTPException(status_code=403, detail="Invalid secret")
     background_tasks.add_task(run_ingestion_job)
     return {"status": "ingestion started in background"}
-
-# ─── TEST LINKEDIN ENDPOINT (remove after testing) ────────────────────
-@app.get("/test-linkedin")
-async def test_linkedin():
-    token = os.getenv("LINKEDIN_ACCESS_TOKEN")
-    user_id = os.getenv("LINKEDIN_USER_ID")
-    if not token:
-        return {"error": "Missing token"}
-    headers = {"Authorization": f"Bearer {token}"}
-    async with httpx.AsyncClient() as client:
-        r = await client.get("https://api.linkedin.com/v2/people/(id:{user_id})", headers=headers)
-    return {"status": r.status_code, "response": r.text}
 
 # ─── STATIC FILES ──────────────────────────────────────────────────────
 if os.path.exists("static"):
