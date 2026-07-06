@@ -1,9 +1,7 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEGAL NOTICE
-# =============================================================================
-# LEXSARTHI v9.1 – ATMA Universal OS
+# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics
 # Owned by: THE ADVOCACY – A LAW FIRM
 # Proprietor: Upmanyu Kumar
 # UDYAM: UP-09-0043193
@@ -16,10 +14,11 @@
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
 
-import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
+import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
+import hashlib
 
 from databases import Database
 from fastapi import (FastAPI, HTTPException, Depends, UploadFile, File, Form,
@@ -56,6 +55,10 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 import razorpay
 
+# ─── REDIS ──────────────────────────────────────────────────────────────
+import redis.asyncio as redis
+from redis.asyncio import ConnectionPool
+
 # ─── ATMA ROUTER ──────────────────────────────────────────────────────────
 from atma import AtmaRouter
 
@@ -66,6 +69,7 @@ logger = logging.getLogger("lexsarthi")
 
 # ─── ENV ──────────────────────────────────────────────────────────────────
 DATABASE_URL       = os.getenv("DATABASE_URL")
+REDIS_URL          = os.getenv("REDIS_URL", None)
 JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
@@ -86,7 +90,7 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel("gemini-pro")
 
-# ─── LOCAL EMBEDDING MODEL (free, no API key) ──────────────────────────
+# ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
 from sentence_transformers import SentenceTransformer
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -143,9 +147,21 @@ bulk_jobs = Table("bulk_jobs", metadata,
     Column("created_at", DateTime, server_default=func.now()),
     Column("expires_at", DateTime),
 )
+# ─── Domain Analytics Table ────────────────────────────────────────────
+domain_analytics = Table("domain_analytics", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("domain", String(255), unique=True),
+    Column("status_code", Integer, nullable=True),
+    Column("response_time", Float, nullable=True),
+    Column("ssl_expiry", DateTime, nullable=True),
+    Column("dns_resolves", Boolean, server_default="false"),
+    Column("cloudflare_analytics", JSON, nullable=True),
+    Column("last_checked", DateTime, server_default=func.now()),
+)
 
-# Global asyncpg pool (for pgvector and Atma)
+# Global pools
 pg_pool: Optional[asyncpg.Pool] = None
+redis_pool: Optional[ConnectionPool] = None
 
 # ─── PYDANTIC MODELS ────────────────────────────────────────────────────
 class UserCreate(BaseModel):
@@ -200,12 +216,18 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-limiter = Limiter(key_func=get_remote_address)
+# ─── RATE LIMITER (Redis‑backed if available) ──────────────────────────
+if REDIS_URL:
+    limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_URL)
+    logger.info("✅ Redis rate limiter enabled")
+else:
+    limiter = Limiter(key_func=get_remote_address)
+    logger.warning("⚠️ REDIS_URL not set – using in‑memory rate limiter")
 
 # ─── SYSTEM PROMPT ──────────────────────────────────────────────────────
 SYSTEM_BASE = """You are LexSarthi, the Universal Default OS for Human Knowledge — 100% True. You are powered by 250 specialist personas, a jury of 3 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, compassionate."""
 
-# ─── 250 SPECIALIST PERSONAS (generated) ──────────────────────────────
+# ─── 250 SPECIALIST PERSONAS ──────────────────────────────────────────
 DOMAINS_FULL = [
     "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
     "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
@@ -266,7 +288,7 @@ VERIFIERS = [
     {"id":"v10","name":"Shakti","role":"Final judge & dharma seal","prompt":"Integrate all critiques and produce a final answer with a confidence rating."}
 ]
 
-# ─── ROUTE AGENT (for bulk) ──────────────────────────────────────────────
+# ─── ROUTE AGENT ──────────────────────────────────────────────────────────
 def route_agent(query: str, oracle: bool) -> str:
     if oracle:
         return "oracle"
@@ -281,11 +303,10 @@ def route_agent(query: str, oracle: bool) -> str:
             best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (pgvector) with local embeddings ──────────────────────────────
+# ─── RAG (pgvector) – with citation ─────────────────────────────────────
 async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
     query_embedding = embedding_model.encode(query).tolist()
-    query_embedding_str = json.dumps(query_embedding)   # pgvector expects a string
-
+    query_embedding_str = json.dumps(query_embedding)
     if conn is None:
         async with pg_pool.acquire() as conn:
             return await _fetch_chunks(conn, query_embedding_str, top_k)
@@ -305,30 +326,31 @@ async def _fetch_chunks(conn, embedding_str: str, top_k: int):
     return [
         {
             "content": row["content"],
+            "citation": row["metadata"].get("source", "Unknown"),
             "metadata": row["metadata"],
             "similarity": row["similarity"]
         }
         for row in rows
     ]
 
-# ─── WEB SEARCH ────────────────────────────────────────────────────────
-async def serpapi_search(query: str) -> List[Dict]:
+# ─── WEB SEARCH ──────────────────────────────────────────────────────────
+async def serpapi_search(query: str, unrestricted: bool = False) -> List[Dict]:
     if not SERPAPI_KEY:
         return []
+    params = {"q": query, "api_key": SERPAPI_KEY, "num": 5}
+    # If not unrestricted, restrict to trusted domains
+    if not unrestricted:
+        domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "")
+        if domains:
+            params["q"] = f'site:({domains.replace(",", " OR ")}) {query}'
     try:
         async with httpx.AsyncClient() as client:
-            r = await client.get(
-                "https://serpapi.com/search",
-                params={"q": query, "api_key": SERPAPI_KEY, "num": 5},
-                timeout=8.0
-            )
-            if r.status_code != 200:
-                return []
-            data = r.json()
-            return data.get("organic_results", [])
+            r = await client.get("https://serpapi.com/search", params=params, timeout=8.0)
+            if r.status_code == 200:
+                return r.json().get("organic_results", [])
     except Exception as e:
         logger.error(f"Web search failed: {e}")
-        return []
+    return []
 
 # ─── FILE PROCESSING ──────────────────────────────────────────────────
 async def process_file_bytes(content: bytes, filename: str) -> str:
@@ -358,32 +380,24 @@ async def call_llm(
     temperature: float = 0.7,
     history: List[Dict] = None
 ) -> str:
-    """
-    Unified LLM caller with provider fallback.
-    provider: "groq" | "openai" | "gemini"
-    """
-    # Map provider to model name
     if provider == "groq":
         model = "llama-3.3-70b-versatile"
         client = groq_client
     elif provider == "openai":
-        model = "gpt-4o-mini"   # or "gpt-4o" if you have access
+        model = "gpt-4o-mini"
         client = openai_client
     elif provider == "gemini":
         model = "gemini-pro"
-        client = gemini_model  # special case
+        client = gemini_model
     else:
-        # fallback
         model = "llama-3.3-70b-versatile"
         client = groq_client
 
     try:
         if provider == "gemini" and gemini_model:
-            # Gemini uses a different API
             r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
             return r.text
         elif client:
-            # Groq / OpenAI (same interface)
             r = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "system", "content": system_prompt},
@@ -396,11 +410,9 @@ async def call_llm(
             raise Exception("No valid LLM client available")
     except Exception as e:
         logger.error(f"LLM call failed for provider {provider}: {e}")
-        # Fallback: try groq if not already
         if provider != "groq" and groq_client:
             logger.info("Falling back to groq")
             return await call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
-        # Final fallback
         return f"Error: {e}"
 
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
@@ -441,6 +453,34 @@ def _build_context(mem: List[dict]) -> str:
     ctx = "\n".join(f"[Prev Q] {x['q']}\n[Prev A] {x['a']}" for x in mem[-3:])
     return f"═══ RECENT CONTEXT ═══\n{ctx}\n═════════════════\nCurrent query:\n"
 
+# ─── CACHING HELPERS (Redis) ──────────────────────────────────────────
+def _get_cache_key(query: str, model: str, oracle: bool) -> str:
+    key_str = f"{query}|{model}|{oracle}"
+    return f"lex_cache:{hashlib.md5(key_str.encode()).hexdigest()}"
+
+async def get_cached_response(query: str, model: str, oracle: bool) -> Optional[Dict]:
+    if not redis_pool:
+        return None
+    key = _get_cache_key(query, model, oracle)
+    try:
+        async with redis_pool.connection() as conn:
+            data = await conn.get(key)
+            if data:
+                return json.loads(data)
+    except Exception as e:
+        logger.warning(f"Redis get error: {e}")
+    return None
+
+async def set_cached_response(query: str, model: str, oracle: bool, response_data: Dict, ttl_seconds: int = 86400):
+    if not redis_pool:
+        return
+    key = _get_cache_key(query, model, oracle)
+    try:
+        async with redis_pool.connection() as conn:
+            await conn.setex(key, ttl_seconds, json.dumps(response_data))
+    except Exception as e:
+        logger.warning(f"Redis set error: {e}")
+
 # ─── STREAMING REPLAY ──────────────────────────────────────────────
 async def replay_stream(answer: str, confidence: str, sources: List[str], metadata: dict):
     for i in range(0, len(answer), 6):
@@ -459,7 +499,7 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
 
-# ─── INGESTION FUNCTION ──────────────────────────────────────────────
+# ─── INGESTION ──────────────────────────────────────────────────────────
 async def run_ingestion_job():
     import pdfplumber, json, glob, asyncpg
     from tqdm import tqdm
@@ -494,7 +534,7 @@ async def run_ingestion_job():
         inserted = 0
         for idx, chunk in enumerate(tqdm(chunks, desc=f"Embedding {source}")):
             emb = embedding_model.encode(chunk).tolist()
-            emb_str = json.dumps(emb)   # convert to string for pgvector
+            emb_str = json.dumps(emb)
             meta = {"source": source, "chunk_index": idx, "total_chunks": len(chunks)}
             await conn.execute(
                 "INSERT INTO knowledge_chunks (content, metadata, embedding) VALUES ($1, $2, $3)",
@@ -520,49 +560,118 @@ async def run_ingestion_job():
     finally:
         await conn.close()
 
+# ─── DOMAIN ANALYTICS ──────────────────────────────────────────────────
+async def _update_domain_analytics():
+    domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "").split(",")
+    if not domains:
+        return
+    for domain in domains:
+        try:
+            status = await _check_domain_health(domain)
+            await _store_domain_analytics(domain, status)
+        except Exception as e:
+            logger.error(f"Failed to check domain {domain}: {e}")
+
+async def _check_domain_health(domain: str) -> dict:
+    result = {
+        "status_code": None,
+        "response_time": None,
+        "ssl_expiry": None,
+        "dns_resolves": False
+    }
+    # DNS
+    try:
+        socket.gethostbyname(domain)
+        result["dns_resolves"] = True
+    except:
+        pass
+    # HTTP
+    try:
+        start = datetime.now()
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"https://{domain}", timeout=5.0)
+        result["status_code"] = r.status_code
+        result["response_time"] = (datetime.now() - start).total_seconds()
+    except:
+        pass
+    # SSL (simplified)
+    try:
+        context = ssl.create_default_context()
+        with context.wrap_socket(socket.socket(), server_hostname=domain) as sock:
+            sock.settimeout(5)
+            sock.connect((domain, 443))
+            cert = sock.getpeercert()
+            if cert and 'notAfter' in cert:
+                expiry = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z")
+                result["ssl_expiry"] = expiry.replace(tzinfo=None)
+    except:
+        pass
+    return result
+
+async def _store_domain_analytics(domain: str, status: dict):
+    await database.execute("""
+        INSERT INTO domain_analytics (domain, status_code, response_time, ssl_expiry, dns_resolves, last_checked)
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        ON CONFLICT (domain) DO UPDATE SET
+            status_code = EXCLUDED.status_code,
+            response_time = EXCLUDED.response_time,
+            ssl_expiry = EXCLUDED.ssl_expiry,
+            dns_resolves = EXCLUDED.dns_resolves,
+            last_checked = NOW()
+    """, domain, status["status_code"], status["response_time"], status["ssl_expiry"], status["dns_resolves"])
+
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global pg_pool
+    global pg_pool, redis_pool
 
-    # 1. Connect to DB and create tables / test user
     await database.connect()
     await _create_tables()
     await _ensure_test_user()
 
-    # 2. Create PostgreSQL connection pool
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
-    # 3. Instantiate AtmaRouter with the pool and required callbacks
+    if REDIS_URL:
+        try:
+            redis_pool = ConnectionPool.from_url(REDIS_URL, max_connections=10)
+            async with redis_pool.connection() as conn:
+                await conn.ping()
+            logger.info("✅ Redis connected successfully")
+        except Exception as e:
+            logger.error(f"❌ Redis connection failed: {e}")
+            redis_pool = None
+    else:
+        logger.warning("⚠️ REDIS_URL not set – caching disabled")
+
     app.state.atma = AtmaRouter(
         pg_pool,
-        fetch_relevant_chunks_func=fetch_relevant_chunks,   # defined above
-        serpapi_search_func=serpapi_search,                 # defined above
-        call_llm_func=call_llm                              # defined above
+        fetch_relevant_chunks_func=fetch_relevant_chunks,
+        serpapi_search_func=serpapi_search,
+        call_llm_func=call_llm
     )
 
-    # 4. Start background scheduler
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
+    sched.add_job(_update_domain_analytics, IntervalTrigger(hours=1))
     sched.start()
-    logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v10.0 with Atma + Redis + Domain Analytics — Ready for 1M users.")
 
-    # 5. Auto‑ingestion on first startup (if knowledge_chunks is empty)
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
         if count == 0:
-            logger.info("📚 knowledge_chunks is empty – running auto‑ingestion...")
+            logger.info("📚 knowledge_chunks empty – running auto‑ingestion...")
             await run_ingestion_job()
         else:
             logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping.")
 
-    # 6. Yield control to the application
     yield
 
-    # 7. Cleanup on shutdown
     await database.disconnect()
-    await pg_pool.close()
+    if pg_pool:
+        await pg_pool.close()
+    if redis_pool:
+        await redis_pool.disconnect()
 
 # ─── DB INIT ────────────────────────────────────────────────────────────
 async def _create_tables():
@@ -617,7 +726,6 @@ async def _create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
         )""",
-        # ─── New pgvector tables with vector(384) ────────────────────────
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
             id SERIAL PRIMARY KEY,
             content TEXT NOT NULL,
@@ -641,7 +749,18 @@ async def _create_tables():
             timestamp TIMESTAMPTZ DEFAULT NOW()
         )""",
         """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp 
-            ON deliberations(timestamp)"""
+            ON deliberations(timestamp)""",
+        # Domain analytics table
+        """CREATE TABLE IF NOT EXISTS domain_analytics (
+            id SERIAL PRIMARY KEY,
+            domain VARCHAR(255) UNIQUE NOT NULL,
+            status_code INTEGER,
+            response_time FLOAT,
+            ssl_expiry TIMESTAMP,
+            dns_resolves BOOLEAN DEFAULT FALSE,
+            cloudflare_analytics JSONB,
+            last_checked TIMESTAMP DEFAULT NOW()
+        )"""
     ]
     for stmt in ddl:
         await database.execute(stmt)
@@ -688,7 +807,15 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ─── ROUTES ──────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "version": "9.1-atma", "agents": 250, "verifiers": 10}
+    redis_status = "connected" if redis_pool else "disabled"
+    return {
+        "status": "healthy",
+        "version": "10.0-atma",
+        "agents": 250,
+        "verifiers": 10,
+        "redis": redis_status,
+        "domain_monitoring": "active"
+    }
 
 @app.post("/auth/login")
 @limiter.limit("10/minute")
@@ -734,6 +861,18 @@ async def my_usage(cu: dict = Depends(get_current_user)):
     today = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id == cu["id"], func.date(queries.c.created_at) == func.current_date())) or 0
     return {"total_queries": total, "queries_today": today}
 
+# ─── Domain Analytics Endpoint ──────────────────────────────────────────
+@app.get("/domain-status")
+async def domain_status(domain: str = None):
+    if domain:
+        row = await database.fetch_one("SELECT * FROM domain_analytics WHERE domain = $1", domain)
+        if not row:
+            raise HTTPException(404, "Domain not found in analytics")
+        return dict(row)
+    else:
+        rows = await database.fetch_all("SELECT * FROM domain_analytics ORDER BY domain")
+        return [dict(r) for r in rows]
+
 # ─── /ask ──────────────────────────────────────────────────────────────
 @app.post("/ask")
 @limiter.limit("30/minute")
@@ -745,6 +884,7 @@ async def ask(
     model: str = Form("llama-3.3-70b-versatile"),
     lang: str = Form("en"),
     oracle_mode: str = Form("false"),
+    unrestricted: str = Form("false"),   # new toggle
     cu: dict = Depends(get_current_user)
 ):
     if not await _check_limit(cu):
@@ -766,13 +906,40 @@ async def ask(
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
 
     await _incr_query(cu["id"])
-
     mem = await _get_memory(cu["id"])
     if mem:
         combined_query = _build_context(mem) + combined_query
 
+    oracle = oracle_mode.lower() == "true"
+    unrestricted_bool = unrestricted.lower() == "true"
+
+    # Cache check only if not oracle and no files
+    cache_hit = None
+    if not files and not oracle:
+        cache_hit = await get_cached_response(combined_query, model, oracle)
+
+    if cache_hit:
+        answer = cache_hit["answer"]
+        confidence = cache_hit["confidence"]
+        sources = cache_hit["sources"]
+        metadata = cache_hit["metadata"]
+        await database.execute(
+            queries.insert().values(
+                user_id=cu["id"],
+                query=combined_query[:8000],
+                response=answer[:16000],
+                metadata=metadata,
+                expires_at=datetime.now() + timedelta(hours=24)
+            )
+        )
+        return StreamingResponse(
+            replay_stream(answer, confidence, sources, metadata),
+            media_type="text/event-stream"
+        )
+
     atma = app.state.atma
-    result = await atma.run(query=combined_query, history=None, files=None)
+    # Pass unrestricted flag to router (will be used in serpapi_search)
+    result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
 
     answer = result["answer"]
     confidence = result["confidence"]
@@ -781,10 +948,19 @@ async def ask(
         "domain": result.get("domain", "general"),
         "persona": result.get("persona", ""),
         "provider": result.get("provider", ""),
-        "jury_verifiers": [],
-        "jury_confidences": {},
+        "jury_verifiers": result.get("jury_verifiers", []),
+        "jury_confidences": result.get("jury_confidences", {}),
         "judge": "Shakti"
     }
+
+    if not files and not oracle:
+        cache_data = {
+            "answer": answer,
+            "confidence": confidence,
+            "sources": sources,
+            "metadata": metadata
+        }
+        await set_cached_response(combined_query, model, oracle, cache_data, ttl_seconds=86400)
 
     await _update_memory(cu["id"], query, answer)
     await database.execute(
@@ -903,7 +1079,7 @@ async def verify_payment(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Verification failed")
 
-# ─── ONE‑TIME INGESTION ENDPOINT (optional) ─────────────────────────
+# ─── ADMIN INGEST ──────────────────────────────────────────────────────
 @app.post("/admin/ingest")
 async def admin_ingest(
     secret: str = Form(...),
