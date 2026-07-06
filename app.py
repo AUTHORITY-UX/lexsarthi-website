@@ -1,13 +1,12 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics (Redis optional)
+# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics & Auto‑Blog
 # =============================================================================
-import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket
+import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket, hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
-import hashlib
 
 from databases import Database
 from fastapi import (FastAPI, HTTPException, Depends, UploadFile, File, Form,
@@ -41,8 +40,10 @@ import pytesseract
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 import razorpay
+import feedparser
 
 # ─── REDIS (optional) ──────────────────────────────────────────────────
 import redis.asyncio as redis
@@ -58,7 +59,7 @@ logger = logging.getLogger("lexsarthi")
 
 # ─── ENV ──────────────────────────────────────────────────────────────────
 DATABASE_URL       = os.getenv("DATABASE_URL")
-REDIS_URL          = os.getenv("REDIS_URL", None)   # optional – fallback to in‑memory for caching
+REDIS_URL          = os.getenv("REDIS_URL", None)
 JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
@@ -147,6 +148,15 @@ domain_analytics = Table("domain_analytics", metadata,
     Column("cloudflare_analytics", JSON, nullable=True),
     Column("last_checked", DateTime, server_default=func.now()),
 )
+# ─── Blog Posts Table ────────────────────────────────────────────────────
+blog_posts = Table("blog_posts", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("title", Text),
+    Column("content", Text),
+    Column("source_url", Text),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("published", Boolean, server_default="true"),
+)
 
 # Global pools
 pg_pool: Optional[asyncpg.Pool] = None
@@ -205,7 +215,7 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-# ─── RATE LIMITER (in‑memory to avoid Redis dependency) ──────────────────
+# ─── RATE LIMITER (in‑memory) ──────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 logger.info("✅ Rate limiter using in‑memory storage")
 
@@ -288,7 +298,7 @@ def route_agent(query: str, oracle: bool) -> str:
             best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (pgvector) – FIXED ─────────────────────────────────────────────
+# ─── RAG (pgvector) ─────────────────────────────────────────────────────
 async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
     query_embedding = embedding_model.encode(query).tolist()
     query_embedding_str = json.dumps(query_embedding)
@@ -599,10 +609,145 @@ async def _store_domain_analytics(domain: str, status: dict):
             last_checked = NOW()
     """, domain, status["status_code"], status["response_time"], status["ssl_expiry"], status["dns_resolves"])
 
+# ─── DAILY BLOG & LINKEDIN PIPELINE ────────────────────────────────────
+AI_NEWS_FEEDS = [
+    "https://arxiv.org/rss/cs.AI",
+    "https://feeds.feedburner.com/TechnologyReview/AI",
+    "https://deepmind.com/blog/feed.xml",
+    "https://openai.com/blog/rss.xml",
+    "https://www.analyticsvidhya.com/feed/",
+    "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
+    "https://ai.meta.com/blog/feed/",
+    "https://www.ibm.com/blogs/research/feed/",
+    "https://research.google/blog/feed/",
+    "https://www.wired.com/feed/tag/ai/latest/rss",
+]
+
+LAST_FETCHED_HASHES = set()
+
+async def _fetch_news():
+    articles = []
+    for feed_url in AI_NEWS_FEEDS:
+        try:
+            feed = feedparser.parse(feed_url)
+            for entry in feed.entries[:3]:
+                content = entry.title + entry.get('summary', '') + entry.get('link', '')
+                hash_id = hashlib.md5(content.encode()).hexdigest()
+                if hash_id in LAST_FETCHED_HASHES:
+                    continue
+                LAST_FETCHED_HASHES.add(hash_id)
+                if len(LAST_FETCHED_HASHES) > 1000:
+                    LAST_FETCHED_HASHES.pop()
+                articles.append({
+                    "title": entry.title,
+                    "summary": entry.get('summary', ''),
+                    "link": entry.get('link', ''),
+                    "published": entry.get('published', ''),
+                })
+        except Exception as e:
+            logger.error(f"Error fetching {feed_url}: {e}")
+    articles.sort(key=lambda x: x.get('published', ''), reverse=True)
+    return articles[:10]
+
+async def _generate_post(article: dict) -> str:
+    prompt = f"""
+You are LexSarthi, a professional AI news writer. Write a concise, engaging LinkedIn post (about 300 words) based on the following news:
+
+Title: {article['title']}
+Summary: {article['summary']}
+Link: {article['link']}
+
+The post should:
+- Have a catchy opening line.
+- Summarise the key innovation or finding.
+- Explain why it matters for professionals or society.
+- End with a call‑to‑action (e.g., "Read more: [link]").
+- Use a professional but conversational tone, suitable for LinkedIn.
+- Include 3 relevant hashtags.
+"""
+    response = await call_llm(
+        system_prompt="You are a professional AI news writer.",
+        user_message=prompt,
+        provider="groq",
+        temperature=0.7
+    )
+    return response
+
+async def _post_to_linkedin(content: str):
+    token = os.getenv("LINKEDIN_ACCESS_TOKEN")
+    user_id = os.getenv("LINKEDIN_USER_ID")
+    if not token or not user_id:
+        logger.warning("LinkedIn credentials missing – skipping posting.")
+        return
+    url = "https://api.linkedin.com/v2/ugcPosts"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "author": user_id,
+        "lifecycleState": "PUBLISHED",
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": {
+                "shareCommentary": {
+                    "text": content[:3000]
+                },
+                "shareMediaCategory": "NONE"
+            }
+        },
+        "visibility": {
+            "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+        }
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.post(url, headers=headers, json=payload)
+            if r.status_code == 201:
+                logger.info("✅ Posted to LinkedIn successfully.")
+            else:
+                logger.error(f"LinkedIn error: {r.status_code} - {r.text}")
+    except Exception as e:
+        logger.error(f"LinkedIn post failed: {e}")
+
+async def _daily_news_pipeline():
+    logger.info("📰 Starting daily news pipeline at 5 AM IST.")
+    articles = await _fetch_news()
+    if not articles:
+        logger.warning("No new articles found.")
+        return
+    top_articles = articles[:5]
+    posts = []
+    for article in top_articles:
+        post_content = await _generate_post(article)
+        posts.append({"article": article, "post": post_content})
+    # Save to blog and publish to LinkedIn
+    for post in posts:
+        # Save to filesystem
+        filename = f"blog/post_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        os.makedirs("blog", exist_ok=True)
+        with open(filename, "w") as f:
+            f.write(f"# {post['article']['title']}\n\n")
+            f.write(f"*Source: {post['article']['link']}*\n\n")
+            f.write(post['post'])
+        # Save to DB
+        try:
+            await database.execute(
+                "INSERT INTO blog_posts (title, content, source_url, created_at) VALUES ($1, $2, $3, NOW())",
+                post['article']['title'], post['post'], post['article']['link']
+            )
+        except Exception as e:
+            logger.error(f"DB insert error: {e}")
+        # Post to LinkedIn
+        await _post_to_linkedin(post['post'])
+    logger.info(f"✅ Published {len(posts)} posts to blog and LinkedIn.")
+
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool, redis_pool
+
+    os.makedirs("blog", exist_ok=True)
 
     await database.connect()
     await _create_tables()
@@ -616,13 +761,11 @@ async def lifespan(app: FastAPI):
             clean_url = REDIS_URL
             if "redis-cli --tls -u " in clean_url:
                 clean_url = clean_url.split("redis-cli --tls -u ")[-1]
-            # Upstash uses TLS, so convert redis:// to rediss:// if needed
             if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
                 clean_url = clean_url.replace("redis://", "rediss://", 1)
-            # Create Redis client directly (async)
             redis_client = redis.from_url(clean_url, decode_responses=True, max_connections=10)
             await redis_client.ping()
-            redis_pool = redis_client   # store client reference
+            redis_pool = redis_client
             logger.info("✅ Redis connected successfully")
         except Exception as e:
             logger.error(f"❌ Redis connection failed: {e}")
@@ -641,8 +784,9 @@ async def lifespan(app: FastAPI):
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.add_job(_update_domain_analytics, IntervalTrigger(hours=1))
+    sched.add_job(_daily_news_pipeline, CronTrigger(hour=5, minute=0, timezone="Asia/Kolkata"), id="daily_news_pipeline")
     sched.start()
-    logger.info("🔱 LexSarthi v10.0 with Atma + Domain Analytics — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v10.0 with Atma + Domain Analytics + Auto‑Blog — Ready for 1M users.")
 
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
@@ -659,6 +803,7 @@ async def lifespan(app: FastAPI):
         await pg_pool.close()
     if redis_pool:
         await redis_pool.close()
+
 # ─── DB INIT ────────────────────────────────────────────────────────────
 async def _create_tables():
     await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
@@ -745,6 +890,14 @@ async def _create_tables():
             dns_resolves BOOLEAN DEFAULT FALSE,
             cloudflare_analytics JSONB,
             last_checked TIMESTAMP DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS blog_posts (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            content TEXT,
+            source_url TEXT,
+            created_at TIMESTAMP DEFAULT NOW(),
+            published BOOLEAN DEFAULT TRUE
         )"""
     ]
     for stmt in ddl:
@@ -857,6 +1010,12 @@ async def domain_status(domain: str = None):
     else:
         rows = await database.fetch_all("SELECT * FROM domain_analytics ORDER BY domain")
         return [dict(r) for r in rows]
+
+# ─── Blog Posts Endpoint ────────────────────────────────────────────────
+@app.get("/blog")
+async def get_blog_posts(limit: int = 10):
+    rows = await database.fetch_all("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT $1", limit)
+    return [dict(r) for r in rows]
 
 # ─── /ask ──────────────────────────────────────────────────────────────
 @app.post("/ask")
@@ -1073,6 +1232,18 @@ async def admin_ingest(
         raise HTTPException(status_code=403, detail="Invalid secret")
     background_tasks.add_task(run_ingestion_job)
     return {"status": "ingestion started in background"}
+
+# ─── TEST LINKEDIN ENDPOINT (remove after testing) ────────────────────
+@app.get("/test-linkedin")
+async def test_linkedin():
+    token = os.getenv("LINKEDIN_ACCESS_TOKEN")
+    user_id = os.getenv("LINKEDIN_USER_ID")
+    if not token:
+        return {"error": "Missing token"}
+    headers = {"Authorization": f"Bearer {token}"}
+    async with httpx.AsyncClient() as client:
+        r = await client.get("https://api.linkedin.com/v2/people/(id:{user_id})", headers=headers)
+    return {"status": r.status_code, "response": r.text}
 
 # ─── STATIC FILES ──────────────────────────────────────────────────────
 if os.path.exists("static"):
