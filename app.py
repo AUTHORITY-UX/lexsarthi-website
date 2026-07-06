@@ -1,10 +1,22 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10 – Universal OS with Adaptive Profiling, OpenRouter, Redis Cache
+# LEGAL NOTICE
+# =============================================================================
+# LEXSARTHI v9.1 – ATMA Universal OS
+# Owned by: THE ADVOCACY – A LAW FIRM
+# Proprietor: Upmanyu Kumar
+# UDYAM: UP-09-0043193
+# PAN: CHFPK3464A
+#
+# This software and all associated materials are proprietary and confidential.
+# Unauthorised copying, distribution, modification, or use of this software
+# without explicit written permission from THE ADVOCACY is strictly prohibited.
+#
+# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
 
-import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, hashlib
+import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
@@ -34,7 +46,6 @@ import httpx
 from groq import Groq
 import openai
 import google.generativeai as genai
-import redis.asyncio as redis
 
 import PyPDF2, pdfplumber, docx
 from PIL import Image
@@ -59,15 +70,13 @@ JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
 
-OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY", "")
+OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY       = os.getenv("GROQ_API_KEY")
-GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY", "")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-SERPAPI_KEY        = os.getenv("SERPAPI_KEY", "")
+GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY")
+SERPAPI_KEY        = os.getenv("SERPAPI_KEY")
 
-REDIS_URL          = os.getenv("REDIS_URL")
-RAZORPAY_KEY_ID    = os.getenv("RAZORPAY_KEY_ID", "")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
 # ─── PROVIDER CLIENTS ────────────────────────────────────────────────────
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -77,18 +86,7 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel("gemini-pro")
 
-# ─── REDIS CACHE ─────────────────────────────────────────────────────────
-redis_client = None
-if REDIS_URL and (REDIS_URL.startswith("redis://") or REDIS_URL.startswith("rediss://") or REDIS_URL.startswith("unix://")):
-    try:
-        redis_client = redis.from_url(REDIS_URL, decode_responses=True)
-        logger.info("✅ Redis connected for caching.")
-    except Exception as e:
-        logger.warning(f"⚠️ Redis connection failed: {e}")
-else:
-    logger.warning("⚠️ REDIS_URL not set or invalid scheme. Caching disabled.")
-
-# ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
+# ─── LOCAL EMBEDDING MODEL (free, no API key) ──────────────────────────
 from sentence_transformers import SentenceTransformer
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -111,7 +109,6 @@ users = Table("users", metadata,
     Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
     Column("api_key", String(64), nullable=True, unique=True),
     Column("preferences", JSON, nullable=True),
-    Column("profile", JSON, server_default='{"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}'),
     Column("memory", JSON, server_default="[]"),
 )
 queries = Table("queries", metadata,
@@ -147,6 +144,7 @@ bulk_jobs = Table("bulk_jobs", metadata,
     Column("expires_at", DateTime),
 )
 
+# Global asyncpg pool (for pgvector and Atma)
 pg_pool: Optional[asyncpg.Pool] = None
 
 # ─── PYDANTIC MODELS ────────────────────────────────────────────────────
@@ -284,53 +282,34 @@ def route_agent(query: str, oracle: bool) -> str:
     return best_id if best_score >= 2 else "general"
 
 # ─── RAG (pgvector) with local embeddings ──────────────────────────────
-async def fetch_relevant_chunks(query: str, top_k: int = 3, conn: asyncpg.Connection = None) -> List[Dict]:
+async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
     query_embedding = embedding_model.encode(query).tolist()
-    query_embedding_str = json.dumps(query_embedding)
-
-    fetch_k = min(top_k * 2, 10)
+    query_embedding_str = json.dumps(query_embedding)   # pgvector expects a string
 
     if conn is None:
         async with pg_pool.acquire() as conn:
-            rows = await conn.fetch(
-                """
-                SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
-                FROM knowledge_chunks
-                ORDER BY embedding <=> $1
-                LIMIT $2
-                """,
-                query_embedding_str, fetch_k
-            )
+            return await _fetch_chunks(conn, query_embedding_str, top_k)
     else:
-        rows = await conn.fetch(
-            """
-            SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
-            FROM knowledge_chunks
-            ORDER BY embedding <=> $1
-            LIMIT $2
-            """,
-            query_embedding_str, fetch_k
-        )
+        return await _fetch_chunks(conn, query_embedding_str, top_k)
 
-    results = []
-    for row in rows:
-        meta = row["metadata"]
-        if isinstance(meta, str):
-            try:
-                meta = json.loads(meta)
-            except:
-                meta = {}
-        source = meta.get("source", "Unknown")
-        page = meta.get("page", "")
-        citation = f"{source}" + (f" (page {page})" if page else "")
-        results.append({
+async def _fetch_chunks(conn, embedding_str: str, top_k: int):
+    rows = await conn.fetch(
+        """
+        SELECT content, metadata, 1 - (embedding <=> $1) AS similarity
+        FROM knowledge_chunks
+        ORDER BY embedding <=> $1
+        LIMIT $2
+        """,
+        embedding_str, top_k
+    )
+    return [
+        {
             "content": row["content"],
-            "metadata": meta,
-            "similarity": row["similarity"],
-            "citation": citation
-        })
-
-    return results[:top_k]
+            "metadata": row["metadata"],
+            "similarity": row["similarity"]
+        }
+        for row in rows
+    ]
 
 # ─── WEB SEARCH ────────────────────────────────────────────────────────
 async def serpapi_search(query: str) -> List[Dict]:
@@ -371,197 +350,58 @@ async def process_file_bytes(content: bytes, filename: str) -> str:
     except Exception as e:
         raise ValueError(f"Unable to read {filename}: {e}")
 
-# ─── UNIFIED LLM CALL with OpenRouter + Redis Cache ──────────────────
+# ─── LLM CALL (unified) ──────────────────────────────────────────────
 async def call_llm(
     system_prompt: str,
     user_message: str,
-    provider: str = "openrouter",
+    provider: str = "groq",
     temperature: float = 0.7,
-    history: List[Dict] = None,
-    use_cache: bool = True
+    history: List[Dict] = None
 ) -> str:
-    cache_key = None
-    if use_cache and redis_client:
-        content = system_prompt + user_message + (str(history) if history else "")
-        cache_key = f"llm_cache:{hashlib.sha256(content.encode()).hexdigest()}"
-        cached = await redis_client.get(cache_key)
-        if cached:
-            logger.info("✅ Cache hit for LLM call")
-            return cached
-
-    if provider == "openrouter" and OPENROUTER_API_KEY:
-        model = "meta-llama/llama-3-70b-instruct"
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": model,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_message}
-                        ],
-                        "temperature": temperature,
-                        "max_tokens": 4096
-                    }
-                )
-                if resp.status_code == 200:
-                    result = resp.json()["choices"][0]["message"]["content"]
-                    if cache_key and redis_client:
-                        await redis_client.setex(cache_key, 86400, result)
-                    return result
-                else:
-                    logger.error(f"OpenRouter error: {resp.text}")
-        except Exception as e:
-            logger.error(f"OpenRouter failed: {e}")
-
-    # Fallback: Groq
-    if groq_client:
-        try:
-            r = groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ],
-                temperature=temperature,
-                max_tokens=4096
-            )
-            result = r.choices[0].message.content
-            if cache_key and redis_client:
-                await redis_client.setex(cache_key, 86400, result)
-            return result
-        except Exception as e:
-            logger.error(f"Groq fallback failed: {e}")
-
-    # Fallback: OpenAI
-    if openai_client:
-        try:
-            r = openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ],
-                temperature=temperature,
-                max_tokens=4096
-            )
-            result = r.choices[0].message.content
-            if cache_key and redis_client:
-                await redis_client.setex(cache_key, 86400, result)
-            return result
-        except Exception as e:
-            logger.error(f"OpenAI fallback failed: {e}")
-
-    # Fallback: Gemini
-    if gemini_model:
-        try:
-            r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
-            result = r.text
-            if cache_key and redis_client:
-                await redis_client.setex(cache_key, 86400, result)
-            return result
-        except Exception as e:
-            logger.error(f"Gemini fallback failed: {e}")
-
-    return "I'm sorry, but I'm currently unable to process your request. Please try again later."
-
-# ─── USER PROFILE INFERENCE ──────────────────────────────────────────
-async def infer_user_profile(query: str, history: List[Dict] = None) -> Dict[str, str]:
-    """Analyze the user's query to infer role, age_group, expertise, tone."""
-    history_text = ""
-    if history and len(history) > 0:
-        last_three = history[-3:] if len(history) >= 3 else history
-        history_text = "\n".join([f"Q: {h.get('query','')}\nA: {h.get('response','')}" for h in last_three])
-
-    system_prompt = """You are a profile inference engine. Analyze the user's query and infer their profile.
-Return a JSON object with exactly these keys:
-- "role" (string): e.g., lawyer, judge, farmer, child, teenager, student, psychologist, senior_citizen, scientist, general.
-- "age_group" (string): child, teen, adult, senior.
-- "expertise" (string): beginner, intermediate, expert.
-- "tone" (string): professional, simple, playful, compassionate, academic.
-
-Rules:
-- If the query uses legal terms (e.g., IPC, Section, Contract, Act), set role to "lawyer" or "judge".
-- If the query asks about farming, crops, or weather, set role to "farmer".
-- If the query is very simple or uses childish language, set age_group to "child" and tone to "playful".
-- If the query asks about mental health, psychology, or emotions, set role to "psychologist" or "student".
-- If the query is highly technical (quantum physics, advanced math), set expertise to "expert".
-- If the query is about retirement, pension, or health, set age_group to "senior" and tone to "compassionate".
-- If unsure, use "general", "adult", "intermediate", "professional".
-
-Respond with ONLY the JSON object. No extra text.
-"""
-    user_message = f"Query: {query}\n\nHistory: {history_text if history_text else 'None'}"
+    """
+    Unified LLM caller with provider fallback.
+    provider: "groq" | "openai" | "gemini"
+    """
+    # Map provider to model name
+    if provider == "groq":
+        model = "llama-3.3-70b-versatile"
+        client = groq_client
+    elif provider == "openai":
+        model = "gpt-4o-mini"   # or "gpt-4o" if you have access
+        client = openai_client
+    elif provider == "gemini":
+        model = "gemini-pro"
+        client = gemini_model  # special case
+    else:
+        # fallback
+        model = "llama-3.3-70b-versatile"
+        client = groq_client
 
     try:
-        response_text = await call_llm(
-            system_prompt=system_prompt,
-            user_message=user_message,
-            provider="groq",  # cheapest/fastest
-            temperature=0.2,
-            use_cache=False
-        )
-        match = re.search(r'\{.*\}', response_text, re.DOTALL)
-        if match:
-            profile = json.loads(match.group())
-            default = {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
-            for key in default:
-                if key not in profile:
-                    profile[key] = default[key]
-            return profile
+        if provider == "gemini" and gemini_model:
+            # Gemini uses a different API
+            r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
+            return r.text
+        elif client:
+            # Groq / OpenAI (same interface)
+            r = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": system_prompt},
+                          {"role": "user", "content": user_message}],
+                temperature=temperature,
+                max_tokens=4096
+            )
+            return r.choices[0].message.content
+        else:
+            raise Exception("No valid LLM client available")
     except Exception as e:
-        logger.error(f"Profile inference failed: {e}")
-
-    return {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
-
-def build_adaptive_system_prompt(profile: Dict[str, str], base_prompt: str = SYSTEM_BASE) -> str:
-    """Modify the base system prompt based on inferred profile."""
-    role = profile.get("role", "general")
-    age_group = profile.get("age_group", "adult")
-    expertise = profile.get("expertise", "intermediate")
-    tone = profile.get("tone", "professional")
-
-    tone_instructions = {
-        "professional": "Use formal, precise language. Cite sources clearly.",
-        "simple": "Use very simple words. Avoid jargon. Short sentences.",
-        "playful": "Be fun, engaging, and use analogies. Make it enjoyable.",
-        "compassionate": "Be warm, patient, and reassuring. Repeat key points."
-    }
-    tone_text = tone_instructions.get(tone, "Use professional language.")
-
-    expertise_text = {
-        "beginner": "Explain concepts from the ground up. Avoid assumptions of prior knowledge.",
-        "intermediate": "Provide balanced detail – not too basic, not too advanced.",
-        "expert": "Use technical terms freely. Provide deep, rigorous analysis."
-    }.get(expertise, "Provide balanced detail.")
-
-    age_text = {
-        "child": "The user is a child. Use very simple, playful language. No scary terms.",
-        "teen": "The user is a teenager. Be respectful and engaging, avoid overly complex jargon.",
-        "adult": "Standard adult communication.",
-        "senior": "The user is elderly. Be very clear, speak slowly (if voice), repeat key information."
-    }.get(age_group, "Standard adult communication.")
-
-    adaptive_prompt = f"""{base_prompt}
-
-ADAPTIVE INSTRUCTIONS (based on inferred user profile):
-- Inferred Role: {role}
-- Inferred Age Group: {age_group}
-- Inferred Expertise: {expertise}
-- Desired Tone: {tone}
-
-{age_text}
-{expertise_text}
-{tone_text}
-
-Always maintain your core values: accuracy, citation, and transparency. Adjust only the delivery.
-"""
-    return adaptive_prompt
+        logger.error(f"LLM call failed for provider {provider}: {e}")
+        # Fallback: try groq if not already
+        if provider != "groq" and groq_client:
+            logger.info("Falling back to groq")
+            return await call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
+        # Final fallback
+        return f"Error: {e}"
 
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
@@ -601,25 +441,6 @@ def _build_context(mem: List[dict]) -> str:
     ctx = "\n".join(f"[Prev Q] {x['q']}\n[Prev A] {x['a']}" for x in mem[-3:])
     return f"═══ RECENT CONTEXT ═══\n{ctx}\n═════════════════\nCurrent query:\n"
 
-async def _get_profile(uid: int) -> dict:
-    u = await database.fetch_one(users.select().where(users.c.id == uid))
-    if not u:
-        return {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
-    p = dict(u).get("profile") or {}
-    if isinstance(p, str):
-        try:
-            p = json.loads(p)
-        except:
-            p = {}
-    default = {"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}
-    for key in default:
-        if key not in p:
-            p[key] = default[key]
-    return p
-
-async def _update_profile(uid: int, profile: dict):
-    await database.execute(users.update().where(users.c.id == uid).values(profile=json.dumps(profile)))
-
 # ─── STREAMING REPLAY ──────────────────────────────────────────────
 async def replay_stream(answer: str, confidence: str, sources: List[str], metadata: dict):
     for i in range(0, len(answer), 6):
@@ -634,7 +455,6 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
         "domain": metadata.get("domain", "general"),
         "persona": metadata.get("persona", ""),
         "provider": metadata.get("provider", ""),
-        "inferred_profile": metadata.get("inferred_profile", {})
     }
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
@@ -674,7 +494,7 @@ async def run_ingestion_job():
         inserted = 0
         for idx, chunk in enumerate(tqdm(chunks, desc=f"Embedding {source}")):
             emb = embedding_model.encode(chunk).tolist()
-            emb_str = json.dumps(emb)
+            emb_str = json.dumps(emb)   # convert to string for pgvector
             meta = {"source": source, "chunk_index": idx, "total_chunks": len(chunks)}
             await conn.execute(
                 "INSERT INTO knowledge_chunks (content, metadata, embedding) VALUES ($1, $2, $3)",
@@ -701,38 +521,46 @@ async def run_ingestion_job():
         await conn.close()
 
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pg_pool
 
+    # 1. Connect to DB and create tables / test user
     await database.connect()
     await _create_tables()
     await _ensure_test_user()
 
+    # 2. Create PostgreSQL connection pool
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
+    # 3. Instantiate AtmaRouter with the pool and required callbacks
     app.state.atma = AtmaRouter(
         pg_pool,
-        fetch_relevant_chunks_func=fetch_relevant_chunks,
-        serpapi_search_func=serpapi_search,
-        call_llm_func=call_llm
+        fetch_relevant_chunks_func=fetch_relevant_chunks,   # defined above
+        serpapi_search_func=serpapi_search,                 # defined above
+        call_llm_func=call_llm                              # defined above
     )
 
+    # 4. Start background scheduler
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.start()
-    logger.info("🔱 LexSarthi v10 — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v9.1 with Atma — Ready for 1M users.")
 
+    # 5. Auto‑ingestion on first startup (if knowledge_chunks is empty)
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
         if count == 0:
-            logger.info("📚 knowledge_chunks empty – running auto‑ingestion...")
+            logger.info("📚 knowledge_chunks is empty – running auto‑ingestion...")
             await run_ingestion_job()
         else:
             logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping.")
 
+    # 6. Yield control to the application
     yield
 
+    # 7. Cleanup on shutdown
     await database.disconnect()
     await pg_pool.close()
 
@@ -755,7 +583,6 @@ async def _create_tables():
             updated_at TIMESTAMP DEFAULT NOW(),
             api_key VARCHAR(64) UNIQUE,
             preferences JSONB,
-            profile JSONB DEFAULT '{"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}',
             memory JSONB DEFAULT '[]'
         )""",
         """CREATE TABLE IF NOT EXISTS queries (
@@ -790,6 +617,7 @@ async def _create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             expires_at TIMESTAMP
         )""",
+        # ─── New pgvector tables with vector(384) ────────────────────────
         """CREATE TABLE IF NOT EXISTS knowledge_chunks (
             id SERIAL PRIMARY KEY,
             content TEXT NOT NULL,
@@ -818,12 +646,6 @@ async def _create_tables():
     for stmt in ddl:
         await database.execute(stmt)
 
-    # Ensure profile column exists (in case table was created without it)
-    try:
-        await database.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile JSONB DEFAULT '{\"role\":\"general\",\"age_group\":\"adult\",\"expertise\":\"intermediate\",\"tone\":\"professional\"}'")
-    except Exception as e:
-        logger.warning(f"Could not add profile column: {e}")
-
 async def _ensure_test_user():
     existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
     if not existing:
@@ -834,7 +656,6 @@ async def _ensure_test_user():
             full_name="Counsel User",
             tier="enterprise",
             api_key="".join(random.choices(string.ascii_letters + string.digits, k=32)),
-            profile=json.dumps({"role":"lawyer","age_group":"adult","expertise":"expert","tone":"professional"}),
             memory=json.dumps([])
         ))
         logger.info("✅ Seeded test user 'counsel'.")
@@ -867,7 +688,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ─── ROUTES ──────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "version": "10-atma-openrouter-adaptive", "agents": 250, "verifiers": 10}
+    return {"status": "healthy", "version": "9.1-atma", "agents": 250, "verifiers": 10}
 
 @app.post("/auth/login")
 @limiter.limit("10/minute")
@@ -893,7 +714,6 @@ async def register(request: Request, body: UserCreate):
         full_name=body.full_name,
         tier="free",
         api_key=ak,
-        profile=json.dumps({"role":"general","age_group":"adult","expertise":"intermediate","tone":"professional"}),
         memory=json.dumps([])
     ).returning(users.c.id))
     tok = create_access_token({"sub": str(uid)})
@@ -922,7 +742,7 @@ async def ask(
     query: str = Form(...),
     files: Optional[List[UploadFile]] = File(None),
     search_web: str = Form("off"),
-    model: str = Form("openrouter"),
+    model: str = Form("llama-3.3-70b-versatile"),
     lang: str = Form("en"),
     oracle_mode: str = Form("false"),
     cu: dict = Depends(get_current_user)
@@ -945,47 +765,25 @@ async def ask(
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
 
-    # Truncate to avoid token limits
-    if len(combined_query) > 2000:
-        combined_query = combined_query[:2000] + "\n[...truncated for token limit]"
-
     await _incr_query(cu["id"])
 
-    # Get user's memory
     mem = await _get_memory(cu["id"])
     if mem:
         combined_query = _build_context(mem) + combined_query
 
-    # 1. Infer user profile from the query and history
-    profile = await infer_user_profile(combined_query, history=mem)
-    # Save profile to user's preferences (optional)
-    await _update_profile(cu["id"], profile)
-
-    # 2. Build adaptive system prompt
-    adaptive_system_prompt = build_adaptive_system_prompt(profile)
-
-    # 3. Inject profile into query for AtmaRouter (or pass as custom_system_prompt)
-    # We'll use the adaptive prompt by passing it to AtmaRouter's new parameter
     atma = app.state.atma
-    result = await atma.run(
-        query=combined_query,
-        history=None,
-        files=None,
-        provider=model,
-        custom_system_prompt=adaptive_system_prompt  # AtmaRouter must accept this
-    )
+    result = await atma.run(query=combined_query, history=None, files=None)
 
-    answer = result.get("answer", "")
-    confidence = result.get("confidence", "MEDIUM")
-    sources = result.get("sources", [])
+    answer = result["answer"]
+    confidence = result["confidence"]
+    sources = result["sources"]
     metadata = {
         "domain": result.get("domain", "general"),
         "persona": result.get("persona", ""),
-        "provider": model,
-        "jury_verifiers": result.get("jury_verifiers", []),
-        "jury_confidences": result.get("jury_confidences", {}),
-        "judge": "Shakti",
-        "inferred_profile": profile
+        "provider": result.get("provider", ""),
+        "jury_verifiers": [],
+        "jury_confidences": {},
+        "judge": "Shakti"
     }
 
     await _update_memory(cu["id"], query, answer)
@@ -1006,7 +804,7 @@ async def ask(
 
 # ─── BULK UPLOAD ──────────────────────────────────────────────────────
 @app.post("/bulk-upload")
-async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("openrouter"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
+async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
     if cu["tier"] not in ("premium", "enterprise", "lifetime"):
         raise HTTPException(status_code=403, detail="Premium+ required")
     jid = str(uuid.uuid4())
