@@ -447,10 +447,9 @@ async def get_cached_response(query: str, model: str, oracle: bool) -> Optional[
         return None
     key = _get_cache_key(query, model, oracle)
     try:
-        async with redis_pool.connection() as conn:
-            data = await conn.get(key)
-            if data:
-                return json.loads(data)
+        data = await redis_pool.get(key)
+        if data:
+            return json.loads(data)
     except Exception as e:
         logger.warning(f"Redis get error: {e}")
     return None
@@ -460,8 +459,7 @@ async def set_cached_response(query: str, model: str, oracle: bool, response_dat
         return
     key = _get_cache_key(query, model, oracle)
     try:
-        async with redis_pool.connection() as conn:
-            await conn.setex(key, ttl_seconds, json.dumps(response_data))
+        await redis_pool.setex(key, ttl_seconds, json.dumps(response_data))
     except Exception as e:
         logger.warning(f"Redis set error: {e}")
 
@@ -614,23 +612,25 @@ async def lifespan(app: FastAPI):
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
     # ─── Redis (optional) ──────────────────────────────────────────────────
-    if REDIS_URL:
-        try:
-            # Convert to rediss if needed
-            clean_url = REDIS_URL
-            if "redis-cli --tls -u " in clean_url:
-                clean_url = clean_url.split("redis-cli --tls -u ")[-1]
-            if "?ssl=true" in clean_url and clean_url.startswith("redis://"):
-                clean_url = clean_url.replace("redis://", "rediss://", 1)
-            redis_pool = ConnectionPool.from_url(clean_url, max_connections=10)
-            async with redis_pool.connection() as conn:
-                await conn.ping()
-            logger.info("✅ Redis connected successfully")
-        except Exception as e:
-            logger.error(f"❌ Redis connection failed: {e}")
-            redis_pool = None
-    else:
-        logger.warning("⚠️ REDIS_URL not set – caching disabled")
+if REDIS_URL:
+    try:
+        clean_url = REDIS_URL
+        if "redis-cli --tls -u " in clean_url:
+            clean_url = clean_url.split("redis-cli --tls -u ")[-1]
+        # Upstash uses TLS, so convert redis:// to rediss:// if needed
+        if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
+            clean_url = clean_url.replace("redis://", "rediss://", 1)
+        # Create Redis client directly (async)
+        redis_client = redis.from_url(clean_url, decode_responses=True, max_connections=10)
+        await redis_client.ping()
+        redis_pool = redis_client   # store client reference
+        logger.info("✅ Redis connected successfully")
+    except Exception as e:
+        logger.error(f"❌ Redis connection failed: {e}")
+        redis_pool = None
+else:
+    redis_pool = None
+    logger.warning("⚠️ REDIS_URL not set – caching disabled")
 
     app.state.atma = AtmaRouter(
         pg_pool,
