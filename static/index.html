@@ -752,17 +752,64 @@
       a.click();
     }
     function downloadPDF() {
-      const el = document.getElementById('chat');
-      if (!el.innerText.trim()) { alert('Nothing to export'); return; }
-      setStatus('Generating PDF...');
-      html2pdf().set({
-        margin: 0.5,
-        filename: 'lexsarthi.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      }).from(el).save().then(() => setStatus('✅ PDF ready')).catch(() => setStatus('❌ PDF failed'));
+  const chatDiv = document.getElementById('chat');
+  // Get all text content, but preserve line breaks better
+  let textContent = chatDiv.innerText || '';
+  
+  if (!textContent.trim()) {
+    alert('Nothing to export.');
+    return;
+  }
+
+  setStatus('Generating PDF...');
+
+  // Import jsPDF directly (ensure you have it loaded in HTML)
+  // Since we already load html2pdf, jsPDF is available via window.jspdf
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'pt', 'a4'); // Portrait, points, A4
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 40;
+  const maxWidth = pageWidth - (margin * 2);
+  let currentY = margin;
+
+  // Add a simple header
+  doc.setFontSize(18);
+  doc.setTextColor(212, 175, 55); // Gold color
+  doc.setFont('helvetica', 'bold');
+  doc.text('LEXSARTHI - VERDICT ENGINE', margin, currentY);
+  currentY += 20;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(150, 150, 150);
+  doc.setFont('helvetica', 'italic');
+  doc.text(`Generated: ${new Date().toLocaleString()}`, margin, currentY);
+  currentY += 30;
+
+  // Set main text style
+  doc.setFontSize(11);
+  doc.setTextColor(20, 20, 20); // Black for readability
+
+  // Split text into lines
+  const lines = doc.splitTextToSize(textContent, maxWidth);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Check if we need a new page
+    if (currentY + 20 > pageHeight - margin) {
+      doc.addPage();
+      currentY = margin;
     }
+    
+    doc.text(line, margin, currentY);
+    currentY += 16; // Line height
+  }
+
+  // Save the PDF
+  doc.save('lexsarthi.pdf');
+  setStatus('✅ PDF ready (Text-based, clear)');
+}
     function shareResponse() {
       const t = document.getElementById('chat').innerText || '';
       if (!t.trim()) { alert('Nothing to share.'); return; }
