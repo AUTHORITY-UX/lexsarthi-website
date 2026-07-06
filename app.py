@@ -1,19 +1,8 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics
-# Owned by: THE ADVOCACY – A LAW FIRM
-# Proprietor: Upmanyu Kumar
-# UDYAM: UP-09-0043193
-# PAN: CHFPK3464A
-#
-# This software and all associated materials are proprietary and confidential.
-# Unauthorised copying, distribution, modification, or use of this software
-# without explicit written permission from THE ADVOCACY is strictly prohibited.
-#
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics (Redis optional)
 # =============================================================================
-
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -55,7 +44,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 import razorpay
 
-# ─── REDIS ──────────────────────────────────────────────────────────────
+# ─── REDIS (optional) ──────────────────────────────────────────────────
 import redis.asyncio as redis
 from redis.asyncio import ConnectionPool
 
@@ -69,7 +58,7 @@ logger = logging.getLogger("lexsarthi")
 
 # ─── ENV ──────────────────────────────────────────────────────────────────
 DATABASE_URL       = os.getenv("DATABASE_URL")
-REDIS_URL          = os.getenv("REDIS_URL", None)
+REDIS_URL          = os.getenv("REDIS_URL", None)   # optional – fallback to in‑memory for caching
 JWT_SECRET         = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM      = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
@@ -216,13 +205,9 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-# ─── RATE LIMITER (Redis‑backed if available) ──────────────────────────
-if REDIS_URL:
-    limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_URL)
-    logger.info("✅ Redis rate limiter enabled")
-else:
-    limiter = Limiter(key_func=get_remote_address)
-    logger.warning("⚠️ REDIS_URL not set – using in‑memory rate limiter")
+# ─── RATE LIMITER (in‑memory to avoid Redis dependency) ──────────────────
+limiter = Limiter(key_func=get_remote_address)
+logger.info("✅ Rate limiter using in‑memory storage")
 
 # ─── SYSTEM PROMPT ──────────────────────────────────────────────────────
 SYSTEM_BASE = """You are LexSarthi, the Universal Default OS for Human Knowledge — 100% True. You are powered by 250 specialist personas, a jury of 3 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, compassionate."""
@@ -303,7 +288,7 @@ def route_agent(query: str, oracle: bool) -> str:
             best_id = agent["id"]
     return best_id if best_score >= 2 else "general"
 
-# ─── RAG (pgvector) – with citation ─────────────────────────────────────
+# ─── RAG (pgvector) – FIXED ─────────────────────────────────────────────
 async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
     query_embedding = embedding_model.encode(query).tolist()
     query_embedding_str = json.dumps(query_embedding)
@@ -338,7 +323,6 @@ async def serpapi_search(query: str, unrestricted: bool = False) -> List[Dict]:
     if not SERPAPI_KEY:
         return []
     params = {"q": query, "api_key": SERPAPI_KEY, "num": 5}
-    # If not unrestricted, restrict to trusted domains
     if not unrestricted:
         domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "")
         if domains:
@@ -579,13 +563,11 @@ async def _check_domain_health(domain: str) -> dict:
         "ssl_expiry": None,
         "dns_resolves": False
     }
-    # DNS
     try:
         socket.gethostbyname(domain)
         result["dns_resolves"] = True
     except:
         pass
-    # HTTP
     try:
         start = datetime.now()
         async with httpx.AsyncClient() as client:
@@ -594,7 +576,6 @@ async def _check_domain_health(domain: str) -> dict:
         result["response_time"] = (datetime.now() - start).total_seconds()
     except:
         pass
-    # SSL (simplified)
     try:
         context = ssl.create_default_context()
         with context.wrap_socket(socket.socket(), server_hostname=domain) as sock:
@@ -632,9 +613,16 @@ async def lifespan(app: FastAPI):
 
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
+    # ─── Redis (optional) ──────────────────────────────────────────────────
     if REDIS_URL:
         try:
-            redis_pool = ConnectionPool.from_url(REDIS_URL, max_connections=10)
+            # Convert to rediss if needed
+            clean_url = REDIS_URL
+            if "redis-cli --tls -u " in clean_url:
+                clean_url = clean_url.split("redis-cli --tls -u ")[-1]
+            if "?ssl=true" in clean_url and clean_url.startswith("redis://"):
+                clean_url = clean_url.replace("redis://", "rediss://", 1)
+            redis_pool = ConnectionPool.from_url(clean_url, max_connections=10)
             async with redis_pool.connection() as conn:
                 await conn.ping()
             logger.info("✅ Redis connected successfully")
@@ -655,7 +643,7 @@ async def lifespan(app: FastAPI):
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.add_job(_update_domain_analytics, IntervalTrigger(hours=1))
     sched.start()
-    logger.info("🔱 LexSarthi v10.0 with Atma + Redis + Domain Analytics — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v10.0 with Atma + Domain Analytics — Ready for 1M users.")
 
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
@@ -750,7 +738,6 @@ async def _create_tables():
         )""",
         """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp 
             ON deliberations(timestamp)""",
-        # Domain analytics table
         """CREATE TABLE IF NOT EXISTS domain_analytics (
             id SERIAL PRIMARY KEY,
             domain VARCHAR(255) UNIQUE NOT NULL,
@@ -884,7 +871,7 @@ async def ask(
     model: str = Form("llama-3.3-70b-versatile"),
     lang: str = Form("en"),
     oracle_mode: str = Form("false"),
-    unrestricted: str = Form("false"),   # new toggle
+    unrestricted: str = Form("false"),
     cu: dict = Depends(get_current_user)
 ):
     if not await _check_limit(cu):
@@ -913,7 +900,6 @@ async def ask(
     oracle = oracle_mode.lower() == "true"
     unrestricted_bool = unrestricted.lower() == "true"
 
-    # Cache check only if not oracle and no files
     cache_hit = None
     if not files and not oracle:
         cache_hit = await get_cached_response(combined_query, model, oracle)
@@ -938,7 +924,6 @@ async def ask(
         )
 
     atma = app.state.atma
-    # Pass unrestricted flag to router (will be used in serpapi_search)
     result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
 
     answer = result["answer"]
