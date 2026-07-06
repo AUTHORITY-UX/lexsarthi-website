@@ -1,8 +1,7 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10.0 – Self‑verifying AI OS with Domain Analytics, Auto‑Blog,
-# Enterprise Customisation & Sovereign AI
+# LEXSARTHI v10.0 – Complete Enterprise Edition
 # =============================================================================
 
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket, hashlib
@@ -26,7 +25,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 import asyncpg
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select, UniqueConstraint
 
 import jwt
 from passlib.context import CryptContext
@@ -45,9 +44,14 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 
 import razorpay
-import feedparser  # Will be used if installed; fallback provided if missing
 
-# ─── REDIS (optional) ──────────────────────────────────────────────────
+try:
+    import feedparser
+    FEEDPARSER_AVAILABLE = True
+except ImportError:
+    FEEDPARSER_AVAILABLE = False
+
+# ─── REDIS ──────────────────────────────────────────────────────────────
 import redis.asyncio as redis
 from redis.asyncio import ConnectionPool
 
@@ -92,7 +96,7 @@ database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
 users = Table("users", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("email", String(255), unique=True, index=True),
     Column("username", String(100), unique=True),
     Column("password_hash", String(255)),
@@ -109,7 +113,7 @@ users = Table("users", metadata,
     Column("memory", JSON, server_default="[]"),
 )
 queries = Table("queries", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("user_id", Integer, index=True),
     Column("query", Text),
     Column("response", Text),
@@ -118,7 +122,7 @@ queries = Table("queries", metadata,
     Column("expires_at", DateTime),
 )
 payments = Table("payments", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("user_id", Integer),
     Column("razorpay_order_id", String(100)),
     Column("razorpay_payment_id", String(100), nullable=True),
@@ -130,7 +134,7 @@ payments = Table("payments", metadata,
     Column("created_at", DateTime, server_default=func.now()),
 )
 bulk_jobs = Table("bulk_jobs", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("user_id", Integer),
     Column("job_id", String(64), unique=True, index=True),
     Column("status", String(20), server_default="pending"),
@@ -140,9 +144,8 @@ bulk_jobs = Table("bulk_jobs", metadata,
     Column("created_at", DateTime, server_default=func.now()),
     Column("expires_at", DateTime),
 )
-# ─── Domain Analytics Table ────────────────────────────────────────────
 domain_analytics = Table("domain_analytics", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("domain", String(255), unique=True),
     Column("status_code", Integer, nullable=True),
     Column("response_time", Float, nullable=True),
@@ -151,32 +154,29 @@ domain_analytics = Table("domain_analytics", metadata,
     Column("cloudflare_analytics", JSON, nullable=True),
     Column("last_checked", DateTime, server_default=func.now()),
 )
-# ─── Blog Posts Table ────────────────────────────────────────────────────
 blog_posts = Table("blog_posts", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("title", Text),
     Column("content", Text),
     Column("source_url", Text),
     Column("created_at", DateTime, server_default=func.now()),
     Column("published", Boolean, server_default="true"),
 )
-# ─── Phase 1: Leads & Demo Requests ─────────────────────────────────────
 leads = Table("leads", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("email", String(255), unique=True),
     Column("created_at", DateTime, server_default=func.now()),
 )
 demo_requests = Table("demo_requests", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("name", String(255)),
     Column("email", String(255)),
     Column("company", String(255)),
     Column("phone", String(50)),
     Column("created_at", DateTime, server_default=func.now()),
 )
-# ─── Phase 3: API Keys ──────────────────────────────────────────────────
 api_keys = Table("api_keys", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("user_id", Integer, index=True),
     Column("key", String(64), unique=True),
     Column("name", String(255)),
@@ -186,9 +186,8 @@ api_keys = Table("api_keys", metadata,
     Column("expires_at", DateTime, nullable=True),
     Column("created_at", DateTime, server_default=func.now()),
 )
-# ─── Phase 4: Custom Personas (Enterprise) ─────────────────────────────
 custom_personas = Table("custom_personas", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("user_id", Integer, index=True),
     Column("name", String(255)),
     Column("description", Text),
@@ -199,9 +198,8 @@ custom_personas = Table("custom_personas", metadata,
     Column("created_at", DateTime, server_default=func.now()),
     Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
 )
-# ─── Phase 4: Fine‑tuning Data ─────────────────────────────────────────
 fine_tune_data = Table("fine_tune_data", metadata,
-    Column("id", Serial, primary_key=True),
+    Column("id", Integer, primary_key=True),   # FIXED: was Serial
     Column("query", Text),
     Column("initial_answer", Text),
     Column("final_answer", Text),
@@ -212,9 +210,8 @@ fine_tune_data = Table("fine_tune_data", metadata,
     Column("used_for_training", Boolean, server_default="false"),
     Column("created_at", DateTime, server_default=func.now()),
 )
-# ─── Phase 4: Enterprise Tenants ────────────────────────────────────────
 enterprise_tenants = Table("enterprise_tenants", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("name", String(255)),
     Column("subdomain", String(100), unique=True),
     Column("api_key", String(64), unique=True),
@@ -225,26 +222,31 @@ enterprise_tenants = Table("enterprise_tenants", metadata,
     Column("is_active", Boolean, server_default="true"),
     Column("created_at", DateTime, server_default=func.now()),
 )
-# ─── Phase 4: Localisation ─────────────────────────────────────────────
 localisations = Table("localisations", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("id", Integer, primary_key=True),
     Column("locale", String(10)),
     Column("key", String(255)),
     Column("value", Text),
     UniqueConstraint("locale", "key", name="uq_locale_key"),
 )
+# ─── Drafts (Human‑in‑the‑Loop) ──────────────────────────────────────
+drafts = Table("drafts", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, index=True),
+    Column("title", Text),
+    Column("content", Text),
+    Column("original_ai_content", Text),
+    Column("status", String(20), server_default="draft"),  # draft, pending_review, approved, rejected, revised
+    Column("feedback", Text, nullable=True),
+    Column("template_id", String(50), nullable=True),
+    Column("metadata", JSON, nullable=True),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
+)
 
 # Global pools
 pg_pool: Optional[asyncpg.Pool] = None
 redis_pool: Optional[ConnectionPool] = None
-
-# ─── FEEDPARSER FALLBACK ────────────────────────────────────────────────
-try:
-    import feedparser
-    FEEDPARSER_AVAILABLE = True
-except ImportError:
-    FEEDPARSER_AVAILABLE = False
-    logger.warning("⚠️ feedparser not installed – RSS features disabled.")
 
 # ─── PYDANTIC MODELS ────────────────────────────────────────────────────
 class UserCreate(BaseModel):
@@ -459,7 +461,6 @@ async def call_sovereign_llm(
     model: str = "meta-llama/llama-3.1-70b-instruct",
     temperature: float = 0.7
 ) -> str:
-    """Call open‑source LLM via OpenRouter (sovereign AI fallback)."""
     if not OPENROUTER_API_KEY:
         return None
     try:
@@ -500,15 +501,13 @@ async def call_llm(
     temperature: float = 0.7,
     history: List[Dict] = None
 ) -> str:
-    # Try sovereign first if requested
     if provider == "sovereign" and OPENROUTER_API_KEY:
         result = await call_sovereign_llm(system_prompt, user_message)
         if result:
             return result
-        # Fallback to groq if sovereign fails
         provider = "groq"
         logger.info("Falling back to groq after sovereign failure.")
-    
+
     if provider == "groq":
         model = "llama-3.3-70b-versatile"
         client = groq_client
@@ -857,16 +856,13 @@ async def _daily_news_pipeline():
     for article in top_articles:
         post_content = await _generate_post(article)
         posts.append({"article": article, "post": post_content})
-    # Save to blog and publish to LinkedIn
     for post in posts:
-        # Save to filesystem
         filename = f"blog/post_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         os.makedirs("blog", exist_ok=True)
         with open(filename, "w") as f:
             f.write(f"# {post['article']['title']}\n\n")
             f.write(f"*Source: {post['article']['link']}*\n\n")
             f.write(post['post'])
-        # Save to DB
         try:
             await database.execute(
                 "INSERT INTO blog_posts (title, content, source_url, created_at) VALUES ($1, $2, $3, NOW())",
@@ -874,13 +870,11 @@ async def _daily_news_pipeline():
             )
         except Exception as e:
             logger.error(f"DB insert error: {e}")
-        # Post to LinkedIn
         await _post_to_linkedin(post['post'])
     logger.info(f"✅ Published {len(posts)} posts to blog and LinkedIn.")
 
 # ─── SELF‑IMPROVEMENT ──────────────────────────────────────────────────
 async def _analyse_and_improve():
-    """Analyse low‑confidence deliberations and prepare fine‑tuning data."""
     logger.info("🔍 Analysing deliberations for self‑improvement...")
     rows = await database.fetch_all("""
         SELECT id, query, final_answer, confidence, verifier_results
@@ -925,7 +919,6 @@ async def lifespan(app: FastAPI):
 
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
-    # ─── Redis (optional) ──────────────────────────────────────────────────
     if REDIS_URL:
         try:
             clean_url = REDIS_URL
@@ -960,7 +953,7 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️ feedparser not installed – daily news pipeline disabled.")
     sched.add_job(_analyse_and_improve, IntervalTrigger(hours=24))
     sched.start()
-    logger.info("🔱 LexSarthi v10.0 with Atma + Domain Analytics + Auto‑Blog + Self‑Improvement — Ready for 1M users.")
+    logger.info("🔱 LexSarthi v10.0 – Complete Enterprise Edition Ready.")
 
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
@@ -1139,6 +1132,19 @@ async def _create_tables():
             key VARCHAR(255) NOT NULL,
             value TEXT NOT NULL,
             UNIQUE(locale, key)
+        )""",
+        """CREATE TABLE IF NOT EXISTS drafts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            title TEXT,
+            content TEXT,
+            original_ai_content TEXT,
+            status VARCHAR(20) DEFAULT 'draft',
+            feedback TEXT,
+            template_id VARCHAR(50),
+            metadata JSONB,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
         )"""
     ]
     for stmt in ddl:
@@ -1240,7 +1246,7 @@ async def my_usage(cu: dict = Depends(get_current_user)):
     today = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id == cu["id"], func.date(queries.c.created_at) == func.current_date())) or 0
     return {"total_queries": total, "queries_today": today}
 
-# ─── Domain Analytics Endpoint ──────────────────────────────────────────
+# ─── Domain Analytics ──────────────────────────────────────────────────
 @app.get("/domain-status")
 async def domain_status(domain: str = None):
     if domain:
@@ -1252,13 +1258,12 @@ async def domain_status(domain: str = None):
         rows = await database.fetch_all("SELECT * FROM domain_analytics ORDER BY domain")
         return [dict(r) for r in rows]
 
-# ─── Blog Posts Endpoint ────────────────────────────────────────────────
 @app.get("/blog")
 async def get_blog_posts(limit: int = 10):
     rows = await database.fetch_all("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT $1", limit)
     return [dict(r) for r in rows]
 
-# ─── Phase 1: Lead Capture ─────────────────────────────────────────────
+# ─── Lead Capture ──────────────────────────────────────────────────────
 @app.post("/capture-lead")
 async def capture_lead(email: str = Form(...)):
     try:
@@ -1275,7 +1280,7 @@ async def book_demo(data: dict = Body(...)):
     """, data.get("name"), data.get("email"), data.get("company"), data.get("phone"))
     return {"status": "success"}
 
-# ─── Phase 3: API Keys ──────────────────────────────────────────────────
+# ─── API Keys ──────────────────────────────────────────────────────────
 @app.post("/api-key/generate")
 async def generate_api_key(name: str = Form(...), cu: dict = Depends(get_current_user)):
     key = "".join(random.choices(string.ascii_letters + string.digits, k=32))
@@ -1285,7 +1290,332 @@ async def generate_api_key(name: str = Form(...), cu: dict = Depends(get_current
     """, cu["id"], key, name)
     return {"api_key": key}
 
-# ─── Phase 4: Custom Personas ──────────────────────────────────────────
+# ─── Public API (Marketplace) ──────────────────────────────────────────
+@app.post("/api/v1/ask")
+async def api_ask(
+    request: Request,
+    query: str = Form(...),
+    model: str = Form("llama-3.3-70b-versatile"),
+    search_web: str = Form("on"),
+    x_api_key: str = Header(...)
+):
+    api_key_record = await database.fetch_one("""
+        SELECT user_id, usage_limit, usage_count, is_active, expires_at
+        FROM api_keys
+        WHERE key = $1
+    """, x_api_key)
+    if not api_key_record:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    record = dict(api_key_record)
+    if not record["is_active"]:
+        raise HTTPException(status_code=403, detail="API key is inactive")
+    if record["expires_at"] and record["expires_at"] < datetime.now():
+        raise HTTPException(status_code=403, detail="API key has expired")
+    if record["usage_count"] >= record["usage_limit"]:
+        raise HTTPException(status_code=429, detail="API usage limit exceeded")
+    user = await database.fetch_one(users.select().where(users.c.id == record["user_id"]))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_dict = dict(user)
+    if user_dict["tier"] not in ("premium", "enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="API access requires Premium or Enterprise plan")
+    await database.execute("""
+        UPDATE api_keys 
+        SET usage_count = usage_count + 1 
+        WHERE key = $1
+    """, x_api_key)
+    combined_query = query
+    oracle = False
+    unrestricted = search_web == "on" and "unrestricted" in search_web
+    atma = app.state.atma
+    result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted)
+    await database.execute(
+        queries.insert().values(
+            user_id=record["user_id"],
+            query=combined_query[:8000],
+            response=result["answer"][:16000],
+            metadata={"domain": result.get("domain", "general"), "persona": result.get("persona", ""), "provider": result.get("provider", ""), "api_call": True},
+            expires_at=datetime.now() + timedelta(hours=24)
+        )
+    )
+    return {
+        "status": "success",
+        "answer": result["answer"],
+        "confidence": result["confidence"],
+        "sources": result["sources"],
+        "domain": result.get("domain", "general"),
+        "persona": result.get("persona", ""),
+        "provider": result.get("provider", ""),
+        "jury_verifiers": result.get("jury_verifiers", []),
+        "jury_confidences": result.get("jury_confidences", {})
+    }
+
+@app.get("/api/v1/usage")
+async def api_usage(x_api_key: str = Header(...)):
+    record = await database.fetch_one("""
+        SELECT usage_count, usage_limit, is_active, expires_at
+        FROM api_keys
+        WHERE key = $1
+    """, x_api_key)
+    if not record:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return dict(record)
+
+@app.post("/api/v1/keys")
+async def create_api_key_endpoint(
+    name: str = Form(...),
+    usage_limit: int = Form(1000),
+    cu: dict = Depends(get_current_user)
+):
+    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Premium+ plan required")
+    key = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    await database.execute("""
+        INSERT INTO api_keys (user_id, key, name, usage_limit, is_active)
+        VALUES ($1, $2, $3, $4, TRUE)
+    """, cu["id"], key, name, usage_limit)
+    return {"api_key": key, "usage_limit": usage_limit}
+
+@app.get("/api/v1/keys")
+async def list_api_keys(cu: dict = Depends(get_current_user)):
+    rows = await database.fetch_all("""
+        SELECT key, name, usage_count, usage_limit, is_active, expires_at, created_at
+        FROM api_keys
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+    """, cu["id"])
+    return [dict(r) for r in rows]
+
+@app.delete("/api/v1/keys/{key}")
+async def revoke_api_key(key: str, cu: dict = Depends(get_current_user)):
+    result = await database.execute("""
+        UPDATE api_keys SET is_active = FALSE
+        WHERE key = $1 AND user_id = $2
+    """, key, cu["id"])
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="API key not found")
+    return {"status": "revoked"}
+
+# ─── Templates ──────────────────────────────────────────────────────────
+TEMPLATES = {
+    "demand_letter": {
+        "name": "Demand Letter (Personal Injury)",
+        "fields": [
+            {"key": "client_name", "label": "Client Name", "type": "text"},
+            {"key": "client_address", "label": "Client Address", "type": "text"},
+            {"key": "date_of_accident", "label": "Date of Accident", "type": "date"},
+            {"key": "at_fault_driver", "label": "At-Fault Driver", "type": "text"},
+            {"key": "insurance_company", "label": "Insurance Company", "type": "text"},
+            {"key": "claim_number", "label": "Claim Number", "type": "text"},
+            {"key": "injuries", "label": "Injuries", "type": "text"},
+            {"key": "medical_bills", "label": "Medical Bills ($)", "type": "number"},
+            {"key": "lost_wages", "label": "Lost Wages ($)", "type": "number"},
+        ],
+        "prompt": """
+You are a legal assistant. Draft a professional demand letter based on the following details:
+
+Client: {client_name}
+Address: {client_address}
+Date of Accident: {date_of_accident}
+At-Fault Driver: {at_fault_driver}
+Insurance Company: {insurance_company}
+Claim Number: {claim_number}
+Injuries: {injuries}
+Medical Bills: ${medical_bills}
+Lost Wages: ${lost_wages}
+
+Format as a formal demand letter to the insurance company. Include heading, accident description, injuries, damages, settlement demand, enclosures, and closing.
+"""
+    },
+    "nda": {
+        "name": "Mutual Non-Disclosure Agreement",
+        "fields": [
+            {"key": "party_a", "label": "Party A", "type": "text"},
+            {"key": "party_b", "label": "Party B", "type": "text"},
+            {"key": "purpose", "label": "Purpose of Disclosure", "type": "text"},
+            {"key": "term", "label": "Term (months)", "type": "number"},
+        ],
+        "prompt": """
+Draft a Mutual Non-Disclosure Agreement (NDA) between {party_a} and {party_b} for the purpose of {purpose}. Term: {term} months. Include definitions, obligations, exclusions, term, governing law (India), and signatures.
+"""
+    },
+    "motion_to_modify": {
+        "name": "Motion to Modify Custody",
+        "fields": [
+            {"key": "petitioner", "label": "Petitioner", "type": "text"},
+            {"key": "respondent", "label": "Respondent", "type": "text"},
+            {"key": "case_number", "label": "Case Number", "type": "text"},
+            {"key": "court", "label": "Court", "type": "text"},
+            {"key": "reason", "label": "Reason", "type": "text"},
+            {"key": "child_name", "label": "Child Name", "type": "text"},
+        ],
+        "prompt": """
+Draft a Motion to Modify Custody for {petitioner} vs {respondent}, Case No. {case_number} in {court}. Reason: {reason}. Child: {child_name}. Include caption, current order, change in circumstances, supporting facts, prayer for relief, and signature block.
+"""
+    },
+    "employment_contract": {
+        "name": "Employment Contract",
+        "fields": [
+            {"key": "employer", "label": "Employer", "type": "text"},
+            {"key": "employee", "label": "Employee", "type": "text"},
+            {"key": "position", "label": "Position", "type": "text"},
+            {"key": "salary", "label": "Salary (INR)", "type": "number"},
+            {"key": "start_date", "label": "Start Date", "type": "date"},
+        ],
+        "prompt": """
+Draft an Employment Contract between {employer} and {employee} for the position of {position}. Salary: ₹{salary}. Start Date: {start_date}. Include duties, compensation, benefits, working hours, leave, confidentiality, termination, and governing law (India).
+"""
+    },
+    "contract_review": {
+        "name": "Contract Review Checklist",
+        "fields": [
+            {"key": "contract_type", "label": "Contract Type", "type": "text"},
+            {"key": "party_a", "label": "Party A", "type": "text"},
+            {"key": "party_b", "label": "Party B", "type": "text"},
+            {"key": "key_terms", "label": "Key Terms", "type": "text"},
+        ],
+        "prompt": """
+Provide a contract review and risk assessment for {contract_type} between {party_a} and {party_b}. Key terms: {key_terms}. Include executive summary, clause analysis, suggested amendments, and overall risk rating (HIGH/MEDIUM/LOW).
+"""
+    }
+}
+
+@app.get("/api/templates")
+async def get_templates():
+    return {"templates": [{"id": k, "name": v["name"], "fields": v["fields"]} for k, v in TEMPLATES.items()]}
+
+@app.post("/api/templates/{template_id}/generate")
+async def generate_template_document(
+    template_id: str,
+    data: Dict[str, Any] = Body(...),
+    cu: dict = Depends(get_current_user)
+):
+    if template_id not in TEMPLATES:
+        raise HTTPException(status_code=404, detail="Template not found")
+    template = TEMPLATES[template_id]
+    prompt = template["prompt"].format(**data)
+    system = "You are a professional legal assistant. Draft accurate, well-formatted legal documents."
+    result = await call_llm(system, prompt, provider="groq")
+    await database.execute(
+        queries.insert().values(
+            user_id=cu["id"],
+            query=f"Template: {template['name']}",
+            response=result[:16000],
+            metadata={"template": template_id, "data": data},
+            expires_at=datetime.now() + timedelta(hours=24)
+        )
+    )
+    return {"status": "success", "document": result, "template": template_id, "name": template["name"]}
+
+# ─── Drafts (Human‑in‑the‑Loop) ──────────────────────────────────────
+@app.post("/drafts")
+async def create_draft(
+    title: str = Form(...),
+    content: str = Form(...),
+    template_id: str = Form(""),
+    cu: dict = Depends(get_current_user)
+):
+    draft_id = await database.fetch_val("""
+        INSERT INTO drafts (user_id, title, content, original_ai_content, status, template_id)
+        VALUES ($1, $2, $3, $4, 'pending_review', $5)
+        RETURNING id
+    """, cu["id"], title, content, content, template_id)
+    return {"id": draft_id, "status": "pending_review"}
+
+@app.get("/drafts")
+async def get_drafts(
+    status: Optional[str] = None,
+    cu: dict = Depends(get_current_user)
+):
+    query = "SELECT * FROM drafts WHERE user_id = $1"
+    params = [cu["id"]]
+    if status:
+        query += " AND status = $2"
+        params.append(status)
+    query += " ORDER BY created_at DESC"
+    rows = await database.fetch_all(query, *params)
+    return [dict(r) for r in rows]
+
+@app.get("/drafts/{draft_id}")
+async def get_draft(draft_id: int, cu: dict = Depends(get_current_user)):
+    draft = await database.fetch_one("""
+        SELECT * FROM drafts WHERE id = $1 AND user_id = $2
+    """, draft_id, cu["id"])
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    return dict(draft)
+
+@app.put("/drafts/{draft_id}/approve")
+async def approve_draft(
+    draft_id: int,
+    feedback: str = Form(""),
+    cu: dict = Depends(get_current_user)
+):
+    await database.execute("""
+        UPDATE drafts 
+        SET status = 'approved', 
+            feedback = $3,
+            updated_at = NOW()
+        WHERE id = $1 AND user_id = $2
+    """, draft_id, cu["id"], feedback)
+    return {"status": "approved"}
+
+@app.put("/drafts/{draft_id}/reject")
+async def reject_draft(
+    draft_id: int,
+    reason: str = Form(...),
+    cu: dict = Depends(get_current_user)
+):
+    await database.execute("""
+        UPDATE drafts 
+        SET status = 'rejected', 
+            feedback = $3,
+            updated_at = NOW()
+        WHERE id = $1 AND user_id = $2
+    """, draft_id, cu["id"], reason)
+    return {"status": "rejected", "reason": reason}
+
+@app.put("/drafts/{draft_id}/revise")
+async def revise_draft(
+    draft_id: int,
+    content: str = Form(...),
+    feedback: str = Form(""),
+    cu: dict = Depends(get_current_user)
+):
+    await database.execute("""
+        UPDATE drafts 
+        SET content = $3,
+            original_ai_content = CASE WHEN original_ai_content IS NULL THEN $3 ELSE original_ai_content END,
+            status = 'revised',
+            feedback = $4,
+            updated_at = NOW()
+        WHERE id = $1 AND user_id = $2
+    """, draft_id, cu["id"], content, feedback)
+    return {"status": "revised"}
+
+@app.post("/drafts/{draft_id}/improve")
+async def improve_draft(
+    draft_id: int,
+    instructions: str = Form("Make this more professional and legally precise."),
+    cu: dict = Depends(get_current_user)
+):
+    draft = await database.fetch_one("""
+        SELECT content FROM drafts WHERE id = $1 AND user_id = $2
+    """, draft_id, cu["id"])
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    system = "You are a legal editor. Improve the following text based on the instructions."
+    prompt = f"Original text:\n{draft['content']}\n\nInstructions: {instructions}"
+    improved = await call_llm(system, prompt, provider="groq")
+    await database.execute("""
+        UPDATE drafts 
+        SET content = $3,
+            updated_at = NOW()
+        WHERE id = $1 AND user_id = $2
+    """, draft_id, cu["id"], improved)
+    return {"status": "improved", "original": draft['content'], "improved": improved}
+
+# ─── Enterprise & Admin ──────────────────────────────────────────────
 @app.post("/enterprise/persona")
 async def create_persona(
     name: str = Form(...),
@@ -1330,7 +1660,6 @@ async def create_whitelabel(
     """, name, subdomain, api_key)
     return {"api_key": api_key}
 
-# ─── Admin: Fine‑tune Export ───────────────────────────────────────────
 @app.post("/admin/fine-tune")
 async def admin_fine_tune(secret: str = Form(...)):
     ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
@@ -1342,24 +1671,14 @@ async def admin_fine_tune(secret: str = Form(...)):
     """)
     training_data = []
     for row in rows:
-        training_data.append({
-            "messages": [
-                {"role": "user", "content": row['query']},
-                {"role": "assistant", "content": row['final_answer']}
-            ]
-        })
+        training_data.append({"messages": [{"role": "user", "content": row['query']}, {"role": "assistant", "content": row['final_answer']}]})
     os.makedirs("training_data", exist_ok=True)
     with open("training_data/fine_tune.jsonl", "w") as f:
         for item in training_data:
             f.write(json.dumps(item) + "\n")
     await database.execute("UPDATE fine_tune_data SET used_for_training = TRUE")
-    return {
-        "status": "success",
-        "samples": len(training_data),
-        "file": "training_data/fine_tune.jsonl"
-    }
+    return {"status": "success", "samples": len(training_data), "file": "training_data/fine_tune.jsonl"}
 
-# ─── Admin Analytics ─────────────────────────────────────────────────────
 @app.post("/admin/analytics")
 async def admin_analytics(secret: str = Form(...)):
     ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
@@ -1382,7 +1701,6 @@ async def admin_analytics(secret: str = Form(...)):
         "confidence_distribution": [dict(r) for r in confidence_dist],
     }
 
-# ─── TEST LINKEDIN (remove after testing) ─────────────────────────────
 @app.get("/test-linkedin")
 async def test_linkedin():
     token = os.getenv("LINKEDIN_ACCESS_TOKEN")
@@ -1393,6 +1711,17 @@ async def test_linkedin():
     async with httpx.AsyncClient() as client:
         r = await client.get("https://api.linkedin.com/v2/people/(id:{user_id})", headers=headers)
     return {"status": r.status_code, "response": r.text}
+
+@app.post("/admin/ingest")
+async def admin_ingest(
+    secret: str = Form(...),
+    background_tasks: BackgroundTasks = None
+):
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    background_tasks.add_task(run_ingestion_job)
+    return {"status": "ingestion started in background"}
 
 # ─── /ask ──────────────────────────────────────────────────────────────
 @app.post("/ask")
@@ -1411,7 +1740,6 @@ async def ask(
 ):
     if not await _check_limit(cu):
         raise HTTPException(status_code=429, detail="Free daily limit reached.")
-
     combined_query = query
     if files:
         for file in files:
@@ -1426,16 +1754,12 @@ async def ask(
                     combined_query += f"\n\n═══ DOCUMENT: {file.filename} ═══\n{ft}"
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
-
     await _incr_query(cu["id"])
     mem = await _get_memory(cu["id"])
     if mem:
         combined_query = _build_context(mem) + combined_query
-
     oracle = oracle_mode.lower() == "true"
     unrestricted_bool = unrestricted.lower() == "true"
-
-    # Custom persona
     custom_system = None
     if persona_id:
         persona = await database.fetch_one("""
@@ -1444,11 +1768,9 @@ async def ask(
         """, int(persona_id) if persona_id.isdigit() else 0, cu["id"])
         if persona:
             custom_system = persona['system_prompt']
-
     cache_hit = None
     if not files and not oracle:
         cache_hit = await get_cached_response(combined_query, model, oracle)
-
     if cache_hit:
         answer = cache_hit["answer"]
         confidence = cache_hit["confidence"]
@@ -1467,17 +1789,11 @@ async def ask(
             replay_stream(answer, confidence, sources, metadata),
             media_type="text/event-stream"
         )
-
-    # Build system prompt with custom persona if any
     system_prompt = SYSTEM_BASE
     if custom_system:
         system_prompt = f"{SYSTEM_BASE}\n\nCustom Persona Instructions:\n{custom_system}"
-
     atma = app.state.atma
-    # Note: AtmaRouter currently uses call_llm directly; if we want to use custom prompt, we need to modify AtmaRouter.
-    # For simplicity, we'll just pass it as part of the query for now.
     result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
-
     answer = result["answer"]
     confidence = result["confidence"]
     sources = result["sources"]
@@ -1489,7 +1805,6 @@ async def ask(
         "jury_confidences": result.get("jury_confidences", {}),
         "judge": "Shakti"
     }
-
     if not files and not oracle:
         cache_data = {
             "answer": answer,
@@ -1498,7 +1813,6 @@ async def ask(
             "metadata": metadata
         }
         await set_cached_response(combined_query, model, oracle, cache_data, ttl_seconds=86400)
-
     await _update_memory(cu["id"], query, answer)
     await database.execute(
         queries.insert().values(
@@ -1509,7 +1823,6 @@ async def ask(
             expires_at=datetime.now() + timedelta(hours=24)
         )
     )
-
     return StreamingResponse(
         replay_stream(answer, confidence, sources, metadata),
         media_type="text/event-stream"
@@ -1615,18 +1928,6 @@ async def verify_payment(
         return {"status": "success", "tier": tier}
     except Exception as e:
         raise HTTPException(status_code=400, detail="Verification failed")
-
-# ─── ADMIN INGEST ──────────────────────────────────────────────────────
-@app.post("/admin/ingest")
-async def admin_ingest(
-    secret: str = Form(...),
-    background_tasks: BackgroundTasks = None
-):
-    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
-    if secret != ADMIN_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid secret")
-    background_tasks.add_task(run_ingestion_job)
-    return {"status": "ingestion started in background"}
 
 # ─── STATIC FILES ──────────────────────────────────────────────────────
 if os.path.exists("static"):
