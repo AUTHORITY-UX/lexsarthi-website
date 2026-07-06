@@ -76,7 +76,7 @@
     @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.7; } }
 
     /* ===== LAYOUT ===== */
-    .container { position:relative; z-index:2; max-width:960px; margin:0 auto; padding:0 16px 16px; display:flex; flex-direction:column; min-height:100vh; }
+    .container { position:relative; z-index:2; max-width:960px; margin:0 auto; padding:0 16px 80px 16px; display:flex; flex-direction:column; min-height:100vh; }
 
     /* ===== HEADER ===== */
     .header { background:rgba(20,20,32,0.6); backdrop-filter:blur(18px); border:1px solid var(--border); border-radius:18px; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:12px 0; box-shadow:var(--shadow); }
@@ -97,7 +97,7 @@
     .settings-panel { display:none; position:absolute; top:calc(100% + 8px); right:16px; background:var(--panel-2); border:1px solid var(--border); border-radius:14px; padding:14px; width:230px; z-index:100; box-shadow:0 12px 40px rgba(0,0,0,0.6); backdrop-filter:blur(12px); }
     .settings-panel.open { display:block; }
 
-    /* ===== HERO (MINIMAL) ===== */
+    /* ===== HERO ===== */
     .hero { background:rgba(20,20,32,0.5); backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:24px; padding:20px 24px 16px; margin-bottom:16px; text-align:center; box-shadow:var(--shadow); }
     .hero-tagline { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:800; color:var(--gold); line-height:1.1; text-shadow:0 0 40px rgba(212,175,55,0.2); letter-spacing:1px; }
     .hero-tagline span { color:#fff; background:linear-gradient(135deg,#fff,#d4af37); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
@@ -153,6 +153,9 @@
     .input-tools { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center; }
     .tool-btn { background:transparent; color:var(--gold); border:1px solid var(--border); padding:4px 12px; border-radius:30px; font-size:0.7rem; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; transition:background 0.2s, border-color 0.2s; }
     .tool-btn:hover { background:var(--gold-soft); border-color:var(--gold); }
+    .template-select-wrapper { display:flex; align-items:center; gap:4px; background:transparent; border:1px solid var(--border); border-radius:30px; padding:0 6px; }
+    .template-select-wrapper select { background:transparent; border:none; color:var(--gold); font-family:inherit; font-size:0.7rem; padding:4px 0; outline:none; cursor:pointer; }
+    .template-select-wrapper select option { background:#1a1a2a; color:#f0ede8; }
     .send-btn { margin-left:auto; background:linear-gradient(135deg,#d4af37,#b8901e); color:#1a1a1a; border:none; padding:6px 20px; border-radius:30px; font-weight:700; cursor:pointer; font-size:0.8rem; transition:transform 0.15s, box-shadow 0.2s; box-shadow:0 4px 12px rgba(212,175,55,0.2); }
     .send-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(212,175,55,0.3); }
     .file-preview { display:none; margin-top:6px; padding:6px 12px; background:var(--gold-soft); border:1px solid var(--border); border-radius:30px; font-size:0.7rem; color:var(--gold); align-items:center; justify-content:space-between; }
@@ -216,7 +219,72 @@
     .blog-gen-box .blog-input-row .blog-input:focus { border-color:var(--gold); }
     .blog-gen-box .blog-output { margin-top:10px; padding:12px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border); max-height:400px; overflow-y:auto; display:none; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; color:var(--text); }
 
-    @media (max-width:520px) { .hero-tagline { font-size:1.8rem; } .btn-hero { padding:10px 24px; font-size:0.9rem; } .brand-name { font-size:1.3rem; } .domain-table { font-size:0.65rem; } .modal-content { padding:16px; } .blog-gen-box .blog-input-row { flex-direction:column; align-items:stretch; } }
+    /* ===== MOBILE BOTTOM NAV ===== */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20,20,32,0.9);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 6px 0 env(safe-area-inset-bottom, 6px) 0;
+      z-index: 100;
+      justify-content: space-around;
+    }
+    .mobile-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.5rem;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+    .mobile-nav-item i { font-size: 1.2rem; margin-bottom: 2px; }
+    .mobile-nav-item.active { color: var(--gold); }
+    .mobile-nav-item:hover { color: var(--gold); }
+    @media (max-width: 480px) {
+      .container { padding-bottom: 70px; }
+      .mobile-bottom-nav { display: flex; }
+      .header { flex-direction: column; padding: 10px; }
+      .brand-name { font-size: 1.2rem; }
+      .header-actions { width: 100%; justify-content: center; }
+      .hero-tagline { font-size: 1.6rem; }
+      .hero-sub { font-size: 0.85rem; }
+      .btn-hero { padding: 10px 20px; font-size: 0.9rem; width: 100%; justify-content: center; }
+      .mode-toggle-bar { gap: 4px; }
+      .mode-btn, .mode-toggle-label { font-size: 0.6rem; padding: 3px 10px; }
+      .chat-container { max-height: 35vh; min-height: 120px; padding: 10px; }
+      .chat-bubble { font-size: 0.8rem; max-width: 95%; }
+      .input-card { padding: 10px; }
+      .query-input { min-height: 50px; font-size: 0.85rem; }
+      .input-tools { gap: 4px; }
+      .tool-btn { font-size: 0.6rem; padding: 3px 10px; }
+      .send-btn { font-size: 0.7rem; padding: 4px 14px; }
+      .quick-btn { font-size: 0.6rem; padding: 3px 8px; }
+      .output-tools { gap: 3px; }
+      .output-tools .tool-btn, .share-btn { font-size: 0.6rem; padding: 3px 8px; }
+      .footer { font-size: 0.5rem; }
+      .domain-table { font-size: 0.6rem; }
+      .domain-table th, .domain-table td { padding: 3px 5px; }
+      .modal-content { padding: 16px; margin: 10px; max-width: 100%; }
+      .blog-gen-box .blog-input-row { flex-direction: column; align-items: stretch; }
+      .blog-gen-box .blog-input-row .btn-hero { width: 100%; justify-content: center; }
+    }
+
+    /* ===== DRAFTS LIST ===== */
+    .draft-item { background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; margin-bottom:8px; border:1px solid var(--border); }
+    .draft-item .draft-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; }
+    .draft-item .draft-title { color:var(--gold); font-size:0.85rem; font-weight:600; }
+    .draft-item .draft-status { font-size:0.6rem; padding:2px 10px; border-radius:30px; background:rgba(255,255,255,0.05); }
+    .draft-item .draft-preview { font-size:0.7rem; color:var(--muted); margin:4px 0; }
+    .draft-item .draft-actions { margin-top:6px; display:flex; gap:4px; flex-wrap:wrap; }
   </style>
 </head>
 <body>
@@ -246,7 +314,10 @@
       </div>
       <div class="header-actions">
         <button class="btn btn-outline btn-sm" onclick="showDomainHealth()">
-          <i class="fas fa-heartbeat"></i> Domain Health
+          <i class="fas fa-heartbeat"></i> Health
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="showDrafts()">
+          <i class="fas fa-file-alt"></i> Drafts
         </button>
         <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
         <button class="btn btn-outline btn-sm" onclick="showLogin()">🔐 Login</button>
@@ -278,7 +349,7 @@
       </div>
     </div>
 
-    <!-- HERO (MINIMAL) -->
+    <!-- HERO -->
     <div class="hero">
       <div class="hero-tagline">The <span>Verdict</span> Engine</div>
       <div class="hero-sub">Ask. Analyze. Get a verified answer.</div>
@@ -288,8 +359,6 @@
         </button>
       </div>
       <div class="hero-secure-tag"><i class="fas fa-user-secret"></i> Zero retention. Your data is never stored.</div>
-
-      <!-- Mode Toggles -->
       <div class="mode-toggle-bar">
         <button class="mode-btn active" data-mode="general" onclick="setMode('general')"><i class="fas fa-globe-asia"></i> General</button>
         <button class="mode-btn" data-mode="legal" onclick="setMode('legal')"><i class="fas fa-gavel"></i> Legal Pro</button>
@@ -319,6 +388,19 @@
 
     <!-- INPUT -->
     <div class="input-card">
+      <div class="input-tools" style="margin-bottom:6px; flex-wrap:wrap;">
+        <div class="template-select-wrapper">
+          <i class="fas fa-file-alt" style="color:var(--gold);"></i>
+          <select id="templateSelect" onchange="onTemplateSelect(this.value)">
+            <option value="">Template</option>
+            <option value="demand_letter">📄 Demand Letter</option>
+            <option value="nda">🤝 NDA</option>
+            <option value="motion_to_modify">⚖️ Motion to Modify</option>
+            <option value="employment_contract">💼 Employment Contract</option>
+            <option value="contract_review">🔍 Contract Review</option>
+          </select>
+        </div>
+      </div>
       <textarea class="query-input" id="queryInput" placeholder="Ask anything — Law, Science, Philosophy, Finance…"></textarea>
       <div class="input-tools">
         <label class="tool-btn"><i class="fas fa-file-pdf"></i> PDF
@@ -374,26 +456,35 @@
     </div>
   </div>
 
-  <!-- ===== DOMAIN HEALTH MODAL ===== -->
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="mobile-bottom-nav">
+    <button class="mobile-nav-item active" onclick="switchMobileTab('chat')" data-tab="chat">
+      <i class="fas fa-comment"></i> Chat
+    </button>
+    <button class="mobile-nav-item" onclick="switchMobileTab('blog')" data-tab="blog">
+      <i class="fas fa-pen-fancy"></i> Blog
+    </button>
+    <button class="mobile-nav-item" onclick="switchMobileTab('health')" data-tab="health">
+      <i class="fas fa-heartbeat"></i> Health
+    </button>
+    <button class="mobile-nav-item" onclick="switchMobileTab('drafts')" data-tab="drafts">
+      <i class="fas fa-file-alt"></i> Drafts
+    </button>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+  <!-- Domain Health Modal -->
   <div class="modal-overlay" id="domainHealthModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('domainHealthModal')">&times;</button>
-      <h3>
-        <span><i class="fas fa-heartbeat" style="color:var(--ok);"></i> Domain Health</span>
-        <button class="btn btn-outline btn-sm" onclick="loadDomainHealth()" style="font-size:0.65rem;">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
+      <h3><span><i class="fas fa-heartbeat" style="color:var(--ok);"></i> Domain Health</span>
+        <button class="btn btn-outline btn-sm" onclick="loadDomainHealth()" style="font-size:0.65rem;"><i class="fas fa-sync-alt"></i> Refresh</button>
       </h3>
-      <div id="domainHealthContent">
-        <div style="text-align:center;padding:20px;color:var(--muted);">
-          <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>
-          Loading domain status...
-        </div>
-      </div>
+      <div id="domainHealthContent"><div style="text-align:center;padding:20px;color:var(--muted);"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>Loading...</div></div>
     </div>
   </div>
 
-  <!-- ===== OTHER MODALS ===== -->
+  <!-- Login Modal -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
@@ -408,6 +499,7 @@
     </div>
   </div>
 
+  <!-- Usage Modal -->
   <div class="modal-overlay" id="myUsageModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('myUsageModal')">&times;</button>
@@ -416,12 +508,13 @@
     </div>
   </div>
 
+  <!-- Payment Modal -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
       <h3>💳 Choose Your Plan</h3>
       <div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer">
-        <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.65rem;color:var(--muted)">(first 1000 seekers)</span>
+        <strong>🙏 ₹2 Lifetime</strong> <span style="font-size:0.65rem;color:var(--muted)">(first 1000)</span>
         <span id="lifetimeCount" style="float:right;font-size:0.7rem;color:var(--gold)"></span>
       </div>
       <div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:12px;border-radius:12px;margin:8px 0;cursor:pointer">
@@ -437,6 +530,29 @@
     </div>
   </div>
 
+  <!-- Template Modal -->
+  <div class="modal-overlay" id="templateModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal('templateModal')">&times;</button>
+      <h3 id="templateModalTitle">📄 Generate Document</h3>
+      <div id="templateFields"></div>
+      <button class="btn btn-gold" onclick="generateFromTemplate()" style="width:100%;padding:10px;margin-top:12px;">
+        <i class="fas fa-file-alt"></i> Generate
+      </button>
+      <div id="templateStatus" class="status-text"></div>
+    </div>
+  </div>
+
+  <!-- Drafts Modal -->
+  <div class="modal-overlay" id="draftsModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal('draftsModal')">&times;</button>
+      <h3>📑 My Drafts</h3>
+      <div id="draftsList"><p style="color:var(--muted);">Loading...</p></div>
+    </div>
+  </div>
+
+  <!-- Legal Modals -->
   <div class="modal-overlay" id="termsModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('termsModal')">&times;</button>
@@ -445,35 +561,29 @@
       <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('termsModal')">Close</button></div>
     </div>
   </div>
-
   <div class="modal-overlay" id="privacyModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('privacyModal')">&times;</button>
       <h3>🔒 Privacy — Zero Retention</h3>
-      <p style="font-size:0.85rem;line-height:1.6">All queries are automatically purged within 24 hours. We do not train models on your data. DPDPA‑2023 compliant.</p>
+      <p style="font-size:0.85rem;line-height:1.6">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p>
       <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('privacyModal')">Close</button></div>
     </div>
   </div>
-
   <div class="modal-overlay" id="aboutModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
       <h3>ℹ️ About LexSarthi</h3>
-      <p style="font-size:0.85rem;line-height:1.7">
-        <strong style="color:var(--gold)">LexSarthi</strong> is an AI‑powered advisory platform developed by <strong>THE ADVOCACY — A LAW FIRM</strong>.<br/><br/>
-        It features 250 specialist personas, a jury of 3 verifiers, a final judge, a curated knowledge base (including the Constitution of India), live web search across 150+ trusted domains, and strict zero‑retention privacy.
-      </p>
+      <p style="font-size:0.85rem;line-height:1.7">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. Features 250 specialist personas, jury of 10, zero retention.</p>
       <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('aboutModal')">Close</button></div>
     </div>
   </div>
-
   <div class="modal-overlay" id="verifiersModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('verifiersModal')">&times;</button>
-      <h3>✅ The 10 Verifiers (Jury + Judge)</h3>
+      <h3>✅ The 10 Verifiers</h3>
       <div style="display:grid;grid-template-columns:1fr;gap:6px;font-size:0.78rem">
-        <div><strong style="color:var(--gold)">Ganesha</strong> — Citation & logic integrity</div>
-        <div><strong style="color:var(--gold)">Saraswati</strong> — Knowledge cross-reference</div>
+        <div><strong style="color:var(--gold)">Ganesha</strong> — Citation & logic</div>
+        <div><strong style="color:var(--gold)">Saraswati</strong> — Knowledge cross‑reference</div>
         <div><strong style="color:var(--gold)">Hanuman</strong> — Global compliance</div>
         <div><strong style="color:var(--gold)">Kartikeya</strong> — Contradiction detection</div>
         <div><strong style="color:var(--gold)">Indra</strong> — Jurisdiction mapping</div>
@@ -481,7 +591,7 @@
         <div><strong style="color:var(--gold)">Surya</strong> — Timeline & limitation</div>
         <div><strong style="color:var(--gold)">Chandra</strong> — Precedent match</div>
         <div><strong style="color:var(--gold)">Vayu</strong> — PII / privacy filter</div>
-        <div><strong style="color:var(--saffron)">Shakti</strong> — Final judge & dharma seal</div>
+        <div><strong style="color:var(--saffron)">Shakti</strong> — Final judge</div>
       </div>
       <div class="modal-actions"><button class="btn btn-gold btn-sm" onclick="closeModal('verifiersModal')">Close</button></div>
     </div>
@@ -494,10 +604,29 @@
     const API_BASE = 'https://upamnyu12-LEX.hf.space';
 
     // ============================================================
-    // MODE TOGGLE & QUICK ACTIONS
+    // STATE
     // ============================================================
     let currentMode = 'general';
+    let uploadedFiles = [];
+    let isSpeaking = false;
+    let queryCount = 0;
+    let currentTemplate = null;
 
+    // ============================================================
+    // TOKEN / AUTH
+    // ============================================================
+    function getToken(){ return localStorage.getItem('lex_token'); }
+
+    function setTyping(a){ document.getElementById('typingIndicator').classList.toggle('active', a); }
+    function openModal(id){ document.getElementById(id).classList.add('active'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+    function showLogin(){ openModal('loginModal'); }
+    function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
+    function setStatus(t){ document.getElementById('inputStatus').textContent = t || ''; }
+
+    // ============================================================
+    // MODES
+    // ============================================================
     const generalQuickActions = [
       { icon: '📚', label: 'Explain Quantum Physics', prompt: 'Explain quantum physics in simple terms.' },
       { icon: '🧮', label: 'Solve a Math Problem', prompt: 'Solve: 2x + 5 = 15. Show steps.' },
@@ -507,7 +636,6 @@
       { icon: '🌍', label: 'History of India', prompt: 'Give a brief history of India in 200 words.' },
       { icon: '💡', label: 'Philosophy of Life', prompt: 'What is the philosophy of Stoicism in simple terms?' },
     ];
-
     const legalQuickActions = [
       { icon: '📄', label: 'Contract Review', prompt: 'Review this contract clause-by-clause and identify risks.' },
       { icon: '📝', label: 'Draft NDA', prompt: 'Draft a mutual NDA under Indian law.' },
@@ -520,12 +648,9 @@
 
     function setMode(mode) {
       currentMode = mode;
-      document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
-      });
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
       renderQuickActions();
     }
-
     function renderQuickActions() {
       const container = document.getElementById('quickActions');
       const actions = currentMode === 'general' ? generalQuickActions : legalQuickActions;
@@ -540,127 +665,20 @@
       html += `<button class="quick-btn quick-btn-oracle" onclick="oracleAsk('How to overcome fear and anxiety?')">🔥 Fear</button>`;
       container.innerHTML = html;
     }
-
-    // ============================================================
-    // DOMAIN HEALTH
-    // ============================================================
-    async function loadDomainHealth() {
-      const container = document.getElementById('domainHealthContent');
-      container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);">
-        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>
-        Loading domain status...
-      </div>`;
-
-      try {
-        const response = await fetch(`${API_BASE}/domain-status`);
-        if (!response.ok) throw new Error('Failed to fetch domain status');
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-          container.innerHTML = `<p style="color:var(--muted);text-align:center;">No domain data available. Background scan may not have run yet.</p>`;
-          return;
-        }
-
-        const total = data.length;
-        const up = data.filter(d => d.status_code === 200).length;
-        const down = total - up;
-
-        let html = `
-          <div class="domain-stats">
-            <span class="total-count">📊 Total: ${total}</span>
-            <span class="up-count">✅ Up: ${up}</span>
-            <span class="down-count">❌ Down: ${down}</span>
-          </div>
-          <input class="domain-search" id="domainSearch" placeholder="🔍 Filter domains..." oninput="filterDomainTable()" />
-          <div style="max-height:400px;overflow-y:auto;">
-            <table class="domain-table">
-              <thead>
-                <tr>
-                  <th>Domain</th>
-                  <th>Status</th>
-                  <th>Response</th>
-                  <th>SSL Expiry</th>
-                  <th>DNS</th>
-                  <th>Last Checked</th>
-                </tr>
-              </thead>
-              <tbody id="domainTableBody">
-        `;
-
-        data.forEach(d => {
-          const isUp = d.status_code === 200;
-          const statusBadge = isUp ? '<span class="status-badge up">✅ UP</span>' : `<span class="status-badge down">❌ ${d.status_code || 'ERR'}</span>`;
-          const dnsBadge = d.dns_resolves ? '✅' : '❌';
-          const responseTime = d.response_time ? `${(d.response_time * 1000).toFixed(0)}ms` : '—';
-          const sslExpiry = d.ssl_expiry ? new Date(d.ssl_expiry).toLocaleDateString() : '—';
-          const lastChecked = d.last_checked ? new Date(d.last_checked).toLocaleString() : '—';
-          html += `
-            <tr data-domain="${d.domain}">
-              <td><strong>${d.domain}</strong></td>
-              <td>${statusBadge}</td>
-              <td>${responseTime}</td>
-              <td>${sslExpiry}</td>
-              <td>${dnsBadge}</td>
-              <td style="font-size:0.6rem;color:var(--muted);">${lastChecked}</td>
-            </tr>
-          `;
-        });
-
-        html += `
-              </tbody>
-            </table>
-          </div>
-          <div style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">
-            ↻ Scans run automatically every hour.
-          </div>
-        `;
-
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<p style="color:var(--err);text-align:center;">❌ Error loading domain health: ${e.message}</p>`;
-      }
-    }
-
-    function filterDomainTable() {
-      const query = document.getElementById('domainSearch').value.toLowerCase();
-      const rows = document.querySelectorAll('#domainTableBody tr');
-      rows.forEach(row => {
-        const domain = row.getAttribute('data-domain').toLowerCase();
-        row.style.display = domain.includes(query) ? '' : 'none';
-      });
-    }
-
-    function showDomainHealth() {
-      openModal('domainHealthModal');
-      loadDomainHealth();
-    }
-
-    // ============================================================
-    // UTILITY FUNCTIONS
-    // ============================================================
-    let uploadedFiles = [];
-    let isSpeaking = false;
-
-    function getToken(){ return localStorage.getItem('lex_token'); }
-    function setTyping(a){ document.getElementById('typingIndicator').classList.toggle('active', a); }
-    function openModal(id){ document.getElementById(id).classList.add('active'); }
-    function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-    function showLogin(){ openModal('loginModal'); }
-    function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
-    function setStatus(t){ document.getElementById('inputStatus').textContent = t || ''; }
     function quickAction(p){ const i=document.getElementById('queryInput'); i.value=p; i.focus(); sendQuery(); }
     function oracleAsk(q){ document.getElementById('oracleModeToggle').checked=true; quickAction(q); }
 
+    // ============================================================
+    // VOICE & SPEAK
+    // ============================================================
     const LANG_VOICE = {en:'en-US',hi:'hi-IN',sa:'hi-IN',bn:'bn-IN',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR',it:'it-IT',ru:'ru-RU',ar:'ar-SA',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR',th:'th-TH',vi:'vi-VN',id:'id-ID',he:'he-IL',el:'el-GR',tr:'tr-TR'};
-
     function startVoice() {
       try {
         const R = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!R) { setStatus('❌ Voice not supported'); return; }
         const r = new R();
         r.lang = LANG_VOICE[document.getElementById('langSelect').value] || 'en-US';
-        r.continuous = false;
-        r.interimResults = false;
+        r.continuous = false; r.interimResults = false;
         const btn = document.getElementById('voiceBtn');
         r.onstart = () => { btn.innerHTML = '<i class="fas fa-microphone-slash"></i>'; setStatus('🎤 Listening...'); };
         r.onresult = e => { document.getElementById('queryInput').value = e.results[0][0].transcript; setStatus('✅ Captured'); };
@@ -669,7 +687,6 @@
         r.start();
       } catch(e) { setStatus('❌ ' + e.message); }
     }
-
     function speakResponse() {
       const t = document.getElementById('chatArea').innerText || '';
       if (!t.trim()) { alert('Nothing to speak.'); return; }
@@ -680,10 +697,9 @@
         setStatus('🔇 Stopped');
         return;
       }
-      const u = new SpeechSynthesisUtterance(t.slice(0, 3000));
+      const u = new SpeechSynthesisUtterance(t.slice(0,3000));
       u.lang = LANG_VOICE[document.getElementById('langSelect').value] || 'en-US';
-      u.rate = 0.85;
-      u.pitch = 0.9;
+      u.rate = 0.85; u.pitch = 0.9;
       const voices = window.speechSynthesis.getVoices();
       const preferredVoice = voices.find(v => v.name.includes('Google US English') && v.name.includes('Female')) || voices.find(v => v.name.includes('Samantha')) || voices.find(v => v.lang.startsWith('en'));
       if (preferredVoice) u.voice = preferredVoice;
@@ -695,6 +711,9 @@
       setStatus('🔊 Speaking...');
     }
 
+    // ============================================================
+    // LOGIN / REGISTER / USAGE
+    // ============================================================
     async function handleLogin() {
       const email = document.getElementById('login-email').value;
       const pass = document.getElementById('login-password').value;
@@ -719,7 +738,6 @@
         s.textContent = '❌ Network error';
       }
     }
-
     async function handleRegister() {
       const email = document.getElementById('login-email').value;
       const pass = document.getElementById('login-password').value;
@@ -746,7 +764,6 @@
         s.textContent = '❌ Network error';
       }
     }
-
     async function checkPremium() {
       const t = getToken();
       if (!t) return;
@@ -756,7 +773,7 @@
         });
         if (r.ok) {
           const d = await r.json();
-          if (['premium', 'enterprise', 'lifetime'].includes(d.tier)) {
+          if (['premium','enterprise','lifetime'].includes(d.tier)) {
             document.getElementById('premiumBadge').style.display = 'inline-block';
           }
           if (d.tier === 'enterprise') {
@@ -765,7 +782,6 @@
         }
       } catch(e) {}
     }
-
     async function showMyUsage() {
       const t = getToken();
       if (!t) { alert('Login first'); showLogin(); return; }
@@ -784,6 +800,9 @@
       }
     }
 
+    // ============================================================
+    // FILE UPLOAD
+    // ============================================================
     function handleFileUpload(inp) {
       uploadedFiles = Array.from(inp.files);
       if (uploadedFiles.length > 0) {
@@ -794,13 +813,11 @@
         clearFilePreview();
       }
     }
-
     function clearFilePreview() {
       uploadedFiles = [];
       document.getElementById('filePreview').classList.remove('show');
       document.getElementById('pdfUpload').value = '';
     }
-
     async function handleBulkUpload(inp) {
       const t = getToken();
       if (!t) { alert('Login first'); showLogin(); return; }
@@ -820,7 +837,7 @@
         });
         const d = await r.json();
         if (r.ok) {
-          setStatus(`✅ Job ${d.job_id.slice(0, 8)}... queued (${d.total_files} files)`);
+          setStatus(`✅ Job ${d.job_id.slice(0,8)}... queued (${d.total_files} files)`);
         } else {
           setStatus('❌ ' + (d.detail || 'Bulk failed'));
         }
@@ -831,33 +848,239 @@
     }
 
     // ============================================================
+    // DOMAIN HEALTH
+    // ============================================================
+    async function loadDomainHealth() {
+      const container = document.getElementById('domainHealthContent');
+      container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>Loading...</div>`;
+      try {
+        const response = await fetch(`${API_BASE}/domain-status`);
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data = await response.json();
+        if (!data || data.length === 0) {
+          container.innerHTML = `<p style="color:var(--muted);text-align:center;">No domain data available. Background scan may not have run yet.</p>`;
+          return;
+        }
+        const total = data.length;
+        const up = data.filter(d => d.status_code === 200).length;
+        const down = total - up;
+        let html = `
+          <div class="domain-stats">
+            <span class="total-count">📊 Total: ${total}</span>
+            <span class="up-count">✅ Up: ${up}</span>
+            <span class="down-count">❌ Down: ${down}</span>
+          </div>
+          <input class="domain-search" id="domainSearch" placeholder="🔍 Filter domains..." oninput="filterDomainTable()" />
+          <div style="max-height:400px;overflow-y:auto;">
+            <table class="domain-table">
+              <thead><tr><th>Domain</th><th>Status</th><th>Response</th><th>SSL Expiry</th><th>DNS</th><th>Last Checked</th></tr></thead>
+              <tbody id="domainTableBody">
+        `;
+        data.forEach(d => {
+          const isUp = d.status_code === 200;
+          const statusBadge = isUp ? '<span class="status-badge up">✅ UP</span>' : `<span class="status-badge down">❌ ${d.status_code || 'ERR'}</span>`;
+          const dnsBadge = d.dns_resolves ? '✅' : '❌';
+          const responseTime = d.response_time ? `${(d.response_time * 1000).toFixed(0)}ms` : '—';
+          const sslExpiry = d.ssl_expiry ? new Date(d.ssl_expiry).toLocaleDateString() : '—';
+          const lastChecked = d.last_checked ? new Date(d.last_checked).toLocaleString() : '—';
+          html += `<tr data-domain="${d.domain}"><td><strong>${d.domain}</strong></td><td>${statusBadge}</td><td>${responseTime}</td><td>${sslExpiry}</td><td>${dnsBadge}</td><td style="font-size:0.6rem;color:var(--muted);">${lastChecked}</td></tr>`;
+        });
+        html += `</tbody></table></div><div style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">↻ Scans run automatically every hour.</div>`;
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = `<p style="color:var(--err);text-align:center;">❌ Error loading: ${e.message}</p>`;
+      }
+    }
+    function filterDomainTable() {
+      const query = document.getElementById('domainSearch').value.toLowerCase();
+      document.querySelectorAll('#domainTableBody tr').forEach(row => {
+        row.style.display = row.getAttribute('data-domain').toLowerCase().includes(query) ? '' : 'none';
+      });
+    }
+    function showDomainHealth() {
+      openModal('domainHealthModal');
+      loadDomainHealth();
+    }
+
+    // ============================================================
+    // TEMPLATES
+    // ============================================================
+    async function onTemplateSelect(value) {
+      if (!value) return;
+      try {
+        const response = await fetch(`${API_BASE}/api/templates`);
+        const data = await response.json();
+        const template = data.templates.find(t => t.id === value);
+        if (!template) return;
+        currentTemplate = template;
+        const container = document.getElementById('templateFields');
+        container.innerHTML = '';
+        template.fields.forEach(f => {
+          const label = document.createElement('label');
+          label.textContent = f.label;
+          label.style.cssText = 'display:block;font-size:0.7rem;color:var(--muted);margin:6px 0 3px;';
+          const input = document.createElement('input');
+          input.type = f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text';
+          input.placeholder = f.label;
+          input.id = `template_field_${f.key}`;
+          input.style.cssText = 'width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;margin-bottom:6px;font-family:inherit;font-size:0.85rem;';
+          container.appendChild(label);
+          container.appendChild(input);
+        });
+        document.getElementById('templateModalTitle').textContent = `📄 ${template.name}`;
+        openModal('templateModal');
+        document.getElementById('templateSelect').value = '';
+      } catch(e) {
+        setStatus('❌ Error loading template: ' + e.message);
+      }
+    }
+    async function generateFromTemplate() {
+      if (!currentTemplate) return;
+      const data = {};
+      currentTemplate.fields.forEach(f => {
+        const input = document.getElementById(`template_field_${f.key}`);
+        if (input) data[f.key] = input.value;
+      });
+      document.getElementById('templateStatus').textContent = 'Generating...';
+      try {
+        const t = getToken();
+        const response = await fetch(`${API_BASE}/api/templates/${currentTemplate.id}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error('Generation failed');
+        const result = await response.json();
+        document.getElementById('templateStatus').textContent = '✅ Generated! Saving to drafts...';
+        const draftResp = await fetch(`${API_BASE}/drafts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+          body: JSON.stringify({
+            title: `${currentTemplate.name} - ${new Date().toLocaleDateString()}`,
+            content: result.document,
+            template_id: currentTemplate.id
+          })
+        });
+        if (draftResp.ok) {
+          document.getElementById('templateStatus').textContent = '✅ Saved to drafts!';
+          setTimeout(() => closeModal('templateModal'), 1500);
+        } else {
+          document.getElementById('templateStatus').textContent = '✅ Generated, but failed to save. Copy the document.';
+        }
+        document.querySelector('#templateModal .btn-gold').style.display = 'none';
+      } catch(e) {
+        document.getElementById('templateStatus').textContent = '❌ Error: ' + e.message;
+      }
+    }
+
+    // ============================================================
+    // DRAFTS
+    // ============================================================
+    function showDrafts() { openModal('draftsModal'); loadDrafts(); }
+    async function loadDrafts() {
+      const container = document.getElementById('draftsList');
+      container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
+      try {
+        const t = getToken();
+        if (!t) { container.innerHTML = '<p style="color:var(--err);">Please login first.</p>'; return; }
+        const response = await fetch(`${API_BASE}/drafts`, {
+          headers: { 'Authorization': `Bearer ${t}` }
+        });
+        const drafts = await response.json();
+        if (!drafts.length) {
+          container.innerHTML = '<p style="color:var(--muted);">No drafts yet. Generate one from a template!</p>';
+          return;
+        }
+        let html = '';
+        drafts.forEach(d => {
+          const statusColor = d.status === 'approved' ? 'var(--ok)' : d.status === 'rejected' ? 'var(--err)' : d.status === 'revised' ? 'var(--saffron)' : 'var(--gold)';
+          html += `
+            <div class="draft-item">
+              <div class="draft-header">
+                <span class="draft-title">${d.title}</span>
+                <span class="draft-status" style="color:${statusColor};">${d.status}</span>
+              </div>
+              <div class="draft-preview">${d.content ? d.content.slice(0,150) + '...' : 'No content'}</div>
+              <div style="font-size:0.6rem;color:var(--muted);">${new Date(d.created_at).toLocaleString()}</div>
+              <div class="draft-actions">
+                <button class="btn btn-outline btn-sm" onclick="viewDraft(${d.id})" style="font-size:0.6rem;">View</button>
+                ${d.status === 'pending_review' ? `
+                  <button class="btn btn-gold btn-sm" onclick="approveDraft(${d.id})" style="font-size:0.6rem;">Approve</button>
+                  <button class="btn btn-outline btn-sm" onclick="rejectDraft(${d.id})" style="font-size:0.6rem;border-color:var(--err);color:var(--err);">Reject</button>
+                ` : ''}
+                <button class="btn btn-outline btn-sm" onclick="improveDraft(${d.id})" style="font-size:0.6rem;">✨ Improve</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = `<p style="color:var(--err);">Error: ${e.message}</p>`;
+      }
+    }
+    async function viewDraft(id) {
+      const t = getToken();
+      const response = await fetch(`${API_BASE}/drafts/${id}`, {
+        headers: { 'Authorization': `Bearer ${t}` }
+      });
+      const draft = await response.json();
+      alert('Draft content:\n\n' + draft.content);
+    }
+    async function approveDraft(id) {
+      if (!confirm('Approve this draft?')) return;
+      const t = getToken();
+      await fetch(`${API_BASE}/drafts/${id}/approve`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${t}` }
+      });
+      loadDrafts();
+    }
+    async function rejectDraft(id) {
+      const reason = prompt('Reason for rejection:');
+      if (reason === null) return;
+      const t = getToken();
+      await fetch(`${API_BASE}/drafts/${id}/reject`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+        body: JSON.stringify({ reason })
+      });
+      loadDrafts();
+    }
+    async function improveDraft(id) {
+      const instructions = prompt('Instructions for improvement:', 'Make this more professional and legally precise.');
+      if (instructions === null) return;
+      const t = getToken();
+      const response = await fetch(`${API_BASE}/drafts/${id}/improve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+        body: JSON.stringify({ instructions })
+      });
+      const result = await response.json();
+      alert('Original:\n\n' + result.original + '\n\nImproved:\n\n' + result.improved);
+      loadDrafts();
+    }
+
+    // ============================================================
     // SEND QUERY
     // ============================================================
     async function sendQuery() {
       const q = document.getElementById('queryInput').value.trim();
-      if (!q && uploadedFiles.length === 0) {
-        setStatus('Type a question or attach files');
-        return;
-      }
+      if (!q && uploadedFiles.length === 0) { setStatus('Type a question or attach files'); return; }
       const t = getToken();
       if (!t) { alert('Login first'); showLogin(); return; }
-
       setTyping(true);
       setStatus('Consulting specialists & jury…');
       const chat = document.getElementById('chatArea');
       const welcome = document.getElementById('defaultWelcome');
       if (welcome) welcome.style.display = 'none';
-
       const oracle = document.getElementById('oracleModeToggle').checked;
       const unrestricted = document.getElementById('unrestrictedSearch').checked;
-
       let userHtml = (oracle ? '🔮 ' : '') + (q || '📎 Files attached');
       if (uploadedFiles.length) {
         userHtml += `<br><span style="font-size:0.65rem;color:var(--gold)">📎 ${uploadedFiles.map(f => f.name).join(', ')}</span>`;
       }
       chat.innerHTML += `<div class="chat-bubble user">${userHtml}</div>`;
       chat.scrollTop = chat.scrollHeight;
-
       const fd = new FormData();
       fd.append('query', q || 'Analyze uploaded documents');
       uploadedFiles.forEach(f => fd.append('files', f));
@@ -867,14 +1090,12 @@
       fd.append('oracle_mode', oracle ? 'true' : 'false');
       fd.append('unrestricted', unrestricted ? 'true' : 'false');
       fd.append('agent_id', 'agent_001');
-
       try {
         const response = await fetch(`${API_BASE}/ask`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${t}` },
           body: fd
         });
-
         if (!response.ok) {
           const err = await response.json();
           setTyping(false);
@@ -882,12 +1103,10 @@
           setStatus('❌ ' + (err.detail || 'Error'));
           return;
         }
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let agentBubble = null;
         let finalVerification = null;
-
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -916,7 +1135,6 @@
             }
           }
         }
-
         setTyping(false);
         if (agentBubble && finalVerification) {
           const badge = document.createElement('div');
@@ -934,10 +1152,22 @@
           agentBubble.appendChild(badge);
           chat.scrollTop = chat.scrollHeight;
         }
-        if (agentBubble) {
-          setStatus('✅ Response ready');
-        } else {
-          setStatus('⚠️ No response');
+        if (agentBubble) { setStatus('✅ Response ready'); } else { setStatus('⚠️ No response'); }
+        // Track free queries for lead capture
+        queryCount++;
+        if (queryCount === 3 && !localStorage.getItem('lead_captured')) {
+          const leadEmail = prompt('Enjoying LexSarthi? Subscribe for weekly legal AI insights (no spam):');
+          if (leadEmail && leadEmail.includes('@')) {
+            try {
+              await fetch(`${API_BASE}/capture-lead`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: leadEmail })
+              });
+              localStorage.setItem('lead_captured', 'true');
+              setStatus('✅ Subscribed!');
+            } catch(e) { /* ignore */ }
+          }
         }
       } catch(e) {
         setTyping(false);
@@ -954,7 +1184,6 @@
     function copyResponse() {
       navigator.clipboard.writeText(document.getElementById('chatArea').innerText || '').then(() => setStatus('✅ Copied'));
     }
-
     function downloadTXT() {
       const txt = document.getElementById('chatArea').innerText || '';
       const b = new Blob([txt], { type: 'text/plain' });
@@ -963,7 +1192,6 @@
       a.download = 'lexsarthi.txt';
       a.click();
     }
-
     function downloadPDF() {
       const el = document.getElementById('chatArea');
       if (!el.innerText.trim()) { alert('Nothing to export'); return; }
@@ -976,7 +1204,6 @@
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       }).from(el).save().then(() => setStatus('✅ PDF ready')).catch(() => setStatus('❌ PDF failed'));
     }
-
     function clearResponse() {
       document.getElementById('chatArea').innerHTML = '';
       document.getElementById('defaultWelcome').style.display = 'block';
@@ -987,16 +1214,15 @@
         document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak';
       }
     }
-
     function shareResponse() {
       const text = document.getElementById('chatArea').innerText;
       if (!text.trim()) { alert('Nothing to share.'); return; }
       const url = window.location.href;
       if (navigator.share) {
-        navigator.share({ title: 'LexSarthi AI Advisory', text: text.slice(0, 1000) + '...', url: url }).catch(() => {});
+        navigator.share({ title: 'LexSarthi AI Advisory', text: text.slice(0,1000) + '...', url: url }).catch(() => {});
       } else {
-        const shareText = `Check out this answer from LexSarthi:\n\n${text.slice(0, 500)}...\n\n${url}`;
-        navigator.clipboard.writeText(shareText).then(() => setStatus('📋 Shared! Copied to clipboard.')).catch(() => alert('Share not supported. Copy the text manually.'));
+        const shareText = `Check out this answer from LexSarthi:\n\n${text.slice(0,500)}...\n\n${url}`;
+        navigator.clipboard.writeText(shareText).then(() => setStatus('📋 Shared! Copied to clipboard.')).catch(() => alert('Share not supported.'));
       }
     }
 
@@ -1056,11 +1282,37 @@
     }
 
     // ============================================================
+    // MOBILE NAV
+    // ============================================================
+    function switchMobileTab(tab) {
+      document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.mobile-nav-item[data-tab="${tab}"]`)?.classList.add('active');
+      const chat = document.getElementById('chatContainer');
+      const blog = document.querySelector('.blog-gen-box');
+      const healthBtn = document.querySelector('.btn[onclick*="showDomainHealth"]');
+      const draftsBtn = document.querySelector('.btn[onclick*="showDrafts"]');
+      if (tab === 'chat') {
+        chat.style.display = 'block';
+        blog.style.display = 'none';
+      } else if (tab === 'blog') {
+        chat.style.display = 'none';
+        blog.style.display = 'block';
+      } else if (tab === 'health') {
+        chat.style.display = 'none';
+        blog.style.display = 'none';
+        showDomainHealth();
+      } else if (tab === 'drafts') {
+        chat.style.display = 'none';
+        blog.style.display = 'none';
+        showDrafts();
+      }
+    }
+
+    // ============================================================
     // PAYMENTS
     // ============================================================
     function showPayment() { openModal('paymentModal'); checkLifetime(); }
     function selectPlan(p) { document.getElementById('paymentPlan').value = p; }
-
     async function checkLifetime() {
       try {
         const r = await fetch(`${API_BASE}/lifetime-count`);
@@ -1068,7 +1320,6 @@
         document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
       } catch(e) {}
     }
-
     async function processPayment() {
       const t = getToken();
       if (!t) { alert('Login first'); return; }
@@ -1148,7 +1399,6 @@
           container.appendChild(ring);
         }
       })();
-
       // Stars
       (function() {
         const c = document.getElementById('starsContainer');
