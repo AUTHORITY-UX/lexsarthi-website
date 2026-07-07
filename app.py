@@ -1966,6 +1966,20 @@ async def verify_payment(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Verification failed")
 
+  @app.post("/test-news-pipeline")
+async def test_news_pipeline(
+    secret: str = Form(...),
+    background_tasks: BackgroundTasks = None
+):
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    # Run the pipeline in the background (or directly)
+    await _daily_news_pipeline()
+    return {"status": "pipeline executed successfully"}      
+
+        
+
 # ─── STATIC FILES ──────────────────────────────────────────────────────
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
