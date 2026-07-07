@@ -581,16 +581,16 @@ async def _update_memory(uid: int, q: str, a: str):
 def _build_context(mem: List[dict]) -> str:
     if not mem:
         return ""
-    # Keep only last 2 exchanges, each truncated
     recent = mem[-2:]
     context_parts = []
     for exchange in recent:
-        q = exchange.get('q', '')[:200]   # max 200 chars
-        a = exchange.get('a', '')[:300]   # max 300 chars
+        q = exchange.get('q', '')[:200]
+        a = exchange.get('a', '')[:300]
         context_parts.append(f"[Prev Q] {q}\n[Prev A] {a}")
     if not context_parts:
         return ""
-    return f"═══ RECENT CONTEXT ═══\n{'\n'.join(context_parts)}\n═════════════════\nCurrent query:\n"
+    separator = "\n".join(context_parts)   # <-- moved outside f-string
+    return f"═══ RECENT CONTEXT ═══\n{separator}\n═════════════════\nCurrent query:\n"
 
 # ─── CACHING HELPERS (Redis) ──────────────────────────────────────────
 def _get_cache_key(query: str, model: str, oracle: bool) -> str:
