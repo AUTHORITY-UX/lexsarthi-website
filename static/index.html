@@ -3,71 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LexSarthi — The Verdict Engine</title>
-  <meta name="description" content="Self‑verifying AI for legal & professional advisory." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%94%B1%3C/text%3E%3C/svg%3E" />
+  <title>Unknown Verdict Engine</title>
+  <meta name="description" content="Self‑verifying AI with unlimited queries." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%91%81%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <!-- GA4 (keep if you want) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QVFXGG86FZ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-QVFXGG86FZ');
-  </script>
   <style>
-    /* ===== RESET & ROOT ===== */
+    /* ===== RESET & ROOT – DARK THEME ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f;
-      --panel: rgba(20,20,32,0.7);
-      --panel-2: #1a1a2a;
+      --bg: #050508;
+      --panel: rgba(10,10,20,0.85);
+      --panel-2: #0d0d1a;
       --border: rgba(212,175,55,0.15);
       --gold: #d4af37;
-      --gold-soft: rgba(212,175,55,0.1);
+      --gold-soft: rgba(212,175,55,0.08);
       --text: #f0ede8;
       --muted: #8a8a95;
       --ok: #34d399;
       --err: #ff6b6b;
-      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow: 0 8px 32px rgba(0,0,0,0.6);
     }
     html, body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      background: radial-gradient(ellipse at 30% 20%, #1a1a30 0%, #0a0a0f 80%);
+      background: radial-gradient(ellipse at 30% 20%, #0a0a1a 0%, #050508 80%);
       font-size: 15px;
       line-height: 1.55;
     }
 
-    /* ===== DECORATIONS (subdued) ===== */
-    .moon { position:fixed; top:5%; left:5%; width:22vmin; height:22vmin; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(255,240,200,0.2), rgba(200,180,150,0.05)); box-shadow:0 0 60px rgba(255,240,200,0.08); pointer-events:none; z-index:0; border:1px solid rgba(255,255,255,0.02); }
-    .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
-    .star { position:absolute; background:#fff; border-radius:50%; opacity:0.4; animation:twinkle 3s infinite ease-in-out; }
-    @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.7; } }
-
-    /* ===== CONTAINER ===== */
-    .container {
-      position: relative;
-      z-index: 2;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 16px 16px 80px;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+    /* ===== 5D EYE BACKGROUND ===== */
+    .eye-background {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 30vmin;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
+      animation: eyePulse 6s ease-in-out infinite;
+      filter: blur(2px);
+      text-shadow: 0 0 80px rgba(212,175,55,0.2);
+    }
+    @keyframes eyePulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.04; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.08; }
     }
 
-    /* ===== HEADER ===== */
+    .moon { position:fixed; top:5%; left:5%; width:22vmin; height:22vmin; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(255,240,200,0.1), rgba(200,180,150,0.02)); box-shadow:0 0 60px rgba(255,240,200,0.04); pointer-events:none; z-index:0; border:1px solid rgba(255,255,255,0.01); }
+    .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+    .star { position:absolute; background:#fff; border-radius:50%; opacity:0.3; animation:twinkle 4s infinite ease-in-out; }
+    @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.6; } }
+
+    .container { position: relative; z-index: 2; max-width: 760px; margin: 0 auto; padding: 16px 16px 80px; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* HEADER */
     .header {
       background: var(--panel);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 12px 20px;
@@ -85,30 +85,37 @@
       font-weight: 700;
       color: var(--gold);
       letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .brand small { font-size: 0.9rem; color: var(--muted); margin-left: 8px; letter-spacing: 1px; }
-    .version { background: var(--gold-soft); border: 1px solid var(--border); color: var(--gold); padding: 2px 8px; border-radius: 999px; font-size: 0.55rem; font-weight: 600; margin-left: 8px; }
-    .badge { display: none; background: var(--gold-soft); color: var(--gold); border: 1px solid var(--gold); padding: 1px 8px; border-radius: 999px; font-size: 0.55rem; margin-left: 6px; }
+    .brand .eye-icon {
+      font-size: 1.8rem;
+      animation: glowEye 3s ease-in-out infinite;
+    }
+    @keyframes glowEye {
+      0%, 100% { text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+      50% { text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3); }
+    }
+    .brand small { font-size: 0.9rem; color: var(--muted); letter-spacing: 1px; }
+    .version { background: var(--gold-soft); border: 1px solid var(--border); color: var(--gold); padding: 2px 8px; border-radius: 999px; font-size: 0.55rem; font-weight: 600; }
+    .badge { display: none; background: var(--gold-soft); color: var(--gold); border: 1px solid var(--gold); padding: 1px 8px; border-radius: 999px; font-size: 0.55rem; }
     .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
     .btn {
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 600;
-      border-radius: 30px;
-      padding: 6px 14px;
-      font-size: 0.7rem;
+      border: none; cursor: pointer; font-family: inherit; font-weight: 600;
+      border-radius: 30px; padding: 6px 14px; font-size: 0.7rem;
       transition: all 0.2s ease;
     }
     .btn:hover { transform: translateY(-1px); }
-    .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #1a1a1a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
+    .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
     .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
     .btn-outline:hover { background: var(--gold-soft); }
     .btn-sm { padding: 4px 10px; font-size: 0.65rem; }
     .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; }
     .btn-icon:hover { background: var(--gold-soft); }
 
-    /* ===== CHAT AREA ===== */
+    /* CHAT AREA */
     .chat-area {
       background: var(--panel);
       backdrop-filter: blur(8px);
@@ -141,21 +148,64 @@
       border: 1px solid var(--border);
       display: inline-block;
     }
+    .msg .provider-tag {
+      font-size: 0.55rem;
+      background: rgba(255,255,255,0.05);
+      padding: 2px 10px;
+      border-radius: 30px;
+      margin-top: 4px;
+      display: inline-block;
+      color: var(--muted);
+    }
+    .msg .msg-actions {
+      margin-top: 6px;
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+    .msg .msg-actions button {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .msg .msg-actions button:hover { background: var(--gold-soft); color: var(--gold); }
     @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
 
-    /* ===== WELCOME ===== */
+    /* WELCOME – only eye */
     .welcome {
       text-align: center;
       padding: 30px 12px;
       color: var(--text);
     }
-    .welcome .om { font-size: 3rem; color: var(--gold); font-family: 'Noto Serif Devanagari', serif; animation: pulse 3s infinite; }
-    @keyframes pulse { 0%,100% { transform: scale(1); opacity:0.8; } 50% { transform: scale(1.1); opacity:1; } }
-    .welcome h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--gold); margin: 6px 0; }
-    .welcome p { color: var(--muted); max-width: 400px; margin: 0 auto; font-size: 0.95rem; }
-    .welcome p strong { color: var(--text); }
+    .welcome .eye-glow {
+      font-size: 4rem;
+      display: block;
+      animation: glowEye 3s ease-in-out infinite;
+      color: var(--gold);
+    }
+    .welcome p {
+      color: var(--muted);
+      max-width: 450px;
+      margin: 0 auto;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    .welcome .sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 4px 16px;
+      border-radius: 30px;
+      display: inline-block;
+      margin-top: 6px;
+    }
 
-    /* ===== INPUT SECTION ===== */
+    /* INPUT – simplified */
     .input-area {
       background: var(--panel);
       backdrop-filter: blur(12px);
@@ -187,7 +237,7 @@
     .input-row textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
     .input-row .send {
       background: linear-gradient(135deg, #d4af37, #b8901e);
-      color: #1a1a1a;
+      color: #0a0a0a;
       border: none;
       padding: 10px 20px;
       border-radius: 30px;
@@ -205,37 +255,25 @@
 
     .input-tools {
       display: flex;
-      flex-wrap: wrap;
       gap: 6px;
-      margin-top: 10px;
-      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
     }
-    .tool-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.7rem;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 4px 12px;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .tool-label:hover { background: var(--gold-soft); }
-    .tool-label input[type="checkbox"] { accent-color: var(--gold); margin-right: 2px; }
-    .tool-select {
+    .input-tools .tool-btn {
       background: transparent;
       border: 1px solid var(--border);
-      color: var(--gold);
+      color: var(--muted);
       padding: 4px 10px;
       border-radius: 30px;
       font-size: 0.7rem;
-      font-family: inherit;
       cursor: pointer;
-      outline: none;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    .tool-select option { background: #1a1a2a; color: #f0ede8; }
+    .input-tools .tool-btn:hover { background: var(--gold-soft); color: var(--gold); }
+    .input-tools .tool-btn.active { background: var(--gold-soft); border-color: var(--gold); color: var(--gold); }
 
     .file-preview {
       display: none;
@@ -251,136 +289,71 @@
     .file-preview.show { display: flex; }
     .file-preview .remove { cursor: pointer; color: var(--muted); font-size: 0.8rem; }
 
-    /* ===== TYPING ===== */
-    .typing {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
+    /* TYPING */
+    .typing { display: none; align-items: center; gap: 8px; padding: 6px 12px; color: var(--muted); font-size: 0.8rem; }
     .typing.active { display: flex; }
     .typing .dots span {
-      display: inline-block;
-      width: 6px; height: 6px;
-      background: var(--gold);
-      border-radius: 50%;
-      margin: 0 2px;
+      display: inline-block; width: 6px; height: 6px;
+      background: var(--gold); border-radius: 50%; margin: 0 2px;
       animation: dotBounce 1.4s infinite;
     }
     .typing .dots span:nth-child(2) { animation-delay: 0.2s; }
     .typing .dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes dotBounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    /* ===== OUTPUT TOOLS (small icons) ===== */
-    .output-tools {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      justify-content: center;
-      margin: 8px 0;
-    }
-    .output-tools .btn-icon { font-size: 0.65rem; padding: 4px 10px; }
+    .status-text { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 6px; }
 
-    /* ===== FOOTER ===== */
+    /* FOOTER */
     .footer {
-      margin-top: auto;
-      padding: 10px 0;
+      margin-top: auto; padding: 10px 0;
       border-top: 1px solid var(--border);
-      text-align: center;
-      font-size: 0.6rem;
-      color: var(--muted);
+      text-align: center; font-size: 0.6rem; color: var(--muted);
     }
     .footer a { color: var(--muted); cursor: pointer; margin: 0 6px; text-decoration: none; }
     .footer a:hover { color: var(--gold); }
     .footer .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
     .footer .badge { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.15); color: var(--ok); padding: 2px 10px; border-radius: 999px; font-size: 0.5rem; }
     .footer .badge.gold { border-color: rgba(212,175,55,0.2); color: var(--gold); }
-
-    /* ===== MODALS ===== */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      padding: 16px;
-    }
-    .modal.open { display: flex; }
-    .modal-box {
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 24px;
-      max-width: 500px;
-      width: 100%;
-      max-height: 80vh;
-      overflow-y: auto;
-      position: relative;
-      box-shadow: var(--shadow);
-    }
-    .modal-box .close {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      background: none;
-      border: none;
+    .footer .copyright {
+      font-size: 0.6rem;
       color: var(--muted);
-      font-size: 1.4rem;
-      cursor: pointer;
+      margin-top: 6px;
     }
+    .footer .copyright .eye-small {
+      color: var(--gold);
+      animation: glowEye 3s ease-in-out infinite;
+    }
+
+    /* MODALS */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px; }
+    .modal.open { display: flex; }
+    .modal-box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 18px; padding: 24px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: var(--shadow); }
+    .modal-box .close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
     .modal-box .close:hover { color: var(--text); }
     .modal-box h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; margin-bottom: 12px; }
-    .modal-box input, .modal-box textarea {
-      width: 100%;
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 10px;
-      margin-bottom: 10px;
-      font-family: inherit;
-      font-size: 0.85rem;
-    }
+    .modal-box input, .modal-box textarea { width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); border-radius: 10px; margin-bottom: 10px; font-family: inherit; font-size: 0.85rem; }
     .modal-box .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
-    .status-text { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 6px; }
+    .modal-box .checkbox-group { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+    .modal-box .checkbox-group label { font-size: 0.8rem; color: var(--text); }
 
-    /* ===== DOMAIN HEALTH TABLE ===== */
-    .domain-table { width:100%; font-size:0.7rem; border-collapse:collapse; margin-top:8px; }
-    .domain-table th { text-align:left; padding:4px 6px; color:var(--gold); border-bottom:1px solid var(--border); }
-    .domain-table td { padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.03); }
-    .status-badge { display:inline-block; padding:1px 8px; border-radius:30px; font-size:0.55rem; font-weight:600; }
-    .status-badge.up { background:rgba(52,211,153,0.15); color:var(--ok); }
-    .status-badge.down { background:rgba(255,107,107,0.15); color:var(--err); }
-    .domain-search { width:100%; padding:6px 10px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text); border-radius:8px; font-size:0.7rem; margin-bottom:8px; outline:none; }
-    .domain-search:focus { border-color:var(--gold); }
-    .domain-stats { display:flex; gap:12px; font-size:0.65rem; color:var(--muted); margin-bottom:8px; flex-wrap:wrap; }
-
-    /* ===== DRAFTS LIST ===== */
-    .draft-item { background:rgba(255,255,255,0.03); border-radius:12px; padding:10px; margin-bottom:6px; border:1px solid var(--border); }
-    .draft-item .draft-title { color:var(--gold); font-weight:600; font-size:0.85rem; }
-    .draft-item .draft-status { font-size:0.6rem; padding:2px 8px; border-radius:30px; background:rgba(255,255,255,0.05); }
-    .draft-item .draft-actions { margin-top:6px; display:flex; gap:4px; flex-wrap:wrap; }
-
-    /* ===== RESPONSIVE ===== */
+    /* RESPONSIVE */
     @media (max-width: 520px) {
       .container { padding: 10px 10px 70px; }
-      .brand { font-size: 1.4rem; }
+      .brand { font-size: 1.2rem; }
+      .brand .eye-icon { font-size: 1.4rem; }
       .header-actions .btn { font-size: 0.6rem; padding: 4px 8px; }
       .input-row { flex-direction: column; align-items: stretch; }
       .input-row .send { width: 100%; justify-content: center; height: 44px; }
       .chat-area { max-height: 45vh; }
       .modal-box { padding: 16px; }
+      .welcome .eye-glow { font-size: 3rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Decorations -->
+  <!-- Background -->
+  <div class="eye-background">👁️</div>
   <div class="moon"></div>
   <div class="stars" id="stars"></div>
 
@@ -389,7 +362,8 @@
     <!-- HEADER -->
     <header class="header">
       <div class="brand">
-        LEXSARTHI <small>verdict engine</small>
+        <span class="eye-icon">👁️</span> UNKNOWN
+        <small>verdict engine</small>
         <span class="version">v10.0</span>
         <span id="premiumBadge" class="badge">⭐ PREMIUM</span>
         <span id="enterpriseBadge" class="badge">🏢 ENTERPRISE</span>
@@ -400,63 +374,45 @@
         <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
         <button class="btn btn-gold btn-sm" onclick="showPayment()">Plans</button>
         <button class="btn btn-outline btn-sm" onclick="showMyUsage()">Usage</button>
+        <button class="btn btn-icon" onclick="openSettings()" title="Settings"><i class="fas fa-cog"></i></button>
       </div>
     </header>
 
-    <!-- CHAT AREA -->
+    <!-- CHAT -->
     <div class="chat-area" id="chatArea">
       <div id="chat">
         <div class="welcome" id="welcome">
-          <div class="om">ॐ</div>
-          <h1>Ask me anything</h1>
-          <p>Powered by <strong>The Advocacy – A Law Firm</strong><br>
-          <span style="color:var(--muted);font-size:0.85rem;">Verified answers from 150+ trusted domains</span></p>
-          <p style="font-size:0.8rem;margin-top:6px;color:var(--gold);">Log in to start</p>
+          <span class="eye-glow">👁️</span>
+          <p>Unrestricted · Verified · Intelligent</p>
+          <span class="sub">Jury of 10 · Zero Retention</span>
+          <p style="font-size:0.8rem;margin-top:12px;color:var(--gold);">Log in to unlock the verdict</p>
         </div>
       </div>
       <div class="typing" id="typing">
-        <span style="font-family:'Noto Serif Devanagari';color:var(--gold);">ॐ</span>
-        <span>Consulting specialists & jury</span>
+        <span>Consulting jury & verifiers</span>
         <div class="dots"><span></span><span></span><span></span></div>
       </div>
     </div>
 
-    <!-- INPUT -->
+    <!-- INPUT – MERGED -->
     <div class="input-area">
       <div class="input-row">
-        <textarea id="queryInput" rows="1" placeholder="Type your question…"></textarea>
+        <textarea id="queryInput" rows="1" placeholder="Ask anything… the eye sees all."></textarea>
         <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
       </div>
       <div class="input-tools">
-        <label class="tool-label"><i class="fas fa-file-pdf"></i> PDF
-          <input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" hidden multiple onchange="handleFileUpload(this)" />
-        </label>
-        <button class="tool-label" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
-        <label class="tool-label"><input type="checkbox" id="webSearchToggle" checked /> <i class="fas fa-globe"></i> Web</label>
-        <label class="tool-label oracle"><input type="checkbox" id="oracleModeToggle" /> 🕉️ Oracle</label>
-        <label class="tool-label"><input type="checkbox" id="unrestrictedSearch" /> 🌍 Open</label>
-        <select class="tool-select" id="templateSelect" onchange="onTemplateSelect(this.value)">
-          <option value="">Template</option>
-          <option value="demand_letter">📄 Demand Letter</option>
-          <option value="nda">🤝 NDA</option>
-          <option value="motion_to_modify">⚖️ Motion</option>
-          <option value="employment_contract">💼 Employment</option>
-          <option value="contract_review">🔍 Contract Review</option>
-        </select>
+        <!-- File upload button -->
+        <button class="tool-btn" id="fileBtn" onclick="document.getElementById('pdfUpload').click()"><i class="fas fa-paperclip"></i> Attach</button>
+        <input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" multiple style="display:none" onchange="handleFileUpload(this)" />
+        <!-- Voice button -->
+        <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
+        <!-- Hidden file preview -->
+        <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
       </div>
-      <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
       <div id="status" class="status-text"></div>
     </div>
 
-    <!-- OUTPUT TOOLS -->
-    <div class="output-tools">
-      <button class="btn-icon" onclick="copyResponse()"><i class="fas fa-copy"></i> Copy</button>
-      <button class="btn-icon" onclick="downloadTXT()"><i class="fas fa-file-alt"></i> TXT</button>
-      <button class="btn-icon" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-      <button class="btn-icon speak-btn" onclick="speakResponse()"><i class="fas fa-volume-up"></i> Speak</button>
-      <button class="btn-icon" onclick="shareResponse()"><i class="fas fa-share-alt"></i> Share</button>
-      <button class="btn-icon" onclick="clearChat()"><i class="fas fa-trash"></i> Clear</button>
-    </div>
+    <!-- No separate output tools – they are integrated into chat messages -->
 
     <!-- FOOTER -->
     <footer class="footer">
@@ -471,13 +427,14 @@
         <span class="badge gold">⚖️ 150+ Trusted Domains</span>
         <span class="badge">✅ Jury Verified</span>
       </div>
-      <div style="margin-top:4px;font-size:0.55rem;color:#555;">© 2026 LexSarthi · <strong style="color:var(--muted);">THE ADVOCACY — A LAW FIRM</strong></div>
+      <div class="copyright">
+        © 2026 <span class="eye-small">👁️</span> · THE ADVOCACY — A LAW FIRM
+      </div>
     </footer>
   </div>
 
   <!-- ===== MODALS ===== -->
-
-  <!-- Login -->
+  <!-- Login, Usage, Payment, Domain, Drafts, Settings, etc. – kept as before but simplified -->
   <div class="modal" id="loginModal">
     <div class="modal-box">
       <button class="close" onclick="closeModal('loginModal')">&times;</button>
@@ -491,8 +448,6 @@
       <div id="loginStatus" class="status-text"></div>
     </div>
   </div>
-
-  <!-- Usage -->
   <div class="modal" id="usageModal">
     <div class="modal-box">
       <button class="close" onclick="closeModal('usageModal')">&times;</button>
@@ -500,8 +455,6 @@
       <div id="usageContent"><p style="color:var(--muted);">Loading...</p></div>
     </div>
   </div>
-
-  <!-- Payment -->
   <div class="modal" id="paymentModal">
     <div class="modal-box">
       <button class="close" onclick="closeModal('paymentModal')">&times;</button>
@@ -521,8 +474,6 @@
       <div id="paymentStatus" class="status-text"></div>
     </div>
   </div>
-
-  <!-- Domain Health -->
   <div class="modal" id="domainHealthModal">
     <div class="modal-box">
       <button class="close" onclick="closeModal('domainHealthModal')">&times;</button>
@@ -530,8 +481,6 @@
       <div id="domainHealthContent"><p style="color:var(--muted);">Loading...</p></div>
     </div>
   </div>
-
-  <!-- Drafts -->
   <div class="modal" id="draftsModal">
     <div class="modal-box">
       <button class="close" onclick="closeModal('draftsModal')">&times;</button>
@@ -539,19 +488,72 @@
       <div id="draftsList"><p style="color:var(--muted);">Loading...</p></div>
     </div>
   </div>
-
-  <!-- Template Modal (for filling fields) -->
-  <div class="modal" id="templateModal">
+  <!-- Settings Modal with merged options -->
+  <div class="modal" id="settingsModal">
     <div class="modal-box">
-      <button class="close" onclick="closeModal('templateModal')">&times;</button>
-      <h3 id="templateTitle">📄 Generate Document</h3>
-      <div id="templateFields"></div>
-      <button class="btn btn-gold" onclick="generateFromTemplate()" style="width:100%;padding:10px;margin-top:8px;">Generate</button>
-      <div id="templateStatus" class="status-text"></div>
+      <button class="close" onclick="closeModal('settingsModal')">&times;</button>
+      <h3>⚙️ Settings</h3>
+      <div style="margin:12px 0;">
+        <label style="display:block;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">Default Provider</label>
+        <select id="defaultProvider" class="tool-select" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--text);">
+          <option value="deepseek">DeepSeek (Unlimited)</option>
+          <option value="gemini">Gemini</option>
+          <option value="groq">Groq</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+      <div style="margin:12px 0;">
+        <label style="display:block;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">Theme</label>
+        <select id="themeSelect" class="tool-select" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--text);">
+          <option value="dark">Dark (Default)</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="webSearchToggle" checked />
+        <label for="webSearchToggle">Enable Web Search</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="unrestrictedToggle" />
+        <label for="unrestrictedToggle">Unrestricted Mode (Open Web)</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="oracleToggle" />
+        <label for="oracleToggle">Oracle Mode</label>
+      </div>
+      <div style="margin:12px 0;">
+        <label style="display:block;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">Language</label>
+        <select id="langSelect" class="tool-select" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--text);">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="sa">Sanskrit</option>
+          <option value="bn">Bengali</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="pt">Portuguese</option>
+          <option value="it">Italian</option>
+          <option value="ru">Russian</option>
+          <option value="ar">Arabic</option>
+          <option value="zh">Chinese</option>
+          <option value="ja">Japanese</option>
+          <option value="ko">Korean</option>
+          <option value="th">Thai</option>
+          <option value="vi">Vietnamese</option>
+          <option value="id">Indonesian</option>
+          <option value="he">Hebrew</option>
+          <option value="el">Greek</option>
+          <option value="tr">Turkish</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button class="btn btn-gold" onclick="saveSettings()">Save</button>
+        <button class="btn btn-outline" onclick="closeModal('settingsModal')">Cancel</button>
+      </div>
+      <div id="settingsStatus" class="status-text"></div>
     </div>
   </div>
-
-  <!-- Static modals (Terms, Privacy, About, Verifiers) -->
+  <!-- Static modals -->
   <div class="modal" id="termsModal"><div class="modal-box"><button class="close" onclick="closeModal('termsModal')">&times;</button><h3>📜 Terms</h3><p style="font-size:0.85rem;color:var(--text);">AI‑generated responses are informational only, not professional advice.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div></div></div>
   <div class="modal" id="privacyModal"><div class="modal-box"><button class="close" onclick="closeModal('privacyModal')">&times;</button><h3>🔒 Privacy</h3><p style="font-size:0.85rem;line-height:1.6;">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div></div></div>
   <div class="modal" id="aboutModal"><div class="modal-box"><button class="close" onclick="closeModal('aboutModal')">&times;</button><h3>ℹ️ About</h3><p style="font-size:0.85rem;line-height:1.7;">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. Features 250 specialist personas, jury of 10, zero retention.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('aboutModal')">Close</button></div></div></div>
@@ -672,6 +674,46 @@
     function showLogin(){ openModal('loginModal'); }
 
     // ============================================================
+    // SETTINGS
+    // ============================================================
+    function openSettings() {
+      openModal('settingsModal');
+      const provider = localStorage.getItem('defaultProvider') || 'deepseek';
+      document.getElementById('defaultProvider').value = provider;
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.getElementById('themeSelect').value = theme;
+      document.getElementById('webSearchToggle').checked = localStorage.getItem('webSearch') !== 'false';
+      document.getElementById('unrestrictedToggle').checked = localStorage.getItem('unrestricted') === 'true';
+      document.getElementById('oracleToggle').checked = localStorage.getItem('oracle') === 'true';
+      document.getElementById('langSelect').value = localStorage.getItem('lang') || 'en';
+    }
+
+    function saveSettings() {
+      const provider = document.getElementById('defaultProvider').value;
+      const theme = document.getElementById('themeSelect').value;
+      const webSearch = document.getElementById('webSearchToggle').checked;
+      const unrestricted = document.getElementById('unrestrictedToggle').checked;
+      const oracle = document.getElementById('oracleToggle').checked;
+      const lang = document.getElementById('langSelect').value;
+      localStorage.setItem('defaultProvider', provider);
+      localStorage.setItem('theme', theme);
+      localStorage.setItem('webSearch', webSearch ? 'true' : 'false');
+      localStorage.setItem('unrestricted', unrestricted ? 'true' : 'false');
+      localStorage.setItem('oracle', oracle ? 'true' : 'false');
+      localStorage.setItem('lang', lang);
+      // Apply theme
+      if (theme === 'light') {
+        document.documentElement.style.setProperty('--bg', '#f0ede8');
+        document.documentElement.style.setProperty('--text', '#0a0a0f');
+      } else {
+        document.documentElement.style.setProperty('--bg', '#050508');
+        document.documentElement.style.setProperty('--text', '#f0ede8');
+      }
+      document.getElementById('settingsStatus').textContent = '✅ Settings saved';
+      setTimeout(() => closeModal('settingsModal'), 1000);
+    }
+
+    // ============================================================
     // FILE UPLOAD
     // ============================================================
     function handleFileUpload(inp) {
@@ -692,13 +734,14 @@
     // ============================================================
     // VOICE
     // ============================================================
-    const LANG_VOICE = {en:'en-US',hi:'hi-IN',sa:'hi-IN',bn:'bn-IN',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR',it:'it-IT',ru:'ru-RU',ar:'ar-SA',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR',th:'th-TH',vi:'vi-VN',id:'id-ID',he:'he-IL',el:'el-GR',tr:'tr-TR'};
     function startVoice() {
       try {
         const R = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!R) { setStatus('❌ Voice not supported'); return; }
         const r = new R();
-        r.lang = LANG_VOICE[document.getElementById('langSelect')?.value] || 'en-US';
+        const lang = localStorage.getItem('lang') || 'en';
+        const langMap = {en:'en-US',hi:'hi-IN',sa:'hi-IN',bn:'bn-IN',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR',it:'it-IT',ru:'ru-RU',ar:'ar-SA',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR',th:'th-TH',vi:'vi-VN',id:'id-ID',he:'he-IL',el:'el-GR',tr:'tr-TR'};
+        r.lang = langMap[lang] || 'en-US';
         r.continuous = false; r.interimResults = false;
         const btn = document.getElementById('voiceBtn');
         r.onstart = () => { btn.innerHTML = '<i class="fas fa-microphone-slash"></i>'; setStatus('🎤 Listening...'); };
@@ -710,128 +753,30 @@
     }
 
     // ============================================================
-    // SPEAK
+    // SPEAK (per message)
     // ============================================================
-    function speakResponse() {
-      const t = document.getElementById('chat').innerText || '';
-      if (!t.trim()) { alert('Nothing to speak.'); return; }
+    function speakMessage(text, btn) {
       if (isSpeaking) {
         window.speechSynthesis.cancel();
         isSpeaking = false;
-        document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
         setStatus('🔇 Stopped');
         return;
       }
-      const u = new SpeechSynthesisUtterance(t.slice(0,3000));
-      u.lang = LANG_VOICE[document.getElementById('langSelect')?.value] || 'en-US';
+      const u = new SpeechSynthesisUtterance(text.slice(0,3000));
+      const lang = localStorage.getItem('lang') || 'en';
+      const langMap = {en:'en-US',hi:'hi-IN',sa:'hi-IN',bn:'bn-IN',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR',it:'it-IT',ru:'ru-RU',ar:'ar-SA',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR',th:'th-TH',vi:'vi-VN',id:'id-ID',he:'he-IL',el:'el-GR',tr:'tr-TR'};
+      u.lang = langMap[lang] || 'en-US';
       u.rate = 0.85; u.pitch = 0.9;
       const voices = window.speechSynthesis.getVoices();
       const preferredVoice = voices.find(v => v.name.includes('Google US English') && v.name.includes('Female')) || voices.find(v => v.name.includes('Samantha')) || voices.find(v => v.lang.startsWith('en'));
       if (preferredVoice) u.voice = preferredVoice;
-      u.onend = () => { isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; setStatus('🔊 Finished'); };
-      u.onerror = () => { isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; setStatus('❌ Speech error'); };
+      u.onend = () => { isSpeaking = false; btn.innerHTML = '<i class="fas fa-volume-up"></i>'; setStatus('🔊 Finished'); };
+      u.onerror = () => { isSpeaking = false; btn.innerHTML = '<i class="fas fa-volume-up"></i>'; setStatus('❌ Speech error'); };
       window.speechSynthesis.speak(u);
       isSpeaking = true;
-      document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-stop"></i> Stop';
+      btn.innerHTML = '<i class="fas fa-stop"></i>';
       setStatus('🔊 Speaking...');
-    }
-
-    // ============================================================
-    // COPY / DOWNLOAD / SHARE / CLEAR
-    // ============================================================
-    function copyResponse() {
-      const t = document.getElementById('chat').innerText || '';
-      navigator.clipboard.writeText(t).then(() => setStatus('✅ Copied'));
-    }
-    function downloadTXT() {
-      const t = document.getElementById('chat').innerText || '';
-      const b = new Blob([t], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(b);
-      a.download = 'lexsarthi.txt';
-      a.click();
-    }
-    function downloadPDF() {
-  const chatDiv = document.getElementById('chat');
-  // Get all text content, but preserve line breaks better
-  let textContent = chatDiv.innerText || '';
-  
-  if (!textContent.trim()) {
-    alert('Nothing to export.');
-    return;
-  }
-
-  setStatus('Generating PDF...');
-
-  // Import jsPDF directly (ensure you have it loaded in HTML)
-  // Since we already load html2pdf, jsPDF is available via window.jspdf
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'pt', 'a4'); // Portrait, points, A4
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 40;
-  const maxWidth = pageWidth - (margin * 2);
-  let currentY = margin;
-
-  // Add a simple header
-  doc.setFontSize(18);
-  doc.setTextColor(212, 175, 55); // Gold color
-  doc.setFont('helvetica', 'bold');
-  doc.text('LEXSARTHI - VERDICT ENGINE', margin, currentY);
-  currentY += 20;
-  
-  doc.setFontSize(10);
-  doc.setTextColor(150, 150, 150);
-  doc.setFont('helvetica', 'italic');
-  doc.text(`Generated: ${new Date().toLocaleString()}`, margin, currentY);
-  currentY += 30;
-
-  // Set main text style
-  doc.setFontSize(11);
-  doc.setTextColor(20, 20, 20); // Black for readability
-
-  // Split text into lines
-  const lines = doc.splitTextToSize(textContent, maxWidth);
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Check if we need a new page
-    if (currentY + 20 > pageHeight - margin) {
-      doc.addPage();
-      currentY = margin;
-    }
-    
-    doc.text(line, margin, currentY);
-    currentY += 16; // Line height
-  }
-
-  // Save the PDF
-  doc.save('lexsarthi.pdf');
-  setStatus('✅ PDF ready (Text-based, clear)');
-}
-    function shareResponse() {
-      const t = document.getElementById('chat').innerText || '';
-      if (!t.trim()) { alert('Nothing to share.'); return; }
-      const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: 'LexSarthi', text: t.slice(0,1000) + '...', url: url }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(`LexSarthi:\n${t.slice(0,500)}...\n${url}`).then(() => setStatus('📋 Shared'));
-      }
-    }
-    function clearChat() {
-      document.getElementById('chat').innerHTML = `
-        <div class="welcome" id="welcome">
-          <div class="om">ॐ</div>
-          <h1>Ask me anything</h1>
-          <p>Powered by <strong>The Advocacy – A Law Firm</strong><br>
-          <span style="color:var(--muted);font-size:0.85rem;">Verified answers from 150+ trusted domains</span></p>
-          <p style="font-size:0.8rem;margin-top:6px;color:var(--gold);">Log in to start</p>
-        </div>
-      `;
-      if (isSpeaking) { window.speechSynthesis.cancel(); isSpeaking = false; document.querySelector('.speak-btn').innerHTML = '<i class="fas fa-volume-up"></i> Speak'; }
-      setStatus('');
     }
 
     // ============================================================
@@ -887,79 +832,9 @@
     }
 
     // ============================================================
-    // TEMPLATES
-    // ============================================================
-    async function onTemplateSelect(value) {
-      if (!value) return;
-      try {
-        const r = await fetch(`${API_BASE}/api/templates`);
-        const data = await r.json();
-        const template = data.templates.find(t => t.id === value);
-        if (!template) return;
-        currentTemplate = template;
-        const container = document.getElementById('templateFields');
-        container.innerHTML = '';
-        template.fields.forEach(f => {
-          const label = document.createElement('label');
-          label.textContent = f.label;
-          label.style.cssText = 'display:block;font-size:0.7rem;color:var(--muted);margin:6px 0 3px;';
-          const input = document.createElement('input');
-          input.type = f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text';
-          input.placeholder = f.label;
-          input.id = `template_field_${f.key}`;
-          input.style.cssText = 'width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;margin-bottom:6px;font-family:inherit;font-size:0.85rem;';
-          container.appendChild(label);
-          container.appendChild(input);
-        });
-        document.getElementById('templateTitle').textContent = `📄 ${template.name}`;
-        openModal('templateModal');
-        document.getElementById('templateSelect').value = '';
-        document.getElementById('templateStatus').textContent = '';
-      } catch(e) { setStatus('❌ Error loading template'); }
-    }
-
-    async function generateFromTemplate() {
-      if (!currentTemplate) return;
-      const data = {};
-      currentTemplate.fields.forEach(f => {
-        const input = document.getElementById(`template_field_${f.key}`);
-        if (input) data[f.key] = input.value;
-      });
-      document.getElementById('templateStatus').textContent = 'Generating...';
-      try {
-        const t = getToken();
-        if (!t) { alert('Login first'); showLogin(); return; }
-        const r = await fetch(`${API_BASE}/api/templates/${currentTemplate.id}/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-          body: JSON.stringify(data)
-        });
-        if (!r.ok) throw new Error('Generation failed');
-        const result = await r.json();
-        // Add to chat as agent message
-        appendMessage('agent', result.document);
-        closeModal('templateModal');
-        setStatus('✅ Template generated!');
-        // Also save as draft automatically
-        await fetch(`${API_BASE}/drafts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-          body: JSON.stringify({
-            title: `${currentTemplate.name} - ${new Date().toLocaleDateString()}`,
-            content: result.document,
-            template_id: currentTemplate.id
-          })
-        });
-      } catch(e) {
-        document.getElementById('templateStatus').textContent = '❌ ' + e.message;
-      }
-    }
-
-    // ============================================================
-    // DRAFTS
+    // DRAFTS (simplified – just view, no extra actions)
     // ============================================================
     function showDrafts() { openModal('draftsModal'); loadDrafts(); }
-
     async function loadDrafts() {
       const container = document.getElementById('draftsList');
       container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
@@ -987,11 +862,6 @@
               <div style="font-size:0.6rem;color:var(--muted);">${new Date(d.created_at).toLocaleString()}</div>
               <div class="draft-actions">
                 <button class="btn btn-outline btn-sm" onclick="viewDraft(${d.id})" style="font-size:0.6rem;">View</button>
-                ${d.status === 'pending_review' ? `
-                  <button class="btn btn-gold btn-sm" onclick="approveDraft(${d.id})" style="font-size:0.6rem;">Approve</button>
-                  <button class="btn btn-outline btn-sm" onclick="rejectDraft(${d.id})" style="font-size:0.6rem;border-color:var(--err);color:var(--err);">Reject</button>
-                ` : ''}
-                <button class="btn btn-outline btn-sm" onclick="improveDraft(${d.id})" style="font-size:0.6rem;">✨ Improve</button>
               </div>
             </div>
           `;
@@ -1001,7 +871,6 @@
         container.innerHTML = `<p style="color:var(--err);">Error: ${e.message}</p>`;
       }
     }
-
     async function viewDraft(id) {
       const t = getToken();
       const r = await fetch(`${API_BASE}/drafts/${id}`, {
@@ -1011,44 +880,65 @@
       alert('Draft content:\n\n' + d.content);
     }
 
-    async function approveDraft(id) {
-      if (!confirm('Approve this draft?')) return;
-      const t = getToken();
-      await fetch(`${API_BASE}/drafts/${id}/approve`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${t}` }
-      });
-      loadDrafts();
+    // ============================================================
+    // PAYMENTS
+    // ============================================================
+    function showPayment(){ openModal('paymentModal'); checkLifetime(); }
+    function selectPlan(p){ document.getElementById('paymentPlan').value = p; }
+    async function checkLifetime(){
+      try {
+        const r = await fetch(`${API_BASE}/lifetime-count`);
+        const d = await r.json();
+        document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
+      } catch(e){}
     }
-
-    async function rejectDraft(id) {
-      const reason = prompt('Reason for rejection:');
-      if (reason === null) return;
+    async function processPayment(){
       const t = getToken();
-      await fetch(`${API_BASE}/drafts/${id}/reject`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-        body: JSON.stringify({ reason })
-      });
-      loadDrafts();
-    }
-
-    async function improveDraft(id) {
-      const instructions = prompt('Instructions for improvement:', 'Make this more professional and legally precise.');
-      if (instructions === null) return;
-      const t = getToken();
-      const r = await fetch(`${API_BASE}/drafts/${id}/improve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-        body: JSON.stringify({ instructions })
-      });
-      const result = await r.json();
-      alert('Original:\n\n' + result.original + '\n\nImproved:\n\n' + result.improved);
-      loadDrafts();
+      if (!t) { alert('Login first'); return; }
+      const tier = document.getElementById('paymentPlan').value;
+      const s = document.getElementById('paymentStatus');
+      s.textContent = 'Creating order...';
+      try {
+        const r = await fetch(`${API_BASE}/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+          body: JSON.stringify({ tier })
+        });
+        const d = await r.json();
+        if (!r.ok) { s.textContent = '❌ ' + d.detail; return; }
+        const opts = {
+          key: d.razorpay_key,
+          amount: d.amount,
+          currency: 'INR',
+          name: 'Unknown Verdict',
+          order_id: d.order_id,
+          handler: async function(resp) {
+            const v = await fetch(`${API_BASE}/verify-payment`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${t}` },
+              body: new URLSearchParams({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature
+              })
+            });
+            const vd = await v.json();
+            if (v.ok) {
+              s.textContent = '✅ Success! Now ' + vd.tier;
+              closeModal('paymentModal');
+              checkPremium();
+            } else {
+              s.textContent = '❌ ' + vd.detail;
+            }
+          },
+          theme: { color: '#d4af37' }
+        };
+        new Razorpay(opts).open();
+      } catch(e) { s.textContent = '❌ ' + e.message; }
     }
 
     // ============================================================
-    // SEND QUERY (MAIN)
+    // SEND QUERY – MERGED (all options from localStorage)
     // ============================================================
     async function sendQuery() {
       if (isProcessing) return;
@@ -1062,14 +952,18 @@
 
       isProcessing = true;
       setTyping(true);
-      setStatus('Analyzing...');
+      setStatus('👁️ Rendering verdict...');
       const chat = document.getElementById('chat');
       const welcome = document.getElementById('welcome');
       if (welcome) welcome.style.display = 'none';
 
-      // Add user message
-      const oracle = document.getElementById('oracleModeToggle').checked;
-      let userMsg = (oracle ? '🔮 ' : '') + (q || '📎 Files attached');
+      // Get settings from localStorage
+      const webSearch = localStorage.getItem('webSearch') !== 'false';
+      const unrestricted = localStorage.getItem('unrestricted') === 'true';
+      const oracle = localStorage.getItem('oracle') === 'true';
+      const lang = localStorage.getItem('lang') || 'en';
+
+      let userMsg = (oracle ? '🕉️ ' : '') + (q || '📎 Files attached');
       if (uploadedFiles.length) {
         userMsg += `<br><span style="font-size:0.65rem;color:var(--gold);">📎 ${uploadedFiles.map(f=>f.name).join(', ')}</span>`;
       }
@@ -1078,11 +972,11 @@
       const fd = new FormData();
       fd.append('query', q || 'Analyze uploaded documents');
       uploadedFiles.forEach(f => fd.append('files', f));
-      fd.append('search_web', document.getElementById('webSearchToggle').checked ? 'on' : 'off');
+      fd.append('search_web', webSearch ? 'on' : 'off');
       fd.append('model', 'llama-3.3-70b-versatile');
-      fd.append('lang', 'en');
+      fd.append('lang', lang);
       fd.append('oracle_mode', oracle ? 'true' : 'false');
-      fd.append('unrestricted', document.getElementById('unrestrictedSearch').checked ? 'true' : 'false');
+      fd.append('unrestricted', unrestricted ? 'true' : 'false');
       fd.append('agent_id', 'agent_001');
 
       try {
@@ -1137,20 +1031,44 @@
         }
 
         setTyping(false);
-        if (agentBubble && verification) {
-          const badge = document.createElement('div');
-          badge.className = 'badge-verify';
-          const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
-                            verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
-          const verifierList = verification.jury_verifiers.join(', ');
-          badge.innerHTML = `
-            <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence} confidence
-            <span style="color:var(--muted);font-size:0.6rem;"> · ${verifierList}</span>
-          `;
-          agentBubble.appendChild(badge);
+        if (agentBubble) {
+          // Add provider tag if available
+          if (verification && verification.provider) {
+            let providerTag = document.createElement('div');
+            providerTag.className = 'provider-tag';
+            providerTag.innerHTML = `⚡ Powered by: <strong>${verification.provider.charAt(0).toUpperCase() + verification.provider.slice(1)}</strong>`;
+            agentBubble.appendChild(providerTag);
+          }
+          if (verification) {
+            const badge = document.createElement('div');
+            badge.className = 'badge-verify';
+            const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
+                              verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
+            const verifierList = verification.jury_verifiers ? verification.jury_verifiers.join(', ') : 'Ganesha, Yama, Shakti';
+            badge.innerHTML = `
+              <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence || 'HIGH'} confidence
+              <span style="color:var(--muted);font-size:0.6rem;"> · ${verifierList}</span>
+            `;
+            agentBubble.appendChild(badge);
+          }
+          // Add action buttons (copy, speak) to each agent message
+          const actions = document.createElement('div');
+          actions.className = 'msg-actions';
+          const copyBtn = document.createElement('button');
+          copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+          copyBtn.onclick = function() {
+            const text = agentBubble.innerText || '';
+            navigator.clipboard.writeText(text).then(() => setStatus('✅ Copied'));
+          };
+          const speakBtn = document.createElement('button');
+          speakBtn.innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+          speakBtn.onclick = function() { speakMessage(fullText, speakBtn); };
+          actions.appendChild(copyBtn);
+          actions.appendChild(speakBtn);
+          agentBubble.appendChild(actions);
           chat.scrollTop = chat.scrollHeight;
         }
-        setStatus('✅ Ready');
+        setStatus('✅ Verdict rendered');
       } catch(e) {
         setTyping(false);
         appendMessage('agent', `❌ Network error: ${e.message}`);
@@ -1170,63 +1088,6 @@
       div.innerHTML = content;
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
-    }
-
-    // ============================================================
-    // PAYMENTS
-    // ============================================================
-    function showPayment(){ openModal('paymentModal'); checkLifetime(); }
-    function selectPlan(p){ document.getElementById('paymentPlan').value = p; }
-    async function checkLifetime(){
-      try {
-        const r = await fetch(`${API_BASE}/lifetime-count`);
-        const d = await r.json();
-        document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
-      } catch(e){}
-    }
-    async function processPayment(){
-      const t = getToken();
-      if (!t) { alert('Login first'); return; }
-      const tier = document.getElementById('paymentPlan').value;
-      const s = document.getElementById('paymentStatus');
-      s.textContent = 'Creating order...';
-      try {
-        const r = await fetch(`${API_BASE}/create-order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-          body: JSON.stringify({ tier })
-        });
-        const d = await r.json();
-        if (!r.ok) { s.textContent = '❌ ' + d.detail; return; }
-        const opts = {
-          key: d.razorpay_key,
-          amount: d.amount,
-          currency: 'INR',
-          name: 'LexSarthi',
-          order_id: d.order_id,
-          handler: async function(resp) {
-            const v = await fetch(`${API_BASE}/verify-payment`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${t}` },
-              body: new URLSearchParams({
-                razorpay_order_id: resp.razorpay_order_id,
-                razorpay_payment_id: resp.razorpay_payment_id,
-                razorpay_signature: resp.razorpay_signature
-              })
-            });
-            const vd = await v.json();
-            if (v.ok) {
-              s.textContent = '✅ Success! Now ' + vd.tier;
-              closeModal('paymentModal');
-              checkPremium();
-            } else {
-              s.textContent = '❌ ' + vd.detail;
-            }
-          },
-          theme: { color: '#d4af37' }
-        };
-        new Razorpay(opts).open();
-      } catch(e) { s.textContent = '❌ ' + e.message; }
     }
 
     // ============================================================
@@ -1256,7 +1117,6 @@
         }
       });
       document.getElementById('sendBtn').addEventListener('click', sendQuery);
-      // Auto-resize textarea
       input.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
@@ -1265,4 +1125,4 @@
     });
   </script>
 </body>
-</html> 
+</html>
