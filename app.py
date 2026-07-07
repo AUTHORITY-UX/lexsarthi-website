@@ -1017,7 +1017,7 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️ feedparser not installed – daily news pipeline disabled.")
     sched.add_job(_analyse_and_improve, IntervalTrigger(hours=24))
     sched.start()
-    logger.info("🔱 LexSarthi v10.0 – Complete Enterprise Edition Ready.")
+    logger.info("👁️ Unknown Verdict Engine v10.0 – Complete Enterprise Edition Ready.")
 
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
