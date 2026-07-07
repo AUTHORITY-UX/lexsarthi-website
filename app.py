@@ -61,7 +61,7 @@ from atma import AtmaRouter
 # ─── LOGGING ──────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("lexsarthi")
+logger = logging.getLogger("unknown_verdict")
 
 # ─── ENV ──────────────────────────────────────────────────────────────────
 DATABASE_URL       = os.getenv("DATABASE_URL")
@@ -305,8 +305,7 @@ limiter = Limiter(key_func=get_remote_address)
 logger.info("✅ Rate limiter using in‑memory storage")
 
 # ─── SYSTEM PROMPT ──────────────────────────────────────────────────────
-SYSTEM_BASE = """You are LexSarthi, the Universal Default OS for Human Knowledge — 100% True. You are powered by 250 specialist personas, a jury of 3 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, compassionate."""
-
+SYSTEM_BASE = SYSTEM_BASE = """You are the Unknown Verdict Engine – an AI advisory OS with 250 specialist personas, a jury of 10 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, neutral."""
 # ─── 250 SPECIALIST PERSONAS ──────────────────────────────────────────
 DOMAINS_FULL = [
     "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
@@ -784,17 +783,29 @@ async def _check_domain_health(domain: str) -> dict:
     return result
 
 async def _store_domain_analytics(domain: str, status: dict):
-    # ✅ FIX: pass all values as a single tuple
-    await database.execute("""
-        INSERT INTO domain_analytics (domain, status_code, response_time, ssl_expiry, dns_resolves, last_checked)
-        VALUES ($1, $2, $3, $4, $5, NOW())
-        ON CONFLICT (domain) DO UPDATE SET
-            status_code = EXCLUDED.status_code,
-            response_time = EXCLUDED.response_time,
-            ssl_expiry = EXCLUDED.ssl_expiry,
-            dns_resolves = EXCLUDED.dns_resolves,
-            last_checked = NOW()
-    """, (domain, status["status_code"], status["response_time"], status["ssl_expiry"], status["dns_resolves"]))
+    """Store domain analytics safely using asyncpg positional placeholders."""
+    try:
+        # Use asyncpg connection directly (pool is available)
+        async with pg_pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO domain_analytics (domain, status_code, response_time, ssl_expiry, dns_resolves, last_checked)
+                VALUES ($1, $2, $3, $4, $5, NOW())
+                ON CONFLICT (domain) DO UPDATE SET
+                    status_code = EXCLUDED.status_code,
+                    response_time = EXCLUDED.response_time,
+                    ssl_expiry = EXCLUDED.ssl_expiry,
+                    dns_resolves = EXCLUDED.dns_resolves,
+                    last_checked = NOW()
+                """,
+                domain,
+                status.get("status_code"),
+                status.get("response_time"),
+                status.get("ssl_expiry"),
+                status.get("dns_resolves", False)
+            )
+    except Exception as e:
+        logger.error(f"Failed to store domain analytics for {domain}: {e}")
 
 # ─── DAILY BLOG & LINKEDIN PIPELINE ────────────────────────────────────
 AI_NEWS_FEEDS = [
@@ -1236,7 +1247,7 @@ async def _incr_query(uid: int):
     await database.execute(users.update().where(users.c.id == uid).values(queries_used_today=users.c.queries_used_today + 1, updated_at=datetime.now()))
 
 # ─── APP INSTANCE ────────────────────────────────────────────────────────
-app = FastAPI(title="LexSarthi", lifespan=lifespan)
+app = FastAPI(title="Unknown Verdict Engine", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
