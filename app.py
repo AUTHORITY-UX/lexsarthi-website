@@ -1,7 +1,7 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10.0 – Complete Enterprise Edition
+# LEXSARTHI v10.0 – Complete Enterprise Edition (Memory Re‑enabled)
 # =============================================================================
 
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket, hashlib
@@ -199,7 +199,7 @@ custom_personas = Table("custom_personas", metadata,
     Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
 )
 fine_tune_data = Table("fine_tune_data", metadata,
-    Column("id", Integer, primary_key=True),   # FIXED: was Serial
+    Column("id", Integer, primary_key=True),
     Column("query", Text),
     Column("initial_answer", Text),
     Column("final_answer", Text),
@@ -229,14 +229,13 @@ localisations = Table("localisations", metadata,
     Column("value", Text),
     UniqueConstraint("locale", "key", name="uq_locale_key"),
 )
-# ─── Drafts (Human‑in‑the‑Loop) ──────────────────────────────────────
 drafts = Table("drafts", metadata,
     Column("id", Integer, primary_key=True),
     Column("user_id", Integer, index=True),
     Column("title", Text),
     Column("content", Text),
     Column("original_ai_content", Text),
-    Column("status", String(20), server_default="draft"),  # draft, pending_review, approved, rejected, revised
+    Column("status", String(20), server_default="draft"),
     Column("feedback", Text, nullable=True),
     Column("template_id", String(50), nullable=True),
     Column("metadata", JSON, nullable=True),
@@ -385,7 +384,8 @@ def route_agent(query: str, oracle: bool) -> str:
     return best_id if best_score >= 2 else "general"
 
 # ─── RAG (pgvector) ─────────────────────────────────────────────────────
-async def fetch_relevant_chunks(query: str, top_k: int = 10, conn: asyncpg.Connection = None) -> List[Dict]:
+async def fetch_relevant_chunks(query: str, top_k: int = 3, conn: asyncpg.Connection = None) -> List[Dict]:
+    """Fetch top_k chunks; reduced to 3 to save tokens."""
     query_embedding = embedding_model.encode(query).tolist()
     query_embedding_str = json.dumps(query_embedding)
     if conn is None:
@@ -407,7 +407,7 @@ async def _fetch_chunks(conn, embedding_str: str, top_k: int):
     return [
         {
             "content": row["content"],
-            # Handle metadata if it's a string (JSON) or a dict
+            # Safely parse metadata if it's a string
             "metadata": row["metadata"] if isinstance(row["metadata"], dict) else json.loads(row["metadata"]),
             "citation": row["metadata"].get("source", "Unknown") if isinstance(row["metadata"], dict) else json.loads(row["metadata"]).get("source", "Unknown"),
             "similarity": row["similarity"]
@@ -419,7 +419,7 @@ async def _fetch_chunks(conn, embedding_str: str, top_k: int):
 async def serpapi_search(query: str, unrestricted: bool = False) -> List[Dict]:
     if not SERPAPI_KEY:
         return []
-    params = {"q": query, "api_key": SERPAPI_KEY, "num": 5}
+    params = {"q": query, "api_key": SERPAPI_KEY, "num": 3}   # reduced to 3
     if not unrestricted:
         domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "")
         if domains:
@@ -572,15 +572,25 @@ async def _get_memory(uid: int) -> List[dict]:
 
 async def _update_memory(uid: int, q: str, a: str):
     m = await _get_memory(uid)
+    # Keep only last 3 exchanges, each truncated
     m.append({"q": q[:200], "a": a[:200]})
-    m = m[-10:]
+    m = m[-3:]   # only 3 exchanges kept
     await database.execute(users.update().where(users.c.id == uid).values(memory=json.dumps(m)))
 
+# ─── CONTEXT BUILDER (SAFE, CAPS) ──────────────────────────────────
 def _build_context(mem: List[dict]) -> str:
     if not mem:
         return ""
-    ctx = "\n".join(f"[Prev Q] {x['q']}\n[Prev A] {x['a']}" for x in mem[-3:])
-    return f"═══ RECENT CONTEXT ═══\n{ctx}\n═════════════════\nCurrent query:\n"
+    # Keep only last 2 exchanges, each truncated
+    recent = mem[-2:]
+    context_parts = []
+    for exchange in recent:
+        q = exchange.get('q', '')[:200]   # max 200 chars
+        a = exchange.get('a', '')[:300]   # max 300 chars
+        context_parts.append(f"[Prev Q] {q}\n[Prev A] {a}")
+    if not context_parts:
+        return ""
+    return f"═══ RECENT CONTEXT ═══\n{'\n'.join(context_parts)}\n═════════════════\nCurrent query:\n"
 
 # ─── CACHING HELPERS (Redis) ──────────────────────────────────────────
 def _get_cache_key(query: str, model: str, oracle: bool) -> str:
@@ -648,6 +658,7 @@ async def run_ingestion_job():
         with pdfplumber.open(file_path) as pdf:
             full_text = "".join(page.extract_text() or "" for page in pdf.pages)
         if not full_text.strip():
+            logger.warning(f"⚠️ No text extracted from {file_path} – skipping.")
             return 0
         chunks = chunk_text(full_text)
         source = os.path.basename(file_path)
@@ -1534,8 +1545,7 @@ async def get_drafts(
         query += " AND status = $2"
         params.append(status)
     query += " ORDER BY created_at DESC"
-    # 🔥 FIX: pass params directly, not with * expansion
-    rows = await database.fetch_all(query, params)
+    rows = await database.fetch_all(query, params)   # fixed: pass params as list
     return [dict(r) for r in rows]
 
 @app.get("/drafts/{draft_id}")
@@ -1725,7 +1735,7 @@ async def admin_ingest(
     background_tasks.add_task(run_ingestion_job)
     return {"status": "ingestion started in background"}
 
-# ─── /ask ──────────────────────────────────────────────────────────────
+# ─── /ask (Memory Re‑enabled with Safety Caps) ──────────────────────
 @app.post("/ask")
 @limiter.limit("30/minute")
 async def ask(
@@ -1742,6 +1752,7 @@ async def ask(
 ):
     if not await _check_limit(cu):
         raise HTTPException(status_code=429, detail="Free daily limit reached.")
+
     combined_query = query
     if files:
         for file in files:
@@ -1756,12 +1767,24 @@ async def ask(
                     combined_query += f"\n\n═══ DOCUMENT: {file.filename} ═══\n{ft}"
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"File error: {e}")
+
     await _incr_query(cu["id"])
+
+    # ─── MEMORY RE‑ENABLED (SAFE, CAPPED) ────────────────────────────────
     mem = await _get_memory(cu["id"])
     if mem:
-        combined_query = _build_context(mem) + combined_query
+        context = _build_context(mem)
+        if context:
+            combined_query = context + combined_query
+
     oracle = oracle_mode.lower() == "true"
     unrestricted_bool = unrestricted.lower() == "true"
+
+    # Safety truncation of the whole query
+    if len(combined_query) > 8000:
+        combined_query = combined_query[:8000] + "\n[...truncated...]"
+
+    # Custom persona
     custom_system = None
     if persona_id:
         persona = await database.fetch_one("""
@@ -1770,9 +1793,12 @@ async def ask(
         """, int(persona_id) if persona_id.isdigit() else 0, cu["id"])
         if persona:
             custom_system = persona['system_prompt']
+
+    # Cache check
     cache_hit = None
     if not files and not oracle:
         cache_hit = await get_cached_response(combined_query, model, oracle)
+
     if cache_hit:
         answer = cache_hit["answer"]
         confidence = cache_hit["confidence"]
@@ -1791,11 +1817,15 @@ async def ask(
             replay_stream(answer, confidence, sources, metadata),
             media_type="text/event-stream"
         )
+
     system_prompt = SYSTEM_BASE
     if custom_system:
         system_prompt = f"{SYSTEM_BASE}\n\nCustom Persona Instructions:\n{custom_system}"
+
     atma = app.state.atma
+    # Pass a clean query (without history) to AtmaRouter – but we already added context in combined_query
     result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
+
     answer = result["answer"]
     confidence = result["confidence"]
     sources = result["sources"]
@@ -1807,6 +1837,7 @@ async def ask(
         "jury_confidences": result.get("jury_confidences", {}),
         "judge": "Shakti"
     }
+
     if not files and not oracle:
         cache_data = {
             "answer": answer,
@@ -1815,7 +1846,10 @@ async def ask(
             "metadata": metadata
         }
         await set_cached_response(combined_query, model, oracle, cache_data, ttl_seconds=86400)
+
+    # Update memory (already truncated in _update_memory)
     await _update_memory(cu["id"], query, answer)
+
     await database.execute(
         queries.insert().values(
             user_id=cu["id"],
@@ -1825,6 +1859,7 @@ async def ask(
             expires_at=datetime.now() + timedelta(hours=24)
         )
     )
+
     return StreamingResponse(
         replay_stream(answer, confidence, sources, metadata),
         media_type="text/event-stream"
