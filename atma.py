@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Any
 import random
 from openai import OpenAI
 
-logger = logging.getLogger("lexsarthi")
+logger = logging.getLogger("unknown_verdict")
 
 class DeepSeekClient:
     """DeepSeek client – unlimited queries via your account."""
