@@ -502,47 +502,87 @@ async def call_llm(
     temperature: float = 0.7,
     history: List[Dict] = None
 ) -> str:
-    if provider == "sovereign" and OPENROUTER_API_KEY:
-        result = await call_sovereign_llm(system_prompt, user_message)
-        if result:
-            return result
-        provider = "groq"
-        logger.info("Falling back to groq after sovereign failure.")
+    """
+    Unified LLM caller with automatic fallback across providers.
+    Priority: groq → openai → gemini → sovereign (OpenRouter).
+    """
+    # Provider configurations
+    providers = {
+        "groq": {
+            "client": groq_client,
+            "model": "llama-3.3-70b-versatile",
+            "is_gemini": False,
+        },
+        "openai": {
+            "client": openai_client,
+            "model": "gpt-4o-mini",   # or "gpt-4o" if you have access
+            "is_gemini": False,
+        },
+        "gemini": {
+            "client": gemini_model,
+            "model": "gemini-pro",
+            "is_gemini": True,
+        },
+        "sovereign": {
+            "client": None,   # handled separately
+            "model": "meta-llama/llama-3.1-70b-instruct",
+            "is_gemini": False,
+        }
+    }
 
-    if provider == "groq":
-        model = "llama-3.3-70b-versatile"
-        client = groq_client
-    elif provider == "openai":
-        model = "gpt-4o-mini"
-        client = openai_client
-    elif provider == "gemini":
-        model = "gemini-pro"
-        client = gemini_model
-    else:
-        model = "llama-3.3-70b-versatile"
-        client = groq_client
+    # Build fallback order: start with the requested provider, then fallback to others
+    fallback_order = ["groq", "openai", "gemini", "sovereign"]
+    if provider in fallback_order:
+        fallback_order.remove(provider)
+        fallback_order.insert(0, provider)
 
-    try:
-        if provider == "gemini" and gemini_model:
-            r = gemini_model.generate_content(f"{system_prompt}\n\nUser: {user_message}")
-            return r.text
-        elif client:
-            r = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": system_prompt},
-                          {"role": "user", "content": user_message}],
-                temperature=temperature,
-                max_tokens=4096
-            )
-            return r.choices[0].message.content
-        else:
-            raise Exception("No valid LLM client available")
-    except Exception as e:
-        logger.error(f"LLM call failed for provider {provider}: {e}")
-        if provider != "groq" and groq_client:
-            logger.info("Falling back to groq")
-            return await call_llm(system_prompt, user_message, provider="groq", temperature=temperature)
-        return f"Error: {e}"
+    last_error = None
+
+    for prov in fallback_order:
+        try:
+            # Sovereign (OpenRouter) special case
+            if prov == "sovereign":
+                if not OPENROUTER_API_KEY:
+                    continue
+                result = await call_sovereign_llm(system_prompt, user_message)
+                if result:
+                    return result
+                continue
+
+            config = providers[prov]
+            client = config["client"]
+            model = config["model"]
+            is_gemini = config["is_gemini"]
+
+            if not client:
+                continue
+
+            # Gemini uses a different API
+            if is_gemini:
+                r = client.generate_content(f"{system_prompt}\n\nUser: {user_message}")
+                return r.text
+            else:
+                # Groq / OpenAI (same interface)
+                r = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_message}
+                    ],
+                    temperature=temperature,
+                    max_tokens=4096
+                )
+                return r.choices[0].message.content
+
+        except Exception as e:
+            logger.warning(f"Provider {prov} failed: {e}")
+            last_error = e
+            continue
+
+    # If all providers fail
+    error_msg = f"All LLM providers failed. Last error: {last_error}" if last_error else "No LLM client available."
+    logger.error(error_msg)
+    return f"Error: {error_msg}"
 
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
