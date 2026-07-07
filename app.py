@@ -85,7 +85,7 @@ groq_client   = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 gemini_model  = None
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel("gemini-pro")
+    gemini_model = genai.GenerativeModel("gemini-2.5-pro")   # or "gemini-2.5-flash"
 
 # ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
 from sentence_transformers import SentenceTransformer
@@ -784,6 +784,7 @@ async def _check_domain_health(domain: str) -> dict:
     return result
 
 async def _store_domain_analytics(domain: str, status: dict):
+    # ✅ FIX: pass all values as a single tuple
     await database.execute("""
         INSERT INTO domain_analytics (domain, status_code, response_time, ssl_expiry, dns_resolves, last_checked)
         VALUES ($1, $2, $3, $4, $5, NOW())
@@ -793,7 +794,7 @@ async def _store_domain_analytics(domain: str, status: dict):
             ssl_expiry = EXCLUDED.ssl_expiry,
             dns_resolves = EXCLUDED.dns_resolves,
             last_checked = NOW()
-    """, domain, status["status_code"], status["response_time"], status["ssl_expiry"], status["dns_resolves"])
+    """, (domain, status["status_code"], status["response_time"], status["ssl_expiry"], status["dns_resolves"]))
 
 # ─── DAILY BLOG & LINKEDIN PIPELINE ────────────────────────────────────
 AI_NEWS_FEEDS = [
@@ -1585,7 +1586,8 @@ async def get_drafts(
         query += " AND status = $2"
         params.append(status)
     query += " ORDER BY created_at DESC"
-    rows = await database.fetch_all(query, params)   # fixed: pass params as list
+    # ✅ FIX: params must be a tuple (positional) or dict (named)
+    rows = await database.fetch_all(query, tuple(params))   # convert list to tuple
     return [dict(r) for r in rows]
 
 @app.get("/drafts/{draft_id}")
