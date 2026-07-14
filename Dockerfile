@@ -41,5 +41,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
 
 # ===================================================================
-# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE 
 # ===================================================================
