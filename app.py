@@ -808,6 +808,13 @@ async def _store_domain_analytics(domain: str, status: dict):
         logger.error(f"Failed to store domain analytics for {domain}: {e}")
 
 # ─── DAILY BLOG & LINKEDIN PIPELINE ────────────────────────────────────
+import os
+import hashlib
+import json
+from datetime import datetime
+import feedparser
+import httpx
+
 AI_NEWS_FEEDS = [
     "https://arxiv.org/rss/cs.AI",
     "https://feeds.feedburner.com/TechnologyReview/AI",
@@ -824,8 +831,11 @@ AI_NEWS_FEEDS = [
 LAST_FETCHED_HASHES = set()
 
 async def _fetch_news():
+    """Fetch news from RSS feeds"""
     if not FEEDPARSER_AVAILABLE:
+        logger.warning("feedparser not available")
         return []
+    
     articles = []
     for feed_url in AI_NEWS_FEEDS:
         try:
@@ -846,10 +856,12 @@ async def _fetch_news():
                 })
         except Exception as e:
             logger.error(f"Error fetching {feed_url}: {e}")
+    
     articles.sort(key=lambda x: x.get('published', ''), reverse=True)
     return articles[:10]
 
 async def _generate_post(article: dict) -> str:
+    """Generate a LinkedIn post from an article using Groq"""
     prompt = f"""
 You are LexSarthi, a professional AI news writer. Write a concise, engaging LinkedIn post (about 300 words) based on the following news:
 
@@ -874,18 +886,29 @@ The post should:
     return response
 
 async def _post_to_linkedin(content: str):
+    """✅ FIXED: Post to LinkedIn with correct author format"""
     token = os.getenv("LINKEDIN_ACCESS_TOKEN")
+    # ✅ FIXED: Use "member" not "person"
     user_id = os.getenv("LINKEDIN_USER_ID")
+    
     if not token or not user_id:
         logger.warning("LinkedIn credentials missing – skipping posting.")
         return
+    
+    # ✅ FIXED: Ensure the user_id is in the correct format
+    if user_id.startswith("urn:li:person:"):
+        user_id = user_id.replace("urn:li:person:", "urn:li:member:")
+        logger.info(f"✅ Fixed LinkedIn author URN: {user_id}")
+    
     url = "https://api.linkedin.com/v2/ugcPosts"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0"
     }
+    
     payload = {
-        "author": user_id,
+        "author": user_id,  # ✅ FIXED: Using corrected URN
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {
@@ -899,10 +922,11 @@ async def _post_to_linkedin(content: str):
             "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
         }
     }
+    
     try:
         async with httpx.AsyncClient() as client:
             r = await client.post(url, headers=headers, json=payload)
-            if r.status_code == 201:
+            if r.status_code in [200, 201]:
                 logger.info("✅ Posted to LinkedIn successfully.")
             else:
                 logger.error(f"LinkedIn error: {r.status_code} - {r.text}")
@@ -910,33 +934,42 @@ async def _post_to_linkedin(content: str):
         logger.error(f"LinkedIn post failed: {e}")
 
 async def _daily_news_pipeline():
+    """✅ FIXED: Daily news pipeline with correct database insert"""
     logger.info("📰 Starting daily news pipeline at 5 AM IST.")
+    
     articles = await _fetch_news()
     if not articles:
         logger.warning("No new articles found.")
         return
+    
     top_articles = articles[:5]
     posts = []
     for article in top_articles:
         post_content = await _generate_post(article)
         posts.append({"article": article, "post": post_content})
+    
     for post in posts:
+        # Save to file
         filename = f"blog/post_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         os.makedirs("blog", exist_ok=True)
         with open(filename, "w") as f:
             f.write(f"# {post['article']['title']}\n\n")
             f.write(f"*Source: {post['article']['link']}*\n\n")
             f.write(post['post'])
+        
+        # ✅ FIXED: Database insert with tuple
         try:
             await database.execute(
                 "INSERT INTO blog_posts (title, content, source_url, created_at) VALUES ($1, $2, $3, NOW())",
-                post['article']['title'], post['post'], post['article']['link']
+                (post['article']['title'], post['post'], post['article']['link'])  # ✅ Tuple!
             )
         except Exception as e:
             logger.error(f"DB insert error: {e}")
+        
+        # Post to LinkedIn
         await _post_to_linkedin(post['post'])
+    
     logger.info(f"✅ Published {len(posts)} posts to blog and LinkedIn.")
-
 # ─── SELF‑IMPROVEMENT ──────────────────────────────────────────────────
 async def _analyse_and_improve():
     logger.info("🔍 Analysing deliberations for self‑improvement...")
