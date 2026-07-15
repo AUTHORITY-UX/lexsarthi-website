@@ -2033,4 +2033,4 @@ if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False) 
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)  
