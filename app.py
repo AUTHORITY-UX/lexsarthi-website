@@ -2060,7 +2060,7 @@ async def test_news_pipeline(
     if secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret")
     await _daily_news_pipeline()
-    return {"status": "pipeline executed successfully"}
+    return {"status": "pipeline executed successfully"}        
 # ─── STATIC FILES ──────────────────────────────────────────────────────
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
