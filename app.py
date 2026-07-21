@@ -1565,10 +1565,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── IMPORT ROUTES ──────────────────────────────────────────────────────
-# (Routes are imported from routes.py or defined inline)
-# For brevity, we include the critical routes below.
-
 # ─── HEALTH CHECK ──────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
@@ -1585,6 +1581,54 @@ async def health():
     }
 
 # ─── AUTH ROUTES ──────────────────────────────────────────────────────
+@app.post("/auth/login")
+@limiter.limit("10/minute")
+async def login(request: Request, body: UserLogin):
+    u = await database.fetch_one(
+        users.select().where(
+            (users.c.username == body.username) | 
+            (users.c.email == body.username.lower())
+        )
+    )
+    if not u or not verify_password(body.password, dict(u)["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    u = dict(u)
+    tok = create_access_token({"sub": str(u["id"])})
+    return {
+        "access_token": tok, 
+        "token_type": "bearer", 
+        "user": {
+            "id": u["id"], 
+            "username": u["username"], 
+            "email": u["email"], 
+            "tier": u["tier"]
+        }
+    }
+
+@app.post("/auth/register")
+@limiter.limit("5/minute")
+async def register(request: Request, body: UserCreate):
+    ex = await database.fetch_one(users.select().where((users.c.username == body.username) | (users.c.email == body.email.lower())))
+    if ex:
+        raise HTTPException(status_code=400, detail="User already exists")
+    ak = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    uid = await database.fetch_val(users.insert().values(
+        username=body.username,
+        email=body.email.lower(),
+        password_hash=hash_password(body.password),
+        full_name=body.full_name,
+        tier="free",
+        api_key=ak,
+        memory=json.dumps([])
+    ).returning(users.c.id))
+    tok = create_access_token({"sub": str(uid)})
+    return {"access_token": tok, "token_type": "bearer", "user": {"id": uid, "username": body.username, "api_key": ak}}
+
+@app.get("/auth/me")
+async def me(cu: dict = Depends(get_current_user)):
+    return cu
+
+# ─── /ask ROUTE WITH SAFETY INTEGRATION ──────────────────────────────
 @app.post("/ask")
 @limiter.limit("30/minute")
 async def ask(
@@ -1604,11 +1648,10 @@ async def ask(
         raise HTTPException(status_code=503, detail="Service temporarily unavailable due to safety protocol")
     
     # ─── SAFETY CHECK 2: User restrictions ────────────────────────
-    # ✅ FIXED: Pass as a tuple (comma after value)
     restriction = await database.fetch_one("""
         SELECT * FROM user_restrictions 
         WHERE user_id = $1 AND is_active = TRUE AND expires_at > NOW()
-    """, (cu["id"],))  # ← FIXED: Tuple with comma
+    """, (cu["id"],))  # ✅ FIXED: Tuple with comma
     
     if restriction:
         raise HTTPException(status_code=403, detail=f"User restricted until {restriction['expires_at']}: {restriction['reason']}")
@@ -1659,7 +1702,7 @@ async def ask(
         persona = await database.fetch_one("""
             SELECT system_prompt FROM custom_personas
             WHERE id = $1 AND (user_id = $2 OR is_public = TRUE)
-        """, (int(persona_id) if persona_id.isdigit() else 0, cu["id"]))  # ← FIXED: Tuple
+        """, (int(persona_id) if persona_id.isdigit() else 0, cu["id"]))  # ✅ FIXED: Tuple
         if persona:
             custom_system = persona['system_prompt']
 
@@ -1737,7 +1780,6 @@ async def ask(
 
     await _update_memory(cu["id"], query, answer)
 
-    # ✅ FIXED: Use SQLAlchemy insert with dictionary
     await database.execute(
         queries.insert().values(
             user_id=cu["id"],
@@ -1752,6 +1794,7 @@ async def ask(
         replay_stream(answer, confidence, sources, metadata),
         media_type="text/event-stream"
     )
+
 # ─── LIFETIME COUNT ────────────────────────────────────────────────────
 @app.get("/lifetime-count")
 async def lifetime_count():
