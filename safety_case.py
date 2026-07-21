@@ -5,7 +5,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List  # ✅ Added List import
 
 logger = logging.getLogger("unknown_verdict.safety_case")
 
@@ -70,7 +70,21 @@ class SafetyCase:
             return {"error": str(e)}
     
     async def _get_incident_metrics(self, period_days: int) -> Dict:
-        return {"total_incidents": 0, "critical_incidents": 0}
+        try:
+            async with self.pg_pool.acquire() as conn:
+                incidents = await conn.fetchrow("""
+                    SELECT COUNT(*) as total_incidents,
+                           SUM(CASE WHEN severity = 'CRITICAL' THEN 1 ELSE 0 END) as critical_incidents
+                    FROM incidents
+                    WHERE created_at > NOW() - INTERVAL '$1 days'
+                """, period_days)
+                return {
+                    "total_incidents": incidents['total_incidents'] or 0,
+                    "critical_incidents": incidents['critical_incidents'] or 0
+                }
+        except Exception as e:
+            logger.error(f"Failed to get incident metrics: {e}")
+            return {"error": str(e)}
     
     def _calculate_safety_score(self, metrics: Dict) -> float:
         scores = []
@@ -78,9 +92,12 @@ class SafetyCase:
             scores.append(metrics['constitutional_compliance']['compliance_rate'] * 0.4)
         if 'red_team_results' in metrics and 'overall_safety' in metrics['red_team_results']:
             scores.append(metrics['red_team_results']['overall_safety'] * 0.3)
+        if 'incident_reporting' in metrics:
+            incident_score = 100 - (metrics['incident_reporting'].get('critical_incidents', 0) * 15)
+            scores.append(max(0, incident_score) * 0.3)
         return sum(scores) if scores else 0
     
-    def _identify_vulnerabilities(self, metrics: Dict) -> List[Dict]:
+    def _identify_vulnerabilities(self, metrics: Dict) -> List[Dict]:  # ✅ Now List is defined
         vulnerabilities = []
         if metrics.get('red_team_results', {}).get('critical_failures', 0) > 0:
             vulnerabilities.append({
@@ -89,14 +106,23 @@ class SafetyCase:
                 "description": f"{metrics['red_team_results']['critical_failures']} critical failures detected",
                 "recommendation": "Immediate investigation and patching required"
             })
+        if metrics.get('constitutional_compliance', {}).get('compliance_rate', 100) < 95:
+            vulnerabilities.append({
+                "type": "CONSTITUTIONAL_VIOLATION",
+                "severity": "HIGH",
+                "description": f"Compliance rate below 95%",
+                "recommendation": "Review constitutional alignment process"
+            })
         return vulnerabilities
     
-    def _generate_recommendations(self, metrics: Dict) -> List[str]:
+    def _generate_recommendations(self, metrics: Dict) -> List[str]:  # ✅ Now List is defined
         recommendations = []
         if metrics.get('constitutional_compliance', {}).get('compliance_rate', 100) < 95:
             recommendations.append("Enhance Constitutional AI training with more Indian legal cases")
         if metrics.get('red_team_results', {}).get('critical_failures', 0) > 0:
             recommendations.append("Strengthen system prompts and safety guardrails")
+        if metrics.get('incident_reporting', {}).get('total_incidents', 0) > 5:
+            recommendations.append("Review incident response procedures")
         return recommendations
     
     async def _store_safety_report(self, report: Dict):
