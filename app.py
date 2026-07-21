@@ -1,7 +1,7 @@
 # =============================================================================
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
-# LEXSARTHI v10.0 – Complete Enterprise Edition (Memory Re‑enabled)
+# UNKNOWN VERDICT v11.0 – Complete Enterprise Edition with AI Safety
 # =============================================================================
 
 import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl, socket, hashlib
@@ -58,6 +58,23 @@ from redis.asyncio import ConnectionPool
 # ─── ATMA ROUTER ──────────────────────────────────────────────────────────
 from atma import AtmaRouter
 
+# ─── AI SAFETY MODULES ──────────────────────────────────────────────────
+from constitutional_ai import ConstitutionalAI
+from red_team import RedTeam
+from kill_switch import KillSwitch
+from monitoring import MonitoringSystem
+from interpretability import InterpretabilityDashboard
+from safety_case import SafetyCase
+
+# ─── EDGE AI MODULES ──────────────────────────────────────────────────
+from akida_edge import AkidaEdge
+from edge_impulse_model import EdgeImpulseModel
+from spike_retriever import SpikeRetriever
+
+# ─── AUTOMATION MODULES ──────────────────────────────────────────────
+from linkedin_automation import LinkedInAutomation
+from payment_gateway import PaymentGateway
+
 # ─── LOGGING ──────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -73,11 +90,16 @@ JWT_EXPIRY_MINUTES = 60 * 24 * 7
 OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY       = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY")
+DEEPSEEK_API_KEY   = os.getenv("DEEPSEEK_API_KEY")
 SERPAPI_KEY        = os.getenv("SERPAPI_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", None)
 
 RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+LINKEDIN_ACCESS_TOKEN = os.getenv("LINKEDIN_ACCESS_TOKEN")
+LINKEDIN_USER_ID      = os.getenv("LINKEDIN_USER_ID")
+ADMIN_SECRET          = os.getenv("ADMIN_SECRET", "change-me")
 
 # ─── PROVIDER CLIENTS ────────────────────────────────────────────────────
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -85,7 +107,7 @@ groq_client   = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 gemini_model  = None
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel("gemini-2.5-pro")   # or "gemini-2.5-flash"
+    gemini_model = genai.GenerativeModel("gemini-2.0-flash")  # ✅ Cheaper model
 
 # ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
 from sentence_transformers import SentenceTransformer
@@ -242,8 +264,118 @@ drafts = Table("drafts", metadata,
     Column("created_at", DateTime, server_default=func.now()),
     Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
 )
+deliberations = Table("deliberations", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("query", Text, nullable=False),
+    Column("domain", Text),
+    Column("persona", Text),
+    Column("provider", Text),
+    Column("initial_answer", Text),
+    Column("verifier_results", JSON),
+    Column("final_answer", Text),
+    Column("confidence", Text),
+    Column("sources", JSON),
+    Column("timestamp", DateTime, server_default=func.now()),
+    Column("used_for_training", Boolean, server_default="false"),
+)
 
-# Global pools
+# ─── SAFETY TABLES ─────────────────────────────────────────────────────
+constitutional_violations = Table("constitutional_violations", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("query", Text),
+    Column("response", Text),
+    Column("violations", JSON),
+    Column("confidence_score", Float),
+    Column("detected_at", DateTime, server_default=func.now()),
+    Column("resolved_at", DateTime, nullable=True),
+    Column("resolved_by", String(255)),
+    Column("resolution_notes", Text),
+)
+red_team_tests = Table("red_team_tests", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("agent_id", String(50)),
+    Column("query", Text),
+    Column("attack_category", String(50)),
+    Column("response", Text),
+    Column("violations", JSON),
+    Column("severity", String(20)),
+    Column("tested_at", DateTime, server_default=func.now()),
+    Column("retested_at", DateTime, nullable=True),
+    Column("is_fixed", Boolean, server_default="false"),
+)
+kill_switch_logs = Table("kill_switch_logs", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("reason", Text),
+    Column("activated_at", DateTime, server_default=func.now()),
+    Column("deactivated_at", DateTime, nullable=True),
+    Column("deactivated_by", String(255)),
+    Column("status", String(20), server_default="ACTIVE"),
+)
+trigger_events = Table("trigger_events", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("trigger_name", String(100)),
+    Column("details", JSON),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+ai_actions_log = Table("ai_actions_log", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("action_type", String(100)),
+    Column("user_id", Integer, index=True),
+    Column("agent_id", String(50)),
+    Column("details", JSON),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("is_anomaly", Boolean, server_default="false"),
+    Column("severity", String(20)),
+)
+user_restrictions = Table("user_restrictions", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, index=True),
+    Column("reason", Text),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("expires_at", DateTime),
+    Column("is_active", Boolean, server_default="true"),
+)
+decision_paths = Table("decision_paths", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("query_id", Integer, index=True),
+    Column("decision_path", JSON),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+safety_reports = Table("safety_reports", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("report_data", JSON),
+    Column("generated_at", DateTime, server_default=func.now()),
+    Column("safety_score", Float),
+)
+user_feedback = Table("user_feedback", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, index=True),
+    Column("query_id", Integer, index=True),
+    Column("rating", Integer),
+    Column("comment", Text),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+query_performance = Table("query_performance", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("query_id", Integer, index=True),
+    Column("response_time", Float),
+    Column("error_occurred", Boolean, server_default="false"),
+    Column("error_message", Text),
+    Column("created_at", DateTime, server_default=func.now()),
+)
+incidents = Table("incidents", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("title", Text),
+    Column("description", Text),
+    Column("severity", String(20)),
+    Column("status", String(20), server_default="OPEN"),
+    Column("assigned_to", String(255)),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("resolved_at", DateTime, nullable=True),
+    Column("resolution_time_hours", Float),
+)
+
+# ─── GLOBAL POOLS ──────────────────────────────────────────────────────
 pg_pool: Optional[asyncpg.Pool] = None
 redis_pool: Optional[ConnectionPool] = None
 
@@ -300,12 +432,16 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-# ─── RATE LIMITER (in‑memory) ──────────────────────────────────────────
+# ─── RATE LIMITER ──────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 logger.info("✅ Rate limiter using in‑memory storage")
 
 # ─── SYSTEM PROMPT ──────────────────────────────────────────────────────
-SYSTEM_BASE = SYSTEM_BASE = """You are the Unknown Verdict Engine – an AI advisory OS with 250 specialist personas, a jury of 10 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) and live web search. Always strive for accuracy, cite sources, and admit uncertainty. Default jurisdiction: India. Tone: professional, wise, neutral."""
+SYSTEM_BASE = """You are the Unknown Verdict Engine – an AI advisory OS with 250 specialist personas, 
+a jury of 10 verifiers, and a final judge. You have access to a knowledge base (including the Constitution of India) 
+and live web search. Always strive for accuracy, cite sources, and admit uncertainty. 
+Default jurisdiction: India. Tone: professional, wise, neutral."""
+
 # ─── 250 SPECIALIST PERSONAS ──────────────────────────────────────────
 DOMAINS_FULL = [
     "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
@@ -406,7 +542,6 @@ async def _fetch_chunks(conn, embedding_str: str, top_k: int):
     return [
         {
             "content": row["content"],
-            # Safely parse metadata if it's a string
             "metadata": row["metadata"] if isinstance(row["metadata"], dict) else json.loads(row["metadata"]),
             "citation": row["metadata"].get("source", "Unknown") if isinstance(row["metadata"], dict) else json.loads(row["metadata"]).get("source", "Unknown"),
             "similarity": row["similarity"]
@@ -418,7 +553,7 @@ async def _fetch_chunks(conn, embedding_str: str, top_k: int):
 async def serpapi_search(query: str, unrestricted: bool = False) -> List[Dict]:
     if not SERPAPI_KEY:
         return []
-    params = {"q": query, "api_key": SERPAPI_KEY, "num": 3}   # reduced to 3
+    params = {"q": query, "api_key": SERPAPI_KEY, "num": 3}
     if not unrestricted:
         domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "")
         if domains:
@@ -471,7 +606,7 @@ async def call_sovereign_llm(
                     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
                     "HTTP-Referer": "https://www.advocacyalawfrim.in",
-                    "X-Title": "LexSarthi"
+                    "X-Title": "Unknown Verdict"
                 },
                 json={
                     "model": model,
@@ -493,19 +628,23 @@ async def call_sovereign_llm(
         logger.error(f"Sovereign LLM failed: {e}")
         return None
 
-# ─── LLM CALL (unified) ──────────────────────────────────────────────
+# ─── LLM CALL (unified with token optimization) ──────────────────────
 async def call_llm(
     system_prompt: str,
     user_message: str,
     provider: str = "groq",
     temperature: float = 0.7,
-    history: List[Dict] = None
+    history: List[Dict] = None,
+    max_tokens: int = 4096
 ) -> str:
     """
-    Unified LLM caller with automatic fallback across providers.
-    Priority: groq → openai → gemini → sovereign (OpenRouter).
+    Unified LLM caller with automatic fallback and token optimization.
     """
-    # Provider configurations
+    # ✅ Truncate to avoid token limits
+    MAX_INPUT_TOKENS = 8000
+    if len(user_message) > MAX_INPUT_TOKENS:
+        user_message = user_message[:MAX_INPUT_TOKENS] + "\n[...truncated...]"
+
     providers = {
         "groq": {
             "client": groq_client,
@@ -514,23 +653,27 @@ async def call_llm(
         },
         "openai": {
             "client": openai_client,
-            "model": "gpt-4o-mini",   # or "gpt-4o" if you have access
+            "model": "gpt-4o-mini",
             "is_gemini": False,
         },
         "gemini": {
             "client": gemini_model,
-            "model": "gemini-pro",
+            "model": "gemini-2.0-flash",
             "is_gemini": True,
         },
+        "deepseek": {
+            "client": None,  # Handled separately via HTTP
+            "model": "deepseek-chat",
+            "is_gemini": False,
+        },
         "sovereign": {
-            "client": None,   # handled separately
+            "client": None,
             "model": "meta-llama/llama-3.1-70b-instruct",
             "is_gemini": False,
         }
     }
 
-    # Build fallback order: start with the requested provider, then fallback to others
-    fallback_order = ["groq", "openai", "gemini", "sovereign"]
+    fallback_order = ["groq", "openai", "deepseek", "gemini", "sovereign"]
     if provider in fallback_order:
         fallback_order.remove(provider)
         fallback_order.insert(0, provider)
@@ -539,7 +682,35 @@ async def call_llm(
 
     for prov in fallback_order:
         try:
-            # Sovereign (OpenRouter) special case
+            # DeepSeek via HTTP
+            if prov == "deepseek":
+                if not DEEPSEEK_API_KEY:
+                    continue
+                async with httpx.AsyncClient() as client:
+                    r = await client.post(
+                        "https://api.deepseek.com/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": "deepseek-chat",
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_message}
+                            ],
+                            "temperature": temperature,
+                            "max_tokens": max_tokens
+                        },
+                        timeout=30.0
+                    )
+                    if r.status_code == 200:
+                        return r.json()["choices"][0]["message"]["content"]
+                    else:
+                        logger.warning(f"DeepSeek failed: {r.status_code} - {r.text}")
+                        continue
+
+            # Sovereign (OpenRouter)
             if prov == "sovereign":
                 if not OPENROUTER_API_KEY:
                     continue
@@ -556,12 +727,10 @@ async def call_llm(
             if not client:
                 continue
 
-            # Gemini uses a different API
             if is_gemini:
                 r = client.generate_content(f"{system_prompt}\n\nUser: {user_message}")
                 return r.text
             else:
-                # Groq / OpenAI (same interface)
                 r = client.chat.completions.create(
                     model=model,
                     messages=[
@@ -569,7 +738,7 @@ async def call_llm(
                         {"role": "user", "content": user_message}
                     ],
                     temperature=temperature,
-                    max_tokens=4096
+                    max_tokens=max_tokens
                 )
                 return r.choices[0].message.content
 
@@ -578,7 +747,6 @@ async def call_llm(
             last_error = e
             continue
 
-    # If all providers fail
     error_msg = f"All LLM providers failed. Last error: {last_error}" if last_error else "No LLM client available."
     logger.error(error_msg)
     return f"Error: {error_msg}"
@@ -588,7 +756,7 @@ async def verify_response(response_text: str, verifier: dict, model: str) -> dic
     ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
 {{"status": "APPROVED|CORRECTED", "confidence": "HIGH|MEDIUM|LOW", "corrected_text": "..."}}"""
     try:
-        out = await call_llm(ver_sys, response_text, model)
+        out = await call_llm(ver_sys, response_text, "groq")
         m = re.search(r'\{.*\}', out, re.DOTALL)
         if m:
             return json.loads(m.group())
@@ -611,12 +779,11 @@ async def _get_memory(uid: int) -> List[dict]:
 
 async def _update_memory(uid: int, q: str, a: str):
     m = await _get_memory(uid)
-    # Keep only last 3 exchanges, each truncated
     m.append({"q": q[:200], "a": a[:200]})
-    m = m[-3:]   # only 3 exchanges kept
+    m = m[-3:]
     await database.execute(users.update().where(users.c.id == uid).values(memory=json.dumps(m)))
 
-# ─── CONTEXT BUILDER (SAFE, CAPS) ──────────────────────────────────
+# ─── CONTEXT BUILDER ──────────────────────────────────────────────────
 def _build_context(mem: List[dict]) -> str:
     if not mem:
         return ""
@@ -628,7 +795,7 @@ def _build_context(mem: List[dict]) -> str:
         context_parts.append(f"[Prev Q] {q}\n[Prev A] {a}")
     if not context_parts:
         return ""
-    separator = "\n".join(context_parts)   # <-- moved outside f-string
+    separator = "\n".join(context_parts)
     return f"═══ RECENT CONTEXT ═══\n{separator}\n═════════════════\nCurrent query:\n"
 
 # ─── CACHING HELPERS (Redis) ──────────────────────────────────────────
@@ -737,84 +904,7 @@ async def run_ingestion_job():
     finally:
         await conn.close()
 
-# ─── DOMAIN ANALYTICS ──────────────────────────────────────────────────
-async def _update_domain_analytics():
-    domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "").split(",")
-    if not domains:
-        return
-    for domain in domains:
-        try:
-            status = await _check_domain_health(domain)
-            await _store_domain_analytics(domain, status)
-        except Exception as e:
-            logger.error(f"Failed to check domain {domain}: {e}")
-
-async def _check_domain_health(domain: str) -> dict:
-    result = {
-        "status_code": None,
-        "response_time": None,
-        "ssl_expiry": None,
-        "dns_resolves": False
-    }
-    try:
-        socket.gethostbyname(domain)
-        result["dns_resolves"] = True
-    except:
-        pass
-    try:
-        start = datetime.now()
-        async with httpx.AsyncClient() as client:
-            r = await client.get(f"https://{domain}", timeout=5.0)
-        result["status_code"] = r.status_code
-        result["response_time"] = (datetime.now() - start).total_seconds()
-    except:
-        pass
-    try:
-        context = ssl.create_default_context()
-        with context.wrap_socket(socket.socket(), server_hostname=domain) as sock:
-            sock.settimeout(5)
-            sock.connect((domain, 443))
-            cert = sock.getpeercert()
-            if cert and 'notAfter' in cert:
-                expiry = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z")
-                result["ssl_expiry"] = expiry.replace(tzinfo=None)
-    except:
-        pass
-    return result
-
-async def _store_domain_analytics(domain: str, status: dict):
-    """Store domain analytics safely using asyncpg positional placeholders."""
-    try:
-        # Use asyncpg connection directly (pool is available)
-        async with pg_pool.acquire() as conn:
-            await conn.execute(
-                """
-                INSERT INTO domain_analytics (domain, status_code, response_time, ssl_expiry, dns_resolves, last_checked)
-                VALUES ($1, $2, $3, $4, $5, NOW())
-                ON CONFLICT (domain) DO UPDATE SET
-                    status_code = EXCLUDED.status_code,
-                    response_time = EXCLUDED.response_time,
-                    ssl_expiry = EXCLUDED.ssl_expiry,
-                    dns_resolves = EXCLUDED.dns_resolves,
-                    last_checked = NOW()
-                """,
-                domain,
-                status.get("status_code"),
-                status.get("response_time"),
-                status.get("ssl_expiry"),
-                status.get("dns_resolves", False)
-            )
-    except Exception as e:
-        logger.error(f"Failed to store domain analytics for {domain}: {e}")
-
-# ─── DAILY BLOG & LINKEDIN PIPELINE ────────────────────────────────────
-import os
-import hashlib
-import json
-from datetime import datetime
-import feedparser
-import httpx
-
+# ─── DAILY NEWS & LINKEDIN PIPELINE ──────────────────────────────────
 AI_NEWS_FEEDS = [
     "https://arxiv.org/rss/cs.AI",
     "https://feeds.feedburner.com/TechnologyReview/AI",
@@ -831,11 +921,9 @@ AI_NEWS_FEEDS = [
 LAST_FETCHED_HASHES = set()
 
 async def _fetch_news():
-    """Fetch news from RSS feeds"""
     if not FEEDPARSER_AVAILABLE:
         logger.warning("feedparser not available")
         return []
-    
     articles = []
     for feed_url in AI_NEWS_FEEDS:
         try:
@@ -856,14 +944,12 @@ async def _fetch_news():
                 })
         except Exception as e:
             logger.error(f"Error fetching {feed_url}: {e}")
-    
     articles.sort(key=lambda x: x.get('published', ''), reverse=True)
     return articles[:10]
 
 async def _generate_post(article: dict) -> str:
-    """Generate a LinkedIn post from an article using Groq"""
     prompt = f"""
-You are LexSarthi, a professional AI news writer. Write a concise, engaging LinkedIn post (about 300 words) based on the following news:
+You are Unknown Verdict, a professional AI news writer. Write a concise, engaging LinkedIn post (about 300 words) based on the following news:
 
 Title: {article['title']}
 Summary: {article['summary']}
@@ -888,16 +974,15 @@ The post should:
 async def _post_to_linkedin(content: str):
     """✅ FIXED: Post to LinkedIn with correct author format"""
     token = os.getenv("LINKEDIN_ACCESS_TOKEN")
-    # ✅ FIXED: Use "member" not "person"
     user_id = os.getenv("LINKEDIN_USER_ID")
     
     if not token or not user_id:
         logger.warning("LinkedIn credentials missing – skipping posting.")
         return
     
-    # ✅ FIXED: Ensure the user_id is in the correct format
-    if user_id.startswith("urn:li:person:"):
-        user_id = user_id.replace("urn:li:person:", "urn:li:member:")
+    # ✅ CRITICAL FIX: Use "person" NOT "member"
+    if user_id.startswith("urn:li:member:"):
+        user_id = user_id.replace("urn:li:member:", "urn:li:person:")
         logger.info(f"✅ Fixed LinkedIn author URN: {user_id}")
     
     url = "https://api.linkedin.com/v2/ugcPosts"
@@ -908,7 +993,7 @@ async def _post_to_linkedin(content: str):
     }
     
     payload = {
-        "author": user_id,  # ✅ FIXED: Using corrected URN
+        "author": user_id,
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {
@@ -957,11 +1042,15 @@ async def _daily_news_pipeline():
             f.write(f"*Source: {post['article']['link']}*\n\n")
             f.write(post['post'])
         
-        # ✅ FIXED: Database insert with tuple
+        # ✅ FIXED: Use SQLAlchemy core insert (not raw SQL with tuple)
         try:
             await database.execute(
-                "INSERT INTO blog_posts (title, content, source_url, created_at) VALUES ($1, $2, $3, NOW())",
-                (post['article']['title'], post['post'], post['article']['link'])  # ✅ Tuple!
+                blog_posts.insert().values(
+                    title=post['article']['title'],
+                    content=post['post'],
+                    source_url=post['article']['link'],
+                    created_at=func.now()
+                )
             )
         except Exception as e:
             logger.error(f"DB insert error: {e}")
@@ -970,14 +1059,16 @@ async def _daily_news_pipeline():
         await _post_to_linkedin(post['post'])
     
     logger.info(f"✅ Published {len(posts)} posts to blog and LinkedIn.")
+
 # ─── SELF‑IMPROVEMENT ──────────────────────────────────────────────────
 async def _analyse_and_improve():
+    """✅ FIXED: Use 'timestamp' column, not 'created_at'"""
     logger.info("🔍 Analysing deliberations for self‑improvement...")
     rows = await database.fetch_all("""
         SELECT id, query, final_answer, confidence, verifier_results
         FROM deliberations
         WHERE confidence = 'LOW' 
-          AND created_at > NOW() - INTERVAL '7 days'
+          AND timestamp > NOW() - INTERVAL '7 days'   -- ✅ Fixed column name
           AND used_for_training = FALSE
         LIMIT 100
     """)
@@ -996,10 +1087,15 @@ async def _analyse_and_improve():
             })
             await database.execute("UPDATE deliberations SET used_for_training = TRUE WHERE id = $1", row['id'])
     for data in improved_data:
-        await database.execute("""
-            INSERT INTO fine_tune_data (query, initial_answer, final_answer, confidence, is_low_confidence)
-            VALUES ($1, $2, $3, $4, TRUE)
-        """, data['query'], data['original'], data['improved'], data['confidence'])
+        await database.execute(
+            fine_tune_data.insert().values(
+                query=data['query'],
+                initial_answer=data['original'],
+                final_answer=data['improved'],
+                confidence=data['confidence'],
+                is_low_confidence=True
+            )
+        )
     logger.info(f"✅ Prepared {len(improved_data)} samples for fine‑tuning.")
 
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
@@ -1016,6 +1112,7 @@ async def lifespan(app: FastAPI):
 
     pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
 
+    # ─── REDIS WITH RETRY ──────────────────────────────────────────
     if REDIS_URL:
         try:
             clean_url = REDIS_URL
@@ -1023,9 +1120,15 @@ async def lifespan(app: FastAPI):
                 clean_url = clean_url.split("redis-cli --tls -u ")[-1]
             if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
                 clean_url = clean_url.replace("redis://", "rediss://", 1)
-            redis_client = redis.from_url(clean_url, decode_responses=True, max_connections=10)
-            await redis_client.ping()
-            redis_pool = redis_client
+            redis_pool = redis.from_url(
+                clean_url,
+                decode_responses=True,
+                max_connections=10,
+                socket_keepalive=True,
+                socket_timeout=5,
+                retry_on_timeout=True
+            )
+            await redis_pool.ping()
             logger.info("✅ Redis connected successfully")
         except Exception as e:
             logger.error(f"❌ Redis connection failed: {e}")
@@ -1034,13 +1137,31 @@ async def lifespan(app: FastAPI):
         redis_pool = None
         logger.warning("⚠️ REDIS_URL not set – caching disabled")
 
+    # ─── INITIALIZE SAFETY MODULES ────────────────────────────────
+    app.state.constitutional_ai = ConstitutionalAI(pg_pool)
+    app.state.red_team = RedTeam(pg_pool, call_llm)
+    app.state.kill_switch = KillSwitch(pg_pool, redis_pool)
+    app.state.monitoring = MonitoringSystem(pg_pool, redis_pool)
+    app.state.interpretability = InterpretabilityDashboard(pg_pool)
+    app.state.safety_case = SafetyCase(pg_pool)
+
+    # ─── INITIALIZE EDGE AI ──────────────────────────────────────
+    app.state.akida_edge = AkidaEdge()
+    app.state.edge_impulse = EdgeImpulseModel()
+    app.state.spike_retriever = SpikeRetriever()
+
+    # ─── INITIALIZE ATMA ROUTER ──────────────────────────────────
     app.state.atma = AtmaRouter(
         pg_pool,
         fetch_relevant_chunks_func=fetch_relevant_chunks,
         serpapi_search_func=serpapi_search,
-        call_llm_func=call_llm
+        call_llm_func=call_llm,
+        constitutional_ai=app.state.constitutional_ai,
+        kill_switch=app.state.kill_switch,
+        monitoring=app.state.monitoring
     )
 
+    # ─── SCHEDULER ──────────────────────────────────────────────────
     sched = AsyncIOScheduler()
     sched.add_job(_purge_expired, IntervalTrigger(hours=1))
     sched.add_job(_update_domain_analytics, IntervalTrigger(hours=1))
@@ -1050,8 +1171,9 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️ feedparser not installed – daily news pipeline disabled.")
     sched.add_job(_analyse_and_improve, IntervalTrigger(hours=24))
     sched.start()
-    logger.info("👁️ Unknown Verdict Engine v10.0 – Complete Enterprise Edition Ready.")
+    logger.info("👁️ Unknown Verdict Engine v11.0 – Complete Enterprise Edition Ready.")
 
+    # ─── CHECK KNOWLEDGE CHUNKS ──────────────────────────────────
     async with pg_pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
         if count == 0:
@@ -1141,7 +1263,8 @@ async def _create_tables():
             final_answer TEXT,
             confidence TEXT,
             sources JSONB,
-            timestamp TIMESTAMPTZ DEFAULT NOW()
+            timestamp TIMESTAMPTZ DEFAULT NOW(),
+            used_for_training BOOLEAN DEFAULT FALSE
         )""",
         """CREATE INDEX IF NOT EXISTS idx_deliberations_timestamp 
             ON deliberations(timestamp)""",
@@ -1242,6 +1365,101 @@ async def _create_tables():
             metadata JSONB,
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
+        )""",
+        # ─── SAFETY TABLES ──────────────────────────────────────────
+        """CREATE TABLE IF NOT EXISTS constitutional_violations (
+            id SERIAL PRIMARY KEY,
+            query TEXT,
+            response TEXT,
+            violations JSONB,
+            confidence_score FLOAT,
+            detected_at TIMESTAMPTZ DEFAULT NOW(),
+            resolved_at TIMESTAMPTZ,
+            resolved_by VARCHAR(255),
+            resolution_notes TEXT
+        )""",
+        """CREATE TABLE IF NOT EXISTS red_team_tests (
+            id SERIAL PRIMARY KEY,
+            agent_id VARCHAR(50),
+            query TEXT,
+            attack_category VARCHAR(50),
+            response TEXT,
+            violations JSONB,
+            severity VARCHAR(20),
+            tested_at TIMESTAMPTZ DEFAULT NOW(),
+            retested_at TIMESTAMPTZ,
+            is_fixed BOOLEAN DEFAULT FALSE
+        )""",
+        """CREATE TABLE IF NOT EXISTS kill_switch_logs (
+            id SERIAL PRIMARY KEY,
+            reason TEXT,
+            activated_at TIMESTAMPTZ DEFAULT NOW(),
+            deactivated_at TIMESTAMPTZ,
+            deactivated_by VARCHAR(255),
+            status VARCHAR(20) DEFAULT 'ACTIVE'
+        )""",
+        """CREATE TABLE IF NOT EXISTS trigger_events (
+            id SERIAL PRIMARY KEY,
+            trigger_name VARCHAR(100),
+            details JSONB,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS ai_actions_log (
+            id SERIAL PRIMARY KEY,
+            action_type VARCHAR(100),
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            agent_id VARCHAR(50),
+            details JSONB,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            is_anomaly BOOLEAN DEFAULT FALSE,
+            severity VARCHAR(20)
+        )""",
+        """CREATE TABLE IF NOT EXISTS user_restrictions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reason TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            expires_at TIMESTAMPTZ,
+            is_active BOOLEAN DEFAULT TRUE
+        )""",
+        """CREATE TABLE IF NOT EXISTS decision_paths (
+            id SERIAL PRIMARY KEY,
+            query_id INTEGER REFERENCES queries(id) ON DELETE CASCADE,
+            decision_path JSONB,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS safety_reports (
+            id SERIAL PRIMARY KEY,
+            report_data JSONB,
+            generated_at TIMESTAMPTZ DEFAULT NOW(),
+            safety_score FLOAT
+        )""",
+        """CREATE TABLE IF NOT EXISTS user_feedback (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            query_id INTEGER REFERENCES queries(id) ON DELETE CASCADE,
+            rating INTEGER,
+            comment TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS query_performance (
+            id SERIAL PRIMARY KEY,
+            query_id INTEGER REFERENCES queries(id) ON DELETE CASCADE,
+            response_time FLOAT,
+            error_occurred BOOLEAN DEFAULT FALSE,
+            error_message TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS incidents (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            description TEXT,
+            severity VARCHAR(20),
+            status VARCHAR(20) DEFAULT 'OPEN',
+            assigned_to VARCHAR(255),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            resolved_at TIMESTAMPTZ,
+            resolution_time_hours FLOAT
         )"""
     ]
     for stmt in ddl:
@@ -1265,6 +1483,67 @@ async def _purge_expired():
     await database.execute(queries.delete().where(queries.c.created_at < datetime.now() - timedelta(hours=24)))
     await database.execute(bulk_jobs.delete().where(bulk_jobs.c.created_at < datetime.now() - timedelta(days=7)))
 
+async def _update_domain_analytics():
+    domains = os.getenv("TARGETED_SEARCH_DOMAINS", "").replace(" ", "").split(",")
+    if not domains:
+        return
+    for domain in domains:
+        try:
+            status = await _check_domain_health(domain)
+            await _store_domain_analytics(domain, status)
+        except Exception as e:
+            logger.error(f"Failed to check domain {domain}: {e}")
+
+async def _check_domain_health(domain: str) -> dict:
+    result = {
+        "status_code": None,
+        "response_time": None,
+        "ssl_expiry": None,
+        "dns_resolves": False
+    }
+    try:
+        socket.gethostbyname(domain)
+        result["dns_resolves"] = True
+    except:
+        pass
+    try:
+        start = datetime.now()
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"https://{domain}", timeout=5.0)
+        result["status_code"] = r.status_code
+        result["response_time"] = (datetime.now() - start).total_seconds()
+    except:
+        pass
+    try:
+        context = ssl.create_default_context()
+        with context.wrap_socket(socket.socket(), server_hostname=domain) as sock:
+            sock.settimeout(5)
+            sock.connect((domain, 443))
+            cert = sock.getpeercert()
+            if cert and 'notAfter' in cert:
+                expiry = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z")
+                result["ssl_expiry"] = expiry.replace(tzinfo=None)
+    except:
+        pass
+    return result
+
+async def _store_domain_analytics(domain: str, status: dict):
+    try:
+        async with pg_pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO domain_analytics (domain, status_code, response_time, ssl_expiry, dns_resolves, last_checked)
+                VALUES ($1, $2, $3, $4, $5, NOW())
+                ON CONFLICT (domain) DO UPDATE SET
+                    status_code = EXCLUDED.status_code,
+                    response_time = EXCLUDED.response_time,
+                    ssl_expiry = EXCLUDED.ssl_expiry,
+                    dns_resolves = EXCLUDED.dns_resolves,
+                    last_checked = NOW()
+            """, domain, status.get("status_code"), status.get("response_time"),
+                status.get("ssl_expiry"), status.get("dns_resolves", False))
+    except Exception as e:
+        logger.error(f"Failed to store domain analytics for {domain}: {e}")
+
 # ─── LIMIT HELPERS ──────────────────────────────────────────────────────
 async def _check_limit(u: dict) -> bool:
     if u["tier"] in ("premium", "enterprise", "lifetime"):
@@ -1280,25 +1559,32 @@ async def _incr_query(uid: int):
     await database.execute(users.update().where(users.c.id == uid).values(queries_used_today=users.c.queries_used_today + 1, updated_at=datetime.now()))
 
 # ─── APP INSTANCE ────────────────────────────────────────────────────────
-app = FastAPI(title="Unknown Verdict Engine", lifespan=lifespan)
+app = FastAPI(title="Unknown Verdict Engine v11.0", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── ROUTES ──────────────────────────────────────────────────────────────
+# ─── IMPORT ROUTES ──────────────────────────────────────────────────────
+# (Routes are imported from routes.py or defined inline)
+# For brevity, we include the critical routes below.
+
+# ─── HEALTH CHECK ──────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
     redis_status = "connected" if redis_pool else "disabled"
+    kill_switch_status = app.state.kill_switch.is_active if hasattr(app.state, 'kill_switch') else "unknown"
     return {
         "status": "healthy",
-        "version": "10.0-atma",
+        "version": "11.0-enterprise",
         "agents": 250,
         "verifiers": 10,
         "redis": redis_status,
+        "kill_switch": kill_switch_status,
         "domain_monitoring": "active"
     }
 
+# ─── AUTH ROUTES ──────────────────────────────────────────────────────
 @app.post("/auth/login")
 @limiter.limit("10/minute")
 async def login(request: Request, body: UserLogin):
@@ -1332,6 +1618,182 @@ async def register(request: Request, body: UserCreate):
 async def me(cu: dict = Depends(get_current_user)):
     return cu
 
+# ─── /ask ROUTE WITH SAFETY INTEGRATION ──────────────────────────────
+@app.post("/ask")
+@limiter.limit("30/minute")
+async def ask(
+    request: Request,
+    query: str = Form(...),
+    files: Optional[List[UploadFile]] = File(None),
+    search_web: str = Form("off"),
+    model: str = Form("llama-3.3-70b-versatile"),
+    lang: str = Form("en"),
+    oracle_mode: str = Form("false"),
+    unrestricted: str = Form("false"),
+    persona_id: str = Form(""),
+    cu: dict = Depends(get_current_user)
+):
+    # ─── SAFETY CHECK 1: Kill switch ──────────────────────────────
+    if not app.state.kill_switch.is_active:
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable due to safety protocol")
+    
+    # ─── SAFETY CHECK 2: User restrictions ────────────────────────
+    restriction = await database.fetch_one("""
+        SELECT * FROM user_restrictions 
+        WHERE user_id = $1 AND is_active = TRUE AND expires_at > NOW()
+    """, cu["id"])
+    if restriction:
+        raise HTTPException(status_code=403, detail=f"User restricted until {restriction['expires_at']}: {restriction['reason']}")
+    
+    # ─── SAFETY CHECK 3: Log the action ──────────────────────────
+    await app.state.monitoring.log_action(
+        action_type="query_submission",
+        user_id=cu["id"],
+        details={"query": query[:100], "files": [f.filename for f in files] if files else []}
+    )
+    
+    if not await _check_limit(cu):
+        raise HTTPException(status_code=429, detail="Free daily limit reached.")
+
+    combined_query = query
+    if files:
+        for file in files:
+            content = await file.read()
+            if len(content) > 8 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail=f"File {file.filename} too large.")
+            try:
+                ft = await process_file_bytes(content, file.filename)
+                if ft.strip():
+                    if len(ft) > 20000:
+                        ft = ft[:20000] + "\n[...truncated...]"
+                    combined_query += f"\n\n═══ DOCUMENT: {file.filename} ═══\n{ft}"
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"File error: {e}")
+
+    await _incr_query(cu["id"])
+
+    # ─── MEMORY ────────────────────────────────────────────────────
+    mem = await _get_memory(cu["id"])
+    if mem:
+        context = _build_context(mem)
+        if context:
+            combined_query = context + combined_query
+
+    oracle = oracle_mode.lower() == "true"
+    unrestricted_bool = unrestricted.lower() == "true"
+
+    if len(combined_query) > 8000:
+        combined_query = combined_query[:8000] + "\n[...truncated...]"
+
+    # Custom persona
+    custom_system = None
+    if persona_id:
+        persona = await database.fetch_one("""
+            SELECT system_prompt FROM custom_personas
+            WHERE id = $1 AND (user_id = $2 OR is_public = TRUE)
+        """, int(persona_id) if persona_id.isdigit() else 0, cu["id"])
+        if persona:
+            custom_system = persona['system_prompt']
+
+    # ─── CACHE CHECK ──────────────────────────────────────────────
+    cache_hit = None
+    if not files and not oracle:
+        cache_hit = await get_cached_response(combined_query, model, oracle)
+
+    if cache_hit:
+        answer = cache_hit["answer"]
+        confidence = cache_hit["confidence"]
+        sources = cache_hit["sources"]
+        metadata = cache_hit["metadata"]
+        await database.execute(
+            queries.insert().values(
+                user_id=cu["id"],
+                query=combined_query[:8000],
+                response=answer[:16000],
+                metadata=metadata,
+                expires_at=datetime.now() + timedelta(hours=24)
+            )
+        )
+        return StreamingResponse(
+            replay_stream(answer, confidence, sources, metadata),
+            media_type="text/event-stream"
+        )
+
+    system_prompt = SYSTEM_BASE
+    if custom_system:
+        system_prompt = f"{SYSTEM_BASE}\n\nCustom Persona Instructions:\n{custom_system}"
+
+    atma = app.state.atma
+    result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
+
+    answer = result["answer"]
+    confidence = result["confidence"]
+    sources = result["sources"]
+    metadata = {
+        "domain": result.get("domain", "general"),
+        "persona": result.get("persona", ""),
+        "provider": result.get("provider", ""),
+        "jury_verifiers": result.get("jury_verifiers", []),
+        "jury_confidences": result.get("jury_confidences", {}),
+        "judge": "Shakti"
+    }
+
+    # ─── CONSTITUTIONAL AI EVALUATION ────────────────────────────
+    constitutional_result = await app.state.constitutional_ai.evaluate_response(
+        query=combined_query,
+        response=answer,
+        context={"user_id": cu["id"], "domain": result.get("domain", "general")}
+    )
+    
+    if constitutional_result["ethics_compliance"] == "LOW":
+        answer = constitutional_result["corrected_response"]
+        confidence = "LOW"
+        await app.state.monitoring.log_action(
+            action_type="constitutional_violation",
+            user_id=cu["id"],
+            details={
+                "query": query[:200],
+                "violations": constitutional_result["violations"],
+                "confidence_score": constitutional_result["confidence"]
+            }
+        )
+
+    if not files and not oracle:
+        cache_data = {
+            "answer": answer,
+            "confidence": confidence,
+            "sources": sources,
+            "metadata": metadata
+        }
+        await set_cached_response(combined_query, model, oracle, cache_data, ttl_seconds=86400)
+
+    await _update_memory(cu["id"], query, answer)
+
+    await database.execute(
+        queries.insert().values(
+            user_id=cu["id"],
+            query=combined_query[:8000],
+            response=answer[:16000],
+            metadata=metadata,
+            expires_at=datetime.now() + timedelta(hours=24)
+        )
+    )
+
+    # ─── LOG PERFORMANCE ──────────────────────────────────────────
+    await database.execute(
+        query_performance.insert().values(
+            query_id=0,  # Will be updated with actual query_id
+            response_time=0.0,
+            error_occurred=False
+        )
+    )
+
+    return StreamingResponse(
+        replay_stream(answer, confidence, sources, metadata),
+        media_type="text/event-stream"
+    )
+
+# ─── LIFETIME COUNT ────────────────────────────────────────────────────
 @app.get("/lifetime-count")
 async def lifetime_count():
     c = await database.fetch_val(select(func.count()).select_from(users).where(users.c.tier == "lifetime")) or 0
@@ -1343,7 +1805,7 @@ async def my_usage(cu: dict = Depends(get_current_user)):
     today = await database.fetch_val(select(func.count()).select_from(queries).where(queries.c.user_id == cu["id"], func.date(queries.c.created_at) == func.current_date())) or 0
     return {"total_queries": total, "queries_today": today}
 
-# ─── Domain Analytics ──────────────────────────────────────────────────
+# ─── DOMAIN ANALYTICS ──────────────────────────────────────────────────
 @app.get("/domain-status")
 async def domain_status(domain: str = None):
     if domain:
@@ -1360,7 +1822,7 @@ async def get_blog_posts(limit: int = 10):
     rows = await database.fetch_all("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT $1", limit)
     return [dict(r) for r in rows]
 
-# ─── Lead Capture ──────────────────────────────────────────────────────
+# ─── LEAD CAPTURE ──────────────────────────────────────────────────────
 @app.post("/capture-lead")
 async def capture_lead(email: str = Form(...)):
     try:
@@ -1377,7 +1839,7 @@ async def book_demo(data: dict = Body(...)):
     """, data.get("name"), data.get("email"), data.get("company"), data.get("phone"))
     return {"status": "success"}
 
-# ─── API Keys ──────────────────────────────────────────────────────────
+# ─── API KEYS ──────────────────────────────────────────────────────────
 @app.post("/api-key/generate")
 async def generate_api_key(name: str = Form(...), cu: dict = Depends(get_current_user)):
     key = "".join(random.choices(string.ascii_letters + string.digits, k=32))
@@ -1387,7 +1849,7 @@ async def generate_api_key(name: str = Form(...), cu: dict = Depends(get_current
     """, cu["id"], key, name)
     return {"api_key": key}
 
-# ─── Public API (Marketplace) ──────────────────────────────────────────
+# ─── PUBLIC API (Marketplace) ──────────────────────────────────────────
 @app.post("/api/v1/ask")
 async def api_ask(
     request: Request,
@@ -1493,7 +1955,7 @@ async def revoke_api_key(key: str, cu: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="API key not found")
     return {"status": "revoked"}
 
-# ─── Templates ──────────────────────────────────────────────────────────
+# ─── TEMPLATES ──────────────────────────────────────────────────────────
 TEMPLATES = {
     "demand_letter": {
         "name": "Demand Letter (Personal Injury)",
@@ -1508,21 +1970,7 @@ TEMPLATES = {
             {"key": "medical_bills", "label": "Medical Bills ($)", "type": "number"},
             {"key": "lost_wages", "label": "Lost Wages ($)", "type": "number"},
         ],
-        "prompt": """
-You are a legal assistant. Draft a professional demand letter based on the following details:
-
-Client: {client_name}
-Address: {client_address}
-Date of Accident: {date_of_accident}
-At-Fault Driver: {at_fault_driver}
-Insurance Company: {insurance_company}
-Claim Number: {claim_number}
-Injuries: {injuries}
-Medical Bills: ${medical_bills}
-Lost Wages: ${lost_wages}
-
-Format as a formal demand letter to the insurance company. Include heading, accident description, injuries, damages, settlement demand, enclosures, and closing.
-"""
+        "prompt": """Draft a professional demand letter with the following details: Client: {client_name}, Address: {client_address}, Date: {date_of_accident}, Driver: {at_fault_driver}, Insurance: {insurance_company}, Claim #: {claim_number}, Injuries: {injuries}, Medical: ${medical_bills}, Lost Wages: ${lost_wages}. Include formal headings, accident description, damages, settlement demand, and closing."""
     },
     "nda": {
         "name": "Mutual Non-Disclosure Agreement",
@@ -1532,9 +1980,7 @@ Format as a formal demand letter to the insurance company. Include heading, acci
             {"key": "purpose", "label": "Purpose of Disclosure", "type": "text"},
             {"key": "term", "label": "Term (months)", "type": "number"},
         ],
-        "prompt": """
-Draft a Mutual Non-Disclosure Agreement (NDA) between {party_a} and {party_b} for the purpose of {purpose}. Term: {term} months. Include definitions, obligations, exclusions, term, governing law (India), and signatures.
-"""
+        "prompt": """Draft a Mutual NDA between {party_a} and {party_b} for {purpose}. Term: {term} months. Include definitions, obligations, exclusions, term, governing law (India), and signatures."""
     },
     "motion_to_modify": {
         "name": "Motion to Modify Custody",
@@ -1546,9 +1992,7 @@ Draft a Mutual Non-Disclosure Agreement (NDA) between {party_a} and {party_b} fo
             {"key": "reason", "label": "Reason", "type": "text"},
             {"key": "child_name", "label": "Child Name", "type": "text"},
         ],
-        "prompt": """
-Draft a Motion to Modify Custody for {petitioner} vs {respondent}, Case No. {case_number} in {court}. Reason: {reason}. Child: {child_name}. Include caption, current order, change in circumstances, supporting facts, prayer for relief, and signature block.
-"""
+        "prompt": """Draft a Motion to Modify Custody for {petitioner} vs {respondent}, Case # {case_number} in {court}. Reason: {reason}. Child: {child_name}. Include caption, current order, change in circumstances, supporting facts, prayer for relief, and signature block."""
     },
     "employment_contract": {
         "name": "Employment Contract",
@@ -1559,9 +2003,7 @@ Draft a Motion to Modify Custody for {petitioner} vs {respondent}, Case No. {cas
             {"key": "salary", "label": "Salary (INR)", "type": "number"},
             {"key": "start_date", "label": "Start Date", "type": "date"},
         ],
-        "prompt": """
-Draft an Employment Contract between {employer} and {employee} for the position of {position}. Salary: ₹{salary}. Start Date: {start_date}. Include duties, compensation, benefits, working hours, leave, confidentiality, termination, and governing law (India).
-"""
+        "prompt": """Draft an Employment Contract between {employer} and {employee} for {position}. Salary: ₹{salary}. Start: {start_date}. Include duties, compensation, benefits, working hours, leave, confidentiality, termination, and governing law (India)."""
     },
     "contract_review": {
         "name": "Contract Review Checklist",
@@ -1571,9 +2013,7 @@ Draft an Employment Contract between {employer} and {employee} for the position 
             {"key": "party_b", "label": "Party B", "type": "text"},
             {"key": "key_terms", "label": "Key Terms", "type": "text"},
         ],
-        "prompt": """
-Provide a contract review and risk assessment for {contract_type} between {party_a} and {party_b}. Key terms: {key_terms}. Include executive summary, clause analysis, suggested amendments, and overall risk rating (HIGH/MEDIUM/LOW).
-"""
+        "prompt": """Provide a contract review for {contract_type} between {party_a} and {party_b}. Key terms: {key_terms}. Include executive summary, clause analysis, suggested amendments, and overall risk rating (HIGH/MEDIUM/LOW)."""
     }
 }
 
@@ -1604,7 +2044,7 @@ async def generate_template_document(
     )
     return {"status": "success", "document": result, "template": template_id, "name": template["name"]}
 
-# ─── Drafts (Human‑in‑the‑Loop) ──────────────────────────────────────
+# ─── DRAFTS ────────────────────────────────────────────────────────────
 @app.post("/drafts")
 async def create_draft(
     title: str = Form(...),
@@ -1630,8 +2070,7 @@ async def get_drafts(
         query += " AND status = $2"
         params.append(status)
     query += " ORDER BY created_at DESC"
-    # ✅ FIX: params must be a tuple (positional) or dict (named)
-    rows = await database.fetch_all(query, tuple(params))   # convert list to tuple
+    rows = await database.fetch_all(query, tuple(params))
     return [dict(r) for r in rows]
 
 @app.get("/drafts/{draft_id}")
@@ -1713,7 +2152,7 @@ async def improve_draft(
     """, draft_id, cu["id"], improved)
     return {"status": "improved", "original": draft['content'], "improved": improved}
 
-# ─── Enterprise & Admin ──────────────────────────────────────────────
+# ─── ENTERPRISE & ADMIN ──────────────────────────────────────────────
 @app.post("/enterprise/persona")
 async def create_persona(
     name: str = Form(...),
@@ -1748,7 +2187,6 @@ async def create_whitelabel(
     subdomain: str = Form(...),
     secret: str = Form(...)
 ):
-    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
     if secret != ADMIN_SECRET:
         raise HTTPException(403, "Invalid secret")
     api_key = "".join(random.choices(string.ascii_letters + string.digits, k=32))
@@ -1760,7 +2198,6 @@ async def create_whitelabel(
 
 @app.post("/admin/fine-tune")
 async def admin_fine_tune(secret: str = Form(...)):
-    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
     if secret != ADMIN_SECRET:
         raise HTTPException(403, "Invalid secret")
     rows = await database.fetch_all("""
@@ -1779,7 +2216,6 @@ async def admin_fine_tune(secret: str = Form(...)):
 
 @app.post("/admin/analytics")
 async def admin_analytics(secret: str = Form(...)):
-    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
     if secret != ADMIN_SECRET:
         raise HTTPException(403, "Invalid secret")
     daily_queries = await database.fetch_all("""
@@ -1807,209 +2243,115 @@ async def test_linkedin():
         return {"error": "Missing token"}
     headers = {"Authorization": f"Bearer {token}"}
     async with httpx.AsyncClient() as client:
-        r = await client.get("https://api.linkedin.com/v2/people/(id:{user_id})", headers=headers)
+        r = await client.get(f"https://api.linkedin.com/v2/people/(id:{user_id})", headers=headers)
     return {"status": r.status_code, "response": r.text}
+
+@app.post("/test-news-pipeline")
+async def test_news_pipeline(
+    secret: str = Form(...),
+    background_tasks: BackgroundTasks = None
+):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    await _daily_news_pipeline()
+    return {"status": "pipeline executed successfully"}
 
 @app.post("/admin/ingest")
 async def admin_ingest(
     secret: str = Form(...),
     background_tasks: BackgroundTasks = None
 ):
-    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
     if secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret")
     background_tasks.add_task(run_ingestion_job)
     return {"status": "ingestion started in background"}
 
-# ─── /ask (Memory Re‑enabled with Safety Caps) ──────────────────────
-@app.post("/ask")
-@limiter.limit("30/minute")
-async def ask(
-    request: Request,
-    query: str = Form(...),
-    files: Optional[List[UploadFile]] = File(None),
-    search_web: str = Form("off"),
-    model: str = Form("llama-3.3-70b-versatile"),
-    lang: str = Form("en"),
-    oracle_mode: str = Form("false"),
-    unrestricted: str = Form("false"),
-    persona_id: str = Form(""),
-    cu: dict = Depends(get_current_user)
-):
-    if not await _check_limit(cu):
-        raise HTTPException(status_code=429, detail="Free daily limit reached.")
-
-    combined_query = query
-    if files:
-        for file in files:
-            content = await file.read()
-            if len(content) > 8 * 1024 * 1024:
-                raise HTTPException(status_code=413, detail=f"File {file.filename} too large.")
-            try:
-                ft = await process_file_bytes(content, file.filename)
-                if ft.strip():
-                    if len(ft) > 20000:
-                        ft = ft[:20000] + "\n[...truncated...]"
-                    combined_query += f"\n\n═══ DOCUMENT: {file.filename} ═══\n{ft}"
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"File error: {e}")
-
-    await _incr_query(cu["id"])
-
-    # ─── MEMORY RE‑ENABLED (SAFE, CAPPED) ────────────────────────────────
-    mem = await _get_memory(cu["id"])
-    if mem:
-        context = _build_context(mem)
-        if context:
-            combined_query = context + combined_query
-
-    oracle = oracle_mode.lower() == "true"
-    unrestricted_bool = unrestricted.lower() == "true"
-
-    # Safety truncation of the whole query
-    if len(combined_query) > 8000:
-        combined_query = combined_query[:8000] + "\n[...truncated...]"
-
-    # Custom persona
-    custom_system = None
-    if persona_id:
-        persona = await database.fetch_one("""
-            SELECT system_prompt FROM custom_personas
-            WHERE id = $1 AND (user_id = $2 OR is_public = TRUE)
-        """, int(persona_id) if persona_id.isdigit() else 0, cu["id"])
-        if persona:
-            custom_system = persona['system_prompt']
-
-    # Cache check
-    cache_hit = None
-    if not files and not oracle:
-        cache_hit = await get_cached_response(combined_query, model, oracle)
-
-    if cache_hit:
-        answer = cache_hit["answer"]
-        confidence = cache_hit["confidence"]
-        sources = cache_hit["sources"]
-        metadata = cache_hit["metadata"]
-        await database.execute(
-            queries.insert().values(
-                user_id=cu["id"],
-                query=combined_query[:8000],
-                response=answer[:16000],
-                metadata=metadata,
-                expires_at=datetime.now() + timedelta(hours=24)
-            )
-        )
-        return StreamingResponse(
-            replay_stream(answer, confidence, sources, metadata),
-            media_type="text/event-stream"
-        )
-
-    system_prompt = SYSTEM_BASE
-    if custom_system:
-        system_prompt = f"{SYSTEM_BASE}\n\nCustom Persona Instructions:\n{custom_system}"
-
-    atma = app.state.atma
-    # Pass a clean query (without history) to AtmaRouter – but we already added context in combined_query
-    result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
-
-    answer = result["answer"]
-    confidence = result["confidence"]
-    sources = result["sources"]
-    metadata = {
-        "domain": result.get("domain", "general"),
-        "persona": result.get("persona", ""),
-        "provider": result.get("provider", ""),
-        "jury_verifiers": result.get("jury_verifiers", []),
-        "jury_confidences": result.get("jury_confidences", {}),
-        "judge": "Shakti"
+# ─── SAFETY DASHBOARD ROUTES ──────────────────────────────────────────
+@app.get("/admin/safety/dashboard")
+async def safety_dashboard(secret: str = Header(...)):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    report = await app.state.safety_case.generate_safety_report(period_days=30)
+    
+    red_team_results = await database.fetch_all("""
+        SELECT * FROM red_team_tests 
+        WHERE tested_at > NOW() - INTERVAL '7 days'
+        ORDER BY tested_at DESC LIMIT 20
+    """)
+    
+    violations = await database.fetch_all("""
+        SELECT * FROM constitutional_violations 
+        WHERE detected_at > NOW() - INTERVAL '7 days'
+        ORDER BY detected_at DESC LIMIT 20
+    """)
+    
+    return {
+        "safety_report": report,
+        "recent_red_team_tests": [dict(r) for r in red_team_results],
+        "recent_constitutional_violations": [dict(r) for r in violations],
+        "kill_switch_status": {
+            "is_active": app.state.kill_switch.is_active,
+            "last_shutdown": app.state.kill_switch.shutdown_time,
+            "reason": app.state.kill_switch.shutdown_reason
+        }
     }
 
-    if not files and not oracle:
-        cache_data = {
-            "answer": answer,
-            "confidence": confidence,
-            "sources": sources,
-            "metadata": metadata
-        }
-        await set_cached_response(combined_query, model, oracle, cache_data, ttl_seconds=86400)
+@app.post("/admin/safety/red-team-trigger")
+async def trigger_red_team(
+    secret: str = Form(...),
+    agent_id: str = Form(...),
+    query: str = Form(...),
+    background_tasks: BackgroundTasks = None
+):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    result = await app.state.red_team.run_red_team_test(agent_id, query)
+    return result
 
-    # Update memory (already truncated in _update_memory)
-    await _update_memory(cu["id"], query, answer)
+@app.post("/admin/safety/trigger-kill-switch")
+async def trigger_kill_switch(
+    secret: str = Form(...),
+    reason: str = Form(...)
+):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    await app.state.kill_switch.activate(f"Manual activation: {reason}")
+    return {"status": "kill_switch_activated"}
 
-    await database.execute(
-        queries.insert().values(
-            user_id=cu["id"],
-            query=combined_query[:8000],
-            response=answer[:16000],
-            metadata=metadata,
-            expires_at=datetime.now() + timedelta(hours=24)
-        )
-    )
+@app.post("/admin/safety/deactivate-kill-switch")
+async def deactivate_kill_switch(
+    secret: str = Form(...),
+    reason: str = Form(...)
+):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    result = await app.state.kill_switch.deactivate(reason, "admin")
+    return {"status": "deactivated" if result else "failed"}
 
-    return StreamingResponse(
-        replay_stream(answer, confidence, sources, metadata),
-        media_type="text/event-stream"
-    )
+@app.get("/admin/safety/interpretability/{query_id}")
+async def get_interpretability(
+    query_id: int,
+    secret: str = Header(...)
+):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    return await app.state.interpretability.explain_response(query_id)
 
-# ─── BULK UPLOAD ──────────────────────────────────────────────────────
-@app.post("/bulk-upload")
-async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
-    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Premium+ required")
-    jid = str(uuid.uuid4())
-    file_data = [(f.filename, await f.read()) for f in files]
-    await database.execute(bulk_jobs.insert().values(
-        user_id=cu["id"],
-        job_id=jid,
-        total_files=len(file_data),
-        status="processing",
-        expires_at=datetime.now() + timedelta(days=7)
-    ))
-    background_tasks.add_task(_process_bulk, jid, file_data, query, model, lang)
-    return {"job_id": jid, "status": "processing", "total_files": len(file_data)}
-
-async def _process_bulk(jid, file_data, query, model, lang):
-    results = []
-    proc = 0
-    for fname, content in file_data:
-        try:
-            txt = await process_file_bytes(content, fname)
-            combined = f"{query}\n\n═══ DOCUMENT ═══\n{txt[:15000]}"
-            agent_id = route_agent(combined, oracle=False)
-            if agent_id == "oracle":
-                persona = "You are the Oracle, offering spiritual and philosophical wisdom."
-            elif agent_id == "general":
-                persona = "You are the full LexSarthi council, a generalist with broad knowledge."
-            else:
-                agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
-                persona = agent["persona_prompt"] if agent else "You are a generalist."
-            sys_p = f"{SYSTEM_BASE}\n{persona}"
-            full = await call_llm(sys_p, combined, model)
-            ver = await verify_response(full, random.choice(VERIFIERS[:-1]), model)
-            final = ver.get("corrected_text") if ver.get("status") == "CORRECTED" else full
-            results.append({"filename": fname, "response": final})
-        except Exception as e:
-            results.append({"filename": fname, "error": str(e)})
-        proc += 1
-        await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id == jid).values(processed_files=proc))
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(["Filename", "Response"])
-    for r in results:
-        w.writerow([r.get("filename"), r.get("response", r.get("error", "Failed"))])
-    await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id == jid).values(status="completed", result_data=buf.getvalue()))
-
-@app.get("/bulk-result/{job_id}")
-async def bulk_result(job_id: str, cu: dict = Depends(get_current_user)):
-    j = await database.fetch_one(bulk_jobs.select().where(bulk_jobs.c.job_id == job_id))
-    if not j:
-        raise HTTPException(status_code=404, detail="Job not found")
-    j = dict(j)
-    if j["user_id"] != cu["id"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    if j["status"] != "completed":
-        return {"status": j["status"], "processed": j["processed_files"], "total": j["total_files"]}
-    return {"status": "completed", "csv_data": j["result_data"]}
+@app.post("/admin/safety/feedback")
+async def submit_feedback(
+    query_id: int = Form(...),
+    rating: int = Form(...),
+    comment: str = Form(""),
+    cu: dict = Depends(get_current_user)
+):
+    if rating < 1 or rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    await database.execute("""
+        INSERT INTO user_feedback (user_id, query_id, rating, comment)
+        VALUES ($1, $2, $3, $4)
+    """, cu["id"], query_id, rating, comment)
+    return {"status": "feedback_submitted"}
 
 # ─── PAYMENTS ──────────────────────────────────────────────────────────
 rzp = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPAY_KEY_ID else None
@@ -2051,19 +2393,70 @@ async def verify_payment(
         return {"status": "success", "tier": tier}
     except Exception as e:
         raise HTTPException(status_code=400, detail="Verification failed")
-@app.post("/test-news-pipeline")
-async def test_news_pipeline(
-    secret: str = Form(...),
-    background_tasks: BackgroundTasks = None
-):
-    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
-    if secret != ADMIN_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid secret")
-    await _daily_news_pipeline()
-    return {"status": "pipeline executed successfully"}        
+
+# ─── BULK UPLOAD ──────────────────────────────────────────────────────
+@app.post("/bulk-upload")
+async def bulk_upload(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), query: str = Form(...), model: str = Form("llama-3.3-70b-versatile"), lang: str = Form("en"), cu: dict = Depends(get_current_user)):
+    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Premium+ required")
+    jid = str(uuid.uuid4())
+    file_data = [(f.filename, await f.read()) for f in files]
+    await database.execute(bulk_jobs.insert().values(
+        user_id=cu["id"],
+        job_id=jid,
+        total_files=len(file_data),
+        status="processing",
+        expires_at=datetime.now() + timedelta(days=7)
+    ))
+    background_tasks.add_task(_process_bulk, jid, file_data, query, model, lang)
+    return {"job_id": jid, "status": "processing", "total_files": len(file_data)}
+
+async def _process_bulk(jid, file_data, query, model, lang):
+    results = []
+    proc = 0
+    for fname, content in file_data:
+        try:
+            txt = await process_file_bytes(content, fname)
+            combined = f"{query}\n\n═══ DOCUMENT ═══\n{txt[:15000]}"
+            agent_id = route_agent(combined, oracle=False)
+            if agent_id == "oracle":
+                persona = "You are the Oracle, offering spiritual and philosophical wisdom."
+            elif agent_id == "general":
+                persona = "You are the full Unknown Verdict council, a generalist with broad knowledge."
+            else:
+                agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
+                persona = agent["persona_prompt"] if agent else "You are a generalist."
+            sys_p = f"{SYSTEM_BASE}\n{persona}"
+            full = await call_llm(sys_p, combined, model)
+            ver = await verify_response(full, random.choice(VERIFIERS[:-1]), model)
+            final = ver.get("corrected_text") if ver.get("status") == "CORRECTED" else full
+            results.append({"filename": fname, "response": final})
+        except Exception as e:
+            results.append({"filename": fname, "error": str(e)})
+        proc += 1
+        await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id == jid).values(processed_files=proc))
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["Filename", "Response"])
+    for r in results:
+        w.writerow([r.get("filename"), r.get("response", r.get("error", "Failed"))])
+    await database.execute(bulk_jobs.update().where(bulk_jobs.c.job_id == jid).values(status="completed", result_data=buf.getvalue()))
+
+@app.get("/bulk-result/{job_id}")
+async def bulk_result(job_id: str, cu: dict = Depends(get_current_user)):
+    j = await database.fetch_one(bulk_jobs.select().where(bulk_jobs.c.job_id == job_id))
+    if not j:
+        raise HTTPException(status_code=404, detail="Job not found")
+    j = dict(j)
+    if j["user_id"] != cu["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if j["status"] != "completed":
+        return {"status": j["status"], "processed": j["processed_files"], "total": j["total_files"]}
+    return {"status": "completed", "csv_data": j["result_data"]}
+
 # ─── STATIC FILES ──────────────────────────────────────────────────────
 if os.path.exists("static"):
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)  
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
