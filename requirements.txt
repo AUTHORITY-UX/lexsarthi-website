@@ -6,6 +6,7 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
+pydantic[email]  # ✅ ADD THIS - for EmailStr validation
 python-multipart==0.0.20
 
 # Database
@@ -39,7 +40,7 @@ Pillow==11.0.0
 pytesseract==0.3.13
 
 # Payments
-razorpay==1.4.2  # ✅ FIXED: changed from 1.4.4 to 1.4.2
+razorpay==1.4.2
 
 # Scheduling
 APScheduler==3.10.4
@@ -62,3 +63,7 @@ prometheus-client==0.21.0
 python-dotenv==1.0.1
 tqdm==4.67.1
 numpy==1.26.4
+email-validator==2.2.0  # ✅ ADD THIS explicitly
+
+# OR simply add:
+# pydantic[email]  # This installs email-validator automatically
