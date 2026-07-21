@@ -7,6 +7,7 @@ import json
 import logging
 import numpy as np
 from typing import Dict, Optional
+from typing import Optional, Dict, List, Any
 
 logger = logging.getLogger("unknown_verdict.edgeimpulse")
 
