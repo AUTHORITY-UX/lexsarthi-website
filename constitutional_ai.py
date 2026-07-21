@@ -7,6 +7,7 @@ import logging
 import re
 from typing import List, Dict, Optional
 from datetime import datetime
+from typing import Optional, Dict, List, Any
 
 logger = logging.getLogger("unknown_verdict.constitutional")
 
