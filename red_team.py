@@ -7,6 +7,7 @@ import json
 import random
 import logging
 from typing import List, Dict
+from typing import Optional, Dict, List, Any
 
 logger = logging.getLogger("unknown_verdict.redteam")
 
