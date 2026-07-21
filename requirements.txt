@@ -1,5 +1,5 @@
 # =============================================================================
-# requirements.txt – All Dependencies
+# requirements.txt – All Dependencies for Unknown Verdict v11.0
 # =============================================================================
 
 # Core
@@ -39,7 +39,7 @@ Pillow==11.0.0
 pytesseract==0.3.13
 
 # Payments
-razorpay==1.4.4
+razorpay==1.4.2  # ✅ FIXED: changed from 1.4.4 to 1.4.2
 
 # Scheduling
 APScheduler==3.10.4
@@ -54,7 +54,7 @@ slowapi==0.1.9
 # Monitoring
 prometheus-client==0.21.0
 
-# Edge AI (optional)
+# Edge AI (optional - uncomment if you have the hardware)
 # tflite-runtime==2.14.0
 # akida==2.3.0
 
