@@ -5,7 +5,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, List, Any  # ✅ Added required imports
 
 logger = logging.getLogger("unknown_verdict.killswitch")
 
@@ -20,7 +20,7 @@ class KillSwitch:
         self.shutdown_time = None
         self.triggers = self._load_triggers()
     
-    def _load_triggers(self) -> Dict:
+    def _load_triggers(self) -> Dict:  # ✅ Now Dict is defined
         return {
             "constitutional_violation": {"threshold": 5, "window_minutes": 60},
             "red_team_escape": {"threshold": 1, "window_minutes": 0},
@@ -39,7 +39,7 @@ class KillSwitch:
         try:
             async with self.pg_pool.acquire() as conn:
                 if window_minutes == 0:
-                    query = f"SELECT COUNT(*) FROM trigger_events WHERE trigger_name = $1 AND created_at > NOW()"
+                    query = "SELECT COUNT(*) FROM trigger_events WHERE trigger_name = $1 AND created_at > NOW()"
                 else:
                     query = f"SELECT COUNT(*) FROM trigger_events WHERE trigger_name = $1 AND created_at > NOW() - INTERVAL '{window_minutes} minutes'"
                 return await conn.fetchval(query, trigger_name) or 0
