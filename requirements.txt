@@ -1,5 +1,5 @@
 # =============================================================================
-# UNKNOWN VERDICT v11.0 - FIXED for Hugging Face
+# UNKNOWN VERDICT v11.0 - FIXED for Hugging Face (No OpenCV)
 # =============================================================================
 
 # ─── CORE ──────────────────────────────────────────────────────────────────
@@ -8,7 +8,7 @@ uvicorn[standard]==0.30.0
 python-multipart==0.0.9
 pydantic==2.8.2
 pydantic-settings==2.3.4
-email-validator==2.1.0  # ⭐ CRITICAL FIX
+email-validator==2.1.0
 
 # ─── DATABASE ──────────────────────────────────────────────────────────────
 databases[postgresql]==0.9.0
@@ -26,7 +26,7 @@ httpx==0.27.0
 
 # ─── EMBEDDING (CPU-optimized) ────────────────────────────────────────────
 sentence-transformers==2.7.0
-numpy==1.24.4  # ⭐ CRITICAL FIX: Pin to numpy 1.x
+numpy==1.24.4
 torch==2.3.0
 transformers==4.41.0
 
@@ -36,7 +36,7 @@ PyPDF2==3.0.1
 python-docx==1.1.0
 pytesseract==0.3.10
 Pillow==10.3.0
-opencv-python-headless==4.8.1.78  # ⭐ FIX: Compatible version
+# opencv-python-headless removed - using PIL instead
 
 # ─── SECURITY ──────────────────────────────────────────────────────────────
 pyjwt==2.8.0
