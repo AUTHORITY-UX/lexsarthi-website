@@ -24,4 +24,4 @@ Pillow>=10.0.0
 feedparser>=6.0.0
 apscheduler>=3.10.0
 slowapi>=0.1.9
-databases>=0.8.0
+databases>=0.8.0 
