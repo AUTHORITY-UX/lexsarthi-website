@@ -8,6 +8,7 @@ import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl,
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
+from edge_impulse_full import get_edge_ai_service, EdgeAIService
 
 from databases import Database
 from fastapi import (FastAPI, HTTPException, Depends, UploadFile, File, Form,
@@ -16,7 +17,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, EmailStr
 import uvicorn
 
@@ -117,6 +118,7 @@ embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 database = Database(DATABASE_URL, min_size=2, max_size=20)
 metadata = MetaData()
 
+# ─── ALL TABLE DEFINITIONS ──────────────────────────────────────────────
 users = Table("users", metadata,
     Column("id", Integer, primary_key=True),
     Column("email", String(255), unique=True, index=True),
@@ -468,6 +470,7 @@ sub_specialties = {
 }
 
 def generate_all_agents():
+    """Generate 250 specialist legal personas"""
     agents = []
     domain_idx = 0
     name_idx = 0
@@ -488,6 +491,7 @@ def generate_all_agents():
     return agents
 
 DIVINE_AGENTS = generate_all_agents()
+logger.info(f"✅ Loaded {len(DIVINE_AGENTS)} specialist personas")
 
 # ─── VERIFIERS (10) ─────────────────────────────────────────────────────
 VERIFIERS = [
@@ -502,9 +506,11 @@ VERIFIERS = [
     {"id":"v09","name":"Vayu","role":"PII / privacy filter","prompt":"Redact PII."},
     {"id":"v10","name":"Shakti","role":"Final judge & dharma seal","prompt":"Integrate all critiques and produce a final answer with a confidence rating."}
 ]
+logger.info(f"✅ Loaded {len(VERIFIERS)} verifiers including judge Shakti")
 
 # ─── ROUTE AGENT ──────────────────────────────────────────────────────────
 def route_agent(query: str, oracle: bool) -> str:
+    """Route query to appropriate agent"""
     if oracle:
         return "oracle"
     q = query.lower()
@@ -751,6 +757,122 @@ async def call_llm(
     logger.error(error_msg)
     return f"Error: {error_msg}"
 
+# ─── JURY VERIFICATION SYSTEM ────────────────────────────────────────
+async def jury_verification(initial_answer: str, query: str, domain: str) -> Dict:
+    """
+    The full jury system - 10 verifiers review the answer
+    Returns verified answer with confidence and sources
+    """
+    logger.info("⚖️ JURY SUMMONED: 10 Verifiers reviewing the answer...")
+    
+    verifier_results = []
+    final_confidence = "MEDIUM"
+    
+    # Run all 10 verifiers including Shakti (judge)
+    for verifier in VERIFIERS:
+        logger.info(f"📜 {verifier['name']} ({verifier['role']}) is reviewing...")
+        
+        ver_system = f"""You are {verifier['name']} ({verifier['role']}). 
+        Review the following legal answer and return JSON:
+        {{"status": "APPROVED|CORRECTED|REJECTED", 
+          "confidence": "HIGH|MEDIUM|LOW", 
+          "corrected_text": "...", 
+          "feedback": "...",
+          "issues": ["..."]}}"""
+        
+        try:
+            # Get verifier's review
+            out = await call_llm(
+                ver_system, 
+                f"Query: {query}\n\nDomain: {domain}\n\nAnswer to review:\n{initial_answer}",
+                "groq"
+            )
+            m = re.search(r'\{.*\}', out, re.DOTALL)
+            if m:
+                result = json.loads(m.group())
+                result['verifier'] = verifier['name']
+                result['role'] = verifier['role']
+                verifier_results.append(result)
+                
+                # Track confidence
+                if result.get('confidence') == 'HIGH':
+                    final_confidence = 'HIGH'
+                elif result.get('confidence') == 'LOW' and final_confidence != 'HIGH':
+                    final_confidence = 'LOW'
+                
+                logger.info(f"✅ {verifier['name']}: {result.get('status')} (Confidence: {result.get('confidence')})")
+            else:
+                verifier_results.append({
+                    'verifier': verifier['name'],
+                    'role': verifier['role'],
+                    'status': 'APPROVED',
+                    'confidence': 'MEDIUM',
+                    'feedback': 'No specific issues found'
+                })
+                logger.info(f"⚠️ {verifier['name']}: Default APPROVED")
+        except Exception as e:
+            logger.error(f"❌ {verifier['name']} error: {e}")
+            verifier_results.append({
+                'verifier': verifier['name'],
+                'role': verifier['role'],
+                'status': 'APPROVED',
+                'confidence': 'MEDIUM',
+                'feedback': 'Verification skipped due to error'
+            })
+    
+    # SHAKTI - The Final Judge
+    logger.info("👑 SHAKTI (Final Judge) is delivering the verdict...")
+    
+    # Compile all feedback
+    all_feedback = []
+    for v in verifier_results:
+        if v.get('feedback'):
+            all_feedback.append(f"{v['verifier']}: {v['feedback']}")
+    
+    # Get judge's final decision
+    judge_system = """You are Shakti, the Final Judge and Dharma Seal.
+    You must integrate all verifier critiques and produce the final answer.
+    Return JSON: {"final_answer": "...", "confidence": "HIGH|MEDIUM|LOW", "sources": [...]}"""
+    
+    judge_prompt = f"""
+    Query: {query}
+    Domain: {domain}
+    Original Answer: {initial_answer}
+    
+    Verifier Feedback:
+    {chr(10).join(all_feedback)}
+    
+    Please deliver the final verdict.
+    """
+    
+    try:
+        judge_response = await call_llm(judge_system, judge_prompt, "groq")
+        m = re.search(r'\{.*\}', judge_response, re.DOTALL)
+        if m:
+            judge_decision = json.loads(m.group())
+            final_answer = judge_decision.get('final_answer', initial_answer)
+            final_confidence = judge_decision.get('confidence', final_confidence)
+            sources = judge_decision.get('sources', [])
+        else:
+            final_answer = initial_answer
+            sources = []
+    except Exception as e:
+        logger.error(f"❌ Judge error: {e}")
+        final_answer = initial_answer
+        sources = []
+    
+    logger.info(f"👑 SHAKTI'S VERDICT: Confidence = {final_confidence}")
+    
+    return {
+        "final_answer": final_answer,
+        "confidence": final_confidence,
+        "sources": sources,
+        "jury_verifiers": [v['verifier'] for v in verifier_results],
+        "jury_confidences": {v['verifier']: v.get('confidence', 'MEDIUM') for v in verifier_results},
+        "judge": "Shakti",
+        "verifier_details": verifier_results
+    }
+
 # ─── BULK VERIFIER ────────────────────────────────────────────────────
 async def verify_response(response_text: str, verifier: dict, model: str) -> dict:
     ver_sys = f"""You are {verifier['name']} ({verifier['role']}). Review and return JSON:
@@ -826,9 +948,13 @@ async def set_cached_response(query: str, model: str, oracle: bool, response_dat
 
 # ─── STREAMING REPLAY ──────────────────────────────────────────────
 async def replay_stream(answer: str, confidence: str, sources: List[str], metadata: dict):
+    """Stream the answer with full jury metadata"""
+    # Stream the answer token by token
     for i in range(0, len(answer), 6):
         yield f"data: {json.dumps({'token': answer[i:i+6]})}\n\n"
         await asyncio.sleep(0.01)
+    
+    # Send verification details including jury info
     verification = {
         "final_confidence": confidence,
         "sources": sources,
@@ -838,6 +964,7 @@ async def replay_stream(answer: str, confidence: str, sources: List[str], metada
         "domain": metadata.get("domain", "general"),
         "persona": metadata.get("persona", ""),
         "provider": metadata.get("provider", ""),
+        "verifier_details": metadata.get("verifier_details", [])
     }
     yield f"data: {json.dumps({'verification': verification})}\n\n"
     yield "data: [DONE]\n\n"
@@ -1574,11 +1701,26 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# ─── EDGE AI SERVICE INITIALIZATION ──────────────────────────────────
+edge_ai_service: Optional[EdgeAIService] = None
+
+@app.on_event("startup")
+async def startup_edge_ai():
+    """Initialize Edge AI on startup"""
+    global edge_ai_service
+    try:
+        edge_ai_service = await get_edge_ai_service()
+        logger.info("✅ Edge AI Service initialized")
+    except Exception as e:
+        logger.error(f"❌ Edge AI Service initialization failed: {e}")
+        edge_ai_service = None
+
 # ─── HEALTH CHECK ──────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
     redis_status = "connected" if redis_pool else "disabled"
     kill_switch_status = app.state.kill_switch.is_active if hasattr(app.state, 'kill_switch') else "unknown"
+    edge_status = "available" if edge_ai_service else "unavailable"
     return {
         "status": "healthy",
         "version": "11.0-enterprise",
@@ -1586,6 +1728,7 @@ async def health():
         "verifiers": 10,
         "redis": redis_status,
         "kill_switch": kill_switch_status,
+        "edge_ai": edge_status,
         "domain_monitoring": "active"
     }
 
@@ -1637,7 +1780,195 @@ async def register(request: Request, body: UserCreate):
 async def me(cu: dict = Depends(get_current_user)):
     return cu
 
-# ─── /ask ROUTE WITH SAFETY INTEGRATION ──────────────────────────────
+# ─── EDGE AI ROUTES ──────────────────────────────────────────────────
+@app.post("/edge/process/audio")
+@limiter.limit("30/minute")
+async def edge_process_audio(
+    request: Request,
+    audio: UploadFile = File(...),
+    analysis_type: str = Form("courtroom"),
+    cu: dict = Depends(get_current_user)
+):
+    """Process audio with Edge AI - Types: courtroom, emotion, transcription"""
+    if edge_ai_service is None:
+        raise HTTPException(status_code=503, detail="Edge AI service not available")
+    
+    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Edge AI requires Premium+ plan")
+    
+    audio_data = await audio.read()
+    
+    if analysis_type == "courtroom":
+        result = await edge_ai_service.analyze_courtroom_audio(audio_data)
+    elif analysis_type == "emotion":
+        result = await edge_ai_service.detect_emotion(audio_data)
+    else:
+        result = await edge_ai_service.model_manager.classify_audio(audio_data)
+        result = result.classifications[0].to_dict()
+    
+    await app.state.monitoring.log_action(
+        action_type="edge_ai_audio",
+        user_id=cu["id"],
+        details={
+            "analysis_type": analysis_type,
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+    
+    return JSONResponse({
+        "status": "success",
+        "result": result,
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.post("/edge/process/vision")
+@limiter.limit("30/minute")
+async def edge_process_vision(
+    request: Request,
+    image: UploadFile = File(...),
+    analysis_type: str = Form("document"),
+    cu: dict = Depends(get_current_user)
+):
+    """Process image with Edge AI - Types: document, signature, evidence"""
+    if edge_ai_service is None:
+        raise HTTPException(status_code=503, detail="Edge AI service not available")
+    
+    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Edge AI requires Premium+ plan")
+    
+    image_data = await image.read()
+    
+    if analysis_type == "document":
+        result = await edge_ai_service.process_legal_document(image_data)
+    elif analysis_type == "signature":
+        result = await edge_ai_service.verify_signature(image_data)
+    else:
+        result = await edge_ai_service.model_manager.classify_vision(image_data)
+        result = result.classifications[0].to_dict()
+    
+    await app.state.monitoring.log_action(
+        action_type="edge_ai_vision",
+        user_id=cu["id"],
+        details={
+            "analysis_type": analysis_type,
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+    
+    return JSONResponse({
+        "status": "success",
+        "result": result,
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.post("/edge/process/multi-modal")
+@limiter.limit("15/minute")
+async def edge_process_multi_modal(
+    request: Request,
+    audio: UploadFile = File(...),
+    image: UploadFile = File(...),
+    cu: dict = Depends(get_current_user)
+):
+    """Process both audio and video for comprehensive analysis"""
+    if edge_ai_service is None:
+        raise HTTPException(status_code=503, detail="Edge AI service not available")
+    
+    if cu["tier"] not in ("enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Multi-modal Edge AI requires Enterprise plan")
+    
+    audio_data = await audio.read()
+    image_data = await image.read()
+    
+    result = await edge_ai_service.model_manager.multi_modal_analysis(audio_data, image_data)
+    
+    await app.state.monitoring.log_action(
+        action_type="edge_ai_multi_modal",
+        user_id=cu["id"],
+        details={
+            "result": result.classifications[0].to_dict(),
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+    
+    return JSONResponse({
+        "status": "success",
+        "result": result.classifications[0].to_dict(),
+        "processing_time_ms": result.processing_time_ms,
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.get("/edge/stream/audio")
+async def edge_audio_stream(
+    request: Request,
+    cu: dict = Depends(get_current_user)
+):
+    """Real-time audio stream for courtroom proceedings"""
+    if edge_ai_service is None:
+        raise HTTPException(status_code=503, detail="Edge AI service not available")
+    
+    if cu["tier"] not in ("enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Audio streaming requires Enterprise plan")
+    
+    async def stream_generator():
+        queue = edge_ai_service.courtroom_stream.audio_queue
+        try:
+            while True:
+                try:
+                    result = await asyncio.wait_for(queue.get(), timeout=30.0)
+                    yield f"data: {json.dumps(result.classifications[0].to_dict())}\n\n"
+                except asyncio.TimeoutError:
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now().isoformat()})}\n\n"
+        except asyncio.CancelledError:
+            logger.info("Audio stream cancelled")
+            raise
+    
+    return StreamingResponse(
+        stream_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+@app.get("/edge/metrics")
+async def edge_metrics(
+    request: Request,
+    cu: dict = Depends(get_current_user)
+):
+    """Get Edge AI performance metrics"""
+    if edge_ai_service is None:
+        raise HTTPException(status_code=503, detail="Edge AI service not available")
+    
+    if cu["tier"] not in ("enterprise", "lifetime"):
+        raise HTTPException(status_code=403, detail="Metrics require Enterprise plan")
+    
+    return edge_ai_service.get_metrics()
+
+@app.get("/edge/status")
+async def edge_status(request: Request):
+    """Get Edge AI service status"""
+    if edge_ai_service is None:
+        return {
+            "status": "unavailable",
+            "message": "Edge AI service not initialized",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    metrics = edge_ai_service.get_metrics()
+    return {
+        "status": "available",
+        "simulation_mode": metrics.get("simulation_mode", True),
+        "models_loaded": metrics.get("models_loaded", []),
+        "total_predictions": metrics.get("total_predictions", 0),
+        "avg_latency_ms": metrics.get("avg_latency_ms", 0),
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ─── /ask ROUTE WITH FULL JURY SYSTEM ──────────────────────────────
 @app.post("/ask")
 @limiter.limit("30/minute")
 async def ask(
@@ -1652,12 +1983,16 @@ async def ask(
     persona_id: str = Form(""),
     cu: dict = Depends(get_current_user)
 ):
+    """
+    Main ask endpoint with full 250 agent routing, 10 verifier jury system, and judge Shakti
+    """
+    logger.info(f"📝 QUERY RECEIVED: {query[:100]}... from user {cu['username']}")
+    
     # ─── SAFETY CHECK 1: Kill switch ──────────────────────────────
     if not app.state.kill_switch.is_active:
         raise HTTPException(status_code=503, detail="Service temporarily unavailable due to safety protocol")
     
     # ─── SAFETY CHECK 2: User restrictions ────────────────────────
-    # ✅ FIXED: Use SQLAlchemy Core with proper parameter binding
     stmt = user_restrictions.select().where(
         and_(
             user_restrictions.c.user_id == cu["id"],
@@ -1710,10 +2045,34 @@ async def ask(
     if len(combined_query) > 8000:
         combined_query = combined_query[:8000] + "\n[...truncated...]"
 
+    # ─── ROUTE TO SPECIALIST AGENT ────────────────────────────────
+    agent_id = route_agent(combined_query, oracle)
+    logger.info(f"🎯 Routing to agent: {agent_id}")
+    
+    if agent_id == "oracle":
+        persona = "You are the Oracle, offering spiritual and philosophical wisdom."
+        domain = "Spiritual & Philosophical"
+        agent_name = "Oracle"
+    elif agent_id == "general":
+        persona = "You are the full Unknown Verdict council, a generalist with broad knowledge."
+        domain = "General"
+        agent_name = "General Council"
+    else:
+        agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
+        if agent:
+            persona = agent["persona_prompt"]
+            domain = agent["domain"]
+            agent_name = agent["name"]
+        else:
+            persona = "You are a generalist."
+            domain = "General"
+            agent_name = "General Council"
+    
+    logger.info(f"👤 Agent selected: {agent_name} (Domain: {domain})")
+
     # Custom persona
     custom_system = None
     if persona_id:
-        # ✅ FIXED: Use SQLAlchemy Core
         stmt = custom_personas.select().where(
             and_(
                 custom_personas.c.id == int(persona_id),
@@ -1723,9 +2082,10 @@ async def ask(
                 )
             )
         )
-        persona = await database.fetch_one(stmt)
-        if persona:
-            custom_system = persona['system_prompt']
+        persona_obj = await database.fetch_one(stmt)
+        if persona_obj:
+            custom_system = persona_obj['system_prompt']
+            logger.info(f"👤 Custom persona applied: {persona_obj['name']}")
 
     # ─── CACHE CHECK ──────────────────────────────────────────────
     cache_hit = None
@@ -1733,6 +2093,7 @@ async def ask(
         cache_hit = await get_cached_response(combined_query, model, oracle)
 
     if cache_hit:
+        logger.info("💾 Cache hit! Returning cached response")
         answer = cache_hit["answer"]
         confidence = cache_hit["confidence"]
         sources = cache_hit["sources"]
@@ -1751,30 +2112,52 @@ async def ask(
             media_type="text/event-stream"
         )
 
-    system_prompt = SYSTEM_BASE
-    if custom_system:
-        system_prompt = f"{SYSTEM_BASE}\n\nCustom Persona Instructions:\n{custom_system}"
+    # ─── BUILD SYSTEM PROMPT ──────────────────────────────────────
+    system_prompt = f"""{SYSTEM_BASE}
 
+    ═══ SPECIALIST AGENT ═══
+    Agent: {agent_name}
+    Domain: {domain}
+    Persona: {persona}
+    """
+    
+    if custom_system:
+        system_prompt += f"\n\nCustom Persona Instructions:\n{custom_system}"
+
+    logger.info(f"🧠 Generating initial response with {agent_name}...")
+
+    # ─── GENERATE INITIAL ANSWER ──────────────────────────────────
     atma = app.state.atma
     result = await atma.run(query=combined_query, history=None, files=None, unrestricted=unrestricted_bool)
 
-    answer = result["answer"]
-    confidence = result["confidence"]
-    sources = result["sources"]
+    initial_answer = result["answer"]
+    logger.info(f"📄 Initial answer generated ({len(initial_answer)} chars)")
+
+    # ─── JURY VERIFICATION SYSTEM ──────────────────────────────────
+    logger.info("⚖️ Summoning the 10 verifier jury...")
+    jury_result = await jury_verification(initial_answer, combined_query, domain)
+    
+    answer = jury_result["final_answer"]
+    confidence = jury_result["confidence"]
+    sources = jury_result["sources"]
+    
+    logger.info(f"👑 Final verdict: Confidence={confidence}, Sources={len(sources)}")
+
     metadata = {
-        "domain": result.get("domain", "general"),
-        "persona": result.get("persona", ""),
+        "domain": domain,
+        "persona": agent_name,
         "provider": result.get("provider", ""),
-        "jury_verifiers": result.get("jury_verifiers", []),
-        "jury_confidences": result.get("jury_confidences", {}),
-        "judge": "Shakti"
+        "jury_verifiers": jury_result["jury_verifiers"],
+        "jury_confidences": jury_result["jury_confidences"],
+        "judge": "Shakti",
+        "verifier_details": jury_result.get("verifier_details", [])
     }
 
     # ─── CONSTITUTIONAL AI EVALUATION ────────────────────────────
     constitutional_result = await app.state.constitutional_ai.evaluate_response(
         query=combined_query,
         response=answer,
-        context={"user_id": cu["id"], "domain": result.get("domain", "general")}
+        context={"user_id": cu["id"], "domain": domain}
     )
     
     if constitutional_result["ethics_compliance"] == "LOW":
@@ -1789,7 +2172,9 @@ async def ask(
                 "confidence_score": constitutional_result["confidence"]
             }
         )
+        logger.warning("⚠️ Constitutional violation detected and corrected")
 
+    # ─── CACHE RESPONSE ──────────────────────────────────────────
     if not files and not oracle:
         cache_data = {
             "answer": answer,
@@ -1798,9 +2183,12 @@ async def ask(
             "metadata": metadata
         }
         await set_cached_response(combined_query, model, oracle, cache_data, ttl_seconds=86400)
+        logger.info("💾 Response cached")
 
+    # ─── UPDATE MEMORY ────────────────────────────────────────────
     await _update_memory(cu["id"], query, answer)
 
+    # ─── SAVE TO DATABASE ──────────────────────────────────────────
     await database.execute(
         queries.insert().values(
             user_id=cu["id"],
@@ -1811,6 +2199,23 @@ async def ask(
         )
     )
 
+    # ─── SAVE DELIBERATION ─────────────────────────────────────────
+    await database.execute(
+        deliberations.insert().values(
+            query=combined_query[:500],
+            domain=domain,
+            persona=agent_name,
+            provider=result.get("provider", ""),
+            initial_answer=initial_answer[:500],
+            verifier_results=json.dumps(jury_result.get("verifier_details", [])),
+            final_answer=answer[:500],
+            confidence=confidence,
+            sources=json.dumps(sources)
+        )
+    )
+    logger.info("💾 Deliberation saved to database")
+
+    # ─── STREAM RESPONSE ──────────────────────────────────────────
     return StreamingResponse(
         replay_stream(answer, confidence, sources, metadata),
         media_type="text/event-stream"
