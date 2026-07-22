@@ -976,6 +976,19 @@ async def verify_response(response_text: str, verifier: dict, model: str) -> dic
         pass
     return {"status": "APPROVED", "confidence": "MEDIUM", "corrected_text": ""}
 
+# ─── APP INSTANCE ────────────────────────────────────────────────────────
+app = FastAPI(
+    title="Unknown Verdict v12.1 - Enterprise Legal AI",
+    description="⚖️ AI-Powered Legal Advisory with 250 Specialist Personas, 10 Verifiers, and Judge Shakti",
+    version="12.1.0",
+    lifespan=lifespan
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+    
+
 # ─── MEMORY ───────────────────────────────────────────────────────────
 async def _get_memory(uid: int) -> List[dict]:
     if not database:
@@ -1875,18 +1888,6 @@ async def _check_limit(u: dict) -> bool:
 async def _incr_query(uid: int):
     if database:
         await database.execute(users.update().where(users.c.id == uid).values(queries_used_today=users.c.queries_used_today + 1, updated_at=datetime.now()))
-
-# ─── APP INSTANCE ────────────────────────────────────────────────────────
-app = FastAPI(
-    title="Unknown Verdict v12.1 - Enterprise Legal AI",
-    description="⚖️ AI-Powered Legal Advisory with 250 Specialist Personas, 10 Verifiers, and Judge Shakti",
-    version="12.1.0",
-    lifespan=lifespan
-)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ─── EDGE AI SERVICE INITIALIZATION ──────────────────────────────────
 edge_ai_service: Optional[EdgeAIService] = None
