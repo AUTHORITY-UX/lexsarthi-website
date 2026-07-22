@@ -3013,5 +3013,5 @@ if __name__ == "__main__":
         workers=1,  # ⭐ CRITICAL: Single worker for clean logs
         log_level="info",
         access_log=True,
-        timeout_keep_alive=30
+        timeout_keep_alive=30 
     )
