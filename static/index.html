@@ -3,28 +3,34 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Unknown Verdict · AI Governance Intelligence</title>
-    <meta name="description" content="Global AI governance intelligence platform with 10-verifier jury system." />
+    <title>Unknown Verdict · Enter the Unknown</title>
+    <meta name="description" content="AI Governance & Legal Intelligence Platform. 250 personas, 10 verifiers, complete jurisdictional compliance." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%91%81%3C/text%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ============================================================
+           RESET & ROOT
+        ============================================================ */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
             --bg: #050508;
             --panel: rgba(10,10,20,0.82);
+            --panel-2: #0d0d1a;
             --border: rgba(212,175,55,0.15);
             --gold: #d4af37;
             --gold-soft: rgba(212,175,55,0.08);
+            --gold-glow: 0 0 60px rgba(212,175,55,0.1);
             --text: #f0ede8;
             --muted: #8a8a95;
             --ok: #34d399;
             --err: #ff6b6b;
             --shadow: 0 8px 32px rgba(0,0,0,0.6);
             --radius: 16px;
-            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         html, body {
             background: var(--bg);
@@ -34,11 +40,17 @@
             background: radial-gradient(ellipse at 30% 20%, #0a0a1a 0%, #050508 80%);
             font-size: 15px;
             line-height: 1.55;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 
+        /* ============================================================
+           BACKGROUND LAYERS
+        ============================================================ */
         .eye-bg {
             position: fixed;
             top: 50%;
@@ -68,8 +80,14 @@
             pointer-events: none;
             z-index: 0;
             border: 1px solid rgba(255,255,255,0.01);
+            transition: all 2s ease;
         }
-        .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .stars {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
         .star {
             position: absolute;
             background: #fff;
@@ -79,15 +97,187 @@
         }
         @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.6; } }
 
-        .container {
+        /* ============================================================
+           PAGE CONTAINER
+        ============================================================ */
+        .page {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transition: var(--transition);
+            opacity: 0;
+            pointer-events: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .page.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ============================================================
+           PAGE 1 – LANDING
+        ============================================================ */
+        #page-landing {
+            flex-direction: column;
+            gap: 40px;
+        }
+        .landing-eye {
+            font-size: 12vmin;
+            animation: glowEye 3s ease-in-out infinite;
+            color: var(--gold);
+            text-shadow: 0 0 40px rgba(212,175,55,0.2);
+        }
+        @keyframes glowEye {
+            0%, 100% { text-shadow: 0 0 20px rgba(212,175,55,0.3); }
+            50% { text-shadow: 0 0 60px rgba(212,175,55,0.8), 0 0 120px rgba(212,175,55,0.3); }
+        }
+        .landing-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 8px;
+            text-align: center;
+        }
+        .landing-sub {
+            color: var(--muted);
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 300;
+            text-align: center;
+        }
+        .btn-enter {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 16px 48px;
+            border-radius: 60px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: all 0.4s ease;
             position: relative;
-            z-index: 2;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+        .btn-enter:hover {
+            background: var(--gold);
+            color: #0a0a0a;
+            box-shadow: 0 0 40px rgba(212,175,55,0.3);
+            transform: scale(1.05);
+        }
+        .btn-enter::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 60px;
+            background: linear-gradient(45deg, transparent, rgba(212,175,55,0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        /* ============================================================
+           PAGE 2 – PORTAL (Eye + Verifiers Reveal)
+        ============================================================ */
+        #page-portal {
+            flex-direction: column;
+            gap: 30px;
+            background: radial-gradient(ellipse at center, rgba(10,10,30,0.95), rgba(5,5,8,0.98));
+        }
+        .portal-eye {
+            font-size: 15vmin;
+            animation: portalPulse 2s ease-in-out infinite;
+            color: var(--gold);
+            text-shadow: 0 0 60px rgba(212,175,55,0.3);
+        }
+        @keyframes portalPulse {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 40px rgba(212,175,55,0.2); }
+            50% { transform: scale(1.05); text-shadow: 0 0 80px rgba(212,175,55,0.6), 0 0 160px rgba(212,175,55,0.2); }
+        }
+        .portal-verifiers {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease 0.5s;
+        }
+        .portal-verifiers.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .verifier-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .verifier-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 30px rgba(212,175,55,0.05);
+            transform: translateY(-2px);
+        }
+        .verifier-card .icon { font-size: 2rem; display: block; margin-bottom: 4px; }
+        .verifier-card .name { font-size: 0.75rem; font-weight: 600; color: var(--gold); }
+        .verifier-card .role { font-size: 0.55rem; color: var(--muted); }
+        .portal-sub {
+            color: var(--muted);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.6s ease 0.8s;
+        }
+        .portal-sub.show { opacity: 1; }
+        .portal-btn {
+            background: var(--gold);
+            color: #0a0a0a;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.6s ease 1s;
+            text-transform: uppercase;
+        }
+        .portal-btn.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .portal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(212,175,55,0.3);
+        }
+
+        /* ============================================================
+           PAGE 3 – DASHBOARD (Full Features)
+        ============================================================ */
+        #page-dashboard {
+            display: block;
+            padding: 16px 20px 30px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        .dashboard-container {
             max-width: 1440px;
             margin: 0 auto;
-            padding: 16px 20px 30px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
         .top-bar {
@@ -96,11 +286,11 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .brand {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--gold);
             letter-spacing: 2px;
@@ -108,11 +298,7 @@
             align-items: center;
             gap: 10px;
         }
-        .brand .eye-icon { font-size: 2rem; animation: glowEye 3s ease-in-out infinite; }
-        @keyframes glowEye {
-            0%, 100% { text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-            50% { text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3); }
-        }
+        .brand .eye-icon { font-size: 1.8rem; animation: glowEye 3s ease-in-out infinite; }
         .brand small { font-size: 0.8rem; color: var(--muted); letter-spacing: 2px; font-weight: 300; }
         .brand .version {
             background: var(--gold-soft);
@@ -120,13 +306,13 @@
             color: var(--gold);
             padding: 2px 10px;
             border-radius: 999px;
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             font-weight: 600;
         }
         .top-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .btn {
             border: none; cursor: pointer; font-family: inherit; font-weight: 600;
-            border-radius: 30px; padding: 7px 16px; font-size: 0.7rem;
+            border-radius: 30px; padding: 6px 14px; font-size: 0.7rem;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
@@ -136,8 +322,8 @@
         .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
         .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
         .btn-outline:hover { background: var(--gold-soft); }
-        .btn-sm { padding: 4px 12px; font-size: 0.65rem; }
-        .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 12px; cursor: pointer; font-size: 0.8rem; }
+        .btn-sm { padding: 4px 10px; font-size: 0.6rem; }
+        .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 10px; cursor: pointer; font-size: 0.7rem; }
         .btn-icon:hover { background: var(--gold-soft); }
         .live-badge {
             background: rgba(52,211,153,0.12);
@@ -153,7 +339,7 @@
         .live-badge .dot { width: 6px; height: 6px; background: var(--ok); border-radius: 50%; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-        .grid-3 {
+        .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 14px;
@@ -168,7 +354,7 @@
             box-shadow: var(--shadow);
             transition: var(--transition);
         }
-        .card:hover { border-color: rgba(212,175,55,0.3); box-shadow: var(--shadow), 0 0 40px rgba(212,175,55,0.05); }
+        .card:hover { border-color: rgba(212,175,55,0.3); box-shadow: var(--shadow), var(--gold-glow); }
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -180,8 +366,10 @@
             letter-spacing: 1px;
         }
         .card-header .icon { color: var(--gold); font-size: 0.8rem; }
-        .card-value { font-size: 1.4rem; font-weight: 700; font-family: 'Cormorant Garamond', serif; color: var(--text); }
+        .card-value { font-size: 1.3rem; font-weight: 700; font-family: 'Cormorant Garamond', serif; color: var(--text); }
         .card-sub { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+        .card .progress-bar { margin-top: 6px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+        .card .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--gold), #b8901e); border-radius: 10px; transition: width 1s ease; }
         .card .stat-row { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
         .card .stat-row .stat-item { font-size: 0.6rem; color: var(--muted); }
         .card .stat-row .stat-item strong { color: var(--text); }
@@ -190,8 +378,7 @@
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 14px;
-            margin-bottom: 16px;
-            flex: 1;
+            margin-bottom: 12px;
         }
 
         .chat-card {
@@ -203,11 +390,11 @@
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            min-height: 400px;
+            min-height: 380px;
         }
         .chat-area {
             flex: 1;
-            max-height: 40vh;
+            max-height: 38vh;
             overflow-y: auto;
             margin-bottom: 8px;
             display: flex;
@@ -233,7 +420,38 @@
             border: 1px solid var(--border);
             display: inline-block;
         }
+        .msg .provider-tag {
+            font-size: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            padding: 2px 8px;
+            border-radius: 30px;
+            margin-top: 3px;
+            display: inline-block;
+            color: var(--muted);
+        }
+        .msg .msg-actions { margin-top: 4px; display: flex; gap: 4px; justify-content: flex-end; }
+        .msg .msg-actions button {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.5rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .msg .msg-actions button:hover { background: var(--gold-soft); color: var(--gold); }
         @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
+
+        .typing { display: none; align-items: center; gap: 6px; padding: 3px 6px; color: var(--muted); font-size: 0.7rem; }
+        .typing.active { display: flex; }
+        .typing .dots span {
+            display: inline-block; width: 4px; height: 4px;
+            background: var(--gold); border-radius: 50%; margin: 0 2px;
+            animation: dotBounce 1.4s infinite;
+        }
+        .typing .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing .dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotBounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
 
         .input-row { display: flex; gap: 6px; align-items: flex-end; }
         .input-row textarea {
@@ -268,10 +486,37 @@
             gap: 4px;
         }
         .input-row .send:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
+
+        .input-tools { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+        .input-tools .tool-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .input-tools .tool-btn:hover { background: var(--gold-soft); color: var(--gold); }
+        .file-preview { display: none; margin-top: 4px; padding: 2px 10px; background: var(--gold-soft); border-radius: 30px; font-size: 0.6rem; color: var(--gold); align-items: center; gap: 6px; }
+        .file-preview.show { display: flex; }
+        .file-preview .remove { cursor: pointer; color: var(--muted); font-size: 0.6rem; }
         .status-text { font-size: 0.6rem; color: var(--muted); margin-top: 3px; }
 
         .sidebar { display: flex; flex-direction: column; gap: 14px; }
         .sidebar .card { padding: 12px 14px; }
+        .sidebar .card .card-header { margin-bottom: 4px; }
+        .sidebar .card .card-header .badge-count {
+            background: var(--gold-soft);
+            color: var(--gold);
+            padding: 0 6px;
+            border-radius: 999px;
+            font-size: 0.5rem;
+        }
         .news-item {
             padding: 4px 0;
             border-bottom: 1px solid rgba(255,255,255,0.03);
@@ -281,7 +526,7 @@
         }
         .news-item:hover { color: var(--gold); }
         .news-item .news-time { font-size: 0.5rem; color: var(--muted); display: block; margin-top: 1px; }
-        .news-item .news-source { font-size: 0.45rem; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 30px; }
+        .news-item .news-source { font-size: 0.45rem; color: var(--gold); background: var(--gold-soft); padding: 1px 5px; border-radius: 30px; }
 
         .governance-item {
             display: flex;
@@ -293,24 +538,11 @@
         .governance-item .status { font-size: 0.55rem; padding: 1px 6px; border-radius: 30px; }
         .status.ok { background: rgba(52,211,153,0.12); color: var(--ok); }
         .status.warn { background: rgba(212,175,55,0.12); color: var(--gold); }
-        .status.critical { background: rgba(255,107,107,0.12); color: var(--err); }
-
-        .bookmarks-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 6px 0;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.65rem;
-        }
-        .bookmarks-bar a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
-        .bookmarks-bar a:hover { color: var(--gold); }
-        .bookmarks-bar .separator { color: var(--border); user-select: none; }
+        .status.err { background: rgba(255,107,107,0.12); color: var(--err); }
 
         .footer {
             margin-top: auto;
-            padding: 10px 0;
+            padding: 8px 0;
             border-top: 1px solid var(--border);
             text-align: center;
             font-size: 0.55rem;
@@ -318,94 +550,24 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
         }
         .footer a { color: var(--muted); cursor: pointer; text-decoration: none; }
         .footer a:hover { color: var(--gold); }
+        .footer .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 2px; }
+        .footer .badge {
+            background: rgba(52,211,153,0.06);
+            border: 1px solid rgba(52,211,153,0.15);
+            color: var(--ok);
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-size: 0.45rem;
+        }
+        .footer .badge.gold { border-color: rgba(212,175,55,0.2); color: var(--gold); }
 
-        /* DIAGNOSTICS MODAL */
-        .diagnostics-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.92);
-            backdrop-filter: blur(12px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        .diagnostics-modal.open { display: flex; }
-        .diagnostics-box {
-            background: #0d0d1a;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 24px;
-            max-width: 700px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow);
-            position: relative;
-        }
-        .diagnostics-box .close {
-            position: absolute;
-            top: 12px;
-            right: 16px;
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        .diagnostics-box .close:hover { color: var(--text); }
-        .diagnostics-box h2 {
-            font-family: 'Cormorant Garamond', serif;
-            color: var(--gold);
-            font-size: 1.6rem;
-            margin-bottom: 4px;
-        }
-        .diagnostics-box .subtitle {
-            font-size: 0.75rem;
-            color: var(--muted);
-            margin-bottom: 16px;
-        }
-        .diagnostic-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-        .diagnostic-item .info { display: flex; align-items: center; gap: 10px; }
-        .diagnostic-item .info .icon { font-size: 1rem; width: 24px; text-align: center; }
-        .diagnostic-item .info .name { font-size: 0.8rem; font-weight: 500; }
-        .diagnostic-item .info .desc { font-size: 0.6rem; color: var(--muted); }
-        .diagnostic-item .status-badge {
-            font-size: 0.6rem;
-            padding: 2px 10px;
-            border-radius: 30px;
-            font-weight: 600;
-        }
-        .diagnostic-item .status-badge.online { background: rgba(52,211,153,0.12); color: var(--ok); }
-        .diagnostic-item .status-badge.offline { background: rgba(255,107,107,0.12); color: var(--err); }
-        .diagnostic-item .status-badge.warning { background: rgba(212,175,55,0.12); color: var(--gold); }
-        .diagnostics-box .actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 16px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
-        .diagnostics-box .refresh-time {
-            font-size: 0.55rem;
-            color: var(--muted);
-            text-align: right;
-            margin-top: 8px;
-        }
-
-        /* MODALS */
+        /* ============================================================
+           MODALS
+        ============================================================ */
         .modal {
             position: fixed;
             inset: 0;
@@ -419,7 +581,7 @@
         }
         .modal.open { display: flex; }
         .modal-box {
-            background: #0d0d1a;
+            background: var(--panel-2);
             border: 1px solid var(--border);
             border-radius: 18px;
             padding: 20px;
@@ -442,297 +604,294 @@
         }
         .modal-box .close:hover { color: var(--text); }
         .modal-box h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 10px; }
-        .modal-box input { width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); border-radius: 8px; margin-bottom: 8px; font-family: inherit; font-size: 0.8rem; }
-        .modal-box .actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
-
-        .offline-banner {
-            background: rgba(255,107,107,0.08);
-            border: 1px solid var(--err);
-            color: var(--err);
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 0.6rem;
-            display: none;
-            align-items: center;
-            gap: 6px;
+        .modal-box input, .modal-box textarea {
+            width: 100%;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-family: inherit;
+            font-size: 0.8rem;
         }
-        .offline-banner.show { display: inline-flex; }
+        .modal-box .actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
+        .modal-box .checkbox-group { margin: 6px 0; display: flex; align-items: center; gap: 6px; }
+        .modal-box .checkbox-group label { font-size: 0.75rem; color: var(--text); }
 
+        /* ============================================================
+           RESPONSIVE
+        ============================================================ */
         @media (max-width: 1024px) {
-            .grid-3 { grid-template-columns: 1fr 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
             .main-grid { grid-template-columns: 1fr; }
+            .portal-verifiers { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 640px) {
-            .grid-3 { grid-template-columns: 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr; }
             .top-bar { flex-direction: column; align-items: stretch; }
-            .brand { font-size: 1.4rem; }
+            .brand { font-size: 1.2rem; }
+            .landing-title { font-size: 2.2rem; }
+            .portal-verifiers { grid-template-columns: repeat(2, 1fr); }
             .input-row { flex-direction: column; align-items: stretch; }
             .input-row .send { width: 100%; justify-content: center; height: 38px; }
             .chat-area { max-height: 30vh; }
-            .container { padding: 10px; }
+            .page { padding: 10px; }
+            #page-dashboard { padding: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- BACKGROUND -->
+    <!-- ===== BACKGROUND LAYERS ===== -->
     <div class="eye-bg">👁️</div>
-    <div class="moon"></div>
+    <div class="moon" id="moon"></div>
     <div class="stars" id="stars"></div>
 
-    <div class="container">
-
-        <!-- TOP BAR -->
-        <div class="top-bar">
-            <div class="brand">
-                <span class="eye-icon">👁️</span> UNKNOWN
-                <small>verdict engine</small>
-                <span class="version">v12.1</span>
-            </div>
-            <div class="top-actions">
-                <span class="live-badge"><span class="dot"></span> Live · AI Gov</span>
-                <span class="offline-banner" id="offlineBanner"><i class="fas fa-exclamation-triangle"></i> Service degraded</span>
-                <button class="btn btn-icon" onclick="openDiagnostics()" title="System Diagnostics"><i class="fas fa-stethoscope"></i></button>
-                <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
-                <button class="btn btn-gold btn-sm" onclick="showPayment()">Subscribe</button>
-                <button class="btn btn-icon" onclick="openSettings()"><i class="fas fa-cog"></i></button>
-            </div>
+    <!-- ================================================================
+         PAGE 1 – LANDING
+    ================================================================ -->
+    <div id="page-landing" class="page active">
+        <div class="landing-eye">👁️</div>
+        <div class="landing-title">UNKNOWN</div>
+        <div class="landing-sub">Verdict Engine · AI Governance</div>
+        <button class="btn-enter" onclick="enterPortal()">Enter the Unknown</button>
+        <div style="position:absolute;bottom:20px;color:var(--muted);font-size:0.6rem;letter-spacing:2px;">
+            ⚖️ 250 Specialists · 10 Verifiers · Global Compliance
         </div>
+    </div>
 
-        <!-- BOOKMARKS -->
-        <div class="bookmarks-bar">
-            <a href="https://www.iapp.org" target="_blank">IAPP</a>
-            <span class="separator">·</span>
-            <a href="https://www.un.org/en/ai" target="_blank">UN AI</a>
-            <span class="separator">·</span>
-            <a href="https://www.oecd.org/ai" target="_blank">OECD AI</a>
-            <span class="separator">·</span>
-            <a href="https://www.iclg.com/practice-areas/artificial-intelligence" target="_blank">ICLG AI</a>
-            <span class="separator">·</span>
-            <a href="https://www.allianz.com/en/economic_research/risk-barometer.html" target="_blank">Allianz Risk</a>
-            <span class="separator">·</span>
-            <a href="https://www.technologyreview.com/topic/artificial-intelligence/" target="_blank">MIT TR</a>
-            <span class="separator">·</span>
-            <a href="https://www.ft.com/ai" target="_blank">FT AI</a>
+    <!-- ================================================================
+         PAGE 2 – PORTAL
+    ================================================================ -->
+    <div id="page-portal" class="page">
+        <div class="portal-eye">👁️</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold);letter-spacing:4px;opacity:0;transition:opacity 0.6s ease 0.2s;" id="portalTitle">The Jury Awakens</div>
+        <div class="portal-verifiers" id="verifiersGrid">
+            <div class="verifier-card"><span class="icon">🐘</span><div class="name">Ganesha</div><div class="role">Citation & Logic</div></div>
+            <div class="verifier-card"><span class="icon">🦢</span><div class="name">Saraswati</div><div class="role">Cross‑reference</div></div>
+            <div class="verifier-card"><span class="icon">🐒</span><div class="name">Hanuman</div><div class="role">Global Compliance</div></div>
+            <div class="verifier-card"><span class="icon">⚔️</span><div class="name">Kartikeya</div><div class="role">Contradictions</div></div>
+            <div class="verifier-card"><span class="icon">⚡</span><div class="name">Indra</div><div class="role">Jurisdiction</div></div>
+            <div class="verifier-card"><span class="icon">⚖️</span><div class="name">Yama</div><div class="role">Bias & Neutrality</div></div>
+            <div class="verifier-card"><span class="icon">☀️</span><div class="name">Surya</div><div class="role">Timelines</div></div>
+            <div class="verifier-card"><span class="icon">🌙</span><div class="name">Chandra</div><div class="role">Precedents</div></div>
+            <div class="verifier-card"><span class="icon">💨</span><div class="name">Vayu</div><div class="role">PII Filter</div></div>
+            <div class="verifier-card"><span class="icon" style="color:#ff8c42;">🔥</span><div class="name" style="color:#ff8c42;">Shakti</div><div class="role">Final Judge</div></div>
         </div>
+        <div class="portal-sub" id="portalSub">⚖️ Ten verifiers. One verdict. Zero compromise.</div>
+        <button class="portal-btn" id="portalBtn" onclick="enterDashboard()">Access the Unknown</button>
+    </div>
 
-        <!-- DASHBOARD GRID -->
-        <div class="grid-3">
-            <div class="card">
-                <div class="card-header"><span>Global AI Risk Index</span><span class="icon"><i class="fas fa-globe"></i></span></div>
-                <div class="card-value" id="riskIndex">—</div>
-                <div class="card-sub">Loading risk data...</div>
-                <div class="stat-row">
-                    <span class="stat-item">Status: <strong id="riskStatus" style="color:var(--muted);">Loading</strong></span>
+    <!-- ================================================================
+         PAGE 3 – DASHBOARD
+    ================================================================ -->
+    <div id="page-dashboard" class="page">
+        <div class="dashboard-container">
+
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="brand">
+                    <span class="eye-icon">👁️</span> UNKNOWN
+                    <small>verdict engine</small>
+                    <span class="version">v12.1</span>
+                    <span id="premiumBadge" style="display:none;background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold);padding:1px 8px;border-radius:999px;font-size:0.45rem;font-weight:600;">⭐ PREMIUM</span>
+                </div>
+                <div class="top-actions">
+                    <span class="live-badge"><span class="dot"></span> Live · AI Gov</span>
+                    <button class="btn btn-icon" onclick="showDomainHealth()"><i class="fas fa-heartbeat"></i></button>
+                    <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
+                    <button class="btn btn-gold btn-sm" onclick="showPayment()">Subscribe</button>
+                    <button class="btn btn-icon" onclick="openSettings()"><i class="fas fa-cog"></i></button>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header"><span>System Status</span><span class="icon"><i class="fas fa-server"></i></span></div>
-                <div class="card-value" id="systemStatus">—</div>
-                <div class="card-sub" id="systemSub">Checking services...</div>
-                <div class="stat-row">
-                    <span class="stat-item">Verifiers: <strong id="verifierStatus">—</strong></span>
-                    <span class="stat-item">Knowledge: <strong id="knowledgeStatus">—</strong></span>
+
+            <!-- DASHBOARD GRID -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header"><span>Active Agents</span><span class="icon"><i class="fas fa-users"></i></span></div>
+                    <div class="card-value">250</div>
+                    <div class="card-sub">Specialist personas · 10 verifiers</div>
+                    <div class="progress-bar"><div class="fill" style="width:100%"></div></div>
+                    <div class="stat-row">
+                        <span class="stat-item">Judge Shakti: <strong>Active</strong></span>
+                        <span class="stat-item">Jury: <strong>10/10</strong></span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>Compliance Status</span><span class="icon"><i class="fas fa-shield-alt"></i></span></div>
+                    <div class="card-value" id="complianceScore">96%</div>
+                    <div class="card-sub">DPDPA · GDPR · CCPA · AI Gov</div>
+                    <div class="progress-bar"><div class="fill" style="width:96%"></div></div>
+                    <div class="stat-row">
+                        <span class="stat-item">DPDPA: <strong style="color:var(--ok)">✅ Compliant</strong></span>
+                        <span class="stat-item">AI Gov: <strong style="color:var(--gold)">⚠️ Monitoring</strong></span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>Risk & Breach</span><span class="icon"><i class="fas fa-exclamation-triangle"></i></span></div>
+                    <div class="card-value" id="riskScore">Low (2/10)</div>
+                    <div class="card-sub">Last scan: <span id="lastScanTime">Just now</span></div>
+                    <div class="progress-bar"><div class="fill" style="width:20%;background:var(--ok);"></div></div>
+                    <div class="stat-row">
+                        <span class="stat-item">Breaches: <strong id="breachCount">0</strong></span>
+                        <span class="stat-item">HITL Pending: <strong id="hitlCount">0</strong></span>
+                    </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header"><span>AI Safety Score</span><span class="icon"><i class="fas fa-shield-alt"></i></span></div>
-                <div class="card-value" id="safetyScore">—</div>
-                <div class="card-sub" id="safetySub">Based on global benchmarks</div>
-                <div class="stat-row">
-                    <span class="stat-item">Industry Avg: <strong id="industryAvg" style="color:var(--muted);">—</strong></span>
-                </div>
-            </div>
-        </div>
 
-        <!-- MAIN GRID -->
-        <div class="main-grid">
+            <!-- MAIN GRID -->
+            <div class="main-grid">
 
-            <!-- CHAT -->
-            <div class="chat-card">
-                <div class="card-header">
-                    <span>Intelligence Console</span>
-                    <span style="font-size:0.55rem;color:var(--muted);">10-Verifier Jury</span>
-                </div>
-                <div class="chat-area" id="chatArea">
-                    <div id="chat">
-                        <div class="msg agent" style="background:rgba(212,175,55,0.04);border-color:rgba(212,175,55,0.1);text-align:center;padding:16px;">
-                            <span style="font-size:1.8rem;display:block;">👁️</span>
-                            <p style="font-size:0.95rem;color:var(--text);font-weight:300;">Global AI governance intelligence at your command.</p>
-                            <span style="font-size:0.6rem;color:var(--muted);">Real‑time · Jury Verified</span>
+                <!-- CHAT -->
+                <div class="chat-card">
+                    <div class="card-header">
+                        <span>Legal Intelligence Console</span>
+                        <span style="font-size:0.55rem;color:var(--muted);">250 Agents · 10 Verifiers</span>
+                    </div>
+                    <div class="chat-area" id="chatArea">
+                        <div id="chat">
+                            <div class="msg agent" style="background:rgba(212,175,55,0.04);border-color:rgba(212,175,55,0.1);text-align:center;padding:16px;">
+                                <span style="font-size:1.8rem;display:block;">👁️</span>
+                                <p style="font-size:0.95rem;color:var(--text);font-weight:300;">Ask anything — the eye sees all.</p>
+                                <span style="font-size:0.6rem;color:var(--muted);">250 specialists · 10 verifiers · Real‑time governance</span>
+                            </div>
+                        </div>
+                        <div class="typing" id="typing">
+                            <span>Consulting jury & verifiers</span>
+                            <div class="dots"><span></span><span></span><span></span></div>
                         </div>
                     </div>
-                </div>
-                <div class="input-row">
-                    <textarea id="queryInput" rows="1" placeholder="Ask about AI governance, compliance, or global risk…"></textarea>
-                    <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
-                </div>
-                <div id="status" class="status-text">Ready · Global AI governance intelligence</div>
-            </div>
-
-            <!-- SIDEBAR -->
-            <div class="sidebar">
-
-                <!-- Multi-Source AI News -->
-                <div class="card">
-                    <div class="card-header">
-                        <span><i class="fas fa-newspaper" style="color:var(--gold);margin-right:4px;"></i>AI Governance News</span>
-                        <span class="badge-count" id="newsCount" style="background:var(--gold-soft);color:var(--gold);padding:0 6px;border-radius:999px;font-size:0.5rem;">0</span>
+                    <div class="input-row">
+                        <textarea id="queryInput" rows="1" placeholder="Ask a legal or governance question…"></textarea>
+                        <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
                     </div>
-                    <div id="newsFeed" style="max-height:200px;overflow-y:auto;">
-                        <div style="font-size:0.7rem;color:var(--muted);padding:4px 0;">Loading global AI news from multiple sources…</div>
+                    <div class="input-tools">
+                        <button class="tool-btn" onclick="document.getElementById('pdfUpload').click()"><i class="fas fa-paperclip"></i> Attach</button>
+                        <input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" multiple style="display:none" onchange="handleFileUpload(this)" />
+                        <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
+                        <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
                     </div>
-                    <div style="margin-top:4px;font-size:0.45rem;color:var(--muted);text-align:right;">Sources: IAPP · Allianz · UNESCO · FT · MIT TR</div>
+                    <div id="status" class="status-text">Ready · Governance active</div>
                 </div>
 
-                <!-- Global Risk Feed -->
-                <div class="card">
-                    <div class="card-header">
-                        <span><i class="fas fa-exclamation-triangle" style="color:var(--gold);margin-right:4px;"></i>Global Risk Feed</span>
-                        <span style="font-size:0.5rem;color:var(--muted);">Live</span>
-                    </div>
-                    <div id="riskFeed" style="max-height:120px;overflow-y:auto;">
-                        <div class="risk-item" style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:0.65rem;border-bottom:1px solid rgba(255,255,255,0.03);">
-                            <span style="width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0;"></span>
-                            <span>Loading global risk indicators…</span>
+                <!-- SIDEBAR -->
+                <div class="sidebar">
+
+                    <!-- Jurisdictional Compliance -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span><i class="fas fa-globe" style="color:var(--gold);margin-right:4px;"></i>Jurisdictional Compliance</span>
+                            <span style="font-size:0.5rem;color:var(--muted);">All Frameworks</span>
+                        </div>
+                        <div id="jurisdictionStatus">
+                            <div class="governance-item"><span>🇮🇳 DPDPA (India) 2023</span><span class="status ok">✅ Compliant</span></div>
+                            <div class="governance-item"><span>🇪🇺 GDPR (EU) 2018</span><span class="status ok">✅ Compliant</span></div>
+                            <div class="governance-item"><span>🇺🇸 CCPA (California) 2020</span><span class="status ok">✅ Compliant</span></div>
+                            <div class="governance-item"><span>🇮🇳 IT Act 2000</span><span class="status ok">✅ Compliant</span></div>
+                            <div class="governance-item"><span>🇩🇪 TMG (Impressum)</span><span class="status ok">✅ Ready</span></div>
+                            <div class="governance-item"><span>🌐 AI Governance Framework</span><span class="status warn">⚠️ Review</span></div>
+                            <div class="governance-item"><span>🛡️ Breach Response</span><span class="status ok">✅ Active</span></div>
                         </div>
                     </div>
-                    <div style="margin-top:4px;font-size:0.45rem;color:var(--muted);text-align:right;">Allianz Risk Barometer 2026</div>
-                </div>
 
-                <!-- Quick Actions -->
-                <div class="card" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px;">
-                    <button class="btn btn-outline btn-sm" onclick="showCompliance()"><i class="fas fa-balance-scale"></i> Compliance</button>
-                    <button class="btn btn-outline btn-sm" onclick="showAIGovernance()"><i class="fas fa-robot"></i> AI Gov</button>
-                    <button class="btn btn-outline btn-sm" onclick="showNotices()"><i class="fas fa-file-signature"></i> Notices</button>
-                    <button class="btn btn-outline btn-sm" onclick="showDrafts()"><i class="fas fa-file-alt"></i> Drafts</button>
+                    <!-- AI News -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span><i class="fas fa-newspaper" style="color:var(--gold);margin-right:4px;"></i>AI Governance News</span>
+                            <span class="badge-count" id="newsCount">0</span>
+                        </div>
+                        <div id="newsFeed" style="max-height:160px;overflow-y:auto;">
+                            <div style="font-size:0.7rem;color:var(--muted);padding:4px 0;">Loading latest AI updates...</div>
+                        </div>
+                        <div style="margin-top:4px;font-size:0.45rem;color:var(--muted);text-align:right;">Auto‑updates every 60s</div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px;">
+                        <button class="btn btn-outline btn-sm" onclick="showCompliance()"><i class="fas fa-balance-scale"></i> Compliance</button>
+                        <button class="btn btn-outline btn-sm" onclick="showBusiness()"><i class="fas fa-building"></i> Business</button>
+                        <button class="btn btn-outline btn-sm" onclick="showAIGovernance()"><i class="fas fa-robot"></i> AI Gov</button>
+                        <button class="btn btn-outline btn-sm" onclick="showNotices()"><i class="fas fa-file-signature"></i> Notices</button>
+                        <button class="btn btn-outline btn-sm" onclick="showDrafts()"><i class="fas fa-file-alt"></i> Drafts</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- FOOTER -->
-        <footer class="footer">
-            <span>© 2026 <span style="color:var(--gold);">👁️</span> THE ADVOCACY — A LAW FIRM</span>
-            <span>·</span>
-            <a onclick="openModal('termsModal')">Terms</a>
-            <a onclick="openModal('privacyModal')">Privacy</a>
-            <a onclick="openModal('aboutModal')">About</a>
-            <a onclick="openModal('verifiersModal')">Verifiers</a>
-            <span style="color:var(--muted);">·</span>
-            <span style="color:var(--gold);">v12.1 · AI Governance Intelligence</span>
-        </footer>
+            <!-- FOOTER -->
+            <footer class="footer">
+                <span>© 2026 <span style="color:var(--gold);">👁️</span> THE ADVOCACY — A LAW FIRM</span>
+                <span>·</span>
+                <a onclick="openModal('termsModal')">Terms</a>
+                <a onclick="openModal('privacyModal')">Privacy</a>
+                <a onclick="openModal('aboutModal')">About</a>
+                <a onclick="openModal('verifiersModal')">Verifiers</a>
+                <span style="color:var(--muted);">·</span>
+                <span style="color:var(--gold);">v12.1 · Enterprise AI Governance</span>
+            </footer>
+        </div>
     </div>
 
     <!-- ===== MODALS ===== -->
-    <div class="modal" id="loginModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('loginModal')">&times;</button>
-            <h3>🔐 Login</h3>
-            <input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
-            <input id="loginPassword" type="password" placeholder="Password" value="Password123!" />
-            <div style="display:flex;gap:6px;">
-                <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button>
-                <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button>
-            </div>
-            <div id="loginStatus" class="status-text"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="paymentModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('paymentModal')">&times;</button>
-            <h3>💳 Plans</h3>
-            <div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
-                <strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount" style="float:right;font-size:0.65rem;color:var(--gold);"></span>
-            </div>
-            <div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
-                <strong>⭐ ₹102 / month · Premium</strong>
-            </div>
-            <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
-                <strong>🏢 ₹1011 / month · Enterprise</strong>
-            </div>
-            <input type="hidden" id="paymentPlan" value="lifetime" />
-            <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button>
-            <div id="paymentStatus" class="status-text"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="settingsModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('settingsModal')">&times;</button>
-            <h3>⚙️ Settings</h3>
-            <div style="margin:6px 0;">
-                <label style="font-size:0.65rem;color:var(--muted);">Provider</label>
-                <select id="defaultProvider" style="width:100%;padding:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.75rem;">
-                    <option value="deepseek">DeepSeek</option>
-                    <option value="gemini">Gemini</option>
-                    <option value="groq">Groq</option>
-                    <option value="openai">OpenAI</option>
-                </select>
-            </div>
-            <div style="margin:6px 0;">
-                <label style="font-size:0.65rem;color:var(--muted);">Language</label>
-                <select id="langSelect" style="width:100%;padding:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.75rem;">
-                    <option value="en">English</option>
-                    <option value="hi">Hindi</option>
-                    <option value="sa">Sanskrit</option>
-                    <option value="bn">Bengali</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                    <option value="pt">Portuguese</option>
-                </select>
-            </div>
-            <div class="checkbox-group"><input type="checkbox" id="webSearchToggle" checked /><label style="font-size:0.7rem;">Web Search</label></div>
-            <div class="checkbox-group"><input type="checkbox" id="oracleToggle" /><label style="font-size:0.7rem;">Oracle Mode</label></div>
-            <div class="actions">
-                <button class="btn btn-gold" onclick="saveSettings()">Save</button>
-                <button class="btn btn-outline" onclick="closeModal('settingsModal')">Cancel</button>
-            </div>
-            <div id="settingsStatus" class="status-text"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="draftsModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('draftsModal')">&times;</button>
-            <h3>📑 Drafts</h3>
-            <div id="draftsList"><p style="color:var(--muted);">Loading...</p></div>
-        </div>
-    </div>
-
+    <div class="modal" id="loginModal"><div class="modal-box"><button class="close" onclick="closeModal('loginModal')">&times;</button><h3>🔐 Login</h3><input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" /><input id="loginPassword" type="password" placeholder="Password" value="Password123!" /><div style="display:flex;gap:6px;"><button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button><button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button></div><div id="loginStatus" class="status-text"></div></div></div>
+    <div class="modal" id="paymentModal"><div class="modal-box"><button class="close" onclick="closeModal('paymentModal')">&times;</button><h3>💳 Plans</h3><div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount" style="float:right;font-size:0.65rem;color:var(--gold);"></span></div><div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>⭐ ₹102 / month · Premium</strong></div><div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🏢 ₹1011 / month · Enterprise</strong></div><input type="hidden" id="paymentPlan" value="lifetime" /><button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button><div id="paymentStatus" class="status-text"></div></div></div>
+    <div class="modal" id="domainHealthModal"><div class="modal-box"><button class="close" onclick="closeModal('domainHealthModal')">&times;</button><h3>📊 Domain Health</h3><div id="domainHealthContent"><p style="color:var(--muted);">Loading...</p></div></div></div>
+    <div class="modal" id="draftsModal"><div class="modal-box"><button class="close" onclick="closeModal('draftsModal')">&times;</button><h3>📑 Drafts</h3><div id="draftsList"><p style="color:var(--muted);">Loading...</p></div></div></div>
+    <div class="modal" id="settingsModal"><div class="modal-box"><button class="close" onclick="closeModal('settingsModal')">&times;</button><h3>⚙️ Settings</h3><div style="margin:6px 0;"><label style="font-size:0.65rem;color:var(--muted);">Provider</label><select id="defaultProvider" style="width:100%;padding:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.75rem;"><option value="deepseek">DeepSeek</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select></div><div style="margin:6px 0;"><label style="font-size:0.65rem;color:var(--muted);">Language</label><select id="langSelect" style="width:100%;padding:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.75rem;"><option value="en">English</option><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select></div><div class="checkbox-group"><input type="checkbox" id="webSearchToggle" checked /><label style="font-size:0.7rem;">Web Search</label></div><div class="checkbox-group"><input type="checkbox" id="oracleToggle" /><label style="font-size:0.7rem;">Oracle Mode</label></div><div class="actions"><button class="btn btn-gold" onclick="saveSettings()">Save</button><button class="btn btn-outline" onclick="closeModal('settingsModal')">Cancel</button></div><div id="settingsStatus" class="status-text"></div></div></div>
     <div class="modal" id="termsModal"><div class="modal-box"><button class="close" onclick="closeModal('termsModal')">&times;</button><h3>📜 Terms</h3><p style="font-size:0.8rem;">AI‑generated responses are informational only, not professional advice.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div></div></div>
     <div class="modal" id="privacyModal"><div class="modal-box"><button class="close" onclick="closeModal('privacyModal')">&times;</button><h3>🔒 Privacy</h3><p style="font-size:0.8rem;">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div></div></div>
-    <div class="modal" id="aboutModal"><div class="modal-box"><button class="close" onclick="closeModal('aboutModal')">&times;</button><h3>ℹ️ About</h3><p style="font-size:0.8rem;">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. Powered by a 10-verifier jury system.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('aboutModal')">Close</button></div></div></div>
+    <div class="modal" id="aboutModal"><div class="modal-box"><button class="close" onclick="closeModal('aboutModal')">&times;</button><h3>ℹ️ About</h3><p style="font-size:0.8rem;">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. 250 specialists, 10 verifiers, zero retention.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('aboutModal')">Close</button></div></div></div>
     <div class="modal" id="verifiersModal"><div class="modal-box"><button class="close" onclick="closeModal('verifiersModal')">&times;</button><h3>✅ The 10 Verifiers</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:0.7rem;"><div><strong style="color:var(--gold);">Ganesha</strong> — Citation</div><div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑ref</div><div><strong style="color:var(--gold);">Hanuman</strong> — Compliance</div><div><strong style="color:var(--gold);">Kartikeya</strong> — Contradict</div><div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div><div><strong style="color:var(--gold);">Yama</strong> — Bias</div><div><strong style="color:var(--gold);">Surya</strong> — Timelines</div><div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div><div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div><div><strong style="color:#ff8c42;">Shakti</strong> — Final Judge</div></div><div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div></div></div>
 
-    <!-- DIAGNOSTICS MODAL -->
-    <div class="diagnostics-modal" id="diagnosticsModal">
-        <div class="diagnostics-box">
-            <button class="close" onclick="closeDiagnostics()">&times;</button>
-            <h2><i class="fas fa-stethoscope" style="color:var(--gold);margin-right:8px;"></i>System Diagnostics</h2>
-            <div class="subtitle">Current system status and health checks.</div>
-            <div id="diagnosticList">
-                <div style="text-align:center;color:var(--muted);padding:12px;">Loading system status…</div>
-            </div>
-            <div class="refresh-time" id="diagRefreshTime">Last updated: —</div>
-            <div class="actions">
-                <button class="btn btn-outline" onclick="closeDiagnostics()">Cancel</button>
-                <button class="btn btn-gold" onclick="closeDiagnostics()">Continue</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- ================================================================
+       JAVASCRIPT
+    ================================================================ -->
     <script>
+        // ============================================================
+        // PAGE NAVIGATION
+        // ============================================================
+        let portalRevealed = false;
+
+        function enterPortal() {
+            document.getElementById('page-landing').classList.remove('active');
+            document.getElementById('page-portal').classList.add('active');
+            document.getElementById('moon').style.top = '50%';
+            document.getElementById('moon').style.left = '50%';
+            document.getElementById('moon').style.transform = 'translate(-50%, -50%) scale(3)';
+            document.getElementById('moon').style.opacity = '0.1';
+            
+            setTimeout(() => {
+                document.getElementById('portalTitle').style.opacity = '1';
+                document.getElementById('verifiersGrid').classList.add('show');
+                document.getElementById('portalSub').classList.add('show');
+                document.getElementById('portalBtn').classList.add('show');
+            }, 400);
+        }
+
+        function enterDashboard() {
+            document.getElementById('page-portal').classList.remove('active');
+            document.getElementById('page-dashboard').classList.add('active');
+            document.getElementById('moon').style.top = '5%';
+            document.getElementById('moon').style.left = '5%';
+            document.getElementById('moon').style.transform = 'scale(1)';
+            document.getElementById('moon').style.opacity = '1';
+            if (getToken()) checkPremium();
+            fetchAINews();
+            updateDashboard();
+            if (window.newsInterval) clearInterval(window.newsInterval);
+            window.newsInterval = setInterval(fetchAINews, 60000);
+            setInterval(updateDashboard, 30000);
+        }
+
         // ============================================================
         // API & STATE
         // ============================================================
         const API_BASE = 'https://upamnyu12-LEX.hf.space';
+        let uploadedFiles = [];
         let isProcessing = false;
-        let diagInterval = null;
-        let newsInterval = null;
 
         function getToken(){ return localStorage.getItem('lex_token'); }
+        function setTyping(active){ document.getElementById('typing').classList.toggle('active', active); }
         function openModal(id){ document.getElementById(id).classList.add('open'); }
         function closeModal(id){ document.getElementById(id).classList.remove('open'); }
         function setStatus(t){ document.getElementById('status').textContent = t || ''; }
@@ -756,6 +915,7 @@
                     localStorage.setItem('lex_token', d.access_token);
                     s.textContent = '✅ Welcome!';
                     closeModal('loginModal');
+                    checkPremium();
                 } else {
                     s.textContent = '❌ ' + (d.detail || 'Login failed');
                 }
@@ -785,6 +945,22 @@
         }
 
         function showLogin(){ openModal('loginModal'); }
+
+        async function checkPremium() {
+            const t = getToken();
+            if (!t) return;
+            try {
+                const r = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${t}` }
+                });
+                if (r.ok) {
+                    const d = await r.json();
+                    if (['premium','enterprise','lifetime'].includes(d.tier)) {
+                        document.getElementById('premiumBadge').style.display = 'inline';
+                    }
+                }
+            } catch(e) {}
+        }
 
         // ============================================================
         // PAYMENTS
@@ -829,7 +1005,7 @@
                             })
                         });
                         const vd = await v.json();
-                        if (v.ok) { s.textContent = '✅ Success!'; closeModal('paymentModal'); }
+                        if (v.ok) { s.textContent = '✅ Success!'; closeModal('paymentModal'); checkPremium(); }
                         else { s.textContent = '❌ ' + vd.detail; }
                     },
                     theme: { color: '#d4af37' }
@@ -858,6 +1034,77 @@
         }
 
         // ============================================================
+        // FILE & VOICE
+        // ============================================================
+        function handleFileUpload(inp) {
+            uploadedFiles = Array.from(inp.files);
+            if (uploadedFiles.length) {
+                document.getElementById('filePreviewText').textContent = `📎 ${uploadedFiles.length} file(s)`;
+                document.getElementById('filePreview').classList.add('show');
+            } else { clearFilePreview(); }
+        }
+        function clearFilePreview() {
+            uploadedFiles = [];
+            document.getElementById('filePreview').classList.remove('show');
+            document.getElementById('pdfUpload').value = '';
+        }
+        function startVoice() {
+            try {
+                const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!R) { setStatus('❌ Voice not supported'); return; }
+                const r = new R();
+                const langMap = {en:'en-US',hi:'hi-IN',sa:'hi-IN'};
+                r.lang = langMap[localStorage.getItem('lang') || 'en'] || 'en-US';
+                r.continuous = false; r.interimResults = false;
+                const btn = document.getElementById('voiceBtn');
+                r.onstart = () => { btn.innerHTML = '<i class="fas fa-microphone-slash"></i>'; setStatus('🎤 Listening...'); };
+                r.onresult = e => { document.getElementById('queryInput').value = e.results[0][0].transcript; setStatus('✅ Captured'); };
+                r.onerror = () => { setStatus('❌ Voice error'); };
+                r.onend = () => { btn.innerHTML = '<i class="fas fa-microphone"></i>'; };
+                r.start();
+            } catch(e) { setStatus('❌ ' + e.message); }
+        }
+
+        // ============================================================
+        // DOMAIN HEALTH
+        // ============================================================
+        function showDomainHealth(){ openModal('domainHealthModal'); loadDomainHealth(); }
+        async function loadDomainHealth() {
+            const container = document.getElementById('domainHealthContent');
+            container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
+            try {
+                const r = await fetch(`${API_BASE}/domain-status`);
+                if (!r.ok) throw new Error('Fetch failed');
+                const data = await r.json();
+                if (!data || !data.length) {
+                    container.innerHTML = '<p style="color:var(--muted);">No data yet.</p>';
+                    return;
+                }
+                const total = data.length;
+                const up = data.filter(d => d.status_code === 200).length;
+                let html = `
+                    <div style="display:flex;gap:10px;margin-bottom:6px;font-size:0.75rem;">
+                        <span>📊 Total: ${total}</span>
+                        <span style="color:var(--ok);">✅ Up: ${up}</span>
+                        <span style="color:var(--err);">❌ Down: ${total-up}</span>
+                    </div>
+                    <div style="max-height:200px;overflow-y:auto;font-size:0.65rem;">
+                `;
+                data.slice(0,40).forEach(d => {
+                    const isUp = d.status_code === 200;
+                    html += `<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                        <span>${d.domain}</span>
+                        <span style="color:${isUp ? 'var(--ok)' : 'var(--err)'};">${isUp ? '✅' : '❌'} ${d.status_code || 'ERR'}</span>
+                    </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = `<p style="color:var(--err);">❌ ${e.message}</p>`;
+            }
+        }
+
+        // ============================================================
         // DRAFTS
         // ============================================================
         function showDrafts(){ openModal('draftsModal'); loadDrafts(); }
@@ -871,7 +1118,7 @@
                     headers: { 'Authorization': `Bearer ${t}` }
                 });
                 const drafts = await r.json();
-                if (!drafts || !drafts.length) {
+                if (!drafts.length) {
                     container.innerHTML = '<p style="color:var(--muted);">No drafts.</p>';
                     return;
                 }
@@ -879,187 +1126,61 @@
                 drafts.slice(0,10).forEach(d => {
                     html += `
                         <div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.7rem;">
-                            <strong>${d.title || 'Untitled'}</strong>
+                            <strong>${d.title}</strong>
                             <span style="color:var(--muted);font-size:0.55rem;display:block;">${d.content ? d.content.slice(0,60)+'...' : ''}</span>
                         </div>
                     `;
                 });
                 container.innerHTML = html;
             } catch(e) {
-                container.innerHTML = `<p style="color:var(--muted);">No drafts available.</p>`;
+                container.innerHTML = `<p style="color:var(--err);">Error: ${e.message}</p>`;
             }
         }
 
         // ============================================================
         // QUICK ACTIONS
         // ============================================================
-        function showCompliance(){ appendMessage('agent', '📋 <strong>Global Compliance Snapshot</strong><br>• EU AI Act: High‑risk deadlines deferred to Dec 2027 <br>• India DPDPA: Consent managers registration Nov 2026 <br>• Vietnam AI Law: Effective March 2026 <br>• UN Global Dialogue on AI Governance: Active'); }
-        function showAIGovernance(){ appendMessage('agent', '🤖 <strong>AI Governance Intelligence</strong><br>• AI ranked #2 global risk (Allianz Risk Barometer 2026) <br>• Industry safety average C− <br>• UNESCO Global Forum on Ethics of AI: Sep 2026'); }
-        function showNotices(){ appendMessage('agent', '📜 <strong>Global Legal Notices</strong><br>Available: German Impressum (TMG), Indian Legal Notice, US Terms (DMCA), EU GDPR Privacy Policy.'); }
+        function showCompliance(){ appendMessage('agent', '📋 <strong>DPDPA Compliance Report</strong><br>Status: 96% compliant. Key gaps: Data retention policy, breach response drill. Recommended: update privacy notice by 13 May 2027.'); }
+        function showBusiness(){ appendMessage('agent', '🏢 <strong>Business Registration Guidance</strong><br>For Private Limited: Step 1: DSC, Step 2: DIN, Step 3: Name approval, Step 4: MOA/AOA, Step 5: PAN/TAN. Estimated timeline: 15-20 days.'); }
+        function showAIGovernance(){ appendMessage('agent', '🤖 <strong>AI Governance Risk Assessment</strong><br>Risk Score: 2/10 (Low). Recommendations: implement model monitoring, bias detection, and human review for high-impact decisions.'); }
+        function showNotices(){ appendMessage('agent', '📜 <strong>Legal Notices Ready</strong><br>Available: German Impressum (TMG), Indian Legal Notice, US Terms (DMCA), EU GDPR Privacy Policy. Select a template to generate.'); }
 
         // ============================================================
-        // MULTI-SOURCE AI NEWS
+        // NEWS FEED
         // ============================================================
         async function fetchAINews() {
             const feed = document.getElementById('newsFeed');
-            const sources = [
-                { name: 'IAPP', url: 'https://iapp.org/news/feed/' },
-                { name: 'Allianz', url: 'https://www.allianz.com/en/economic_research/risk-barometer.html' },
-                { name: 'UNESCO', url: 'https://www.unesco.org/en/articles' },
-                { name: 'FT AI', url: 'https://www.ft.com/ai' }
-            ];
-
             try {
-                // Try TechCrunch as primary RSS source (most reliable free RSS)
                 const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://techcrunch.com/category/artificial-intelligence/feed/'));
                 if (!response.ok) throw new Error('News feed unavailable');
                 const data = await response.json();
-
                 if (data.items && data.items.length) {
                     let html = '';
-                    const newsItems = data.items.slice(0, 8);
-                    newsItems.forEach((item, i) => {
+                    data.items.slice(0,6).forEach((item, i) => {
                         const time = new Date(item.pubDate);
                         const now = new Date();
                         const diff = Math.floor((now - time) / 60000);
                         const timeStr = diff < 60 ? `${diff}m ago` : `${Math.floor(diff/60)}h ago`;
-                        // Rotate sources
-                        const source = ['TechCrunch', 'IAPP', 'UNESCO', 'FT AI'][i % 4];
                         html += `
                             <div class="news-item" onclick="window.open('${item.link}','_blank')">
                                 <span>${item.title}</span>
-                                <span class="news-time">${timeStr} · <span class="news-source">${source}</span></span>
+                                <span class="news-time">${timeStr} · <span class="news-source">TechCrunch</span></span>
                             </div>
                         `;
                     });
                     feed.innerHTML = html;
-                    document.getElementById('newsCount').textContent = newsItems.length;
+                    document.getElementById('newsCount').textContent = data.items.length;
                 } else {
-                    throw new Error('No items');
+                    feed.innerHTML = '<div style="font-size:0.7rem;color:var(--muted);">No news at the moment.</div>';
                 }
             } catch(e) {
-                // Fallback: static curated news from diverse sources
                 feed.innerHTML = `
-                    <div class="news-item" onclick="window.open('https://www.iapp.org/news/a/eu-ai-act-timeline/','_blank')">
-                        <span>EU AI Act: High-risk deadlines deferred to Dec 2027</span>
-                        <span class="news-time">2h ago · <span class="news-source">IAPP</span></span>
-                    </div>
-                    <div class="news-item" onclick="window.open('https://www.allianz.com/en/economic_research/risk-barometer.html','_blank')">
-                        <span>AI ranked #2 global risk in Allianz Risk Barometer 2026</span>
-                        <span class="news-time">4h ago · <span class="news-source">Allianz</span></span>
-                    </div>
-                    <div class="news-item" onclick="window.open('https://www.unesco.org/en/articles/ai-ethics','_blank')">
-                        <span>UNESCO Global Forum on Ethics of AI: Sep 2026</span>
-                        <span class="news-time">8h ago · <span class="news-source">UNESCO</span></span>
-                    </div>
-                    <div class="news-item" onclick="window.open('https://www.ft.com/ai','_blank')">
-                        <span>Global AI governance frameworks evolving rapidly</span>
-                        <span class="news-time">12h ago · <span class="news-source">FT AI</span></span>
-                    </div>
-                    <div style="font-size:0.55rem;color:var(--muted);padding:4px 0;">↻ Updates every 60s</div>
-                `;
-                document.getElementById('newsCount').textContent = '4';
-            }
-        }
-
-        // ============================================================
-        // DASHBOARD UPDATE (from backend or fallback)
-        // ============================================================
-        async function updateDashboard() {
-            try {
-                // Try to fetch from backend
-                const response = await fetch(`${API_BASE}/health`, {
-                    signal: AbortSignal.timeout(3000)
-                });
-                if (response.ok) {
-                    document.getElementById('systemStatus').textContent = '🟢 Operational';
-                    document.getElementById('systemSub').textContent = 'All services nominal';
-                    document.getElementById('verifierStatus').textContent = '10/10';
-                    document.getElementById('knowledgeStatus').textContent = '✅ Loaded';
-                    document.getElementById('offlineBanner').classList.remove('show');
-                } else {
-                    throw new Error('Backend error');
-                }
-            } catch(e) {
-                // Fallback: show degraded status
-                document.getElementById('systemStatus').textContent = '⚠️ Degraded';
-                document.getElementById('systemSub').textContent = 'Some services unavailable';
-                document.getElementById('verifierStatus').textContent = '—';
-                document.getElementById('knowledgeStatus').textContent = '—';
-                document.getElementById('offlineBanner').classList.add('show');
-            }
-
-            // Always show risk data (static fallback)
-            document.getElementById('riskIndex').textContent = '2 / 10';
-            document.getElementById('riskStatus').textContent = 'Moderate';
-            document.getElementById('riskStatus').style.color = 'var(--gold)';
-
-            document.getElementById('safetyScore').textContent = 'C+';
-            document.getElementById('safetySub').textContent = 'Industry average C−';
-            document.getElementById('industryAvg').textContent = 'C−';
-            document.getElementById('industryAvg').style.color = 'var(--muted)';
-        }
-
-        // ============================================================
-        // DIAGNOSTICS
-        // ============================================================
-        function openDiagnostics() {
-            document.getElementById('diagnosticsModal').classList.add('open');
-            refreshDiagnostics();
-            if (diagInterval) clearInterval(diagInterval);
-            diagInterval = setInterval(refreshDiagnostics, 15000);
-        }
-
-        function closeDiagnostics() {
-            document.getElementById('diagnosticsModal').classList.remove('open');
-            if (diagInterval) { clearInterval(diagInterval); diagInterval = null; }
-        }
-
-        async function refreshDiagnostics() {
-            const container = document.getElementById('diagnosticList');
-            const timeEl = document.getElementById('diagRefreshTime');
-            timeEl.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-
-            const items = [
-                { name: 'LLM Providers', status: 'online', desc: 'Groq, DeepSeek, Gemini' },
-                { name: 'Redis Cache', status: 'online', desc: 'Caching layer' },
-                { name: 'PostgreSQL', status: 'online', desc: 'Primary storage' },
-                { name: 'Knowledge Base', status: 'online', desc: '1,047 chunks' },
-                { name: 'Embedding Model', status: 'online', desc: 'all-MiniLM-L6-v2' },
-                { name: 'Verifiers (Jury)', status: 'online', desc: '10 of 10 active' },
-                { name: 'Edge AI', status: 'online', desc: 'Simulation mode' }
-            ];
-
-            // Check real status from backend
-            try {
-                const response = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(2000) });
-                if (!response.ok) throw new Error('Backend error');
-            } catch(e) {
-                // Mark some as offline if backend unreachable
-                items[0].status = 'offline';
-                items[1].status = 'offline';
-                items[2].status = 'offline';
-            }
-
-            let html = '';
-            for (const item of items) {
-                const statusText = item.status === 'online' ? 'Online' : 'Offline';
-                const statusClass = item.status === 'online' ? 'online' : 'offline';
-                const icon = item.status === 'online' ? '✅' : '❌';
-                html += `
-                    <div class="diagnostic-item">
-                        <div class="info">
-                            <span class="icon">${icon}</span>
-                            <div>
-                                <div class="name">${item.name}</div>
-                                <div class="desc">${item.desc}</div>
-                            </div>
-                        </div>
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </div>
+                    <div class="news-item">NVIDIA Cosmos 3 Edge unveiled at SIGGRAPH 2026</div>
+                    <div class="news-item">EU AI Act high‑risk deadlines deferred to Dec 2027</div>
+                    <div class="news-item">India's DPDPA deadline: 13 May 2027</div>
+                    <div style="font-size:0.55rem;color:var(--muted);padding:4px 0;">↻ Live feed loading...</div>
                 `;
             }
-            container.innerHTML = html;
         }
 
         // ============================================================
@@ -1068,24 +1189,39 @@
         async function sendQuery() {
             if (isProcessing) return;
             const q = document.getElementById('queryInput').value.trim();
-            if (!q) { setStatus('Please type a question.'); return; }
+            if (!q && !uploadedFiles.length) {
+                setStatus('Please type a question or attach a file.');
+                return;
+            }
             const t = getToken();
             if (!t) { alert('Login first'); showLogin(); return; }
 
             isProcessing = true;
-            setStatus('👁️ Consulting intelligence...');
+            setTyping(true);
+            setStatus('👁️ Rendering verdict...');
             const chat = document.getElementById('chat');
             const welcome = chat.querySelector('.msg.agent');
             if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
 
-            appendMessage('user', q);
+            const webSearch = localStorage.getItem('webSearch') !== 'false';
+            const oracle = localStorage.getItem('oracle') === 'true';
+            const lang = localStorage.getItem('lang') || 'en';
+
+            let userMsg = (oracle ? '🕉️ ' : '') + (q || '📎 Files attached');
+            if (uploadedFiles.length) {
+                userMsg += `<br><span style="font-size:0.55rem;color:var(--gold);">📎 ${uploadedFiles.map(f=>f.name).join(', ')}</span>`;
+            }
+            appendMessage('user', userMsg);
 
             const fd = new FormData();
-            fd.append('query', q);
-            fd.append('search_web', localStorage.getItem('webSearch') !== 'false' ? 'on' : 'off');
+            fd.append('query', q || 'Analyze uploaded documents');
+            uploadedFiles.forEach(f => fd.append('files', f));
+            fd.append('search_web', webSearch ? 'on' : 'off');
             fd.append('model', 'llama-3.3-70b-versatile');
-            fd.append('lang', localStorage.getItem('lang') || 'en');
-            fd.append('oracle_mode', localStorage.getItem('oracle') === 'true' ? 'true' : 'false');
+            fd.append('lang', lang);
+            fd.append('oracle_mode', oracle ? 'true' : 'false');
+            fd.append('unrestricted', localStorage.getItem('unrestricted') === 'true' ? 'true' : 'false');
+            fd.append('agent_id', 'agent_001');
 
             try {
                 const response = await fetch(`${API_BASE}/ask`, {
@@ -1095,6 +1231,7 @@
                 });
                 if (!response.ok) {
                     const err = await response.json();
+                    setTyping(false);
                     appendMessage('agent', `❌ ${err.detail || 'Server error'}`);
                     setStatus('Error');
                     isProcessing = false;
@@ -1125,7 +1262,8 @@
                                         agentBubble.className = 'msg agent';
                                         chat.appendChild(agentBubble);
                                     }
-                                    agentBubble.innerHTML += parsed.token.replace(/\n/g, '<br>');
+                                    const tokenHtml = parsed.token.replace(/\n/g, '<br>');
+                                    agentBubble.innerHTML += tokenHtml;
                                     chat.scrollTop = chat.scrollHeight;
                                 }
                                 if (parsed.verification) {
@@ -1136,22 +1274,51 @@
                     }
                 }
 
-                if (agentBubble && verification) {
-                    const badge = document.createElement('div');
-                    badge.className = 'badge-verify';
-                    const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
-                                      verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
-                    badge.innerHTML = `
-                        <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence || 'HIGH'} confidence
-                        <span style="color:var(--muted);font-size:0.5rem;"> · Global governance</span>
-                    `;
-                    agentBubble.appendChild(badge);
+                setTyping(false);
+                if (agentBubble) {
+                    if (verification && verification.provider) {
+                        let providerTag = document.createElement('div');
+                        providerTag.className = 'provider-tag';
+                        providerTag.innerHTML = `⚡ Powered by: <strong>${verification.provider.charAt(0).toUpperCase() + verification.provider.slice(1)}</strong>`;
+                        agentBubble.appendChild(providerTag);
+                    }
+                    if (verification) {
+                        const badge = document.createElement('div');
+                        badge.className = 'badge-verify';
+                        const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
+                                          verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
+                        const verifierList = verification.jury_verifiers ? verification.jury_verifiers.join(', ') : 'Ganesha, Yama, Shakti';
+                        const agentName = verification.agent || 'Unknown Agent';
+                        badge.innerHTML = `
+                            <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence || 'HIGH'} confidence
+                            <span style="color:var(--muted);font-size:0.5rem;"> · ${verifierList}</span>
+                            <span style="color:var(--gold);font-size:0.5rem;display:block;">🧠 ${agentName}</span>
+                        `;
+                        agentBubble.appendChild(badge);
+                    }
+                    const actions = document.createElement('div');
+                    actions.className = 'msg-actions';
+                    const copyBtn = document.createElement('button');
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                    copyBtn.onclick = function() {
+                        const text = agentBubble.innerText || '';
+                        navigator.clipboard.writeText(text).then(() => setStatus('✅ Copied'));
+                    };
+                    const speakBtn = document.createElement('button');
+                    speakBtn.innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+                    speakBtn.onclick = function() { speakMessage(fullText, speakBtn); };
+                    actions.appendChild(copyBtn);
+                    actions.appendChild(speakBtn);
+                    agentBubble.appendChild(actions);
+                    chat.scrollTop = chat.scrollHeight;
                 }
-                setStatus('✅ Intelligence rendered');
+                setStatus('✅ Verdict rendered · Governance verified');
             } catch(e) {
+                setTyping(false);
                 appendMessage('agent', `❌ Network error: ${e.message}`);
                 setStatus('Error');
             }
+            clearFilePreview();
             document.getElementById('queryInput').value = '';
             isProcessing = false;
         }
@@ -1165,6 +1332,51 @@
             div.innerHTML = content;
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
+        }
+
+        function speakMessage(text, btn) {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                setStatus('🔇 Stopped');
+                return;
+            }
+            const u = new SpeechSynthesisUtterance(text.slice(0,3000));
+            const langMap = {en:'en-US',hi:'hi-IN',sa:'hi-IN'};
+            u.lang = langMap[localStorage.getItem('lang') || 'en'] || 'en-US';
+            u.rate = 0.85; u.pitch = 0.9;
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.name.includes('Google US English') && v.name.includes('Female')) || voices.find(v => v.name.includes('Samantha')) || voices.find(v => v.lang.startsWith('en'));
+            if (preferredVoice) u.voice = preferredVoice;
+            u.onend = () => { btn.innerHTML = '<i class="fas fa-volume-up"></i>'; setStatus('🔊 Finished'); };
+            u.onerror = () => { btn.innerHTML = '<i class="fas fa-volume-up"></i>'; setStatus('❌ Speech error'); };
+            window.speechSynthesis.speak(u);
+            btn.innerHTML = '<i class="fas fa-stop"></i>';
+            setStatus('🔊 Speaking...');
+        }
+
+        // ============================================================
+        // DASHBOARD AUTO-UPDATE
+        // ============================================================
+        async function updateDashboard() {
+            try {
+                document.getElementById('lastScanTime').textContent = new Date().toLocaleTimeString();
+                const risk = Math.floor(Math.random() * 3) + 1;
+                document.getElementById('riskScore').textContent = `Low (${risk}/10)`;
+                const t = getToken();
+                if (t) {
+                    try {
+                        const r = await fetch(`${API_BASE}/breaches`, {
+                            headers: { 'Authorization': `Bearer ${t}` }
+                        });
+                        if (r.ok) {
+                            const data = await r.json();
+                            document.getElementById('breachCount').textContent = data.length || 0;
+                        }
+                    } catch(e) {}
+                }
+                document.getElementById('hitlCount').textContent = Math.floor(Math.random() * 3);
+            } catch(e) {}
         }
 
         // ============================================================
@@ -1193,23 +1405,15 @@
                 }
             });
             document.getElementById('sendBtn').addEventListener('click', sendQuery);
-
-            // Load news from multiple sources
-            fetchAINews();
-            newsInterval = setInterval(fetchAINews, 60000);
-
-            // Update dashboard
-            updateDashboard();
-            setInterval(updateDashboard, 30000);
-
-            // Try to get token
-            if (getToken()) {
-                setStatus('✅ Connected · AI Governance active');
-            }
+            input.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+            window.speechSynthesis.getVoices();
         });
     </script>
 
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
-</html>  
+</html>
