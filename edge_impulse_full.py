@@ -1,15 +1,10 @@
-# edge_impulse_full.py - No OpenCV dependency
+# edge_impulse_full.py - No OpenCV required
 import logging
 import time
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
-from PIL import Image
-import io
-import random
 
 logger = logging.getLogger("unknown_verdict.edge")
-
-# ─── DATA CLASSES ──────────────────────────────────────────────────────
 
 @dataclass
 class EdgeClassification:
@@ -42,15 +37,11 @@ class EdgeResult:
             "input_type": self.input_type
         }
 
-# ─── EDGE MODEL MANAGER ──────────────────────────────────────────────
-
 class EdgeModelManager:
-    """Simulation mode for Edge AI - No OpenCV required"""
+    """Simulation mode for Edge AI"""
     
     def __init__(self):
         self.simulation_mode = True
-        self.models_dir = "edge_models"
-        
         self.simulation_results = {
             "courtroom_audio": {
                 "label": "legal_proceeding",
@@ -77,8 +68,7 @@ class EdgeModelManager:
                 "metadata": {"emotion": "neutral", "intensity": 0.78}
             }
         }
-        
-        logger.info("⚠️ Running in simulation mode (No OpenCV)")
+        logger.info("⚠️ Running in simulation mode")
 
     async def classify_audio(self, audio_data: bytes, model_name: str = "courtroom_audio") -> EdgeResult:
         start = time.time()
@@ -110,12 +100,7 @@ class EdgeModelManager:
         start = time.time()
         audio_result = await self.classify_audio(audio_data)
         vision_result = await self.classify_vision(image_data)
-        
-        combined_confidence = (
-            audio_result.classifications[0].confidence * 0.6 +
-            vision_result.classifications[0].confidence * 0.4
-        )
-        
+        combined_confidence = audio_result.classifications[0].confidence * 0.6 + vision_result.classifications[0].confidence * 0.4
         return EdgeResult(
             classifications=[EdgeClassification(
                 label="legal_proceeding",
@@ -131,10 +116,8 @@ class EdgeModelManager:
             input_type="multi_modal"
         )
 
-# ─── EDGE AI SERVICE ──────────────────────────────────────────────────
-
 class EdgeAIService:
-    """Edge AI Service in simulation mode - No OpenCV required"""
+    """Edge AI Service in simulation mode"""
     
     def __init__(self):
         self.model_manager = EdgeModelManager()
@@ -146,7 +129,7 @@ class EdgeAIService:
             "models_loaded": []
         }
         self._prediction_times = []
-        logger.info("✅ Edge AI Service initialized (simulation mode)")
+        logger.info("✅ Edge AI Service initialized (simulation)")
 
     async def initialize(self):
         return self
@@ -209,8 +192,6 @@ class EdgeAIService:
             "simulation_mode": True,
             "models_available": ["courtroom_audio", "document_vision", "signature_verification", "emotion_detection"]
         }
-
-# ─── SINGLETON ──────────────────────────────────────────────────────────
 
 _edge_ai_service = None
 
