@@ -9,7 +9,6 @@ import os, io, csv, json, uuid, glob, re, random, string, logging, asyncio, ssl,
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
-
 # ─── EDGE AI ──────────────────────────────────────────────────────────
 try:
     from edge_impulse_full import get_edge_ai_service, EdgeAIService
@@ -977,21 +976,25 @@ async def verify_response(response_text: str, verifier: dict, model: str) -> dic
     return {"status": "APPROVED", "confidence": "MEDIUM", "corrected_text": ""} 
     
 # ─── LIFESPAN ─────────────────────────────────────────────────────────
+# ─── IMPORT ──────────────────────────────────────────────────────────────
+from contextlib import asynccontextmanager  # ← ADD THIS!
 
-@asynccontextmanager
+# ─── LIFESPAN ──────────────────────────────────────────────────────────
+@asynccontextmanager  # ← CRITICAL – MUST HAVE THIS DECORATOR!
 async def lifespan(app: FastAPI):
     global pg_pool, redis_pool
-
+    
+    # ─── STARTUP ──────────────────────────────────────────────────────
     os.makedirs("blog", exist_ok=True)
-
+    
     if database:
         await database.connect()
         await _create_tables()
         await _ensure_test_user()
-
+    
     if DATABASE_URL:
         pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
-
+    
     if REDIS_URL:
         try:
             clean_url = REDIS_URL
@@ -1015,6 +1018,75 @@ async def lifespan(app: FastAPI):
     else:
         redis_pool = None
         logger.warning("⚠️ REDIS_URL not set – caching disabled")
+    
+    # ─── INITIALIZE SAFETY MODULES ────────────────────────────────
+    if ConstitutionalAI:
+        app.state.constitutional_ai = ConstitutionalAI(pg_pool)
+    if RedTeam:
+        app.state.red_team = RedTeam(pg_pool, call_llm)
+    if KillSwitch:
+        app.state.kill_switch = KillSwitch(pg_pool, redis_pool)
+    if MonitoringSystem:
+        app.state.monitoring = MonitoringSystem(pg_pool, redis_pool)
+    if InterpretabilityDashboard:
+        app.state.interpretability = InterpretabilityDashboard(pg_pool)
+    if SafetyCase:
+        app.state.safety_case = SafetyCase(pg_pool)
+    
+    # ─── INITIALIZE EDGE AI ────────────────────────────────────────
+    if AkidaEdge:
+        app.state.akida_edge = AkidaEdge()
+    if EdgeImpulseModel:
+        app.state.edge_impulse = EdgeImpulseModel()
+    if SpikeRetriever:
+        app.state.spike_retriever = SpikeRetriever()
+    
+    # ─── INITIALIZE ATMA ROUTER ──────────────────────────────────────
+    if AtmaRouter:
+        app.state.atma = AtmaRouter(
+            pg_pool,
+            fetch_relevant_chunks_func=fetch_relevant_chunks,
+            serpapi_search_func=serpapi_search,
+            call_llm_func=call_llm,
+            constitutional_ai=app.state.constitutional_ai if hasattr(app.state, 'constitutional_ai') else None,
+            kill_switch=app.state.kill_switch if hasattr(app.state, 'kill_switch') else None,
+            monitoring=app.state.monitoring if hasattr(app.state, 'monitoring') else None
+        )
+    
+    # ─── SCHEDULER ──────────────────────────────────────────────────
+    sched = AsyncIOScheduler()
+    sched.add_job(_purge_expired, IntervalTrigger(hours=1))
+    sched.add_job(_update_domain_analytics, IntervalTrigger(hours=1))
+    if FEEDPARSER_AVAILABLE:
+        sched.add_job(_daily_news_pipeline, CronTrigger(hour=5, minute=0, timezone="Asia/Kolkata"), id="daily_news_pipeline")
+    sched.add_job(_analyse_and_improve, IntervalTrigger(hours=24))
+    sched.start()
+    logger.info("👁️ Unknown Verdict Engine v12.1 – Complete Enterprise Edition Ready.")
+    
+    # ─── CHECK KNOWLEDGE CHUNKS ────────────────────────────────────
+    if pg_pool:
+        async with pg_pool.acquire() as conn:
+            try:
+                count = await conn.fetchval("SELECT COUNT(*) FROM knowledge_chunks")
+                if count == 0:
+                    logger.info("📚 knowledge_chunks empty – running auto‑ingestion...")
+                    await run_ingestion_job()
+                else:
+                    logger.info(f"📚 knowledge_chunks already has {count} chunks. Skipping.")
+            except Exception as e:
+                logger.warning(f"Knowledge chunks check failed: {e}")
+    
+    # ─── YIELD ──────────────────────────────────────────────────────
+    yield  # ← CRITICAL – this is what makes it an async generator
+    
+    # ─── SHUTDOWN ──────────────────────────────────────────────────
+    if database:
+        await database.disconnect()
+    if pg_pool:
+        await pg_pool.close()
+    if redis_pool:
+        await redis_pool.close()
+
 # ─── APP INSTANCE ────────────────────────────────────────────────────────
 app = FastAPI(
     title="Unknown Verdict v12.1 - Enterprise Legal AI",
