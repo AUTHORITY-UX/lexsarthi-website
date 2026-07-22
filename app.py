@@ -25,7 +25,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 import asyncpg
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select, UniqueConstraint
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, select, UniqueConstraint, and_, or_
 
 import jwt
 from passlib.context import CryptContext
@@ -107,7 +107,7 @@ groq_client   = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 gemini_model  = None
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel("gemini-2.0-flash")  # ✅ Cheaper model
+    gemini_model = genai.GenerativeModel("gemini-2.0-flash")
 
 # ─── LOCAL EMBEDDING MODEL ──────────────────────────────────────────────
 from sentence_transformers import SentenceTransformer
@@ -935,7 +935,7 @@ async def _fetch_news():
                     continue
                 LAST_FETCHED_HASHES.add(hash_id)
                 if len(LAST_FETCHED_HASHES) > 1000:
-                    LAST_FETCHED_HASHES.pop()
+                    LAST_FETCHED_HASHES.clear()
                 articles.append({
                     "title": entry.title,
                     "summary": entry.get('summary', ''),
@@ -1064,16 +1064,20 @@ async def _daily_news_pipeline():
 async def _analyse_and_improve():
     """✅ FIXED: Use 'timestamp' column, not 'created_at'"""
     logger.info("🔍 Analysing deliberations for self‑improvement...")
-    rows = await database.fetch_all("""
-        SELECT id, query, final_answer, confidence, verifier_results
-        FROM deliberations
-        WHERE confidence = 'LOW' 
-          AND timestamp > NOW() - INTERVAL '7 days'   -- ✅ Fixed column name
-          AND used_for_training = FALSE
-        LIMIT 100
-    """)
+    
+    # ✅ FIXED: Use SQLAlchemy Core instead of raw SQL
+    stmt = deliberations.select().where(
+        and_(
+            deliberations.c.confidence == 'LOW',
+            deliberations.c.timestamp > datetime.now() - timedelta(days=7),
+            deliberations.c.used_for_training == False
+        )
+    ).limit(100)
+    
+    rows = await database.fetch_all(stmt)
     if not rows:
         return
+    
     improved_data = []
     for row in rows:
         system = "You are a legal expert. Improve the following answer for accuracy, clarity, and completeness. Return only the improved answer."
@@ -1085,7 +1089,12 @@ async def _analyse_and_improve():
                 "improved": improved,
                 "confidence": row['confidence']
             })
-            await database.execute("UPDATE deliberations SET used_for_training = TRUE WHERE id = $1", row['id'])
+            await database.execute(
+                deliberations.update()
+                .where(deliberations.c.id == row['id'])
+                .values(used_for_training=True)
+            )
+    
     for data in improved_data:
         await database.execute(
             fine_tune_data.insert().values(
@@ -1648,10 +1657,15 @@ async def ask(
         raise HTTPException(status_code=503, detail="Service temporarily unavailable due to safety protocol")
     
     # ─── SAFETY CHECK 2: User restrictions ────────────────────────
-    restriction = await database.fetch_one("""
-        SELECT * FROM user_restrictions 
-        WHERE user_id = $1 AND is_active = TRUE AND expires_at > NOW()
-    """, (cu["id"],))  # ✅ FIXED: Tuple with comma
+    # ✅ FIXED: Use SQLAlchemy Core with proper parameter binding
+    stmt = user_restrictions.select().where(
+        and_(
+            user_restrictions.c.user_id == cu["id"],
+            user_restrictions.c.is_active == True,
+            user_restrictions.c.expires_at > datetime.now()
+        )
+    )
+    restriction = await database.fetch_one(stmt)
     
     if restriction:
         raise HTTPException(status_code=403, detail=f"User restricted until {restriction['expires_at']}: {restriction['reason']}")
@@ -1699,10 +1713,17 @@ async def ask(
     # Custom persona
     custom_system = None
     if persona_id:
-        persona = await database.fetch_one("""
-            SELECT system_prompt FROM custom_personas
-            WHERE id = $1 AND (user_id = $2 OR is_public = TRUE)
-        """, (int(persona_id) if persona_id.isdigit() else 0, cu["id"]))  # ✅ FIXED: Tuple
+        # ✅ FIXED: Use SQLAlchemy Core
+        stmt = custom_personas.select().where(
+            and_(
+                custom_personas.c.id == int(persona_id),
+                or_(
+                    custom_personas.c.user_id == cu["id"],
+                    custom_personas.c.is_public == True
+                )
+            )
+        )
+        persona = await database.fetch_one(stmt)
         if persona:
             custom_system = persona['system_prompt']
 
