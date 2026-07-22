@@ -2100,3 +2100,48 @@ if __name__ == "__main__":
         access_log=True,
         timeout_keep_alive=30
     )
+if __name__ == "__main__":
+    import asyncio
+    import os
+    
+    # Check if we should use Verdict Engine
+    USE_VERDICT_ENGINE = os.getenv("USE_VERDICT_ENGINE", "true").lower() == "true"
+    ENGINE_MODE = os.getenv("VERDICT_ENGINE_MODE", "hybrid")
+    
+    if USE_VERDICT_ENGINE:
+        try:
+            from verdict_engine import start_verdict_engine
+            
+            print(f"""
+    ════════════════════════════════════════════════════════════════
+      🏎️  Starting Unknown Verdict with Verdict Engine - {ENGINE_MODE.upper()} Mode
+      🌐  Server: http://0.0.0.0:7860
+      🚀  Press CTRL+C to stop
+    ════════════════════════════════════════════════════════════════
+            """)
+            
+            asyncio.run(start_verdict_engine(app, mode=ENGINE_MODE))
+            
+        except ImportError:
+            print("⚠️  Verdict Engine not available - Falling back to Uvicorn")
+            import uvicorn
+            uvicorn.run(
+                "app:app",
+                host="0.0.0.0",
+                port=7860,
+                workers=1,  # ✅ SINGLE WORKER
+                log_level="info",
+                access_log=True,
+                timeout_keep_alive=30
+            )
+    else:
+        import uvicorn
+        uvicorn.run(
+            "app:app",
+            host="0.0.0.0",
+            port=7860,
+            workers=1,  # ✅ SINGLE WORKER
+            log_level="info",
+            access_log=True,
+            timeout_keep_alive=30
+        )    
