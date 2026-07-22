@@ -974,8 +974,47 @@ async def verify_response(response_text: str, verifier: dict, model: str) -> dic
             return json.loads(m.group())
     except:
         pass
-    return {"status": "APPROVED", "confidence": "MEDIUM", "corrected_text": ""}
+    return {"status": "APPROVED", "confidence": "MEDIUM", "corrected_text": ""} 
+    
+# ─── LIFESPAN ─────────────────────────────────────────────────────────
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global pg_pool, redis_pool
+
+    os.makedirs("blog", exist_ok=True)
+
+    if database:
+        await database.connect()
+        await _create_tables()
+        await _ensure_test_user()
+
+    if DATABASE_URL:
+        pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
+
+    if REDIS_URL:
+        try:
+            clean_url = REDIS_URL
+            if "redis-cli --tls -u " in clean_url:
+                clean_url = clean_url.split("redis-cli --tls -u ")[-1]
+            if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
+                clean_url = clean_url.replace("redis://", "rediss://", 1)
+            redis_pool = redis.from_url(
+                clean_url,
+                decode_responses=True,
+                max_connections=10,
+                socket_keepalive=True,
+                socket_timeout=5,
+                retry_on_timeout=True
+            )
+            await redis_pool.ping()
+            logger.info("✅ Redis connected successfully")
+        except Exception as e:
+            logger.error(f"❌ Redis connection failed: {e}")
+            redis_pool = None
+    else:
+        redis_pool = None
+        logger.warning("⚠️ REDIS_URL not set – caching disabled")
 # ─── APP INSTANCE ────────────────────────────────────────────────────────
 app = FastAPI(
     title="Unknown Verdict v12.1 - Enterprise Legal AI",
@@ -1402,46 +1441,6 @@ async def _analyse_and_improve():
             )
         )
     logger.info(f"✅ Prepared {len(improved_data)} samples for fine‑tuning.")
-
-# ─── LIFESPAN ─────────────────────────────────────────────────────────
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global pg_pool, redis_pool
-
-    os.makedirs("blog", exist_ok=True)
-
-    if database:
-        await database.connect()
-        await _create_tables()
-        await _ensure_test_user()
-
-    if DATABASE_URL:
-        pg_pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
-
-    if REDIS_URL:
-        try:
-            clean_url = REDIS_URL
-            if "redis-cli --tls -u " in clean_url:
-                clean_url = clean_url.split("redis-cli --tls -u ")[-1]
-            if clean_url.startswith("redis://") and "?ssl=true" not in clean_url:
-                clean_url = clean_url.replace("redis://", "rediss://", 1)
-            redis_pool = redis.from_url(
-                clean_url,
-                decode_responses=True,
-                max_connections=10,
-                socket_keepalive=True,
-                socket_timeout=5,
-                retry_on_timeout=True
-            )
-            await redis_pool.ping()
-            logger.info("✅ Redis connected successfully")
-        except Exception as e:
-            logger.error(f"❌ Redis connection failed: {e}")
-            redis_pool = None
-    else:
-        redis_pool = None
-        logger.warning("⚠️ REDIS_URL not set – caching disabled")
 
     # ─── INITIALIZE SAFETY MODULES ────────────────────────────────
     if ConstitutionalAI:
