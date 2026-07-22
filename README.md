@@ -1,34 +1,24 @@
+---
+title: Unknown Verdict
+emoji: ⚖️
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: true
+license: mit
+fullWidth: true
+header: mini
+---
+
 # ⚖️ Unknown Verdict v11.0
-
-<div align="center">
-
-![Unknown Verdict Logo](https://img.shields.io/badge/Unknown_Verdict-⚖️-blue)
-[![Hugging Face](https://img.shields.io/badge/Hugging_Face-Space-yellow)](https://huggingface.co/spaces)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-green)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 **Enterprise AI Legal Advisory Platform with 250 Specialist Personas, 10 Verifiers, and Judge Shakti**
 
-[Live Demo](https://huggingface.co/spaces/your-username/unknown-verdict) · [Documentation](#) · [Report Bug](#) · [Request Feature](#)
-
-</div>
-
----
-
-## 📋 **Table of Contents**
-
-- [Overview](#-overview)
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [API Documentation](#-api-documentation)
-- [Usage Examples](#-usage-examples)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Contact](#-contact)
+[![Hugging Face](https://img.shields.io/badge/Hugging_Face-Space-yellow)](https://huggingface.co/spaces/upamnyu12/LEX)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-green)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 ---
 
@@ -42,8 +32,6 @@
 - **Constitutional AI** - Ethical and constitutional compliance
 - **Edge AI Integration** - On-device AI processing
 - **Enterprise Features** - Multi-tenancy, API keys, white-labeling
-
-Built for law firms, corporate legal departments, and legal professionals seeking AI-powered legal assistance.
 
 ---
 
@@ -78,19 +66,22 @@ Built for law firms, corporate legal departments, and legal professionals seekin
 | **Legal Templates** | 5+ legal document templates | ✅ |
 | **Payments** | Razorpay integration | ✅ |
 
-### 🤝 **Integrations**
-| Integration | Description | Status |
-|-------------|-------------|--------|
-| **Groq** | Lightning-fast LLM inference | ✅ |
-| **OpenAI** | GPT-4 fallback | ✅ |
-| **Gemini** | Google AI | ✅ |
-| **DeepSeek** | Alternative LLM | ✅ |
-| **OpenRouter** | Multi-LLM gateway | ✅ |
-| **Redis** | High-speed caching | ✅ |
-| **PostgreSQL** | Vector database with pgvector | ✅ |
-| **LinkedIn** | Automated posting | ✅ |
-| **Razorpay** | Payment processing | ✅ |
-
 ---
 
-## 🏗️ **Architecture**
+## 🚀 **Quick Start**
+
+### **Try it Now!**
+
+```bash
+# 1. Login to get token
+curl -X POST https://upamnyu12-LEX.hf.space/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"counsel","password":"Password123!"}'
+
+# 2. Ask a legal question
+curl -X POST https://upamnyu12-LEX.hf.space/ask \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d "query=What are my fundamental rights?"
+
+# 3. Check health
+curl https://upamnyu12-LEX.hf.space/health
