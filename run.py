@@ -1,33 +1,42 @@
-# ===================================================================
-# Copyright (c) 2026 THE ADVOCACY A LAW FIRM. All rights reserved.
-# Confidential and proprietary. Do not distribute without a license.
-# LEXSARTHI IS A PROPERTY OR ASSET OF THE ADVOCACY A LAW FIRM.
-# ===================================================================
-# LEXSARTHI v4.0 - RUN SCRIPT
-# ===================================================================
+#!/usr/bin/env python3
+# run.py - Start Unknown Verdict with Verdict Engine
 
-import uvicorn
 import os
+import sys
+import asyncio
+import argparse
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+def main():
+    parser = argparse.ArgumentParser(description="Unknown Verdict - Verdict Engine")
+    parser.add_argument(
+        "--mode",
+        choices=["sports", "hybrid", "eco"],
+        default="hybrid",
+        help="Engine mode: sports (fastest), hybrid (balanced), eco (energy saving)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Import app
+    from app import app
+    
+    # Import engine
+    from verdict_engine import start_verdict_engine
+    
+    print(f"""
+    ════════════════════════════════════════════════════════════════
+      🏎️  UNKNOWN VERDICT - VERDICT ENGINE
+    
+      Mode: {args.mode.upper()}
+      Server: http://0.0.0.0:7860
+      Press CTRL+C to stop
+    ════════════════════════════════════════════════════════════════
+    """)
+    
+    asyncio.run(start_verdict_engine(app, mode=args.mode))
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 7860))
-    host = os.getenv("HOST", "0.0.0.0")
-    
-    print("=" * 80)
-    print("⚖️ LEXSARTHI v4.0 - THE COMPLETE LEGAL OS")
-    print("=" * 80)
-    print("🚀 Starting LexSarthi v4.0 API Server...")
-    print(f"📡 Host: {host}")
-    print(f"🔌 Port: {port}")
-    print(f"🤖 Agents: 73")
-    print(f"🔒 Zero Retention: 24 hours")
-    print("=" * 80)
-    
-    uvicorn.run(
-        "app:app",
-        host=host,
-        port=port,
-        reload=False,
-        workers=1,
-        log_level="info"
-    )
+    main()
