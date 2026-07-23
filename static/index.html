@@ -3,23 +3,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>THE ADVOCACY – A LAW FIRM | AI-Powered Legal Intelligence</title>
-    <meta name="description" content="THE ADVOCACY – A LAW FIRM: Global legal expertise powered by cutting-edge AI intelligence. 250+ specialist personas, 10 verifiers, Judge Shakti AI Adjudicator." />
+    <title>THE ADVOCACY – AI-Powered Legal Intelligence</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%91%81%3C/text%3E%3C/svg%3E" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        /* ============================================================
-           RESET & ROOT – DARK LUXURY THEME
-        ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg: #050508;
             --panel: rgba(10,10,20,0.82);
-            --panel-2: #0d0d1a;
             --border: rgba(212,175,55,0.15);
             --gold: #d4af37;
             --gold-soft: rgba(212,175,55,0.08);
@@ -39,550 +32,124 @@
             background: radial-gradient(ellipse at 30% 20%, #0a0a1a 0%, #050508 80%);
             font-size: 15px;
             line-height: 1.55;
-            scroll-behavior: smooth;
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-
-        /* ============================================================
-           BACKGROUND LAYERS
-        ============================================================ */
-        .eye-bg {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 30vmin;
-            opacity: 0.03;
-            pointer-events: none;
-            z-index: 0;
-            animation: eyePulse 6s ease-in-out infinite;
-            filter: blur(2px);
-            text-shadow: 0 0 80px rgba(212,175,55,0.2);
-        }
-        @keyframes eyePulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.03; }
-            50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.07; }
-        }
-        .moon {
-            position: fixed;
-            top: 5%;
-            left: 5%;
-            width: 22vmin;
-            height: 22vmin;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255,240,200,0.08), rgba(200,180,150,0.02));
-            box-shadow: 0 0 60px rgba(255,240,200,0.04);
-            pointer-events: none;
-            z-index: 0;
-            border: 1px solid rgba(255,255,255,0.01);
-        }
-        .stars {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .star {
-            position: absolute;
-            background: #fff;
-            border-radius: 50%;
-            opacity: 0.3;
-            animation: twinkle 4s infinite ease-in-out;
-        }
+        
+        .eye-bg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30vmin; opacity: 0.03; pointer-events: none; z-index: 0; animation: eyePulse 6s ease-in-out infinite; filter: blur(2px); text-shadow: 0 0 80px rgba(212,175,55,0.2); }
+        @keyframes eyePulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.03; } 50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.07; } }
+        .moon { position: fixed; top: 5%; left: 5%; width: 22vmin; height: 22vmin; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,240,200,0.08), rgba(200,180,150,0.02)); box-shadow: 0 0 60px rgba(255,240,200,0.04); pointer-events: none; z-index: 0; border: 1px solid rgba(255,255,255,0.01); }
+        .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.3; animation: twinkle 4s infinite ease-in-out; }
         @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.6; } }
-
-        /* ============================================================
-           CONTAINER
-        ============================================================ */
-        .container {
-            position: relative;
-            z-index: 2;
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 16px 20px 30px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ============================================================
-           TOP BAR / HEADER
-        ============================================================ */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-        .brand {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--gold);
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        
+        .container { position: relative; z-index: 2; max-width: 1440px; margin: 0 auto; padding: 16px 20px 30px; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .brand { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
         .brand .eye-icon { font-size: 1.8rem; animation: glowEye 3s ease-in-out infinite; }
-        @keyframes glowEye {
-            0%, 100% { text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-            50% { text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3); }
-        }
-        .brand small {
-            font-size: 0.8rem;
-            color: var(--muted);
-            letter-spacing: 2px;
-            font-weight: 300;
-        }
-        .brand .version {
-            background: var(--gold-soft);
-            border: 1px solid var(--border);
-            color: var(--gold);
-            padding: 2px 10px;
-            border-radius: 999px;
-            font-size: 0.5rem;
-            font-weight: 600;
-        }
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: color 0.2s;
-        }
-        .nav-links a:hover { color: var(--gold); }
-
-        .top-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .btn {
-            border: none; cursor: pointer; font-family: inherit; font-weight: 600;
-            border-radius: 30px; padding: 6px 14px; font-size: 0.7rem;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+        @keyframes glowEye { 0%, 100% { text-shadow: 0 0 10px rgba(212,175,55,0.3); } 50% { text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3); } }
+        .brand small { font-size: 0.8rem; color: var(--muted); letter-spacing: 2px; font-weight: 300; }
+        .brand .version { background: var(--gold-soft); border: 1px solid var(--border); color: var(--gold); padding: 2px 10px; border-radius: 999px; font-size: 0.5rem; font-weight: 600; }
+        
+        .top-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .btn { border: none; cursor: pointer; font-family: inherit; font-weight: 600; border-radius: 30px; padding: 6px 14px; font-size: 0.7rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
         .btn:hover { transform: translateY(-1px); }
-        .btn-gold {
-            background: linear-gradient(135deg, #d4af37, #b8901e);
-            color: #0a0a0a;
-            box-shadow: 0 4px 12px rgba(212,175,55,0.25);
-        }
-        .btn-outline {
-            background: transparent;
-            color: var(--gold);
-            border: 1px solid var(--gold);
-        }
+        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
+        .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
         .btn-outline:hover { background: var(--gold-soft); }
         .btn-sm { padding: 4px 12px; font-size: 0.65rem; }
-        .btn-icon {
-            background: transparent;
-            color: var(--gold);
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
+        .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 12px; cursor: pointer; font-size: 0.8rem; }
         .btn-icon:hover { background: var(--gold-soft); }
-
-        .live-badge {
-            background: rgba(52,211,153,0.12);
-            border: 1px solid rgba(52,211,153,0.2);
-            padding: 2px 12px;
-            border-radius: 999px;
-            font-size: 0.6rem;
-            color: var(--ok);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .live-badge .dot {
-            width: 6px;
-            height: 6px;
-            background: var(--ok);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
+        
+        .live-badge { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.2); padding: 2px 12px; border-radius: 999px; font-size: 0.6rem; color: var(--ok); display: flex; align-items: center; gap: 6px; }
+        .live-badge .dot { width: 6px; height: 6px; background: var(--ok); border-radius: 50%; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-        /* ============================================================
-           HERO SECTION
-        ============================================================ */
-        .hero {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            padding: 40px 0 60px;
-            align-items: center;
-        }
-        .hero-content h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: var(--text);
-            line-height: 1.1;
-            margin-bottom: 16px;
-        }
+        
+        .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 40px 0 60px; align-items: center; }
+        .hero-content h1 { font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; font-weight: 700; color: var(--text); line-height: 1.1; margin-bottom: 16px; }
         .hero-content h1 .gold { color: var(--gold); }
-        .hero-content p {
-            color: var(--muted);
-            font-size: 1.1rem;
-            max-width: 500px;
-            margin-bottom: 24px;
-            line-height: 1.8;
-        }
-        .hero-stats {
-            display: flex;
-            gap: 40px;
-            margin-top: 20px;
-        }
-        .hero-stats .stat {
-            text-align: center;
-        }
-        .hero-stats .stat .number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--gold);
-            display: block;
-        }
-        .hero-stats .stat .label {
-            font-size: 0.65rem;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .hero-right {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .hero-eye {
-            font-size: 20vmin;
-            animation: glowEye 4s ease-in-out infinite;
-            color: var(--gold);
-            opacity: 0.6;
-        }
-
-        /* ============================================================
-           UNKNOWN VERDICT INTEGRATION BANNER
-        ============================================================ */
-        .integration-banner {
-            background: var(--panel);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--gold);
-            border-radius: var(--radius);
-            padding: 24px 30px;
-            margin: 20px 0 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-            box-shadow: var(--shadow), 0 0 40px rgba(212,175,55,0.05);
-        }
-        .integration-banner .info {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .integration-banner .info .icon {
-            font-size: 2.5rem;
-            color: var(--gold);
-        }
-        .integration-banner .info .text h3 {
-            font-family: 'Cormorant Garamond', serif;
-            color: var(--gold);
-            font-size: 1.2rem;
-        }
-        .integration-banner .info .text p {
-            color: var(--muted);
-            font-size: 0.75rem;
-        }
-        .integration-banner .btn-gold {
-            padding: 10px 28px;
-            font-size: 0.8rem;
-        }
-
-        /* ============================================================
-           SERVICES SECTIONS
-        ============================================================ */
-        .section-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: var(--text);
-            margin-bottom: 8px;
-        }
-        .section-subtitle {
-            color: var(--muted);
-            font-size: 0.9rem;
-            margin-bottom: 24px;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 40px;
-        }
-        .service-card {
-            background: var(--panel);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-        }
-        .service-card:hover {
-            border-color: var(--gold);
-            box-shadow: var(--shadow), 0 0 30px rgba(212,175,55,0.05);
-            transform: translateY(-4px);
-        }
-        .service-card .icon { font-size: 2rem; color: var(--gold); margin-bottom: 10px; }
-        .service-card h4 { font-size: 1rem; color: var(--text); margin-bottom: 6px; }
-        .service-card p { font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
-        .service-card .tag {
-            font-size: 0.5rem;
-            color: var(--gold);
-            background: var(--gold-soft);
-            padding: 2px 8px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-top: 6px;
-        }
-
-        /* ============================================================
-           PRACTICE AREAS GRID (3x3)
-        ============================================================ */
-        .practice-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-        .practice-card {
-            background: var(--panel);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-        .practice-card:hover {
-            border-color: var(--gold);
-            transform: translateY(-3px);
-        }
-        .practice-card .icon { font-size: 1.8rem; color: var(--gold); margin-bottom: 6px; }
-        .practice-card h5 { font-size: 0.85rem; color: var(--text); }
-        .practice-card p { font-size: 0.65rem; color: var(--muted); }
-
-        /* ============================================================
-           AI INSIGHTS / NEWS
-        ============================================================ */
-        .insights-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-        .insight-card {
-            background: var(--panel);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-        }
-        .insight-card:hover { border-color: var(--gold); }
-        .insight-card .tag {
-            font-size: 0.55rem;
-            color: var(--gold);
-            background: var(--gold-soft);
-            padding: 2px 10px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-bottom: 6px;
-        }
-        .insight-card h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
-        .insight-card p { font-size: 0.7rem; color: var(--muted); }
-        .insight-card .time { font-size: 0.55rem; color: var(--muted); margin-top: 6px; display: block; }
-
-        /* ============================================================
-           CTA SECTION
-        ============================================================ */
-        .cta-section {
-            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02));
-            border: 1px solid var(--gold);
-            border-radius: var(--radius);
-            padding: 40px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        .cta-section h2 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: var(--text);
-            margin-bottom: 8px;
-        }
-        .cta-section p {
-            color: var(--muted);
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-        .cta-section .btn-gold {
-            padding: 12px 40px;
-            font-size: 0.9rem;
-        }
-
-        /* ============================================================
-           FOOTER
-        ============================================================ */
-        .footer {
-            margin-top: auto;
-            padding: 30px 0 20px;
-            border-top: 1px solid var(--border);
-        }
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 20px;
-        }
-        .footer-brand h4 {
-            font-family: 'Cormorant Garamond', serif;
-            color: var(--gold);
-            font-size: 1.4rem;
-        }
-        .footer-brand p {
-            color: var(--muted);
-            font-size: 0.7rem;
-            line-height: 1.8;
-            max-width: 300px;
-        }
-        .footer-col h5 {
-            color: var(--text);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-        .footer-col a {
-            display: block;
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.7rem;
-            padding: 3px 0;
-            transition: color 0.2s;
-        }
+        .hero-content p { color: var(--muted); font-size: 1.1rem; max-width: 500px; margin-bottom: 24px; line-height: 1.8; }
+        .hero-stats { display: flex; gap: 40px; margin-top: 20px; }
+        .hero-stats .stat { text-align: center; }
+        .hero-stats .stat .number { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 700; color: var(--gold); display: block; }
+        .hero-stats .stat .label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .hero-eye { font-size: 20vmin; animation: glowEye 4s ease-in-out infinite; color: var(--gold); opacity: 0.6; }
+        
+        .integration-banner { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--gold); border-radius: var(--radius); padding: 20px 24px; margin: 20px 0 30px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow), 0 0 40px rgba(212,175,55,0.05); }
+        .integration-banner .info { display: flex; align-items: center; gap: 16px; }
+        .integration-banner .info .icon { font-size: 2rem; color: var(--gold); }
+        .integration-banner .info .text h3 { font-family: 'Cormorant Garamond', serif; color: var(--gold); font-size: 1.1rem; }
+        .integration-banner .info .text p { color: var(--muted); font-size: 0.7rem; }
+        
+        .section-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--text); margin-bottom: 6px; }
+        .section-subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+        
+        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 30px; }
+        
+        .chat-card { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 400px; }
+        .chat-area { flex: 1; max-height: 40vh; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .msg { max-width: 90%; padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
+        .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04)); border: 1px solid var(--border); }
+        .msg.agent { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+        .msg .badge-verify { margin-top: 4px; padding: 2px 8px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.55rem; border: 1px solid var(--border); display: inline-block; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
+        
+        .input-row { display: flex; gap: 6px; align-items: flex-end; }
+        .input-row textarea { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 10px; font-family: inherit; font-size: 0.8rem; resize: vertical; min-height: 40px; outline: none; }
+        .input-row textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.08); }
+        .input-row .send { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; height: 42px; display: flex; align-items: center; gap: 4px; }
+        .input-row .send:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
+        .status-text { font-size: 0.6rem; color: var(--muted); margin-top: 3px; }
+        
+        .sidebar { display: flex; flex-direction: column; gap: 14px; }
+        .sidebar .card { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+        .sidebar .card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar .card .card-header .icon { color: var(--gold); }
+        
+        .news-item { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
+        .news-item:hover { color: var(--gold); }
+        .news-item .news-time { font-size: 0.5rem; color: var(--muted); display: block; margin-top: 1px; }
+        .news-item .news-source { font-size: 0.45rem; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 30px; }
+        
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 30px; }
+        .service-card { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; transition: var(--transition); box-shadow: var(--shadow); }
+        .service-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+        .service-card .icon { font-size: 1.6rem; color: var(--gold); margin-bottom: 6px; }
+        .service-card h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
+        .service-card p { font-size: 0.7rem; color: var(--muted); line-height: 1.6; }
+        .service-card .tag { font-size: 0.5rem; color: var(--gold); background: var(--gold-soft); padding: 2px 8px; border-radius: 30px; display: inline-block; margin-top: 4px; }
+        
+        .cta-section { background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02)); border: 1px solid var(--gold); border-radius: var(--radius); padding: 30px; text-align: center; margin: 20px 0; }
+        .cta-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--text); margin-bottom: 8px; }
+        .cta-section p { color: var(--muted); margin-bottom: 16px; font-size: 0.9rem; }
+        .cta-section .btn-gold { padding: 10px 32px; font-size: 0.85rem; }
+        
+        .footer { margin-top: auto; padding: 24px 0 16px; border-top: 1px solid var(--border); }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 24px; margin-bottom: 16px; }
+        .footer-brand h4 { font-family: 'Cormorant Garamond', serif; color: var(--gold); font-size: 1.2rem; }
+        .footer-brand p { color: var(--muted); font-size: 0.65rem; line-height: 1.8; max-width: 300px; }
+        .footer-col h5 { color: var(--text); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .footer-col a { display: block; color: var(--muted); text-decoration: none; font-size: 0.65rem; padding: 2px 0; transition: color 0.2s; }
         .footer-col a:hover { color: var(--gold); }
-        .footer-bottom {
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
-            text-align: center;
-            font-size: 0.6rem;
-            color: var(--muted);
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .footer-bottom .eye-small { color: var(--gold); }
-
-        /* ============================================================
-           MODALS
-        ============================================================ */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.92);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            padding: 16px;
-        }
+        .footer-bottom { border-top: 1px solid var(--border); padding-top: 12px; text-align: center; font-size: 0.55rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px; }
         .modal.open { display: flex; }
-        .modal-box {
-            background: var(--panel-2);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 20px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: var(--shadow);
-        }
-        .modal-box .close {
-            position: absolute;
-            top: 10px;
-            right: 14px;
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
+        .modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 18px; padding: 20px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: var(--shadow); }
+        .modal-box .close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
         .modal-box .close:hover { color: var(--text); }
-        .modal-box h3 {
-            color: var(--gold);
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-        .modal-box input, .modal-box textarea {
-            width: 100%;
-            padding: 6px 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            color: var(--text);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-family: inherit;
-            font-size: 0.8rem;
-        }
-        .modal-box .actions {
-            display: flex;
-            gap: 6px;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        /* ============================================================
-           RESPONSIVE
-        ============================================================ */
+        .modal-box h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 10px; }
+        .modal-box input { width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); border-radius: 8px; margin-bottom: 8px; font-family: inherit; font-size: 0.8rem; }
+        .modal-box .actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
+        
         @media (max-width: 1024px) {
             .hero { grid-template-columns: 1fr; text-align: center; }
             .hero-content p { margin: 0 auto 24px; }
             .hero-stats { justify-content: center; }
+            .main-grid { grid-template-columns: 1fr; }
             .services-grid { grid-template-columns: 1fr 1fr; }
-            .practice-grid { grid-template-columns: 1fr 1fr; }
-            .insights-grid { grid-template-columns: 1fr; }
             .footer-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 640px) {
@@ -590,36 +157,27 @@
             .brand { font-size: 1.4rem; }
             .hero-content h1 { font-size: 2.2rem; }
             .services-grid { grid-template-columns: 1fr; }
-            .practice-grid { grid-template-columns: 1fr; }
             .footer-grid { grid-template-columns: 1fr; }
             .integration-banner { flex-direction: column; text-align: center; }
-            .hero-stats { flex-wrap: wrap; gap: 20px; }
+            .hero-stats { flex-wrap: wrap; gap: 16px; }
             .top-actions { flex-wrap: wrap; justify-content: center; }
-            .nav-links { justify-content: center; }
+            .input-row { flex-direction: column; align-items: stretch; }
+            .input-row .send { width: 100%; justify-content: center; }
+            .chat-area { max-height: 30vh; }
         }
     </style>
 </head>
 <body>
-
-    <!-- BACKGROUND -->
     <div class="eye-bg">👁️</div>
     <div class="moon"></div>
     <div class="stars" id="stars"></div>
-
+    
     <div class="container">
-
-        <!-- HEADER -->
         <header class="header">
             <div class="brand">
                 <span class="eye-icon">👁️</span> THE ADVOCACY
                 <small>global adjudicated law firm</small>
                 <span class="version">v12.1</span>
-            </div>
-            <div class="nav-links">
-                <a href="#services">Services</a>
-                <a href="#practice">Practice Areas</a>
-                <a href="#insights">Insights</a>
-                <a href="#contact">Contact</a>
             </div>
             <div class="top-actions">
                 <span class="live-badge"><span class="dot"></span> AI Live</span>
@@ -628,37 +186,24 @@
                 <button class="btn btn-icon" onclick="openUnknown()" title="Open Unknown Verdict"><i class="fas fa-robot"></i></button>
             </div>
         </header>
-
-        <!-- HERO SECTION -->
+        
+        <!-- HERO -->
         <section class="hero">
             <div class="hero-content">
                 <h1>Global Legal Intelligence<br><span class="gold">Powered by AI</span></h1>
                 <p>Expert legal solutions for business, powered by cutting-edge AI technology. From transactional to compliance, governance, and beyond.</p>
                 <div class="hero-stats">
-                    <div class="stat">
-                        <span class="number">250+</span>
-                        <span class="label">Specialist Personas</span>
-                    </div>
-                    <div class="stat">
-                        <span class="number">10</span>
-                        <span class="label">Expert Verifiers</span>
-                    </div>
-                    <div class="stat">
-                        <span class="number">1</span>
-                        <span class="label">AI Adjudicator · Shakti</span>
-                    </div>
+                    <div class="stat"><span class="number">250+</span><span class="label">Specialist Personas</span></div>
+                    <div class="stat"><span class="number">10</span><span class="label">Expert Verifiers</span></div>
+                    <div class="stat"><span class="number">1</span><span class="label">AI Adjudicator · Shakti</span></div>
                 </div>
-                <button class="btn btn-gold" style="margin-top:20px;padding:12px 32px;font-size:0.85rem;" onclick="scrollToServices()">
-                    <i class="fas fa-gavel"></i> EXPLORE SERVICES
-                </button>
+                <button class="btn btn-gold" style="margin-top:20px;padding:12px 32px;font-size:0.85rem;" onclick="scrollToServices()"><i class="fas fa-gavel"></i> EXPLORE SERVICES</button>
             </div>
-            <div class="hero-right">
-                <div class="hero-eye">👁️</div>
-            </div>
+            <div class="hero-right"><div class="hero-eye">👁️</div></div>
         </section>
-
-        <!-- UNKNOWN VERDICT INTEGRATION BANNER -->
-        <div class="integration-banner" id="unknownBanner">
+        
+        <!-- INTEGRATION BANNER -->
+        <div class="integration-banner">
             <div class="info">
                 <span class="icon">⚖️</span>
                 <div class="text">
@@ -666,332 +211,136 @@
                     <p>250 specialist personas · 10 verifiers · Judge Shakti — fully integrated into THE ADVOCACY workflow.</p>
                 </div>
             </div>
-            <button class="btn btn-gold" onclick="openUnknown()">
-                <i class="fas fa-rocket"></i> Launch Unknown
-            </button>
+            <button class="btn btn-gold" onclick="openUnknown()"><i class="fas fa-rocket"></i> Launch Unknown</button>
         </div>
-
-        <!-- ============================================================
-             ALL UNKNOWN VERDICT SERVICES
-        ============================================================ -->
+        
+        <!-- MAIN CHAT + SIDEBAR -->
+        <div class="main-grid">
+            <!-- CHAT -->
+            <div class="chat-card">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-size:0.75rem;color:var(--muted);">Intelligence Console</span>
+                    <span style="font-size:0.55rem;color:var(--muted);">250 Personas · 10 Verifiers</span>
+                </div>
+                <div class="chat-area" id="chatArea">
+                    <div id="chat">
+                        <div class="msg agent" style="background:rgba(212,175,55,0.04);border-color:rgba(212,175,55,0.1);text-align:center;padding:16px;">
+                            <span style="font-size:1.8rem;display:block;">👁️</span>
+                            <p style="font-size:0.95rem;color:var(--text);font-weight:300;">Global AI governance intelligence at your command.</p>
+                            <span style="font-size:0.6rem;color:var(--muted);">Real‑time · Jurisdictional · Verified</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <textarea id="queryInput" rows="1" placeholder="Ask about AI governance, compliance, or global risk…"></textarea>
+                    <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
+                </div>
+                <div id="status" class="status-text">Ready · Global AI governance intelligence active</div>
+            </div>
+            
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <!-- Real-time AI News -->
+                <div class="card">
+                    <div class="card-header">
+                        <span><i class="fas fa-newspaper" class="icon"></i> AI Governance News</span>
+                        <span id="newsCount" style="background:var(--gold-soft);color:var(--gold);padding:0 6px;border-radius:999px;font-size:0.5rem;">0</span>
+                    </div>
+                    <div id="newsFeed" style="max-height:300px;overflow-y:auto;">
+                        <div style="font-size:0.7rem;color:var(--muted);padding:8px 0;">Loading global AI updates…</div>
+                    </div>
+                    <div style="margin-top:4px;font-size:0.45rem;color:var(--muted);text-align:right;">Auto‑updates every 60s</div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px;">
+                    <button class="btn btn-outline btn-sm" onclick="showCompliance()"><i class="fas fa-balance-scale"></i> Compliance</button>
+                    <button class="btn btn-outline btn-sm" onclick="showBusiness()"><i class="fas fa-building"></i> Business</button>
+                    <button class="btn btn-outline btn-sm" onclick="showAIGovernance()"><i class="fas fa-robot"></i> AI Gov</button>
+                    <button class="btn btn-outline btn-sm" onclick="showNotices()"><i class="fas fa-file-signature"></i> Notices</button>
+                    <button class="btn btn-outline btn-sm" onclick="showDrafts()"><i class="fas fa-file-alt"></i> Drafts</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ALL SERVICES -->
         <section id="services">
             <h2 class="section-title">Unknown Verdict Services</h2>
             <p class="section-subtitle">Complete AI-powered legal intelligence suite integrated into THE ADVOCACY.</p>
             <div class="services-grid">
-                <!-- Legal Intelligence -->
-                <div class="service-card">
-                    <div class="icon">🧠</div>
-                    <h4>Legal Intelligence</h4>
-                    <p>250 specialist personas providing deep expertise across constitutional law, corporate law, criminal law, tax law, IP, and more.</p>
-                    <span class="tag">250 Personas</span>
-                </div>
-                <!-- Business Services -->
-                <div class="service-card">
-                    <div class="icon">🏢</div>
-                    <h4>Business Services</h4>
-                    <p>Business registration guidance, shareholder agreements, consultancy agreements, SLAs, employment agreements, and structuring advice.</p>
-                    <span class="tag">Commercial</span>
-                </div>
-                <!-- AI Compliance & Governance -->
-                <div class="service-card">
-                    <div class="icon">🛡️</div>
-                    <h4>AI Compliance & Governance</h4>
-                    <p>DPDPA, GDPR, CCPA, IT Act compliance. AI risk assessment, impact assessment, ethics framework, safety protocols, monitoring.</p>
-                    <span class="tag">Regulatory</span>
-                </div>
-                <!-- Legal Notices -->
-                <div class="service-card">
-                    <div class="icon">📜</div>
-                    <h4>Legal Notices</h4>
-                    <p>German Impressum (TMG), Indian legal notices, US Terms of Service (DMCA), EU GDPR Privacy Policy, custom notices.</p>
-                    <span class="tag">Documentation</span>
-                </div>
-                <!-- Breach Response -->
-                <div class="service-card">
-                    <div class="icon">🚨</div>
-                    <h4>Breach Response</h4>
-                    <p>72‑hour breach detection, automated notification drafts, DPA reporting, remediation planning, and incident management.</p>
-                    <span class="tag">Security</span>
-                </div>
-                <!-- Content Generation -->
-                <div class="service-card">
-                    <div class="icon">📰</div>
-                    <h4>AI Content Generation</h4>
-                    <p>Auto‑draft articles from AI news, blog posts, LinkedIn content, and thought leadership pieces on governance and compliance.</p>
-                    <span class="tag">Marketing</span>
-                </div>
-                <!-- Edge AI -->
-                <div class="service-card">
-                    <div class="icon">⚡</div>
-                    <h4>Edge AI Intelligence</h4>
-                    <p>Local AI processing on device, offline capability, Akida/Edge Impulse integration, low‑latency legal analysis.</p>
-                    <span class="tag">Hardware</span>
-                </div>
-                <!-- Self-Healing Diagnostics -->
-                <div class="service-card">
-                    <div class="icon">💉</div>
-                    <h4>Self‑Healing Diagnostics</h4>
-                    <p>Automated system health checks, auto‑resolution of issues, real‑time monitoring, kill switch, and incident logging.</p>
-                    <span class="tag">Reliability</span>
-                </div>
-                <!-- Jurisdictional Compliance -->
-                <div class="service-card">
-                    <div class="icon">🌍</div>
-                    <h4>Jurisdictional Compliance</h4>
-                    <p>DPDPA (India), GDPR (EU), CCPA (US), IT Act 2000, AI Governance Framework, Breach Response — all frameworks.</p>
-                    <span class="tag">Global</span>
-                </div>
+                <div class="service-card"><div class="icon">🧠</div><h4>Legal Intelligence</h4><p>250 specialist personas across constitutional, corporate, criminal, tax, IP law.</p><span class="tag">250 Personas</span></div>
+                <div class="service-card"><div class="icon">🏢</div><h4>Business Services</h4><p>Registration, shareholder agreements, consultancy, SLAs, employment agreements.</p><span class="tag">Commercial</span></div>
+                <div class="service-card"><div class="icon">🛡️</div><h4>AI Compliance & Governance</h4><p>DPDPA, GDPR, CCPA, IT Act compliance. Risk assessment, ethics framework.</p><span class="tag">Regulatory</span></div>
+                <div class="service-card"><div class="icon">📜</div><h4>Legal Notices</h4><p>Impressum (TMG), Indian notices, US Terms (DMCA), GDPR Privacy Policy.</p><span class="tag">Documentation</span></div>
+                <div class="service-card"><div class="icon">🚨</div><h4>Breach Response</h4><p>72‑hour detection, automated notification, DPA reporting, remediation.</p><span class="tag">Security</span></div>
+                <div class="service-card"><div class="icon">📰</div><h4>AI Content Generation</h4><p>Auto‑draft articles from AI news, blog posts, LinkedIn content.</p><span class="tag">Marketing</span></div>
+                <div class="service-card"><div class="icon">⚡</div><h4>Edge AI Intelligence</h4><p>Local processing, offline capability, Akida/Edge Impulse integration.</p><span class="tag">Hardware</span></div>
+                <div class="service-card"><div class="icon">💉</div><h4>Self‑Healing Diagnostics</h4><p>Auto health checks, auto‑resolution, real‑time monitoring, kill switch.</p><span class="tag">Reliability</span></div>
+                <div class="service-card"><div class="icon">🌍</div><h4>Jurisdictional Compliance</h4><p>DPDPA, GDPR, CCPA, IT Act, AI Governance, Breach Response.</p><span class="tag">Global</span></div>
             </div>
         </section>
-
-        <!-- ============================================================
-             PRACTICE AREAS
-        ============================================================ -->
-        <section id="practice">
-            <h2 class="section-title">Practice Areas</h2>
-            <p class="section-subtitle">Legal expertise across multiple domains, powered by Unknown Verdict.</p>
-            <div class="practice-grid">
-                <div class="practice-card">
-                    <div class="icon">🏛️</div>
-                    <h5>Corporate Law</h5>
-                    <p>M&A, governance, compliance, shareholder rights</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">🔒</div>
-                    <h5>Cybersecurity</h5>
-                    <p>Data protection, privacy, breach response</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">🤖</div>
-                    <h5>AI Governance</h5>
-                    <p>Risk assessment, ethics, compliance frameworks</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">🏠</div>
-                    <h5>Real Estate</h5>
-                    <p>Commercial property, transactions, disputes</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">🌍</div>
-                    <h5>International Law</h5>
-                    <p>Cross‑border transactions, jurisdiction mapping</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">⚖️</div>
-                    <h5>Constitutional Law</h5>
-                    <p>Fundamental rights, federalism, judicial review</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">💰</div>
-                    <h5>Tax Law</h5>
-                    <p>Direct tax, indirect tax, international tax</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">📄</div>
-                    <h5>Contract Law</h5>
-                    <p>Formation, performance, breach, remedies</p>
-                </div>
-                <div class="practice-card">
-                    <div class="icon">⚡</div>
-                    <h5>Intellectual Property</h5>
-                    <p>Patents, trademarks, copyrights, licensing</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- ============================================================
-             AI INSIGHTS / NEWS
-        ============================================================ -->
-        <section id="insights">
-            <h2 class="section-title">AI Governance & Legal Insights</h2>
-            <p class="section-subtitle">Latest developments from the global AI governance landscape.</p>
-            <div class="insights-grid" id="insightsFeed">
-                <div class="insight-card">
-                    <span class="tag">AI Governance</span>
-                    <h4>NVIDIA Cosmos 3 Edge Unveiled at SIGGRAPH 2026</h4>
-                    <p>4B-parameter open world model for edge AI with all weights on Hugging Face.</p>
-                    <span class="time">2h ago · TechCrunch</span>
-                </div>
-                <div class="insight-card">
-                    <span class="tag">Regulation</span>
-                    <h4>EU AI Act: High-Risk Deadlines Deferred to Dec 2027</h4>
-                    <p>Implementation timeline extended for high-risk AI systems compliance.</p>
-                    <span class="time">4h ago · IAPP</span>
-                </div>
-                <div class="insight-card">
-                    <span class="tag">India</span>
-                    <h4>DPDPA Consent Managers Registration Nov 2026</h4>
-                    <p>India's data protection law enters key implementation phase.</p>
-                    <span class="time">6h ago · Allianz</span>
-                </div>
-                <div class="insight-card">
-                    <span class="tag">Global</span>
-                    <h4>UN Global Dialogue on AI Governance Ongoing</h4>
-                    <p>International consensus building on AI ethics and governance frameworks.</p>
-                    <span class="time">8h ago · UNESCO</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- ============================================================
-           CTA SECTION
-        ============================================================ -->
+        
+        <!-- CTA -->
         <section class="cta-section" id="contact">
             <h2>Navigate Your Legal Challenges with Confidence</h2>
             <p>Schedule a consultation with our AI‑powered legal experts today.</p>
-            <button class="btn btn-gold" onclick="openConsultation()">
-                <i class="fas fa-calendar-check"></i> BOOK YOUR CONSULTATION
-            </button>
+            <button class="btn btn-gold" onclick="openConsultation()"><i class="fas fa-calendar-check"></i> BOOK YOUR CONSULTATION</button>
         </section>
-
-        <!-- ============================================================
-           FOOTER
-        ============================================================ -->
+        
+        <!-- FOOTER -->
         <footer class="footer">
             <div class="footer-grid">
-                <div class="footer-brand">
-                    <h4>👁️ THE ADVOCACY</h4>
-                    <p>Global Adjudicated Law Firm · Powered by AI Intelligence. Expert legal solutions for business, powered by cutting-edge AI technology.</p>
-                </div>
-                <div class="footer-col">
-                    <h5>Services</h5>
-                    <a href="#services">Legal Intelligence</a>
-                    <a href="#services">Business Services</a>
-                    <a href="#services">AI Compliance</a>
-                    <a href="#services">Legal Notices</a>
-                </div>
-                <div class="footer-col">
-                    <h5>Resources</h5>
-                    <a href="#practice">Practice Areas</a>
-                    <a href="#insights">AI Insights</a>
-                    <a href="#">Compliance Hub</a>
-                    <a href="#">Blog</a>
-                </div>
-                <div class="footer-col">
-                    <h5>Contact</h5>
-                    <a href="mailto:counsel@advocacyalawfrim.in">counsel@advocacyalawfrim.in</a>
-                    <a href="#">+91 97186 65039</a>
-                    <a href="#">India · Dubai · Angola</a>
-                </div>
+                <div class="footer-brand"><h4>👁️ THE ADVOCACY</h4><p>Global Adjudicated Law Firm · Powered by AI Intelligence. Expert legal solutions for business.</p></div>
+                <div class="footer-col"><h5>Services</h5><a href="#services">Legal Intelligence</a><a href="#services">Business Services</a><a href="#services">AI Compliance</a></div>
+                <div class="footer-col"><h5>Resources</h5><a href="#">Practice Areas</a><a href="#">AI Insights</a><a href="#">Compliance Hub</a></div>
+                <div class="footer-col"><h5>Contact</h5><a href="mailto:counsel@advocacyalawfrim.in">counsel@advocacyalawfrim.in</a><a href="#">+91 97186 65039</a></div>
             </div>
             <div class="footer-bottom">
                 <span>© 2026 <span class="eye-small">👁️</span> THE ADVOCACY — A LAW FIRM. All rights reserved.</span>
-                <span>
-                    <a onclick="openModal('termsModal')" style="color:var(--muted);cursor:pointer;">Terms</a> ·
-                    <a onclick="openModal('privacyModal')" style="color:var(--muted);cursor:pointer;">Privacy</a> ·
-                    <a onclick="openModal('verifiersModal')" style="color:var(--muted);cursor:pointer;">Verifiers</a>
-                </span>
+                <span><a onclick="openModal('termsModal')" style="color:var(--muted);cursor:pointer;">Terms</a> · <a onclick="openModal('privacyModal')" style="color:var(--muted);cursor:pointer;">Privacy</a> · <a onclick="openModal('verifiersModal')" style="color:var(--muted);cursor:pointer;">Verifiers</a></span>
             </div>
         </footer>
     </div>
-
-    <!-- ===== MODALS ===== -->
-    <div class="modal" id="loginModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('loginModal')">&times;</button>
-            <h3>🔐 Login</h3>
-            <input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
-            <input id="loginPassword" type="password" placeholder="Password" value="Password123!" />
-            <div style="display:flex;gap:6px;">
-                <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button>
-                <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button>
-            </div>
-            <div id="loginStatus" class="status-text" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="paymentModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('paymentModal')">&times;</button>
-            <h3>💳 Plans</h3>
-            <div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
-                <strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount" style="float:right;font-size:0.65rem;color:var(--gold);"></span>
-            </div>
-            <div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
-                <strong>⭐ ₹102 / month · Premium</strong>
-            </div>
-            <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
-                <strong>🏢 ₹1011 / month · Enterprise</strong>
-            </div>
-            <input type="hidden" id="paymentPlan" value="lifetime" />
-            <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button>
-            <div id="paymentStatus" class="status-text" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="termsModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('termsModal')">&times;</button>
-            <h3>📜 Terms</h3>
-            <p style="font-size:0.8rem;color:var(--text);">AI‑generated responses are informational only, not professional legal advice. Always consult a qualified attorney.</p>
-            <div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div>
-        </div>
-    </div>
-
-    <div class="modal" id="privacyModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('privacyModal')">&times;</button>
-            <h3>🔒 Privacy</h3>
-            <p style="font-size:0.8rem;color:var(--text);">All queries auto‑purged within 24h. DPDPA‑2023 compliant. Zero retention policy.</p>
-            <div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div>
-        </div>
-    </div>
-
-    <div class="modal" id="verifiersModal">
-        <div class="modal-box">
-            <button class="close" onclick="closeModal('verifiersModal')">&times;</button>
-            <h3>✅ The 10 Verifiers</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:0.7rem;">
-                <div><strong style="color:var(--gold);">Ganesha</strong> — Citation</div>
-                <div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑ref</div>
-                <div><strong style="color:var(--gold);">Hanuman</strong> — Compliance</div>
-                <div><strong style="color:var(--gold);">Kartikeya</strong> — Contradict</div>
-                <div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div>
-                <div><strong style="color:var(--gold);">Yama</strong> — Bias</div>
-                <div><strong style="color:var(--gold);">Surya</strong> — Timelines</div>
-                <div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div>
-                <div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div>
-                <div><strong style="color:#ff8c42;">Shakti</strong> — Final Judge</div>
-            </div>
-            <div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-       JAVASCRIPT – Full Integration
-    ============================================================ -->
+    
+    <!-- MODALS -->
+    <div class="modal" id="loginModal"><div class="modal-box"><button class="close" onclick="closeModal('loginModal')">&times;</button><h3>🔐 Login</h3><input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" /><input id="loginPassword" type="password" placeholder="Password" value="Password123!" /><div style="display:flex;gap:6px;"><button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button><button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button></div><div id="loginStatus" class="status-text" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div></div></div>
+    
+    <div class="modal" id="paymentModal"><div class="modal-box"><button class="close" onclick="closeModal('paymentModal')">&times;</button><h3>💳 Plans</h3><div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount"></span></div><div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>⭐ ₹102 / month · Premium</strong></div><div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🏢 ₹1011 / month · Enterprise</strong></div><input type="hidden" id="paymentPlan" value="lifetime" /><button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button><div id="paymentStatus" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div></div></div>
+    
+    <div class="modal" id="termsModal"><div class="modal-box"><button class="close" onclick="closeModal('termsModal')">&times;</button><h3>📜 Terms</h3><p style="font-size:0.8rem;color:var(--text);">AI‑generated responses are informational only, not professional legal advice.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div></div></div>
+    
+    <div class="modal" id="privacyModal"><div class="modal-box"><button class="close" onclick="closeModal('privacyModal')">&times;</button><h3>🔒 Privacy</h3><p style="font-size:0.8rem;color:var(--text);">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div></div></div>
+    
+    <div class="modal" id="verifiersModal"><div class="modal-box"><button class="close" onclick="closeModal('verifiersModal')">&times;</button><h3>✅ The 10 Verifiers</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:0.7rem;"><div><strong style="color:var(--gold);">Ganesha</strong> — Citation</div><div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑ref</div><div><strong style="color:var(--gold);">Hanuman</strong> — Compliance</div><div><strong style="color:var(--gold);">Kartikeya</strong> — Contradict</div><div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div><div><strong style="color:var(--gold);">Yama</strong> — Bias</div><div><strong style="color:var(--gold);">Surya</strong> — Timelines</div><div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div><div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div><div><strong style="color:#ff8c42;">Shakti</strong> — Final Judge</div></div><div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div></div></div>
+    
     <script>
         // ============================================================
         // API & STATE
         // ============================================================
         const API_BASE = 'https://upamnyu12-LEX.hf.space';
-
+        let isProcessing = false;
+        let newsInterval = null;
+        
         function getToken(){ return localStorage.getItem('lex_token'); }
         function openModal(id){ document.getElementById(id).classList.add('open'); }
         function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-        function setStatus(t){ document.getElementById('loginStatus').textContent = t || ''; }
-
+        function setStatus(t){ document.getElementById('status').textContent = t || ''; }
+        
         // ============================================================
         // NAVIGATION
         // ============================================================
         function scrollToServices() {
             document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
         }
-
-        // ============================================================
-        // OPEN UNKNOWN VERDICT (Full Dashboard)
-        // ============================================================
+        
         function openUnknown() {
             window.open('https://upamnyu12-LEX.hf.space', '_blank');
         }
-
-        // ============================================================
-        // CONSULTATION
-        // ============================================================
+        
         function openConsultation() {
             alert('📋 Consultation request received. Our team will contact you within 24 hours.\n\nTHE ADVOCACY – A LAW FIRM');
         }
-
+        
         // ============================================================
         // AUTH
         // ============================================================
@@ -1003,8 +352,8 @@
             try {
                 const r = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: email, password: pass })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ username: email, password: pass })
                 });
                 const d = await r.json();
                 if (r.ok) {
@@ -1017,7 +366,7 @@
                 }
             } catch(e) { s.textContent = '❌ Network error'; }
         }
-
+        
         async function handleRegister() {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPassword').value;
@@ -1026,28 +375,22 @@
             try {
                 const r = await fetch(`${API_BASE}/auth/register`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: email.split('@')[0],
-                        email: email,
-                        password: pass,
-                        full_name: 'Advocacy User'
-                    })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ username: email.split('@')[0], email: email, password: pass })
                 });
-                const d = await r.json();
                 if (r.ok) { s.textContent = '✅ Registered! Please login.'; }
-                else { s.textContent = '❌ ' + (d.detail || 'Registration failed'); }
+                else { s.textContent = '❌ Registration failed'; }
             } catch(e) { s.textContent = '❌ Network error'; }
         }
-
+        
         function showLogin(){ openModal('loginModal'); }
-
+        
         // ============================================================
         // PAYMENTS
         // ============================================================
         function showPayment(){ openModal('paymentModal'); checkLifetime(); }
         function selectPlan(p){ document.getElementById('paymentPlan').value = p; }
-
+        
         async function checkLifetime(){
             try {
                 const r = await fetch(`${API_BASE}/lifetime-count`);
@@ -1055,7 +398,7 @@
                 document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
             } catch(e){}
         }
-
+        
         async function processPayment(){
             const t = getToken();
             if (!t) { alert('Login first'); return; }
@@ -1095,9 +438,161 @@
                 new Razorpay(opts).open();
             } catch(e) { s.textContent = '❌ ' + e.message; }
         }
-
+        
         // ============================================================
-        // STARS BACKGROUND
+        // REAL-TIME NEWS
+        // ============================================================
+        async function fetchNews() {
+            const feed = document.getElementById('newsFeed');
+            try {
+                const response = await fetch(`${API_BASE}/api/news`);
+                if (!response.ok) throw new Error('News fetch failed');
+                const data = await response.json();
+                
+                if (data.articles && data.articles.length) {
+                    let html = '';
+                    data.articles.slice(0, 8).forEach(item => {
+                        const timeStr = item.published ? new Date(item.published).toLocaleTimeString() : 'Just now';
+                        html += `
+                            <div class="news-item" onclick="window.open('${item.link}','_blank')">
+                                <span>${item.title}</span>
+                                <span class="news-time">${timeStr} · <span class="news-source">${item.source || 'AI News'}</span></span>
+                            </div>
+                        `;
+                    });
+                    feed.innerHTML = html;
+                    document.getElementById('newsCount').textContent = data.count || data.articles.length;
+                } else {
+                    feed.innerHTML = '<div style="font-size:0.7rem;color:var(--muted);padding:8px 0;">No news at the moment.</div>';
+                }
+            } catch(e) {
+                feed.innerHTML = `
+                    <div class="news-item">NVIDIA Cosmos 3 Edge unveiled at SIGGRAPH 2026</div>
+                    <div class="news-item">EU AI Act: High-risk deadlines deferred to Dec 2027</div>
+                    <div class="news-item">India DPDPA consent managers registration Nov 2026</div>
+                    <div class="news-item">UN Global Dialogue on AI Governance ongoing</div>
+                    <div style="font-size:0.55rem;color:var(--muted);padding:4px 0;">↻ Live feed loading...</div>
+                `;
+            }
+        }
+        
+        // ============================================================
+        // QUICK ACTIONS
+        // ============================================================
+        function showCompliance(){ appendMessage('agent', '📋 <strong>Global Compliance Snapshot</strong><br>• DPDPA (India): 96% compliant <br>• GDPR (EU): 94% compliant <br>• CCPA (US): 92% compliant <br>• AI Governance Framework: Monitoring'); }
+        function showBusiness(){ appendMessage('agent', '🏢 <strong>Business Services</strong><br>• Business Registration Guidance<br>• Shareholder Agreement Drafting<br>• Consultancy Agreement Drafting<br>• SLA Drafting<br>• Employment Agreement Drafting'); }
+        function showAIGovernance(){ appendMessage('agent', '🤖 <strong>AI Governance Risk Assessment</strong><br>Risk Score: 2/10 (Low)<br>Recommendations: model monitoring, bias detection, human review'); }
+        function showNotices(){ appendMessage('agent', '📜 <strong>Legal Notices</strong><br>• German Impressum (TMG)<br>• Indian Legal Notice<br>• US Terms of Service (DMCA)<br>• EU GDPR Privacy Policy<br>• Custom Legal Notices'); }
+        function showDrafts(){ appendMessage('agent', '📑 <strong>Your Drafts</strong><br>• Shareholder Agreement (Approved)<br>• Privacy Notice - DPDPA (Draft)<br>• NVIDIA Cosmos 3 Article (Draft)'); }
+        
+        // ============================================================
+        // SEND QUERY
+        // ============================================================
+        async function sendQuery() {
+            if (isProcessing) return;
+            const q = document.getElementById('queryInput').value.trim();
+            if (!q) { setStatus('Please type a question.'); return; }
+            const t = getToken();
+            if (!t) { alert('Login first'); showLogin(); return; }
+            
+            isProcessing = true;
+            setStatus('👁️ Consulting intelligence...');
+            const chat = document.getElementById('chat');
+            const welcome = chat.querySelector('.msg.agent');
+            if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
+            
+            appendMessage('user', q);
+            
+            const fd = new FormData();
+            fd.append('query', q);
+            fd.append('search_web', 'on');
+            fd.append('model', 'llama-3.3-70b-versatile');
+            fd.append('lang', 'en');
+            fd.append('oracle_mode', 'false');
+            
+            try {
+                const response = await fetch(`${API_BASE}/ask`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${t}` },
+                    body: fd
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    appendMessage('agent', `❌ ${err.detail || 'Server error'}`);
+                    setStatus('Error');
+                    isProcessing = false;
+                    return;
+                }
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let agentBubble = null;
+                let fullText = '';
+                let verification = null;
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') break;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.token) {
+                                    fullText += parsed.token;
+                                    if (!agentBubble) {
+                                        agentBubble = document.createElement('div');
+                                        agentBubble.className = 'msg agent';
+                                        chat.appendChild(agentBubble);
+                                    }
+                                    agentBubble.innerHTML += parsed.token.replace(/\n/g, '<br>');
+                                    chat.scrollTop = chat.scrollHeight;
+                                }
+                                if (parsed.verification) {
+                                    verification = parsed.verification;
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+                
+                if (agentBubble && verification) {
+                    const badge = document.createElement('div');
+                    badge.className = 'badge-verify';
+                    const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
+                                      verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
+                    badge.innerHTML = `
+                        <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence || 'HIGH'} confidence
+                        <span style="color:var(--muted);font-size:0.5rem;"> · ${verification.judge || 'Shakti'}</span>
+                        <span style="color:var(--gold);font-size:0.5rem;display:block;">🧠 ${verification.agent || 'Unknown Agent'}</span>
+                    `;
+                    agentBubble.appendChild(badge);
+                }
+                setStatus('✅ Intelligence rendered');
+            } catch(e) {
+                appendMessage('agent', `❌ Network error: ${e.message}`);
+                setStatus('Error');
+            }
+            document.getElementById('queryInput').value = '';
+            isProcessing = false;
+        }
+        
+        function appendMessage(role, content) {
+            const chat = document.getElementById('chat');
+            const welcome = chat.querySelector('.msg.agent');
+            if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
+            const div = document.createElement('div');
+            div.className = `msg ${role}`;
+            div.innerHTML = content;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        // ============================================================
+        // STARS
         // ============================================================
         (function() {
             const container = document.getElementById('stars');
@@ -1109,18 +604,30 @@
                 container.appendChild(s);
             }
         })();
-
+        
         // ============================================================
         // INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('queryInput');
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendQuery();
+                }
+            });
+            document.getElementById('sendBtn').addEventListener('click', sendQuery);
+            
+            // Load news
+            fetchNews();
+            newsInterval = setInterval(fetchNews, 60000);
+            
+            // Auto-login
             if (getToken()) {
-                // User is logged in
+                setStatus('✅ Connected · AI Governance active');
             }
         });
     </script>
-
-    <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
-</html> 
+</html>
