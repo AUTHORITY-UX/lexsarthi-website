@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Unknown Verdict · Enter the Unknown</title>
-    <meta name="description" content="AI Governance & Legal Intelligence Platform. 250 personas, 10 verifiers, complete jurisdictional compliance." />
+    <title>THE ADVOCACY – A LAW FIRM | AI-Powered Legal Intelligence</title>
+    <meta name="description" content="THE ADVOCACY – A LAW FIRM: Global legal expertise powered by cutting-edge AI intelligence. 250+ specialist personas, 10 verifiers, Judge Shakti AI Adjudicator." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%91%81%3C/text%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,9 +13,9 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         /* ============================================================
-           RESET & ROOT
+           RESET & ROOT – DARK LUXURY THEME
         ============================================================ */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg: #050508;
             --panel: rgba(10,10,20,0.82);
@@ -23,14 +23,13 @@
             --border: rgba(212,175,55,0.15);
             --gold: #d4af37;
             --gold-soft: rgba(212,175,55,0.08);
-            --gold-glow: 0 0 60px rgba(212,175,55,0.1);
             --text: #f0ede8;
             --muted: #8a8a95;
             --ok: #34d399;
             --err: #ff6b6b;
             --shadow: 0 8px 32px rgba(0,0,0,0.6);
             --radius: 16px;
-            --transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         html, body {
             background: var(--bg);
@@ -40,9 +39,7 @@
             background: radial-gradient(ellipse at 30% 20%, #0a0a1a 0%, #050508 80%);
             font-size: 15px;
             line-height: 1.55;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
+            scroll-behavior: smooth;
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
@@ -80,7 +77,6 @@
             pointer-events: none;
             z-index: 0;
             border: 1px solid rgba(255,255,255,0.01);
-            transition: all 2s ease;
         }
         .stars {
             position: fixed;
@@ -98,196 +94,31 @@
         @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.6; } }
 
         /* ============================================================
-           PAGE CONTAINER
+           CONTAINER
         ============================================================ */
-        .page {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-            transition: var(--transition);
-            opacity: 0;
-            pointer-events: none;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .page.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        /* ============================================================
-           PAGE 1 – LANDING
-        ============================================================ */
-        #page-landing {
-            flex-direction: column;
-            gap: 40px;
-        }
-        .landing-eye {
-            font-size: 12vmin;
-            animation: glowEye 3s ease-in-out infinite;
-            color: var(--gold);
-            text-shadow: 0 0 40px rgba(212,175,55,0.2);
-        }
-        @keyframes glowEye {
-            0%, 100% { text-shadow: 0 0 20px rgba(212,175,55,0.3); }
-            50% { text-shadow: 0 0 60px rgba(212,175,55,0.8), 0 0 120px rgba(212,175,55,0.3); }
-        }
-        .landing-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4rem;
-            font-weight: 700;
-            color: var(--gold);
-            letter-spacing: 8px;
-            text-align: center;
-        }
-        .landing-sub {
-            color: var(--muted);
-            font-size: 1.1rem;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            font-weight: 300;
-            text-align: center;
-        }
-        .btn-enter {
-            background: transparent;
-            border: 2px solid var(--gold);
-            color: var(--gold);
-            padding: 16px 48px;
-            border-radius: 60px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 4px;
-            cursor: pointer;
-            transition: all 0.4s ease;
+        .container {
             position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
-        }
-        .btn-enter:hover {
-            background: var(--gold);
-            color: #0a0a0a;
-            box-shadow: 0 0 40px rgba(212,175,55,0.3);
-            transform: scale(1.05);
-        }
-        .btn-enter::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 60px;
-            background: linear-gradient(45deg, transparent, rgba(212,175,55,0.1), transparent);
-            animation: shimmer 3s infinite;
-        }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-        /* ============================================================
-           PAGE 2 – PORTAL (Eye + Verifiers Reveal)
-        ============================================================ */
-        #page-portal {
-            flex-direction: column;
-            gap: 30px;
-            background: radial-gradient(ellipse at center, rgba(10,10,30,0.95), rgba(5,5,8,0.98));
-        }
-        .portal-eye {
-            font-size: 15vmin;
-            animation: portalPulse 2s ease-in-out infinite;
-            color: var(--gold);
-            text-shadow: 0 0 60px rgba(212,175,55,0.3);
-        }
-        @keyframes portalPulse {
-            0%, 100% { transform: scale(1); text-shadow: 0 0 40px rgba(212,175,55,0.2); }
-            50% { transform: scale(1.05); text-shadow: 0 0 80px rgba(212,175,55,0.6), 0 0 160px rgba(212,175,55,0.2); }
-        }
-        .portal-verifiers {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            max-width: 700px;
-            width: 100%;
-            margin: 0 auto;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.8s ease 0.5s;
-        }
-        .portal-verifiers.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .verifier-card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 8px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: default;
-        }
-        .verifier-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 0 30px rgba(212,175,55,0.05);
-            transform: translateY(-2px);
-        }
-        .verifier-card .icon { font-size: 2rem; display: block; margin-bottom: 4px; }
-        .verifier-card .name { font-size: 0.75rem; font-weight: 600; color: var(--gold); }
-        .verifier-card .role { font-size: 0.55rem; color: var(--muted); }
-        .portal-sub {
-            color: var(--muted);
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.6s ease 0.8s;
-        }
-        .portal-sub.show { opacity: 1; }
-        .portal-btn {
-            background: var(--gold);
-            color: #0a0a0a;
-            border: none;
-            padding: 14px 40px;
-            border-radius: 60px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            letter-spacing: 3px;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.6s ease 1s;
-            text-transform: uppercase;
-        }
-        .portal-btn.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .portal-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 40px rgba(212,175,55,0.3);
-        }
-
-        /* ============================================================
-           PAGE 3 – DASHBOARD (Full Features)
-        ============================================================ */
-        #page-dashboard {
-            display: block;
-            padding: 16px 20px 30px;
-            overflow-y: auto;
-            height: 100vh;
-        }
-        .dashboard-container {
+            z-index: 2;
             max-width: 1440px;
             margin: 0 auto;
+            padding: 16px 20px 30px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Dashboard components */
-        .top-bar {
+        /* ============================================================
+           TOP BAR / HEADER
+        ============================================================ */
+        .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
-            margin-bottom: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
         }
         .brand {
             font-family: 'Cormorant Garamond', serif;
@@ -300,7 +131,16 @@
             gap: 10px;
         }
         .brand .eye-icon { font-size: 1.8rem; animation: glowEye 3s ease-in-out infinite; }
-        .brand small { font-size: 0.8rem; color: var(--muted); letter-spacing: 2px; font-weight: 300; }
+        @keyframes glowEye {
+            0%, 100% { text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+            50% { text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3); }
+        }
+        .brand small {
+            font-size: 0.8rem;
+            color: var(--muted);
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
         .brand .version {
             background: var(--gold-soft);
             border: 1px solid var(--border);
@@ -310,7 +150,28 @@
             font-size: 0.5rem;
             font-weight: 600;
         }
-        .top-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--gold); }
+
+        .top-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
         .btn {
             border: none; cursor: pointer; font-family: inherit; font-weight: 600;
             border-radius: 30px; padding: 6px 14px; font-size: 0.7rem;
@@ -320,12 +181,29 @@
             gap: 6px;
         }
         .btn:hover { transform: translateY(-1px); }
-        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
-        .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37, #b8901e);
+            color: #0a0a0a;
+            box-shadow: 0 4px 12px rgba(212,175,55,0.25);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
         .btn-outline:hover { background: var(--gold-soft); }
-        .btn-sm { padding: 4px 10px; font-size: 0.6rem; }
-        .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 10px; cursor: pointer; font-size: 0.7rem; }
+        .btn-sm { padding: 4px 12px; font-size: 0.65rem; }
+        .btn-icon {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
         .btn-icon:hover { background: var(--gold-soft); }
+
         .live-badge {
             background: rgba(52,211,153,0.12);
             border: 1px solid rgba(52,211,153,0.2);
@@ -337,234 +215,301 @@
             align-items: center;
             gap: 6px;
         }
-        .live-badge .dot { width: 6px; height: 6px; background: var(--ok); border-radius: 50%; animation: pulse 1.5s infinite; }
+        .live-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--ok);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-        .dashboard-grid {
+        /* ============================================================
+           HERO SECTION
+        ============================================================ */
+        .hero {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 14px;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px 0 60px;
+            align-items: center;
+        }
+        .hero-content h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.1;
             margin-bottom: 16px;
         }
-        .card {
-            background: var(--panel);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px 16px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
+        .hero-content h1 .gold { color: var(--gold); }
+        .hero-content p {
+            color: var(--muted);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin-bottom: 24px;
+            line-height: 1.8;
         }
-        .card:hover { border-color: rgba(212,175,55,0.3); box-shadow: var(--shadow), var(--gold-glow); }
-        .card-header {
+        .hero-stats {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        .hero-stats .stat {
+            text-align: center;
+        }
+        .hero-stats .stat .number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--gold);
+            display: block;
+        }
+        .hero-stats .stat .label {
             font-size: 0.65rem;
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .card-header .icon { color: var(--gold); font-size: 0.8rem; }
-        .card-value { font-size: 1.3rem; font-weight: 700; font-family: 'Cormorant Garamond', serif; color: var(--text); }
-        .card-sub { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
-        .card .progress-bar { margin-top: 6px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-        .card .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--gold), #b8901e); border-radius: 10px; transition: width 1s ease; }
-        .card .stat-row { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
-        .card .stat-row .stat-item { font-size: 0.6rem; color: var(--muted); }
-        .card .stat-row .stat-item strong { color: var(--text); }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 14px;
-            margin-bottom: 12px;
+        .hero-right {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero-eye {
+            font-size: 20vmin;
+            animation: glowEye 4s ease-in-out infinite;
+            color: var(--gold);
+            opacity: 0.6;
         }
 
-        .chat-card {
+        /* ============================================================
+           UNKNOWN VERDICT INTEGRATION BANNER
+        ============================================================ */
+        .integration-banner {
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius);
+            padding: 24px 30px;
+            margin: 20px 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: var(--shadow), 0 0 40px rgba(212,175,55,0.05);
+        }
+        .integration-banner .info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .integration-banner .info .icon {
+            font-size: 2.5rem;
+            color: var(--gold);
+        }
+        .integration-banner .info .text h3 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--gold);
+            font-size: 1.2rem;
+        }
+        .integration-banner .info .text p {
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+        .integration-banner .btn-gold {
+            padding: 10px 28px;
+            font-size: 0.8rem;
+        }
+
+        /* ============================================================
+           SERVICES SECTIONS
+        ============================================================ */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        .service-card {
             background: var(--panel);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 14px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            min-height: 380px;
-        }
-        .chat-area {
-            flex: 1;
-            max-height: 38vh;
-            overflow-y: auto;
-            margin-bottom: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .msg {
-            max-width: 90%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            animation: fadeIn 0.3s ease;
-        }
-        .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04)); border: 1px solid var(--border); }
-        .msg.agent { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
-        .msg .badge-verify {
-            margin-top: 4px;
-            padding: 2px 8px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            font-size: 0.55rem;
-            border: 1px solid var(--border);
-            display: inline-block;
-        }
-        .msg .provider-tag {
-            font-size: 0.5rem;
-            background: rgba(255,255,255,0.05);
-            padding: 2px 8px;
-            border-radius: 30px;
-            margin-top: 3px;
-            display: inline-block;
-            color: var(--muted);
-        }
-        .msg .msg-actions { margin-top: 4px; display: flex; gap: 4px; justify-content: flex-end; }
-        .msg .msg-actions button {
-            background: transparent;
-            border: none;
-            color: var(--muted);
-            cursor: pointer;
-            font-size: 0.5rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        .msg .msg-actions button:hover { background: var(--gold-soft); color: var(--gold); }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
-
-        .typing { display: none; align-items: center; gap: 6px; padding: 3px 6px; color: var(--muted); font-size: 0.7rem; }
-        .typing.active { display: flex; }
-        .typing .dots span {
-            display: inline-block; width: 4px; height: 4px;
-            background: var(--gold); border-radius: 50%; margin: 0 2px;
-            animation: dotBounce 1.4s infinite;
-        }
-        .typing .dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing .dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dotBounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
-
-        .input-row { display: flex; gap: 6px; align-items: flex-end; }
-        .input-row textarea {
-            flex: 1;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 0.8rem;
-            resize: vertical;
-            min-height: 40px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .input-row textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.08); }
-        .input-row .send {
-            background: linear-gradient(135deg, #d4af37, #b8901e);
-            color: #0a0a0a;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .input-row .send:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
-
-        .input-tools { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
-        .input-tools .tool-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--muted);
-            padding: 2px 8px;
-            border-radius: 30px;
-            font-size: 0.6rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-        .input-tools .tool-btn:hover { background: var(--gold-soft); color: var(--gold); }
-        .file-preview { display: none; margin-top: 4px; padding: 2px 10px; background: var(--gold-soft); border-radius: 30px; font-size: 0.6rem; color: var(--gold); align-items: center; gap: 6px; }
-        .file-preview.show { display: flex; }
-        .file-preview .remove { cursor: pointer; color: var(--muted); font-size: 0.6rem; }
-        .status-text { font-size: 0.6rem; color: var(--muted); margin-top: 3px; }
-
-        .sidebar { display: flex; flex-direction: column; gap: 14px; }
-        .sidebar .card { padding: 12px 14px; }
-        .sidebar .card .card-header { margin-bottom: 4px; }
-        .sidebar .card .card-header .badge-count {
-            background: var(--gold-soft);
-            color: var(--gold);
-            padding: 0 6px;
-            border-radius: 999px;
-            font-size: 0.5rem;
-        }
-        .news-item {
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            font-size: 0.7rem;
-            cursor: pointer;
+            padding: 20px;
             transition: var(--transition);
+            box-shadow: var(--shadow);
         }
-        .news-item:hover { color: var(--gold); }
-        .news-item .news-time { font-size: 0.5rem; color: var(--muted); display: block; margin-top: 1px; }
-        .news-item .news-source { font-size: 0.45rem; color: var(--gold); background: var(--gold-soft); padding: 1px 5px; border-radius: 30px; }
-
-        .governance-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 3px 0;
-            font-size: 0.7rem;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+        .service-card:hover {
+            border-color: var(--gold);
+            box-shadow: var(--shadow), 0 0 30px rgba(212,175,55,0.05);
+            transform: translateY(-4px);
         }
-        .governance-item .status { font-size: 0.55rem; padding: 1px 6px; border-radius: 30px; }
-        .status.ok { background: rgba(52,211,153,0.12); color: var(--ok); }
-        .status.warn { background: rgba(212,175,55,0.12); color: var(--gold); }
-        .status.err { background: rgba(255,107,107,0.12); color: var(--err); }
+        .service-card .icon { font-size: 2rem; color: var(--gold); margin-bottom: 10px; }
+        .service-card h4 { font-size: 1rem; color: var(--text); margin-bottom: 6px; }
+        .service-card p { font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
+        .service-card .tag {
+            font-size: 0.5rem;
+            color: var(--gold);
+            background: var(--gold-soft);
+            padding: 2px 8px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 6px;
+        }
 
+        /* ============================================================
+           PRACTICE AREAS GRID (3x3)
+        ============================================================ */
+        .practice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .practice-card {
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .practice-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-3px);
+        }
+        .practice-card .icon { font-size: 1.8rem; color: var(--gold); margin-bottom: 6px; }
+        .practice-card h5 { font-size: 0.85rem; color: var(--text); }
+        .practice-card p { font-size: 0.65rem; color: var(--muted); }
+
+        /* ============================================================
+           AI INSIGHTS / NEWS
+        ============================================================ */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .insight-card {
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+        .insight-card:hover { border-color: var(--gold); }
+        .insight-card .tag {
+            font-size: 0.55rem;
+            color: var(--gold);
+            background: var(--gold-soft);
+            padding: 2px 10px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .insight-card h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
+        .insight-card p { font-size: 0.7rem; color: var(--muted); }
+        .insight-card .time { font-size: 0.55rem; color: var(--muted); margin-top: 6px; display: block; }
+
+        /* ============================================================
+           CTA SECTION
+        ============================================================ */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02));
+            border: 1px solid var(--gold);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .cta-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .cta-section p {
+            color: var(--muted);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        .cta-section .btn-gold {
+            padding: 12px 40px;
+            font-size: 0.9rem;
+        }
+
+        /* ============================================================
+           FOOTER
+        ============================================================ */
         .footer {
             margin-top: auto;
-            padding: 8px 0;
+            padding: 30px 0 20px;
             border-top: 1px solid var(--border);
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .footer-brand h4 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--gold);
+            font-size: 1.4rem;
+        }
+        .footer-brand p {
+            color: var(--muted);
+            font-size: 0.7rem;
+            line-height: 1.8;
+            max-width: 300px;
+        }
+        .footer-col h5 {
+            color: var(--text);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .footer-col a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            padding: 3px 0;
+            transition: color 0.2s;
+        }
+        .footer-col a:hover { color: var(--gold); }
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
             text-align: center;
-            font-size: 0.55rem;
+            font-size: 0.6rem;
             color: var(--muted);
             display: flex;
+            justify-content: space-between;
             flex-wrap: wrap;
-            justify-content: center;
             gap: 10px;
         }
-        .footer a { color: var(--muted); cursor: pointer; text-decoration: none; }
-        .footer a:hover { color: var(--gold); }
-        .footer .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 2px; }
-        .footer .badge {
-            background: rgba(52,211,153,0.06);
-            border: 1px solid rgba(52,211,153,0.15);
-            color: var(--ok);
-            padding: 1px 8px;
-            border-radius: 999px;
-            font-size: 0.45rem;
-        }
-        .footer .badge.gold { border-color: rgba(212,175,55,0.2); color: var(--gold); }
+        .footer-bottom .eye-small { color: var(--gold); }
 
         /* ============================================================
            MODALS
@@ -604,7 +549,12 @@
             cursor: pointer;
         }
         .modal-box .close:hover { color: var(--text); }
-        .modal-box h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 10px; }
+        .modal-box h3 {
+            color: var(--gold);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
         .modal-box input, .modal-box textarea {
             width: 100%;
             padding: 6px 10px;
@@ -616,284 +566,431 @@
             font-family: inherit;
             font-size: 0.8rem;
         }
-        .modal-box .actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
-        .modal-box .checkbox-group { margin: 6px 0; display: flex; align-items: center; gap: 6px; }
-        .modal-box .checkbox-group label { font-size: 0.75rem; color: var(--text); }
+        .modal-box .actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
 
         /* ============================================================
            RESPONSIVE
         ============================================================ */
         @media (max-width: 1024px) {
-            .dashboard-grid { grid-template-columns: 1fr 1fr; }
-            .main-grid { grid-template-columns: 1fr; }
-            .portal-verifiers { grid-template-columns: repeat(3, 1fr); }
+            .hero { grid-template-columns: 1fr; text-align: center; }
+            .hero-content p { margin: 0 auto 24px; }
+            .hero-stats { justify-content: center; }
+            .services-grid { grid-template-columns: 1fr 1fr; }
+            .practice-grid { grid-template-columns: 1fr 1fr; }
+            .insights-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 640px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .top-bar { flex-direction: column; align-items: stretch; }
-            .brand { font-size: 1.2rem; }
-            .landing-title { font-size: 2.2rem; }
-            .portal-verifiers { grid-template-columns: repeat(2, 1fr); }
-            .input-row { flex-direction: column; align-items: stretch; }
-            .input-row .send { width: 100%; justify-content: center; height: 38px; }
-            .chat-area { max-height: 30vh; }
-            .page { padding: 10px; }
-            #page-dashboard { padding: 10px; }
+            .header { flex-direction: column; align-items: stretch; }
+            .brand { font-size: 1.4rem; }
+            .hero-content h1 { font-size: 2.2rem; }
+            .services-grid { grid-template-columns: 1fr; }
+            .practice-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .integration-banner { flex-direction: column; text-align: center; }
+            .hero-stats { flex-wrap: wrap; gap: 20px; }
+            .top-actions { flex-wrap: wrap; justify-content: center; }
+            .nav-links { justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== BACKGROUND LAYERS ===== -->
+    <!-- BACKGROUND -->
     <div class="eye-bg">👁️</div>
-    <div class="moon" id="moon"></div>
+    <div class="moon"></div>
     <div class="stars" id="stars"></div>
 
-    <!-- ================================================================
-         PAGE 1 – LANDING
-    ================================================================ -->
-    <div id="page-landing" class="page active">
-        <div class="landing-eye">👁️</div>
-        <div class="landing-title">UNKNOWN</div>
-        <div class="landing-sub">Verdict Engine · AI Governance</div>
-        <button class="btn-enter" onclick="enterPortal()">Enter the Unknown</button>
-        <div style="position:absolute;bottom:20px;color:var(--muted);font-size:0.6rem;letter-spacing:2px;">
-            ⚖️ 250 Specialists · 10 Verifiers · Global Compliance
-        </div>
-    </div>
+    <div class="container">
 
-    <!-- ================================================================
-         PAGE 2 – PORTAL
-    ================================================================ -->
-    <div id="page-portal" class="page">
-        <div class="portal-eye">👁️</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold);letter-spacing:4px;opacity:0;transition:opacity 0.6s ease 0.2s;" id="portalTitle">The Jury Awakens</div>
-        <div class="portal-verifiers" id="verifiersGrid">
-            <div class="verifier-card"><span class="icon">🐘</span><div class="name">Ganesha</div><div class="role">Citation & Logic</div></div>
-            <div class="verifier-card"><span class="icon">🦢</span><div class="name">Saraswati</div><div class="role">Cross‑reference</div></div>
-            <div class="verifier-card"><span class="icon">🐒</span><div class="name">Hanuman</div><div class="role">Global Compliance</div></div>
-            <div class="verifier-card"><span class="icon">⚔️</span><div class="name">Kartikeya</div><div class="role">Contradictions</div></div>
-            <div class="verifier-card"><span class="icon">⚡</span><div class="name">Indra</div><div class="role">Jurisdiction</div></div>
-            <div class="verifier-card"><span class="icon">⚖️</span><div class="name">Yama</div><div class="role">Bias & Neutrality</div></div>
-            <div class="verifier-card"><span class="icon">☀️</span><div class="name">Surya</div><div class="role">Timelines</div></div>
-            <div class="verifier-card"><span class="icon">🌙</span><div class="name">Chandra</div><div class="role">Precedents</div></div>
-            <div class="verifier-card"><span class="icon">💨</span><div class="name">Vayu</div><div class="role">PII Filter</div></div>
-            <div class="verifier-card"><span class="icon" style="color:#ff8c42;">🔥</span><div class="name" style="color:#ff8c42;">Shakti</div><div class="role">Final Judge</div></div>
-        </div>
-        <div class="portal-sub" id="portalSub">⚖️ Ten verifiers. One verdict. Zero compromise.</div>
-        <button class="portal-btn" id="portalBtn" onclick="enterDashboard()">Access the Unknown</button>
-    </div>
+        <!-- HEADER -->
+        <header class="header">
+            <div class="brand">
+                <span class="eye-icon">👁️</span> THE ADVOCACY
+                <small>global adjudicated law firm</small>
+                <span class="version">v12.1</span>
+            </div>
+            <div class="nav-links">
+                <a href="#services">Services</a>
+                <a href="#practice">Practice Areas</a>
+                <a href="#insights">Insights</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="top-actions">
+                <span class="live-badge"><span class="dot"></span> AI Live</span>
+                <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
+                <button class="btn btn-gold btn-sm" onclick="showPayment()">Subscribe</button>
+                <button class="btn btn-icon" onclick="openUnknown()" title="Open Unknown Verdict"><i class="fas fa-robot"></i></button>
+            </div>
+        </header>
 
-    <!-- ================================================================
-         PAGE 3 – DASHBOARD
-    ================================================================ -->
-    <div id="page-dashboard" class="page">
-        <div class="dashboard-container">
-
-            <!-- TOP BAR -->
-            <div class="top-bar">
-                <div class="brand">
-                    <span class="eye-icon">👁️</span> UNKNOWN
-                    <small>verdict engine</small>
-                    <span class="version">v12.1</span>
-                    <span id="premiumBadge" style="display:none;background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold);padding:1px 8px;border-radius:999px;font-size:0.45rem;font-weight:600;">⭐ PREMIUM</span>
+        <!-- HERO SECTION -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Global Legal Intelligence<br><span class="gold">Powered by AI</span></h1>
+                <p>Expert legal solutions for business, powered by cutting-edge AI technology. From transactional to compliance, governance, and beyond.</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="number">250+</span>
+                        <span class="label">Specialist Personas</span>
+                    </div>
+                    <div class="stat">
+                        <span class="number">10</span>
+                        <span class="label">Expert Verifiers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="number">1</span>
+                        <span class="label">AI Adjudicator · Shakti</span>
+                    </div>
                 </div>
-                <div class="top-actions">
-                    <span class="live-badge"><span class="dot"></span> Live · AI Gov</span>
-                    <button class="btn btn-icon" onclick="showDomainHealth()"><i class="fas fa-heartbeat"></i></button>
-                    <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
-                    <button class="btn btn-gold btn-sm" onclick="showPayment()">Subscribe</button>
-                    <button class="btn btn-icon" onclick="openSettings()"><i class="fas fa-cog"></i></button>
+                <button class="btn btn-gold" style="margin-top:20px;padding:12px 32px;font-size:0.85rem;" onclick="scrollToServices()">
+                    <i class="fas fa-gavel"></i> EXPLORE SERVICES
+                </button>
+            </div>
+            <div class="hero-right">
+                <div class="hero-eye">👁️</div>
+            </div>
+        </section>
+
+        <!-- UNKNOWN VERDICT INTEGRATION BANNER -->
+        <div class="integration-banner" id="unknownBanner">
+            <div class="info">
+                <span class="icon">⚖️</span>
+                <div class="text">
+                    <h3>Unknown Verdict Engine</h3>
+                    <p>250 specialist personas · 10 verifiers · Judge Shakti — fully integrated into THE ADVOCACY workflow.</p>
                 </div>
             </div>
-
-            <!-- DASHBOARD GRID -->
-            <div class="dashboard-grid">
-                <div class="card">
-                    <div class="card-header"><span>Active Agents</span><span class="icon"><i class="fas fa-users"></i></span></div>
-                    <div class="card-value">250</div>
-                    <div class="card-sub">Specialist personas · 10 verifiers</div>
-                    <div class="progress-bar"><div class="fill" style="width:100%"></div></div>
-                    <div class="stat-row">
-                        <span class="stat-item">Judge Shakti: <strong>Active</strong></span>
-                        <span class="stat-item">Jury: <strong>10/10</strong></span>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><span>Compliance Status</span><span class="icon"><i class="fas fa-shield-alt"></i></span></div>
-                    <div class="card-value" id="complianceScore">96%</div>
-                    <div class="card-sub">DPDPA · GDPR · CCPA · AI Gov</div>
-                    <div class="progress-bar"><div class="fill" style="width:96%"></div></div>
-                    <div class="stat-row">
-                        <span class="stat-item">DPDPA: <strong style="color:var(--ok)">✅ Compliant</strong></span>
-                        <span class="stat-item">AI Gov: <strong style="color:var(--gold)">⚠️ Monitoring</strong></span>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><span>Risk & Breach</span><span class="icon"><i class="fas fa-exclamation-triangle"></i></span></div>
-                    <div class="card-value" id="riskScore">Low (2/10)</div>
-                    <div class="card-sub">Last scan: <span id="lastScanTime">Just now</span></div>
-                    <div class="progress-bar"><div class="fill" style="width:20%;background:var(--ok);"></div></div>
-                    <div class="stat-row">
-                        <span class="stat-item">Breaches: <strong id="breachCount">0</strong></span>
-                        <span class="stat-item">HITL Pending: <strong id="hitlCount">0</strong></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MAIN GRID -->
-            <div class="main-grid">
-
-                <!-- CHAT -->
-                <div class="chat-card">
-                    <div class="card-header">
-                        <span>Legal Intelligence Console</span>
-                        <span style="font-size:0.55rem;color:var(--muted);">250 Agents · 10 Verifiers</span>
-                    </div>
-                    <div class="chat-area" id="chatArea">
-                        <div id="chat">
-                            <div class="msg agent" style="background:rgba(212,175,55,0.04);border-color:rgba(212,175,55,0.1);text-align:center;padding:16px;">
-                                <span style="font-size:1.8rem;display:block;">👁️</span>
-                                <p style="font-size:0.95rem;color:var(--text);font-weight:300;">Ask anything — the eye sees all.</p>
-                                <span style="font-size:0.6rem;color:var(--muted);">250 specialists · 10 verifiers · Real‑time governance</span>
-                            </div>
-                        </div>
-                        <div class="typing" id="typing">
-                            <span>Consulting jury & verifiers</span>
-                            <div class="dots"><span></span><span></span><span></span></div>
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <textarea id="queryInput" rows="1" placeholder="Ask a legal or governance question…"></textarea>
-                        <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
-                    </div>
-                    <div class="input-tools">
-                        <button class="tool-btn" onclick="document.getElementById('pdfUpload').click()"><i class="fas fa-paperclip"></i> Attach</button>
-                        <input type="file" id="pdfUpload" accept=".pdf,.docx,.jpg,.png" multiple style="display:none" onchange="handleFileUpload(this)" />
-                        <button class="tool-btn" id="voiceBtn" onclick="startVoice()"><i class="fas fa-microphone"></i> Voice</button>
-                        <div id="filePreview" class="file-preview"><span id="filePreviewText"></span><span class="remove" onclick="clearFilePreview()">✕</span></div>
-                    </div>
-                    <div id="status" class="status-text">Ready · Governance active</div>
-                </div>
-
-                <!-- SIDEBAR -->
-                <div class="sidebar">
-
-                    <!-- Jurisdictional Compliance -->
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-globe" style="color:var(--gold);margin-right:4px;"></i>Jurisdictional Compliance</span>
-                            <span style="font-size:0.5rem;color:var(--muted);">All Frameworks</span>
-                        </div>
-                        <div id="jurisdictionStatus">
-                            <div class="governance-item"><span>🇮🇳 DPDPA (India) 2023</span><span class="status ok">✅ Compliant</span></div>
-                            <div class="governance-item"><span>🇪🇺 GDPR (EU) 2018</span><span class="status ok">✅ Compliant</span></div>
-                            <div class="governance-item"><span>🇺🇸 CCPA (California) 2020</span><span class="status ok">✅ Compliant</span></div>
-                            <div class="governance-item"><span>🇮🇳 IT Act 2000</span><span class="status ok">✅ Compliant</span></div>
-                            <div class="governance-item"><span>🇩🇪 TMG (Impressum)</span><span class="status ok">✅ Ready</span></div>
-                            <div class="governance-item"><span>🌐 AI Governance Framework</span><span class="status warn">⚠️ Review</span></div>
-                            <div class="governance-item"><span>🛡️ Breach Response</span><span class="status ok">✅ Active</span></div>
-                        </div>
-                    </div>
-
-                    <!-- AI News -->
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-newspaper" style="color:var(--gold);margin-right:4px;"></i>AI Governance News</span>
-                            <span class="badge-count" id="newsCount">0</span>
-                        </div>
-                        <div id="newsFeed" style="max-height:160px;overflow-y:auto;">
-                            <div style="font-size:0.7rem;color:var(--muted);padding:4px 0;">Loading latest AI updates...</div>
-                        </div>
-                        <div style="margin-top:4px;font-size:0.45rem;color:var(--muted);text-align:right;">Auto‑updates every 60s</div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="card" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px;">
-                        <button class="btn btn-outline btn-sm" onclick="showCompliance()"><i class="fas fa-balance-scale"></i> Compliance</button>
-                        <button class="btn btn-outline btn-sm" onclick="showBusiness()"><i class="fas fa-building"></i> Business</button>
-                        <button class="btn btn-outline btn-sm" onclick="showAIGovernance()"><i class="fas fa-robot"></i> AI Gov</button>
-                        <button class="btn btn-outline btn-sm" onclick="showNotices()"><i class="fas fa-file-signature"></i> Notices</button>
-                        <button class="btn btn-outline btn-sm" onclick="showDrafts()"><i class="fas fa-file-alt"></i> Drafts</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FOOTER -->
-            <footer class="footer">
-                <span>© 2026 <span style="color:var(--gold);">👁️</span> THE ADVOCACY — A LAW FIRM</span>
-                <span>·</span>
-                <a onclick="openModal('termsModal')">Terms</a>
-                <a onclick="openModal('privacyModal')">Privacy</a>
-                <a onclick="openModal('aboutModal')">About</a>
-                <a onclick="openModal('verifiersModal')">Verifiers</a>
-                <span style="color:var(--muted);">·</span>
-                <span style="color:var(--gold);">v12.1 · Enterprise AI Governance</span>
-            </footer>
+            <button class="btn btn-gold" onclick="openUnknown()">
+                <i class="fas fa-rocket"></i> Launch Unknown
+            </button>
         </div>
+
+        <!-- ============================================================
+             ALL UNKNOWN VERDICT SERVICES
+        ============================================================ -->
+        <section id="services">
+            <h2 class="section-title">Unknown Verdict Services</h2>
+            <p class="section-subtitle">Complete AI-powered legal intelligence suite integrated into THE ADVOCACY.</p>
+            <div class="services-grid">
+                <!-- Legal Intelligence -->
+                <div class="service-card">
+                    <div class="icon">🧠</div>
+                    <h4>Legal Intelligence</h4>
+                    <p>250 specialist personas providing deep expertise across constitutional law, corporate law, criminal law, tax law, IP, and more.</p>
+                    <span class="tag">250 Personas</span>
+                </div>
+                <!-- Business Services -->
+                <div class="service-card">
+                    <div class="icon">🏢</div>
+                    <h4>Business Services</h4>
+                    <p>Business registration guidance, shareholder agreements, consultancy agreements, SLAs, employment agreements, and structuring advice.</p>
+                    <span class="tag">Commercial</span>
+                </div>
+                <!-- AI Compliance & Governance -->
+                <div class="service-card">
+                    <div class="icon">🛡️</div>
+                    <h4>AI Compliance & Governance</h4>
+                    <p>DPDPA, GDPR, CCPA, IT Act compliance. AI risk assessment, impact assessment, ethics framework, safety protocols, monitoring.</p>
+                    <span class="tag">Regulatory</span>
+                </div>
+                <!-- Legal Notices -->
+                <div class="service-card">
+                    <div class="icon">📜</div>
+                    <h4>Legal Notices</h4>
+                    <p>German Impressum (TMG), Indian legal notices, US Terms of Service (DMCA), EU GDPR Privacy Policy, custom notices.</p>
+                    <span class="tag">Documentation</span>
+                </div>
+                <!-- Breach Response -->
+                <div class="service-card">
+                    <div class="icon">🚨</div>
+                    <h4>Breach Response</h4>
+                    <p>72‑hour breach detection, automated notification drafts, DPA reporting, remediation planning, and incident management.</p>
+                    <span class="tag">Security</span>
+                </div>
+                <!-- Content Generation -->
+                <div class="service-card">
+                    <div class="icon">📰</div>
+                    <h4>AI Content Generation</h4>
+                    <p>Auto‑draft articles from AI news, blog posts, LinkedIn content, and thought leadership pieces on governance and compliance.</p>
+                    <span class="tag">Marketing</span>
+                </div>
+                <!-- Edge AI -->
+                <div class="service-card">
+                    <div class="icon">⚡</div>
+                    <h4>Edge AI Intelligence</h4>
+                    <p>Local AI processing on device, offline capability, Akida/Edge Impulse integration, low‑latency legal analysis.</p>
+                    <span class="tag">Hardware</span>
+                </div>
+                <!-- Self-Healing Diagnostics -->
+                <div class="service-card">
+                    <div class="icon">💉</div>
+                    <h4>Self‑Healing Diagnostics</h4>
+                    <p>Automated system health checks, auto‑resolution of issues, real‑time monitoring, kill switch, and incident logging.</p>
+                    <span class="tag">Reliability</span>
+                </div>
+                <!-- Jurisdictional Compliance -->
+                <div class="service-card">
+                    <div class="icon">🌍</div>
+                    <h4>Jurisdictional Compliance</h4>
+                    <p>DPDPA (India), GDPR (EU), CCPA (US), IT Act 2000, AI Governance Framework, Breach Response — all frameworks.</p>
+                    <span class="tag">Global</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             PRACTICE AREAS
+        ============================================================ -->
+        <section id="practice">
+            <h2 class="section-title">Practice Areas</h2>
+            <p class="section-subtitle">Legal expertise across multiple domains, powered by Unknown Verdict.</p>
+            <div class="practice-grid">
+                <div class="practice-card">
+                    <div class="icon">🏛️</div>
+                    <h5>Corporate Law</h5>
+                    <p>M&A, governance, compliance, shareholder rights</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">🔒</div>
+                    <h5>Cybersecurity</h5>
+                    <p>Data protection, privacy, breach response</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">🤖</div>
+                    <h5>AI Governance</h5>
+                    <p>Risk assessment, ethics, compliance frameworks</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">🏠</div>
+                    <h5>Real Estate</h5>
+                    <p>Commercial property, transactions, disputes</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">🌍</div>
+                    <h5>International Law</h5>
+                    <p>Cross‑border transactions, jurisdiction mapping</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">⚖️</div>
+                    <h5>Constitutional Law</h5>
+                    <p>Fundamental rights, federalism, judicial review</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">💰</div>
+                    <h5>Tax Law</h5>
+                    <p>Direct tax, indirect tax, international tax</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">📄</div>
+                    <h5>Contract Law</h5>
+                    <p>Formation, performance, breach, remedies</p>
+                </div>
+                <div class="practice-card">
+                    <div class="icon">⚡</div>
+                    <h5>Intellectual Property</h5>
+                    <p>Patents, trademarks, copyrights, licensing</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             AI INSIGHTS / NEWS
+        ============================================================ -->
+        <section id="insights">
+            <h2 class="section-title">AI Governance & Legal Insights</h2>
+            <p class="section-subtitle">Latest developments from the global AI governance landscape.</p>
+            <div class="insights-grid" id="insightsFeed">
+                <div class="insight-card">
+                    <span class="tag">AI Governance</span>
+                    <h4>NVIDIA Cosmos 3 Edge Unveiled at SIGGRAPH 2026</h4>
+                    <p>4B-parameter open world model for edge AI with all weights on Hugging Face.</p>
+                    <span class="time">2h ago · TechCrunch</span>
+                </div>
+                <div class="insight-card">
+                    <span class="tag">Regulation</span>
+                    <h4>EU AI Act: High-Risk Deadlines Deferred to Dec 2027</h4>
+                    <p>Implementation timeline extended for high-risk AI systems compliance.</p>
+                    <span class="time">4h ago · IAPP</span>
+                </div>
+                <div class="insight-card">
+                    <span class="tag">India</span>
+                    <h4>DPDPA Consent Managers Registration Nov 2026</h4>
+                    <p>India's data protection law enters key implementation phase.</p>
+                    <span class="time">6h ago · Allianz</span>
+                </div>
+                <div class="insight-card">
+                    <span class="tag">Global</span>
+                    <h4>UN Global Dialogue on AI Governance Ongoing</h4>
+                    <p>International consensus building on AI ethics and governance frameworks.</p>
+                    <span class="time">8h ago · UNESCO</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+           CTA SECTION
+        ============================================================ -->
+        <section class="cta-section" id="contact">
+            <h2>Navigate Your Legal Challenges with Confidence</h2>
+            <p>Schedule a consultation with our AI‑powered legal experts today.</p>
+            <button class="btn btn-gold" onclick="openConsultation()">
+                <i class="fas fa-calendar-check"></i> BOOK YOUR CONSULTATION
+            </button>
+        </section>
+
+        <!-- ============================================================
+           FOOTER
+        ============================================================ -->
+        <footer class="footer">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h4>👁️ THE ADVOCACY</h4>
+                    <p>Global Adjudicated Law Firm · Powered by AI Intelligence. Expert legal solutions for business, powered by cutting-edge AI technology.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Services</h5>
+                    <a href="#services">Legal Intelligence</a>
+                    <a href="#services">Business Services</a>
+                    <a href="#services">AI Compliance</a>
+                    <a href="#services">Legal Notices</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Resources</h5>
+                    <a href="#practice">Practice Areas</a>
+                    <a href="#insights">AI Insights</a>
+                    <a href="#">Compliance Hub</a>
+                    <a href="#">Blog</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Contact</h5>
+                    <a href="mailto:counsel@advocacyalawfrim.in">counsel@advocacyalawfrim.in</a>
+                    <a href="#">+91 97186 65039</a>
+                    <a href="#">India · Dubai · Angola</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 <span class="eye-small">👁️</span> THE ADVOCACY — A LAW FIRM. All rights reserved.</span>
+                <span>
+                    <a onclick="openModal('termsModal')" style="color:var(--muted);cursor:pointer;">Terms</a> ·
+                    <a onclick="openModal('privacyModal')" style="color:var(--muted);cursor:pointer;">Privacy</a> ·
+                    <a onclick="openModal('verifiersModal')" style="color:var(--muted);cursor:pointer;">Verifiers</a>
+                </span>
+            </div>
+        </footer>
     </div>
 
     <!-- ===== MODALS ===== -->
-    <div class="modal" id="loginModal"><div class="modal-box"><button class="close" onclick="closeModal('loginModal')">&times;</button><h3>🔐 Login</h3><input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" /><input id="loginPassword" type="password" placeholder="Password" value="Password123!" /><div style="display:flex;gap:6px;"><button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button><button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button></div><div id="loginStatus" class="status-text"></div></div></div>
-    <div class="modal" id="paymentModal"><div class="modal-box"><button class="close" onclick="closeModal('paymentModal')">&times;</button><h3>💳 Plans</h3><div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount" style="float:right;font-size:0.65rem;color:var(--gold);"></span></div><div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>⭐ ₹102 / month · Premium</strong></div><div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🏢 ₹1011 / month · Enterprise</strong></div><input type="hidden" id="paymentPlan" value="lifetime" /><button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button><div id="paymentStatus" class="status-text"></div></div></div>
-    <div class="modal" id="domainHealthModal"><div class="modal-box"><button class="close" onclick="closeModal('domainHealthModal')">&times;</button><h3>📊 Domain Health</h3><div id="domainHealthContent"><p style="color:var(--muted);">Loading...</p></div></div></div>
-    <div class="modal" id="draftsModal"><div class="modal-box"><button class="close" onclick="closeModal('draftsModal')">&times;</button><h3>📑 Drafts</h3><div id="draftsList"><p style="color:var(--muted);">Loading...</p></div></div></div>
-    <div class="modal" id="settingsModal"><div class="modal-box"><button class="close" onclick="closeModal('settingsModal')">&times;</button><h3>⚙️ Settings</h3><div style="margin:6px 0;"><label style="font-size:0.65rem;color:var(--muted);">Provider</label><select id="defaultProvider" style="width:100%;padding:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.75rem;"><option value="deepseek">DeepSeek</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select></div><div style="margin:6px 0;"><label style="font-size:0.65rem;color:var(--muted);">Language</label><select id="langSelect" style="width:100%;padding:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.75rem;"><option value="en">English</option><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select></div><div class="checkbox-group"><input type="checkbox" id="webSearchToggle" checked /><label style="font-size:0.7rem;">Web Search</label></div><div class="checkbox-group"><input type="checkbox" id="oracleToggle" /><label style="font-size:0.7rem;">Oracle Mode</label></div><div class="actions"><button class="btn btn-gold" onclick="saveSettings()">Save</button><button class="btn btn-outline" onclick="closeModal('settingsModal')">Cancel</button></div><div id="settingsStatus" class="status-text"></div></div></div>
-    <div class="modal" id="termsModal"><div class="modal-box"><button class="close" onclick="closeModal('termsModal')">&times;</button><h3>📜 Terms</h3><p style="font-size:0.8rem;">AI‑generated responses are informational only, not professional advice.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div></div></div>
-    <div class="modal" id="privacyModal"><div class="modal-box"><button class="close" onclick="closeModal('privacyModal')">&times;</button><h3>🔒 Privacy</h3><p style="font-size:0.8rem;">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div></div></div>
-    <div class="modal" id="aboutModal"><div class="modal-box"><button class="close" onclick="closeModal('aboutModal')">&times;</button><h3>ℹ️ About</h3><p style="font-size:0.8rem;">Built by <strong>THE ADVOCACY — A LAW FIRM</strong>. 250 specialists, 10 verifiers, zero retention.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('aboutModal')">Close</button></div></div></div>
-    <div class="modal" id="verifiersModal"><div class="modal-box"><button class="close" onclick="closeModal('verifiersModal')">&times;</button><h3>✅ The 10 Verifiers</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:0.7rem;"><div><strong style="color:var(--gold);">Ganesha</strong> — Citation</div><div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑ref</div><div><strong style="color:var(--gold);">Hanuman</strong> — Compliance</div><div><strong style="color:var(--gold);">Kartikeya</strong> — Contradict</div><div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div><div><strong style="color:var(--gold);">Yama</strong> — Bias</div><div><strong style="color:var(--gold);">Surya</strong> — Timelines</div><div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div><div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div><div><strong style="color:#ff8c42;">Shakti</strong> — Final Judge</div></div><div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div></div></div>
+    <div class="modal" id="loginModal">
+        <div class="modal-box">
+            <button class="close" onclick="closeModal('loginModal')">&times;</button>
+            <h3>🔐 Login</h3>
+            <input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" />
+            <input id="loginPassword" type="password" placeholder="Password" value="Password123!" />
+            <div style="display:flex;gap:6px;">
+                <button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button>
+                <button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button>
+            </div>
+            <div id="loginStatus" class="status-text" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div>
+        </div>
+    </div>
 
-    <!-- ================================================================
-       JAVASCRIPT
-    ================================================================ -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-box">
+            <button class="close" onclick="closeModal('paymentModal')">&times;</button>
+            <h3>💳 Plans</h3>
+            <div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
+                <strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount" style="float:right;font-size:0.65rem;color:var(--gold);"></span>
+            </div>
+            <div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
+                <strong>⭐ ₹102 / month · Premium</strong>
+            </div>
+            <div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;">
+                <strong>🏢 ₹1011 / month · Enterprise</strong>
+            </div>
+            <input type="hidden" id="paymentPlan" value="lifetime" />
+            <button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button>
+            <div id="paymentStatus" class="status-text" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="termsModal">
+        <div class="modal-box">
+            <button class="close" onclick="closeModal('termsModal')">&times;</button>
+            <h3>📜 Terms</h3>
+            <p style="font-size:0.8rem;color:var(--text);">AI‑generated responses are informational only, not professional legal advice. Always consult a qualified attorney.</p>
+            <div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="privacyModal">
+        <div class="modal-box">
+            <button class="close" onclick="closeModal('privacyModal')">&times;</button>
+            <h3>🔒 Privacy</h3>
+            <p style="font-size:0.8rem;color:var(--text);">All queries auto‑purged within 24h. DPDPA‑2023 compliant. Zero retention policy.</p>
+            <div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="verifiersModal">
+        <div class="modal-box">
+            <button class="close" onclick="closeModal('verifiersModal')">&times;</button>
+            <h3>✅ The 10 Verifiers</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:0.7rem;">
+                <div><strong style="color:var(--gold);">Ganesha</strong> — Citation</div>
+                <div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑ref</div>
+                <div><strong style="color:var(--gold);">Hanuman</strong> — Compliance</div>
+                <div><strong style="color:var(--gold);">Kartikeya</strong> — Contradict</div>
+                <div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div>
+                <div><strong style="color:var(--gold);">Yama</strong> — Bias</div>
+                <div><strong style="color:var(--gold);">Surya</strong> — Timelines</div>
+                <div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div>
+                <div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div>
+                <div><strong style="color:#ff8c42;">Shakti</strong> — Final Judge</div>
+            </div>
+            <div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+       JAVASCRIPT – Full Integration
+    ============================================================ -->
     <script>
-        // ============================================================
-        // PAGE NAVIGATION
-        // ============================================================
-        function enterPortal() {
-            document.getElementById('page-landing').classList.remove('active');
-            document.getElementById('page-portal').classList.add('active');
-            document.getElementById('moon').style.top = '50%';
-            document.getElementById('moon').style.left = '50%';
-            document.getElementById('moon').style.transform = 'translate(-50%, -50%) scale(3)';
-            document.getElementById('moon').style.opacity = '0.1';
-            
-            setTimeout(() => {
-                document.getElementById('portalTitle').style.opacity = '1';
-                document.getElementById('verifiersGrid').classList.add('show');
-                document.getElementById('portalSub').classList.add('show');
-                document.getElementById('portalBtn').classList.add('show');
-            }, 400);
-        }
-
-        function enterDashboard() {
-            document.getElementById('page-portal').classList.remove('active');
-            document.getElementById('page-dashboard').classList.add('active');
-            document.getElementById('moon').style.top = '5%';
-            document.getElementById('moon').style.left = '5%';
-            document.getElementById('moon').style.transform = 'scale(1)';
-            document.getElementById('moon').style.opacity = '1';
-            if (getToken()) checkPremium();
-            fetchAINews();
-            updateDashboard();
-            if (window.newsInterval) clearInterval(window.newsInterval);
-            window.newsInterval = setInterval(fetchAINews, 60000);
-            setInterval(updateDashboard, 30000);
-        }
-
         // ============================================================
         // API & STATE
         // ============================================================
         const API_BASE = 'https://upamnyu12-LEX.hf.space';
-        let uploadedFiles = [];
-        let isProcessing = false;
 
         function getToken(){ return localStorage.getItem('lex_token'); }
-        function setTyping(active){ document.getElementById('typing').classList.toggle('active', active); }
         function openModal(id){ document.getElementById(id).classList.add('open'); }
         function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-        function setStatus(t){ document.getElementById('status').textContent = t || ''; }
+        function setStatus(t){ document.getElementById('loginStatus').textContent = t || ''; }
+
+        // ============================================================
+        // NAVIGATION
+        // ============================================================
+        function scrollToServices() {
+            document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ============================================================
+        // OPEN UNKNOWN VERDICT (Full Dashboard)
+        // ============================================================
+        function openUnknown() {
+            window.open('https://upamnyu12-LEX.hf.space', '_blank');
+        }
+
+        // ============================================================
+        // CONSULTATION
+        // ============================================================
+        function openConsultation() {
+            alert('📋 Consultation request received. Our team will contact you within 24 hours.\n\nTHE ADVOCACY – A LAW FIRM');
+        }
 
         // ============================================================
         // AUTH
@@ -914,7 +1011,7 @@
                     localStorage.setItem('lex_token', d.access_token);
                     s.textContent = '✅ Welcome!';
                     closeModal('loginModal');
-                    checkPremium();
+                    openUnknown();
                 } else {
                     s.textContent = '❌ ' + (d.detail || 'Login failed');
                 }
@@ -934,38 +1031,23 @@
                         username: email.split('@')[0],
                         email: email,
                         password: pass,
-                        full_name: 'User'
+                        full_name: 'Advocacy User'
                     })
                 });
                 const d = await r.json();
-                if (r.ok) { s.textContent = '✅ Registered! Now login.'; }
+                if (r.ok) { s.textContent = '✅ Registered! Please login.'; }
                 else { s.textContent = '❌ ' + (d.detail || 'Registration failed'); }
             } catch(e) { s.textContent = '❌ Network error'; }
         }
 
         function showLogin(){ openModal('loginModal'); }
 
-        async function checkPremium() {
-            const t = getToken();
-            if (!t) return;
-            try {
-                const r = await fetch(`${API_BASE}/auth/me`, {
-                    headers: { 'Authorization': `Bearer ${t}` }
-                });
-                if (r.ok) {
-                    const d = await r.json();
-                    if (['premium','enterprise','lifetime'].includes(d.tier)) {
-                        document.getElementById('premiumBadge').style.display = 'inline';
-                    }
-                }
-            } catch(e) {}
-        }
-
         // ============================================================
         // PAYMENTS
         // ============================================================
         function showPayment(){ openModal('paymentModal'); checkLifetime(); }
         function selectPlan(p){ document.getElementById('paymentPlan').value = p; }
+
         async function checkLifetime(){
             try {
                 const r = await fetch(`${API_BASE}/lifetime-count`);
@@ -973,6 +1055,7 @@
                 document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
             } catch(e){}
         }
+
         async function processPayment(){
             const t = getToken();
             if (!t) { alert('Login first'); return; }
@@ -991,7 +1074,7 @@
                     key: d.razorpay_key,
                     amount: d.amount,
                     currency: 'INR',
-                    name: 'Unknown Verdict',
+                    name: 'THE ADVOCACY – Unknown Verdict',
                     order_id: d.order_id,
                     handler: async function(resp) {
                         const v = await fetch(`${API_BASE}/verify-payment`, {
@@ -1004,7 +1087,7 @@
                             })
                         });
                         const vd = await v.json();
-                        if (v.ok) { s.textContent = '✅ Success!'; closeModal('paymentModal'); checkPremium(); }
+                        if (v.ok) { s.textContent = '✅ Success!'; closeModal('paymentModal'); }
                         else { s.textContent = '❌ ' + vd.detail; }
                     },
                     theme: { color: '#d4af37' }
@@ -1014,372 +1097,7 @@
         }
 
         // ============================================================
-        // SETTINGS
-        // ============================================================
-        function openSettings() {
-            openModal('settingsModal');
-            document.getElementById('defaultProvider').value = localStorage.getItem('defaultProvider') || 'deepseek';
-            document.getElementById('langSelect').value = localStorage.getItem('lang') || 'en';
-            document.getElementById('webSearchToggle').checked = localStorage.getItem('webSearch') !== 'false';
-            document.getElementById('oracleToggle').checked = localStorage.getItem('oracle') === 'true';
-        }
-        function saveSettings() {
-            localStorage.setItem('defaultProvider', document.getElementById('defaultProvider').value);
-            localStorage.setItem('lang', document.getElementById('langSelect').value);
-            localStorage.setItem('webSearch', document.getElementById('webSearchToggle').checked ? 'true' : 'false');
-            localStorage.setItem('oracle', document.getElementById('oracleToggle').checked ? 'true' : 'false');
-            document.getElementById('settingsStatus').textContent = '✅ Saved';
-            setTimeout(() => closeModal('settingsModal'), 800);
-        }
-
-        // ============================================================
-        // FILE & VOICE
-        // ============================================================
-        function handleFileUpload(inp) {
-            uploadedFiles = Array.from(inp.files);
-            if (uploadedFiles.length) {
-                document.getElementById('filePreviewText').textContent = `📎 ${uploadedFiles.length} file(s)`;
-                document.getElementById('filePreview').classList.add('show');
-            } else { clearFilePreview(); }
-        }
-        function clearFilePreview() {
-            uploadedFiles = [];
-            document.getElementById('filePreview').classList.remove('show');
-            document.getElementById('pdfUpload').value = '';
-        }
-        function startVoice() {
-            try {
-                const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!R) { setStatus('❌ Voice not supported'); return; }
-                const r = new R();
-                const langMap = {en:'en-US',hi:'hi-IN',sa:'hi-IN'};
-                r.lang = langMap[localStorage.getItem('lang') || 'en'] || 'en-US';
-                r.continuous = false; r.interimResults = false;
-                const btn = document.getElementById('voiceBtn');
-                r.onstart = () => { btn.innerHTML = '<i class="fas fa-microphone-slash"></i>'; setStatus('🎤 Listening...'); };
-                r.onresult = e => { document.getElementById('queryInput').value = e.results[0][0].transcript; setStatus('✅ Captured'); };
-                r.onerror = () => { setStatus('❌ Voice error'); };
-                r.onend = () => { btn.innerHTML = '<i class="fas fa-microphone"></i>'; };
-                r.start();
-            } catch(e) { setStatus('❌ ' + e.message); }
-        }
-
-        // ============================================================
-        // DOMAIN HEALTH
-        // ============================================================
-        function showDomainHealth(){ openModal('domainHealthModal'); loadDomainHealth(); }
-        async function loadDomainHealth() {
-            const container = document.getElementById('domainHealthContent');
-            container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
-            try {
-                const r = await fetch(`${API_BASE}/domain-status`);
-                if (!r.ok) throw new Error('Fetch failed');
-                const data = await r.json();
-                if (!data || !data.length) {
-                    container.innerHTML = '<p style="color:var(--muted);">No data yet.</p>';
-                    return;
-                }
-                const total = data.length;
-                const up = data.filter(d => d.status_code === 200).length;
-                let html = `
-                    <div style="display:flex;gap:10px;margin-bottom:6px;font-size:0.75rem;">
-                        <span>📊 Total: ${total}</span>
-                        <span style="color:var(--ok);">✅ Up: ${up}</span>
-                        <span style="color:var(--err);">❌ Down: ${total-up}</span>
-                    </div>
-                    <div style="max-height:200px;overflow-y:auto;font-size:0.65rem;">
-                `;
-                data.slice(0,40).forEach(d => {
-                    const isUp = d.status_code === 200;
-                    html += `<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
-                        <span>${d.domain}</span>
-                        <span style="color:${isUp ? 'var(--ok)' : 'var(--err)'};">${isUp ? '✅' : '❌'} ${d.status_code || 'ERR'}</span>
-                    </div>`;
-                });
-                html += `</div>`;
-                container.innerHTML = html;
-            } catch(e) {
-                container.innerHTML = `<p style="color:var(--err);">❌ ${e.message}</p>`;
-            }
-        }
-
-        // ============================================================
-        // DRAFTS
-        // ============================================================
-        function showDrafts(){ openModal('draftsModal'); loadDrafts(); }
-        async function loadDrafts() {
-            const container = document.getElementById('draftsList');
-            container.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
-            try {
-                const t = getToken();
-                if (!t) { container.innerHTML = '<p style="color:var(--err);">Please login.</p>'; return; }
-                const r = await fetch(`${API_BASE}/drafts`, {
-                    headers: { 'Authorization': `Bearer ${t}` }
-                });
-                const drafts = await r.json();
-                if (!drafts.length) {
-                    container.innerHTML = '<p style="color:var(--muted);">No drafts.</p>';
-                    return;
-                }
-                let html = '';
-                drafts.slice(0,10).forEach(d => {
-                    html += `
-                        <div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.7rem;">
-                            <strong>${d.title}</strong>
-                            <span style="color:var(--muted);font-size:0.55rem;display:block;">${d.content ? d.content.slice(0,60)+'...' : ''}</span>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } catch(e) {
-                container.innerHTML = `<p style="color:var(--err);">Error: ${e.message}</p>`;
-            }
-        }
-
-        // ============================================================
-        // QUICK ACTIONS
-        // ============================================================
-        function showCompliance(){ appendMessage('agent', '📋 <strong>DPDPA Compliance Report</strong><br>Status: 96% compliant. Key gaps: Data retention policy, breach response drill. Recommended: update privacy notice by 13 May 2027.'); }
-        function showBusiness(){ appendMessage('agent', '🏢 <strong>Business Registration Guidance</strong><br>For Private Limited: Step 1: DSC, Step 2: DIN, Step 3: Name approval, Step 4: MOA/AOA, Step 5: PAN/TAN. Estimated timeline: 15-20 days.'); }
-        function showAIGovernance(){ appendMessage('agent', '🤖 <strong>AI Governance Risk Assessment</strong><br>Risk Score: 2/10 (Low). Recommendations: implement model monitoring, bias detection, and human review for high-impact decisions.'); }
-        function showNotices(){ appendMessage('agent', '📜 <strong>Legal Notices Ready</strong><br>Available: German Impressum (TMG), Indian Legal Notice, US Terms (DMCA), EU GDPR Privacy Policy. Select a template to generate.'); }
-
-        // ============================================================
-        // NEWS FEED
-        // ============================================================
-        async function fetchAINews() {
-            const feed = document.getElementById('newsFeed');
-            try {
-                const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://techcrunch.com/category/artificial-intelligence/feed/'));
-                if (!response.ok) throw new Error('News feed unavailable');
-                const data = await response.json();
-                if (data.items && data.items.length) {
-                    let html = '';
-                    data.items.slice(0,6).forEach((item, i) => {
-                        const time = new Date(item.pubDate);
-                        const now = new Date();
-                        const diff = Math.floor((now - time) / 60000);
-                        const timeStr = diff < 60 ? `${diff}m ago` : `${Math.floor(diff/60)}h ago`;
-                        html += `
-                            <div class="news-item" onclick="window.open('${item.link}','_blank')">
-                                <span>${item.title}</span>
-                                <span class="news-time">${timeStr} · <span class="news-source">TechCrunch</span></span>
-                            </div>
-                        `;
-                    });
-                    feed.innerHTML = html;
-                    document.getElementById('newsCount').textContent = data.items.length;
-                } else {
-                    feed.innerHTML = '<div style="font-size:0.7rem;color:var(--muted);">No news at the moment.</div>';
-                }
-            } catch(e) {
-                feed.innerHTML = `
-                    <div class="news-item">NVIDIA Cosmos 3 Edge unveiled at SIGGRAPH 2026</div>
-                    <div class="news-item">EU AI Act high‑risk deadlines deferred to Dec 2027</div>
-                    <div class="news-item">India's DPDPA deadline: 13 May 2027</div>
-                    <div style="font-size:0.55rem;color:var(--muted);padding:4px 0;">↻ Live feed loading...</div>
-                `;
-            }
-        }
-
-        // ============================================================
-        // SEND QUERY
-        // ============================================================
-        async function sendQuery() {
-            if (isProcessing) return;
-            const q = document.getElementById('queryInput').value.trim();
-            if (!q && !uploadedFiles.length) {
-                setStatus('Please type a question or attach a file.');
-                return;
-            }
-            const t = getToken();
-            if (!t) { alert('Login first'); showLogin(); return; }
-
-            isProcessing = true;
-            setTyping(true);
-            setStatus('👁️ Rendering verdict...');
-            const chat = document.getElementById('chat');
-            const welcome = chat.querySelector('.msg.agent');
-            if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
-
-            const webSearch = localStorage.getItem('webSearch') !== 'false';
-            const oracle = localStorage.getItem('oracle') === 'true';
-            const lang = localStorage.getItem('lang') || 'en';
-
-            let userMsg = (oracle ? '🕉️ ' : '') + (q || '📎 Files attached');
-            if (uploadedFiles.length) {
-                userMsg += `<br><span style="font-size:0.55rem;color:var(--gold);">📎 ${uploadedFiles.map(f=>f.name).join(', ')}</span>`;
-            }
-            appendMessage('user', userMsg);
-
-            const fd = new FormData();
-            fd.append('query', q || 'Analyze uploaded documents');
-            uploadedFiles.forEach(f => fd.append('files', f));
-            fd.append('search_web', webSearch ? 'on' : 'off');
-            fd.append('model', 'llama-3.3-70b-versatile');
-            fd.append('lang', lang);
-            fd.append('oracle_mode', oracle ? 'true' : 'false');
-            fd.append('unrestricted', localStorage.getItem('unrestricted') === 'true' ? 'true' : 'false');
-            fd.append('agent_id', 'agent_001');
-
-            try {
-                const response = await fetch(`${API_BASE}/ask`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${t}` },
-                    body: fd
-                });
-                if (!response.ok) {
-                    const err = await response.json();
-                    setTyping(false);
-                    appendMessage('agent', `❌ ${err.detail || 'Server error'}`);
-                    setStatus('Error');
-                    isProcessing = false;
-                    return;
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let agentBubble = null;
-                let fullText = '';
-                let verification = null;
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            if (data === '[DONE]') break;
-                            try {
-                                const parsed = JSON.parse(data);
-                                if (parsed.token) {
-                                    fullText += parsed.token;
-                                    if (!agentBubble) {
-                                        agentBubble = document.createElement('div');
-                                        agentBubble.className = 'msg agent';
-                                        chat.appendChild(agentBubble);
-                                    }
-                                    const tokenHtml = parsed.token.replace(/\n/g, '<br>');
-                                    agentBubble.innerHTML += tokenHtml;
-                                    chat.scrollTop = chat.scrollHeight;
-                                }
-                                if (parsed.verification) {
-                                    verification = parsed.verification;
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                }
-
-                setTyping(false);
-                if (agentBubble) {
-                    if (verification && verification.provider) {
-                        let providerTag = document.createElement('div');
-                        providerTag.className = 'provider-tag';
-                        providerTag.innerHTML = `⚡ Powered by: <strong>${verification.provider.charAt(0).toUpperCase() + verification.provider.slice(1)}</strong>`;
-                        agentBubble.appendChild(providerTag);
-                    }
-                    if (verification) {
-                        const badge = document.createElement('div');
-                        badge.className = 'badge-verify';
-                        const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
-                                          verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
-                        const verifierList = verification.jury_verifiers ? verification.jury_verifiers.join(', ') : 'Ganesha, Yama, Shakti';
-                        const agentName = verification.agent || 'Unknown Agent';
-                        badge.innerHTML = `
-                            <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence || 'HIGH'} confidence
-                            <span style="color:var(--muted);font-size:0.5rem;"> · ${verifierList}</span>
-                            <span style="color:var(--gold);font-size:0.5rem;display:block;">🧠 ${agentName}</span>
-                        `;
-                        agentBubble.appendChild(badge);
-                    }
-                    const actions = document.createElement('div');
-                    actions.className = 'msg-actions';
-                    const copyBtn = document.createElement('button');
-                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                    copyBtn.onclick = function() {
-                        const text = agentBubble.innerText || '';
-                        navigator.clipboard.writeText(text).then(() => setStatus('✅ Copied'));
-                    };
-                    const speakBtn = document.createElement('button');
-                    speakBtn.innerHTML = '<i class="fas fa-volume-up"></i> Speak';
-                    speakBtn.onclick = function() { speakMessage(fullText, speakBtn); };
-                    actions.appendChild(copyBtn);
-                    actions.appendChild(speakBtn);
-                    agentBubble.appendChild(actions);
-                    chat.scrollTop = chat.scrollHeight;
-                }
-                setStatus('✅ Verdict rendered · Governance verified');
-            } catch(e) {
-                setTyping(false);
-                appendMessage('agent', `❌ Network error: ${e.message}`);
-                setStatus('Error');
-            }
-            clearFilePreview();
-            document.getElementById('queryInput').value = '';
-            isProcessing = false;
-        }
-
-        function appendMessage(role, content) {
-            const chat = document.getElementById('chat');
-            const welcome = chat.querySelector('.msg.agent');
-            if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
-            const div = document.createElement('div');
-            div.className = `msg ${role}`;
-            div.innerHTML = content;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function speakMessage(text, btn) {
-            if (window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                setStatus('🔇 Stopped');
-                return;
-            }
-            const u = new SpeechSynthesisUtterance(text.slice(0,3000));
-            const langMap = {en:'en-US',hi:'hi-IN',sa:'hi-IN'};
-            u.lang = langMap[localStorage.getItem('lang') || 'en'] || 'en-US';
-            u.rate = 0.85; u.pitch = 0.9;
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.name.includes('Google US English') && v.name.includes('Female')) || voices.find(v => v.name.includes('Samantha')) || voices.find(v => v.lang.startsWith('en'));
-            if (preferredVoice) u.voice = preferredVoice;
-            u.onend = () => { btn.innerHTML = '<i class="fas fa-volume-up"></i>'; setStatus('🔊 Finished'); };
-            u.onerror = () => { btn.innerHTML = '<i class="fas fa-volume-up"></i>'; setStatus('❌ Speech error'); };
-            window.speechSynthesis.speak(u);
-            btn.innerHTML = '<i class="fas fa-stop"></i>';
-            setStatus('🔊 Speaking...');
-        }
-
-        // ============================================================
-        // DASHBOARD AUTO-UPDATE
-        // ============================================================
-        async function updateDashboard() {
-            try {
-                document.getElementById('lastScanTime').textContent = new Date().toLocaleTimeString();
-                const risk = Math.floor(Math.random() * 3) + 1;
-                document.getElementById('riskScore').textContent = `Low (${risk}/10)`;
-                const t = getToken();
-                if (t) {
-                    try {
-                        const r = await fetch(`${API_BASE}/breaches`, {
-                            headers: { 'Authorization': `Bearer ${t}` }
-                        });
-                        if (r.ok) {
-                            const data = await r.json();
-                            document.getElementById('breachCount').textContent = data.length || 0;
-                        }
-                    } catch(e) {}
-                }
-                document.getElementById('hitlCount').textContent = Math.floor(Math.random() * 3);
-            } catch(e) {}
-        }
-
-        // ============================================================
-        // STARS
+        // STARS BACKGROUND
         // ============================================================
         (function() {
             const container = document.getElementById('stars');
@@ -1396,23 +1114,13 @@
         // INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('queryInput');
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendQuery();
-                }
-            });
-            document.getElementById('sendBtn').addEventListener('click', sendQuery);
-            input.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-            });
-            window.speechSynthesis.getVoices();
+            if (getToken()) {
+                // User is logged in
+            }
         });
     </script>
 
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
-</html> 
+</html>
