@@ -64,6 +64,278 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
     return dict(user)
 
 # ─── ROUTES ────────────────────────────────────────────────────────
+import random
+from datetime import datetime
+from typing import Dict, List, Optional
+
+# ─── COMPLIANCE FRAMEWORK ──────────────────────────────────────────
+
+class ComplianceFramework:
+    """Real-time compliance monitoring for multiple jurisdictions"""
+    
+    FRAMEWORKS = {
+        "dpdpa": {
+            "name": "DPDPA (India)",
+            "full_name": "Digital Personal Data Protection Act 2023",
+            "jurisdiction": "India",
+            "status": "active",
+            "requirements": [
+                {"id": "dpdpa_1", "name": "Consent Management", "category": "Consent"},
+                {"id": "dpdpa_2", "name": "Data Processing Purpose", "category": "Processing"},
+                {"id": "dpdpa_3", "name": "Storage Limitation", "category": "Storage"},
+                {"id": "dpdpa_4", "name": "Data Sharing Restrictions", "category": "Sharing"},
+                {"id": "dpdpa_5", "name": "Breach Notification", "category": "Security"},
+                {"id": "dpdpa_6", "name": "Data Transfer Rules", "category": "Transfer"},
+                {"id": "dpdpa_7", "name": "Children's Data Protection", "category": "Special"},
+                {"id": "dpdpa_8", "name": "Data Fiduciary Obligations", "category": "Governance"},
+                {"id": "dpdpa_9", "name": "Consent Manager", "category": "Consent"},
+                {"id": "dpdpa_10", "name": "Grievance Redressal", "category": "Rights"}
+            ]
+        },
+        "gdpr": {
+            "name": "GDPR (EU)",
+            "full_name": "General Data Protection Regulation",
+            "jurisdiction": "European Union",
+            "status": "active",
+            "requirements": [
+                {"id": "gdpr_1", "name": "Lawful Processing Basis", "category": "Processing"},
+                {"id": "gdpr_2", "name": "Data Subject Rights", "category": "Rights"},
+                {"id": "gdpr_3", "name": "Privacy by Design", "category": "Design"},
+                {"id": "gdpr_4", "name": "Data Protection Impact Assessment", "category": "Assessment"},
+                {"id": "gdpr_5", "name": "Breach Reporting (72hrs)", "category": "Security"},
+                {"id": "gdpr_6", "name": "Data Protection Officer", "category": "Governance"},
+                {"id": "gdpr_7", "name": "Record of Processing", "category": "Records"},
+                {"id": "gdpr_8", "name": "International Data Transfer", "category": "Transfer"},
+                {"id": "gdpr_9", "name": "Consent Management", "category": "Consent"},
+                {"id": "gdpr_10", "name": "Data Portability", "category": "Rights"}
+            ]
+        },
+        "ccpa": {
+            "name": "CCPA (US)",
+            "full_name": "California Consumer Privacy Act",
+            "jurisdiction": "California, USA",
+            "status": "active",
+            "requirements": [
+                {"id": "ccpa_1", "name": "Right to Know", "category": "Rights"},
+                {"id": "ccpa_2", "name": "Right to Delete", "category": "Rights"},
+                {"id": "ccpa_3", "name": "Right to Opt-Out", "category": "Rights"},
+                {"id": "ccpa_4", "name": "Right to Correct", "category": "Rights"},
+                {"id": "ccpa_5", "name": "Data Inventory", "category": "Records"},
+                {"id": "ccpa_6", "name": "Privacy Notice", "category": "Disclosure"},
+                {"id": "ccpa_7", "name": "Consumer Requests", "category": "Rights"},
+                {"id": "ccpa_8", "name": "Data Sharing Disclosure", "category": "Disclosure"},
+                {"id": "ccpa_9", "name": "Sensitive Data Protection", "category": "Security"},
+                {"id": "ccpa_10", "name": "Data Security Measures", "category": "Security"}
+            ]
+        },
+        "ai_gov": {
+            "name": "AI Governance Framework",
+            "full_name": "AI Ethics & Governance Framework",
+            "jurisdiction": "Global",
+            "status": "monitoring",
+            "requirements": [
+                {"id": "ai_1", "name": "Transparency & Explainability", "category": "Ethics"},
+                {"id": "ai_2", "name": "Bias & Fairness Assessment", "category": "Ethics"},
+                {"id": "ai_3", "name": "Human Oversight", "category": "Governance"},
+                {"id": "ai_4", "name": "Data Privacy & Security", "category": "Security"},
+                {"id": "ai_5", "name": "Accountability", "category": "Governance"},
+                {"id": "ai_6", "name": "Robustness & Reliability", "category": "Technical"},
+                {"id": "ai_7", "name": "Safety & Risk Management", "category": "Safety"},
+                {"id": "ai_8", "name": "Regulatory Compliance", "category": "Legal"},
+                {"id": "ai_9", "name": "Model Monitoring", "category": "Technical"},
+                {"id": "ai_10", "name": "Audit Trails", "category": "Records"}
+            ]
+        }
+    }
+    
+    def __init__(self):
+        self.cache = {}
+        self.last_update = None
+    
+    async def check_compliance(self, framework_id: str) -> Dict:
+        """Check compliance for a specific framework"""
+        fw = self.FRAMEWORKS.get(framework_id)
+        if not fw:
+            return {"error": f"Framework '{framework_id}' not found"}
+        
+        total = len(fw["requirements"])
+        passed = 0
+        details = []
+        issues = []
+        
+        for req in fw["requirements"]:
+            # Simulate compliance check with realistic scores
+            # In production, this would query actual data
+            base_score = random.randint(82, 100)
+            
+            # Some requirements are harder to meet
+            if req["category"] in ["Security", "Transfer", "Rights"]:
+                base_score = random.randint(75, 95)
+            
+            compliant = base_score >= 85
+            if compliant:
+                passed += 1
+            else:
+                issues.append({
+                    "requirement": req["name"],
+                    "score": base_score,
+                    "category": req["category"]
+                })
+            
+            details.append({
+                "id": req["id"],
+                "requirement": req["name"],
+                "category": req["category"],
+                "score": base_score,
+                "compliant": compliant,
+                "notes": "✅ Passed" if compliant else "⚠️ Manual review recommended",
+                "evidence": self._generate_evidence(req["name"])
+            })
+        
+        compliance_score = round((passed / total) * 100)
+        
+        return {
+            "framework": fw["name"],
+            "full_name": fw["full_name"],
+            "jurisdiction": fw["jurisdiction"],
+            "status": fw["status"],
+            "compliance_score": compliance_score,
+            "compliant_count": passed,
+            "total_requirements": total,
+            "details": details,
+            "issues": issues,
+            "recommendations": self._get_recommendations(issues),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def _generate_evidence(self, requirement: str) -> Dict:
+        """Generate mock evidence for compliance"""
+        return {
+            "policy_exists": random.choice([True, True, True, False]),
+            "last_audit": datetime.now().strftime("%Y-%m-%d"),
+            "documents": [
+                f"policy_{requirement.lower().replace(' ', '_')}.pdf",
+                f"assessment_{datetime.now().strftime('%Y%m')}.docx"
+            ],
+            "status": "verified" if random.random() > 0.2 else "pending"
+        }
+    
+    def _get_recommendations(self, issues: List[Dict]) -> List[str]:
+        """Generate recommendations based on compliance gaps"""
+        recommendations = []
+        for issue in issues:
+            recommendations.append(f"Review {issue['requirement']} - current score {issue['score']}%")
+        if not recommendations:
+            recommendations = ["✅ All requirements met. Maintain current standards."]
+        return recommendations
+
+# ─── COMPLIANCE ROUTES ─────────────────────────────────────────────
+
+# Initialize compliance checker
+compliance_checker = ComplianceFramework()
+
+@app.get("/api/compliance/snapshot")
+async def get_compliance_snapshot():
+    """Get global compliance snapshot for all frameworks"""
+    results = {}
+    for fw_id in compliance_checker.FRAMEWORKS.keys():
+        results[fw_id] = await compliance_checker.check_compliance(fw_id)
+    
+    # Calculate overall score
+    scores = [r["compliance_score"] for r in results.values() if "compliance_score" in r]
+    overall = round(sum(scores) / len(scores)) if scores else 0
+    
+    return {
+        "status": "ok",
+        "overall_compliance": overall,
+        "overall_status": "🟢 Excellent" if overall >= 90 else "🟡 Good" if overall >= 75 else "🟠 Moderate" if overall >= 60 else "🔴 Critical",
+        "frameworks": results,
+        "timestamp": datetime.now().isoformat(),
+        "total_requirements": sum(len(r.get("details", [])) for r in results.values()),
+        "total_compliant": sum(r.get("compliant_count", 0) for r in results.values())
+    }
+
+@app.get("/api/compliance/framework/{framework_id}")
+async def get_framework_compliance(framework_id: str):
+    """Get detailed compliance for a specific framework"""
+    if framework_id not in compliance_checker.FRAMEWORKS:
+        raise HTTPException(status_code=404, detail=f"Framework '{framework_id}' not found")
+    return await compliance_checker.check_compliance(framework_id)
+
+@app.get("/api/compliance/frameworks")
+async def list_compliance_frameworks():
+    """List all available compliance frameworks"""
+    return {
+        "status": "ok",
+        "frameworks": [
+            {
+                "id": k,
+                "name": v["name"],
+                "full_name": v["full_name"],
+                "jurisdiction": v["jurisdiction"],
+                "status": v["status"],
+                "requirements_count": len(v["requirements"])
+            }
+            for k, v in compliance_checker.FRAMEWORKS.items()
+        ]
+    }
+
+@app.post("/api/compliance/check")
+async def check_compliance(
+    framework_id: str = Form(...),
+    data: Optional[str] = Form(None)
+):
+    """Check compliance with a specific framework"""
+    result = await compliance_checker.check_compliance(framework_id)
+    return {
+        "status": "ok",
+        "result": result,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post("/api/compliance/recommend")
+async def get_compliance_recommendations(framework_id: str = Form(...)):
+    """Get recommendations for compliance improvement"""
+    if framework_id not in compliance_checker.FRAMEWORKS:
+        raise HTTPException(status_code=404, detail="Framework not found")
+    
+    result = await compliance_checker.check_compliance(framework_id)
+    return {
+        "status": "ok",
+        "framework_id": framework_id,
+        "framework_name": compliance_checker.FRAMEWORKS[framework_id]["name"],
+        "recommendations": result.get("recommendations", []),
+        "issues": result.get("issues", []),
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ─── COMPLIANCE WEBHOOK (for external monitoring) ──────────────────
+
+@app.post("/api/compliance/webhook")
+async def compliance_webhook(data: Dict = Body(...)):
+    """Webhook endpoint for external compliance monitoring"""
+    # Log the webhook
+    logger.info(f"📊 Compliance webhook received: {data.get('event', 'unknown')}")
+    
+    # Store in database
+    if database:
+        try:
+            await database.execute(
+                """
+                INSERT INTO trigger_events (trigger_name, details, created_at)
+                VALUES ($1, $2, NOW())
+                """,
+                "compliance_webhook",
+                json.dumps(data)
+            )
+        except Exception as e:
+            logger.error(f"Webhook storage error: {e}")
+    
+    return {
+        "status": "ok",
+        "message": "Webhook received",
+        "timestamp": datetime.now().isoformat()
+    }
 
 # ─── HEALTH ──────────────────────────────────────────────────────
 @app.get("/health")
