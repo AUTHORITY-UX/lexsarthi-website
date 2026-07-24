@@ -12,7 +12,7 @@ LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # ─── ENVIRONMENT ────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL postgresql://neondb_owner:npg_uWF70INEzRlA@ep-muddy-haze-atfwpnmd-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
 REDIS_URL = os.getenv("REDIS_URL", None)
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM = "HS256"
