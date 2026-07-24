@@ -4,146 +4,85 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Unknown Verdict AGI v12.1</title>
-    
-    <!-- ─── FAVICON ─── -->
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZUAAAAEdEVYdFRpdGxlAENvcHlyaWdodCDCqSAyMDI2IFRIRSBBRFZPQ0FDWSAtIEEgTEFXIEZJUk0uIEFsbCByaWdodHMgcmVzZXJ2ZWQuNURgZQAAAVVJREFUOMuVkz9Lw0AYxr83l8RJq0RBxME6iHQr4p/wg2BwcHNyE4qgo4OIi4XQQUH6AZycnARpBwW3LkIrrWAz1qJpoWmab+99xtxpy2nnh3vuuSfv83u+545gjDHiP+EoFAbAXqQTn+VvYmd3Sic3ll2fcX0gTbqPAKBQMQaAnZ1g5Ptm90qB53l4T3/yA3tNG8be9u7B3u9TvJ67UO4yfHa0RTRfKqKEsW5T23sxXRBHMWCA4CB+SAg1qxaLixNUjt30i0IYw1Y+/Hxcq3rrZRgGAEBb/xFIS4Z9e7TfOAAwe9Sy50mBk9Oh9r5AEK6C0xIdDLr2vusDaRwHUMkkUqZfOUMxI9nTbJ7sTFW4N5Z6iyWYUnahvQpQ3rYXvznLZ2pgs9VggBZBgNWNp4Y73drPAXxtNwTzAEjD7Q4k8sfhJJrMpSeN1fq/lD/Cjc/on/22sAAAAABJRU5ErkJggg==" />
-    
-    <!-- ─── GOOGLE FONTS ─── -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    
     <style>
         /* ═══════════════════════════════════════════════════════════════
            🔱 UNKNOWN VERDICT v12.1 - COMPLETE STYLES
            ═══════════════════════════════════════════════════════════════ */
         
-        /* ─── RESET ────────────────────────────────────────────────── */
-        *,
-        *::before,
-        *::after {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
-        html {
-            scroll-behavior: smooth;
-        }
-        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: #f0f2f5;
             color: #1a1a2e;
             line-height: 1.6;
             min-height: 100vh;
         }
         
-        /* ─── SCROLLBAR ────────────────────────────────────────────── */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f0f2f5;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c4c9d4;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a0a8b8;
-        }
-        
-        /* ─── CONTAINER ────────────────────────────────────────────── */
+        /* ─── LAYOUT ────────────────────────────────────────────────── */
         .app-container {
-            max-width: 1280px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 1.5rem 2rem 3rem;
+            padding: 1rem 1.5rem 2rem;
         }
         
         /* ─── HEADER ────────────────────────────────────────────────── */
-        .app-header {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0 1.5rem;
+            padding: 0.75rem 0 1.25rem;
             border-bottom: 2px solid #e9ecef;
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
-        .logo-area {
+        .logo {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
-        
         .logo-icon {
             font-size: 2rem;
-            line-height: 1;
         }
-        
         .logo-text {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 800;
             background: linear-gradient(135deg, #6c5ce7, #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-        
-        .logo-sub {
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #6c757d;
+        .logo-badge {
+            font-size: 0.65rem;
             background: #e9ecef;
-            padding: 0.2rem 0.6rem;
+            padding: 0.15rem 0.6rem;
             border-radius: 12px;
+            color: #6c757d;
             -webkit-text-fill-color: #6c757d;
         }
-        
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
-        
-        .header-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-        
         .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
             display: inline-block;
-        }
-        
-        .status-dot.online {
             background: #28a745;
-            animation: pulse-dot 2s infinite;
+            animation: pulse 2s infinite;
         }
-        
-        @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.6;
-                transform: scale(0.8);
-            }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
         }
-        
-        .btn-login,
-        .btn-logout {
-            padding: 0.5rem 1.2rem;
+        .btn-primary, .btn-secondary, .btn-danger {
+            padding: 0.45rem 1.2rem;
             border: none;
             border-radius: 8px;
             font-weight: 600;
@@ -151,36 +90,42 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
-        .btn-login {
+        .btn-primary {
             background: #6c5ce7;
             color: white;
         }
-        
-        .btn-login:hover {
+        .btn-primary:hover {
             background: #5a4bd1;
             transform: translateY(-1px);
         }
-        
-        .btn-logout {
+        .btn-secondary {
             background: #e9ecef;
             color: #1a1a2e;
         }
-        
-        .btn-logout:hover {
+        .btn-secondary:hover {
             background: #dee2e6;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-primary:disabled, .btn-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         
         .user-badge {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.4rem 0.8rem 0.4rem 0.4rem;
+            padding: 0.3rem 0.8rem 0.3rem 0.3rem;
             background: #f8f9fa;
             border-radius: 30px;
             border: 1px solid #e9ecef;
         }
-        
         .user-avatar {
             width: 32px;
             height: 32px;
@@ -193,395 +138,390 @@
             font-weight: 700;
             font-size: 0.8rem;
         }
-        
         .user-name {
             font-size: 0.85rem;
             font-weight: 500;
-            color: #1a1a2e;
         }
-        
         .user-tier {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             padding: 0.1rem 0.5rem;
             border-radius: 10px;
             font-weight: 600;
         }
-        
-        .user-tier.free {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .user-tier.premium {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .user-tier.enterprise {
-            background: #cce5ff;
-            color: #004085;
-        }
-        
-        .user-tier.lifetime {
-            background: linear-gradient(135deg, #6c5ce7, #a855f7);
-            color: white;
-        }
+        .user-tier.free { background: #fff3cd; color: #856404; }
+        .user-tier.premium { background: #d4edda; color: #155724; }
+        .user-tier.enterprise { background: #cce5ff; color: #004085; }
+        .user-tier.lifetime { background: linear-gradient(135deg, #6c5ce7, #a855f7); color: white; }
         
         /* ─── HERO ──────────────────────────────────────────────────── */
         .hero {
             text-align: center;
-            padding: 3rem 1rem 2rem;
+            padding: 2rem 1rem 1.5rem;
         }
-        
         .hero h1 {
-            font-size: 2.8rem;
+            font-size: 2.6rem;
             font-weight: 800;
             background: linear-gradient(135deg, #1a1a2e, #6c5ce7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
         }
-        
         .hero p {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #4a4a6a;
             max-width: 600px;
-            margin: 0 auto;
+            margin: 0.25rem auto 0.5rem;
         }
-        
         .hero-badge {
             display: inline-block;
             background: #e9ecef;
-            padding: 0.3rem 1rem;
+            padding: 0.25rem 1rem;
             border-radius: 20px;
             font-size: 0.8rem;
             color: #6c757d;
-            margin-top: 0.75rem;
         }
         
-        /* ─── STATS BAR ────────────────────────────────────────────── */
+        /* ─── STATS ──────────────────────────────────────────────────── */
         .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
             background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1.5rem 0 2rem;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin: 1rem 0 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
             border: 1px solid #e9ecef;
         }
-        
         .stat-item {
             text-align: center;
         }
-        
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: #1a1a2e;
             display: block;
         }
-        
         .stat-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #6c757d;
             font-weight: 500;
         }
         
-        /* ─── SERVICES GRID ────────────────────────────────────────── */
-        .services-section {
-            margin: 2rem 0;
-        }
-        
-        .services-section h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: #1a1a2e;
-        }
-        
-        .services-grid {
+        /* ─── MAIN LAYOUT ───────────────────────────────────────────── */
+        .main-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.25rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
-        .service-card {
+        /* ─── CHAT / CONSOLE ────────────────────────────────────────── */
+        .chat-section {
             background: white;
             border-radius: 14px;
-            padding: 1.5rem;
             border: 1px solid #e9ecef;
-            transition: all 0.25s;
-            cursor: default;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
         }
-        
-        .service-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            border-color: #d0d5dd;
+        .chat-header {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
         }
-        
-        .service-icon {
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-        
-        .service-title {
-            font-size: 1.1rem;
+        .chat-header h3 {
+            font-size: 1rem;
             font-weight: 700;
+        }
+        .chat-header .badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            background: #d4edda;
+            color: #155724;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.25rem;
+            background: #fafafa;
+            min-height: 200px;
+        }
+        .chat-message {
+            margin-bottom: 0.75rem;
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-message.user {
+            background: #6c5ce7;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-message.ai {
+            background: #e9ecef;
             color: #1a1a2e;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-message.system {
+            background: #fff3cd;
+            color: #856404;
+            margin: 0 auto;
+            text-align: center;
+            max-width: 100%;
+            font-size: 0.85rem;
+        }
+        .chat-message .timestamp {
+            font-size: 0.65rem;
+            opacity: 0.6;
+            display: block;
+            margin-top: 0.25rem;
+        }
+        .chat-message.user .timestamp { color: rgba(255,255,255,0.7); }
+        .chat-message.ai .timestamp { color: #6c757d; }
+        
+        .chat-input-area {
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 0.75rem;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 0 0 14px 14px;
+        }
+        .chat-input-area textarea {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            resize: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            min-height: 44px;
+            max-height: 120px;
+        }
+        .chat-input-area textarea:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108,92,231,0.12);
+        }
+        .chat-input-area .btn-send {
+            padding: 0.6rem 1.5rem;
+            background: #6c5ce7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            height: 44px;
+        }
+        .chat-input-area .btn-send:hover {
+            background: #5a4bd1;
+        }
+        .chat-input-area .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ─── SERVICES PANEL ────────────────────────────────────────── */
+        .services-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        @media (max-width: 640px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            border-color: #6c5ce7;
+        }
+        .service-card .icon {
+            font-size: 1.5rem;
+            display: block;
             margin-bottom: 0.3rem;
         }
-        
-        .service-desc {
+        .service-card .title {
+            font-weight: 700;
             font-size: 0.9rem;
-            color: #4a4a6a;
-            line-height: 1.5;
+            color: #1a1a2e;
         }
-        
-        .service-tag {
+        .service-card .desc {
+            font-size: 0.8rem;
+            color: #4a4a6a;
+            line-height: 1.4;
+        }
+        .service-card .tag {
             display: inline-block;
-            margin-top: 0.75rem;
-            font-size: 0.7rem;
+            margin-top: 0.4rem;
+            font-size: 0.6rem;
             font-weight: 600;
-            padding: 0.2rem 0.7rem;
-            border-radius: 12px;
+            padding: 0.1rem 0.6rem;
+            border-radius: 10px;
             background: #f8f9fa;
             color: #6c757d;
         }
         
         /* ─── NEWS SECTION ──────────────────────────────────────────── */
-        .news-section,
-        .blog-section {
-            padding: 2rem 1.5rem;
+        .news-section, .blog-section {
             background: white;
-            border-radius: 16px;
-            margin: 2rem 0;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border-radius: 14px;
             border: 1px solid #e9ecef;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
         }
-        
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .section-header h2 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0;
-        }
-        
-        .section-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .timestamp {
-            font-size: 0.8rem;
-            color: #888;
-        }
-        
-        .btn-secondary {
-            padding: 0.5rem 1.2rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #e9ecef;
-            color: #1a1a2e;
-        }
-        
-        .btn-secondary:hover {
-            background: #dee2e6;
-        }
-        
-        .btn-secondary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        /* ─── NEWS GRID ────────────────────────────────────────────── */
-        .news-grid,
-        .blog-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        /* ─── NEWS CARD ────────────────────────────────────────────── */
-        .news-card,
-        .blog-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.25s;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #e9ecef;
-        }
-        
-        .news-card:hover,
-        .blog-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-        }
-        
-        .news-badge {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #6c757d;
-        }
-        
-        .badge-source {
-            background: #6c5ce7;
-            color: white;
-            padding: 0.15rem 0.7rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-        }
-        
-        .badge-date {
-            color: #6c757d;
-            font-weight: 400;
-        }
-        
-        .news-title,
-        .blog-title {
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-            flex: 1;
-        }
-        
-        .news-summary,
-        .blog-preview {
-            color: #4a4a6a;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            flex: 1;
+            gap: 0.75rem;
             margin-bottom: 1rem;
         }
-        
-        .news-footer,
-        .blog-footer {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            padding-top: 0.75rem;
-            border-top: 1px solid #e9ecef;
+        .section-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
         }
-        
-        .news-actions {
+        .section-header .timestamp {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .news-grid, .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .news-card, .blog-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        .news-card:hover, .blog-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .news-card .source {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6c5ce7;
+        }
+        .news-card .date {
+            font-size: 0.7rem;
+            color: #888;
+            float: right;
+        }
+        .news-card .title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0.3rem 0;
+            color: #1a1a2e;
+        }
+        .news-card .summary {
+            font-size: 0.85rem;
+            color: #4a4a6a;
+            line-height: 1.5;
+        }
+        .news-card .actions {
             display: flex;
             gap: 0.5rem;
+            margin-top: 0.75rem;
             flex-wrap: wrap;
         }
-        
-        /* ─── BUTTONS ────────────────────────────────────────────────── */
-        .btn-generate,
-        .btn-read,
-        .btn-read-full,
-        .btn-source {
-            padding: 0.35rem 0.85rem;
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
             border: none;
-            border-radius: 8px;
-            font-size: 0.78rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
         }
-        
-        .btn-generate {
+        .btn-sm.generate {
             background: #6c5ce7;
             color: white;
         }
-        
-        .btn-generate:hover {
+        .btn-sm.generate:hover {
             background: #5a4bd1;
-            transform: scale(1.02);
         }
-        
-        .btn-generate:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-read,
-        .btn-read-full {
+        .btn-sm.read {
             background: #e9ecef;
             color: #1a1a2e;
         }
-        
-        .btn-read:hover,
-        .btn-read-full:hover {
+        .btn-sm.read:hover {
             background: #dee2e6;
         }
-        
-        .btn-source {
-            background: #17a2b8;
+        .btn-sm.danger {
+            background: #dc3545;
             color: white;
-            font-size: 0.7rem;
+        }
+        .btn-sm.danger:hover {
+            background: #c82333;
         }
         
-        .btn-source:hover {
-            background: #138496;
-        }
-        
-        /* ─── BLOG CARD ────────────────────────────────────────────── */
-        .blog-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            font-size: 0.8rem;
-        }
-        
-        .blog-date {
+        /* ─── LOADING ────────────────────────────────────────────────── */
+        .loading-spinner {
+            text-align: center;
+            padding: 2rem;
             color: #6c757d;
+            grid-column: 1 / -1;
         }
-        
-        .blog-status {
-            padding: 0.1rem 0.6rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e9ecef;
+            border-top-color: #6c5ce7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 0.5rem;
         }
-        
-        .blog-status.published {
-            background: #d4edda;
-            color: #155724;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        
-        .blog-status.draft {
-            background: #fff3cd;
-            color: #856404;
+        .error-box, .info-box {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 10px;
+            grid-column: 1 / -1;
         }
+        .error-box { color: #dc3545; background: #f8d7da; }
+        .info-box { color: #0c5460; background: #d1ecf1; }
         
         /* ─── MODAL ──────────────────────────────────────────────────── */
         .modal {
@@ -591,383 +531,101 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            overflow-y: auto;
+            background: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
             display: none;
+            overflow-y: auto;
         }
-        
         .modal-content {
             background: white;
             margin: 3% auto;
-            padding: 2.5rem;
-            max-width: 820px;
+            padding: 2rem;
+            max-width: 720px;
             border-radius: 16px;
             position: relative;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
-        
         .modal .close {
             position: sticky;
             top: 0;
             float: right;
-            font-size: 2rem;
+            font-size: 1.8rem;
             cursor: pointer;
             color: #888;
             background: white;
             padding: 0 0.5rem;
             line-height: 1;
-            z-index: 10;
         }
-        
-        .modal .close:hover {
-            color: #333;
-        }
-        
-        #modal-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0.5rem 0 1rem;
-            padding-right: 2.5rem;
-        }
-        
-        .modal-content .article-body {
-            line-height: 1.9;
-            font-size: 1.05rem;
-            color: #212529;
+        .modal .close:hover { color: #333; }
+        .modal h2 { margin-bottom: 1rem; }
+        .modal .body {
+            line-height: 1.8;
             white-space: pre-wrap;
-            margin: 1.5rem 0;
-            padding: 0 0.5rem;
+            margin: 1rem 0;
         }
-        
-        .modal-content .article-body h1 {
-            font-size: 2rem;
-            margin: 1.5rem 0 1rem 0;
-            color: #1a1a2e;
-        }
-        
-        .modal-content .article-body h2 {
-            font-size: 1.5rem;
-            margin: 1.2rem 0 0.8rem 0;
-            color: #1a1a2e;
-        }
-        
-        .modal-content .article-body h3 {
-            font-size: 1.2rem;
-            margin: 1rem 0 0.6rem 0;
-            color: #1a1a2e;
-        }
-        
-        .modal-content .article-body strong {
-            color: #1a1a2e;
-        }
-        
-        .modal-content .article-body ul,
-        .modal-content .article-body ol {
-            margin: 0.8rem 0;
-            padding-left: 1.5rem;
-        }
-        
-        .modal-content .article-body li {
-            margin-bottom: 0.3rem;
-        }
-        
         .modal-actions {
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
             padding-top: 1rem;
             border-top: 1px solid #e9ecef;
         }
         
-        .btn-download {
-            padding: 0.6rem 1.5rem;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .btn-download:hover {
-            background: #218838;
-        }
-        
-        .btn-copy {
-            padding: 0.6rem 1.5rem;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .btn-copy:hover {
-            background: #5a6268;
-        }
-        
-        /* ─── LOADING / ERROR STATES ────────────────────────────────── */
-        .loading-spinner {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-            grid-column: 1 / -1;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e9ecef;
-            border-top-color: #6c5ce7;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        
-        .error-box,
-        .info-box {
-            text-align: center;
-            padding: 2rem 1rem;
-            background: #f8f9fa;
-            border-radius: 12px;
-            grid-column: 1 / -1;
-        }
-        
-        .error-box {
-            color: #dc3545;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .info-box {
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        
-        /* ─── LOGIN MODAL ───────────────────────────────────────────── */
-        .login-modal .modal-content {
-            max-width: 420px;
-            padding: 2.5rem;
-        }
-        
-        .login-modal h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #1a1a2e;
-        }
-        
-        .login-modal p {
-            color: #6c757d;
-            margin-bottom: 1.5rem;
-        }
-        
-        .login-modal .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .login-modal label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 0.3rem;
-            color: #1a1a2e;
-        }
-        
-        .login-modal input {
-            width: 100%;
-            padding: 0.7rem 1rem;
-            border: 1px solid #d0d5dd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        
-        .login-modal input:focus {
-            outline: none;
-            border-color: #6c5ce7;
-            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
-        }
-        
-        .login-modal .btn-submit {
-            width: 100%;
-            padding: 0.8rem;
-            background: #6c5ce7;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 0.5rem;
-        }
-        
-        .login-modal .btn-submit:hover {
-            background: #5a4bd1;
-        }
-        
-        .login-modal .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .login-error {
-            color: #dc3545;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-        
-        .login-error.show {
-            display: block;
-        }
-        
         /* ─── FOOTER ────────────────────────────────────────────────── */
-        .app-footer {
+        .footer {
             text-align: center;
-            padding: 2rem 0 0;
+            padding: 1.5rem 0 0;
             margin-top: 2rem;
             border-top: 1px solid #e9ecef;
             color: #6c757d;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
-        
-        .app-footer a {
+        .footer a {
             color: #6c5ce7;
             text-decoration: none;
         }
-        
-        .app-footer a:hover {
-            text-decoration: underline;
-        }
+        .footer a:hover { text-decoration: underline; }
         
         /* ─── RESPONSIVE ────────────────────────────────────────────── */
         @media (max-width: 768px) {
-            .app-container {
-                padding: 1rem;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .section-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .news-grid,
-            .blog-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .services-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .modal-content {
-                margin: 5% 1rem;
-                padding: 1.5rem;
-                max-height: 90vh;
-            }
-            
-            #modal-title {
-                font-size: 1.4rem;
-            }
-            
-            .modal-content .article-body {
-                font-size: 0.95rem;
-            }
-            
-            .stats-bar {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.75rem;
-                padding: 1rem;
-            }
-            
-            .stat-number {
-                font-size: 1.5rem;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .user-badge {
-                font-size: 0.8rem;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-bar {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .logo-text {
-                font-size: 1.2rem;
-            }
-            
-            .hero h1 {
-                font-size: 1.6rem;
-            }
+            .app-container { padding: 0.75rem 1rem; }
+            .hero h1 { font-size: 1.8rem; }
+            .header { flex-direction: column; align-items: stretch; }
+            .header-actions { justify-content: space-between; }
+            .main-grid { grid-template-columns: 1fr; }
+            .chat-section { height: 450px; }
+            .news-grid, .blog-grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 5% 1rem; padding: 1.25rem; }
         }
     </style>
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════
-         APP CONTAINER
+         APP
          ═══════════════════════════════════════════════════════════════ -->
     <div class="app-container" id="app">
         
         <!-- ─── HEADER ────────────────────────────────────────────── -->
-        <header class="app-header">
-            <div class="logo-area">
+        <header class="header">
+            <div class="logo">
                 <span class="logo-icon">🔱</span>
                 <span class="logo-text">Unknown Verdict</span>
-                <span class="logo-sub">v12.1</span>
+                <span class="logo-badge">v12.1</span>
             </div>
             <div class="header-actions">
-                <div class="header-status">
-                    <span class="status-dot online" id="statusDot"></span>
-                    <span id="statusText">Online</span>
-                </div>
+                <div class="status-dot" id="statusDot"></div>
+                <span style="font-size:0.85rem;color:#6c757d;" id="statusText">Online</span>
                 <div id="authSection">
-                    <button class="btn-login" id="loginBtn" onclick="showLoginModal()">🔑 Login</button>
+                    <button class="btn-primary" onclick="showLogin()">🔑 Login</button>
                 </div>
                 <div id="userSection" style="display:none;">
                     <div class="user-badge">
                         <div class="user-avatar" id="userAvatar">U</div>
                         <span class="user-name" id="userName">User</span>
                         <span class="user-tier free" id="userTier">Free</span>
-                        <button class="btn-logout" onclick="logoutUser()">✕</button>
+                        <button class="btn-danger" onclick="logoutUser()" style="padding:0.2rem 0.6rem;font-size:0.7rem;">✕</button>
                     </div>
                 </div>
             </div>
@@ -998,78 +656,99 @@
                 <span class="stat-number" id="statNews">0</span>
                 <span class="stat-label">News Articles</span>
             </div>
+            <div class="stat-item">
+                <span class="stat-number" id="statBlog">0</span>
+                <span class="stat-label">Articles Generated</span>
+            </div>
         </div>
         
-        <!-- ─── SERVICES ────────────────────────────────────────────── -->
-        <section class="services-section">
-            <h2>🛠️ Services</h2>
-            <div class="services-grid">
-                <div class="service-card">
-                    <span class="service-icon">⚖️</span>
-                    <div class="service-title">Legal Intelligence</div>
-                    <div class="service-desc">250 specialist personas across constitutional, corporate, criminal, tax, IP law.</div>
-                    <span class="service-tag">250 Personas</span>
+        <!-- ─── MAIN GRID: CHAT + SERVICES ─────────────────────────── -->
+        <div class="main-grid">
+            
+            <!-- ─── CHAT / CONSOLE ──────────────────────────────────── -->
+            <div class="chat-section">
+                <div class="chat-header">
+                    <h3>💬 AI Console</h3>
+                    <span class="badge">⚡ 250 Agents</span>
                 </div>
-                <div class="service-card">
-                    <span class="service-icon">🏢</span>
-                    <div class="service-title">Business Services</div>
-                    <div class="service-desc">Registration, shareholder agreements, consultancy, SLAs, employment agreements.</div>
-                    <span class="service-tag">Commercial</span>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message system">
+                        Welcome to Unknown Verdict AGI v12.1<br/>
+                        Ask me anything about legal, business, or compliance.
+                    </div>
                 </div>
-                <div class="service-card">
-                    <span class="service-icon">🛡️</span>
-                    <div class="service-title">AI Compliance &amp; Governance</div>
-                    <div class="service-desc">DPDPA, GDPR, CCPA, IT Act compliance. Risk assessment, ethics framework.</div>
-                    <span class="service-tag">Regulatory</span>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">📄</span>
-                    <div class="service-title">Legal Notices</div>
-                    <div class="service-desc">Impressum (TMG), Indian notices, US Terms (DMCA), GDPR Privacy Policy.</div>
-                    <span class="service-tag">Documentation</span>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">🚨</span>
-                    <div class="service-title">Breach Response</div>
-                    <div class="service-desc">72-hour detection, automated notification, DPA reporting, remediation.</div>
-                    <span class="service-tag">Security</span>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">✍️</span>
-                    <div class="service-title">AI Content Generation</div>
-                    <div class="service-desc">Auto-draft articles from AI news, blog posts, LinkedIn content.</div>
-                    <span class="service-tag">Marketing</span>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">🧠</span>
-                    <div class="service-title">Edge AI Intelligence</div>
-                    <div class="service-desc">Local processing, offline capability, Akida/Edge Impulse integration.</div>
-                    <span class="service-tag">Hardware</span>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">🔄</span>
-                    <div class="service-title">Self-Healing Diagnostics</div>
-                    <div class="service-desc">Auto health checks, auto-resolution, real-time monitoring, kill switch.</div>
-                    <span class="service-tag">Reliability</span>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">🌍</span>
-                    <div class="service-title">Jurisdictional Compliance</div>
-                    <div class="service-desc">DPDPA, GDPR, CCPA, IT Act, AI Governance, Breach Response.</div>
-                    <span class="service-tag">Global</span>
+                <div class="chat-input-area">
+                    <textarea id="chatInput" rows="1" placeholder="Type your query here..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendQuery();}"></textarea>
+                    <button class="btn-send" id="sendBtn" onclick="sendQuery()">➤ Send</button>
                 </div>
             </div>
-        </section>
+            
+            <!-- ─── SERVICES PANEL ──────────────────────────────────── -->
+            <div class="services-panel">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:1.1rem;">🛠️ Services</h3>
+                    <span style="font-size:0.75rem;color:#888;">Click to query</span>
+                </div>
+                <div class="services-grid" id="servicesGrid">
+                    <div class="service-card" onclick="quickQuery('legal intelligence')">
+                        <span class="icon">⚖️</span>
+                        <div class="title">Legal Intelligence</div>
+                        <div class="desc">250 personas across constitutional, corporate, criminal, tax, IP law.</div>
+                        <span class="tag">250 Personas</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('business services')">
+                        <span class="icon">🏢</span>
+                        <div class="title">Business Services</div>
+                        <div class="desc">Registration, shareholder agreements, consultancy, SLAs, employment.</div>
+                        <span class="tag">Commercial</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('AI compliance and governance')">
+                        <span class="icon">🛡️</span>
+                        <div class="title">AI Compliance & Governance</div>
+                        <div class="desc">DPDPA, GDPR, CCPA, IT Act compliance. Risk assessment, ethics.</div>
+                        <span class="tag">Regulatory</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('legal notices')">
+                        <span class="icon">📄</span>
+                        <div class="title">Legal Notices</div>
+                        <div class="desc">Impressum (TMG), Indian notices, US Terms (DMCA), GDPR Privacy.</div>
+                        <span class="tag">Documentation</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('breach response')">
+                        <span class="icon">🚨</span>
+                        <div class="title">Breach Response</div>
+                        <div class="desc">72-hour detection, automated notification, DPA reporting, remediation.</div>
+                        <span class="tag">Security</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('AI content generation')">
+                        <span class="icon">✍️</span>
+                        <div class="title">AI Content Generation</div>
+                        <div class="desc">Auto-draft articles from AI news, blog posts, LinkedIn content.</div>
+                        <span class="tag">Marketing</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('edge AI intelligence')">
+                        <span class="icon">🧠</span>
+                        <div class="title">Edge AI Intelligence</div>
+                        <div class="desc">Local processing, offline capability, Akida/Edge Impulse integration.</div>
+                        <span class="tag">Hardware</span>
+                    </div>
+                    <div class="service-card" onclick="quickQuery('diagnostics')">
+                        <span class="icon">🔄</span>
+                        <div class="title">Self-Healing Diagnostics</div>
+                        <div class="desc">Auto health checks, auto-resolution, real-time monitoring, kill switch.</div>
+                        <span class="tag">Reliability</span>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- ─── NEWS SECTION ────────────────────────────────────────── -->
         <section class="news-section" id="newsSection">
             <div class="section-header">
-                <h2>📰 Latest AI News</h2>
-                <div class="section-actions">
-                    <button class="btn-secondary" id="refreshNewsBtn" onclick="fetchNews()">
-                        🔄 Refresh
-                    </button>
-                    <span class="timestamp" id="newsTimestamp">Last updated: loading...</span>
+                <h3>📰 Latest AI News</h3>
+                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="fetchNews()" style="padding:0.3rem 1rem;font-size:0.8rem;">🔄 Refresh</button>
+                    <span class="timestamp" id="newsTimestamp">Loading...</span>
                 </div>
             </div>
             <div id="newsContainer" class="news-grid">
@@ -1083,7 +762,7 @@
         <!-- ─── BLOG SECTION ────────────────────────────────────────── -->
         <section class="blog-section" id="blogSection">
             <div class="section-header">
-                <h2>✍️ Generated Articles</h2>
+                <h3>✍️ Generated Articles</h3>
                 <span class="timestamp" id="blogTimestamp">Auto-generated from news</span>
             </div>
             <div id="blogContainer" class="blog-grid">
@@ -1095,9 +774,9 @@
         </section>
         
         <!-- ─── FOOTER ────────────────────────────────────────────────── -->
-        <footer class="app-footer">
+        <footer class="footer">
             <p>© 2026 <a href="https://www.advocacyalawfrim.in" target="_blank">THE ADVOCACY – A LAW FIRM</a> · All rights reserved.</p>
-            <p style="font-size:0.75rem;color:#adb5bd;margin-top:0.3rem;">
+            <p style="font-size:0.7rem;color:#adb5bd;margin-top:0.2rem;">
                 🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE · Unknown Verdict v12.1 · Enterprise Edition
             </p>
         </footer>
@@ -1106,26 +785,26 @@
     <!-- ═══════════════════════════════════════════════════════════════
          LOGIN MODAL
          ═══════════════════════════════════════════════════════════════ -->
-    <div class="modal login-modal" id="loginModal">
+    <div class="modal" id="loginModal">
         <div class="modal-content">
-            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <span class="close" onclick="closeLogin()">&times;</span>
             <h2>🔑 Sign In</h2>
-            <p>Enter your credentials to access Unknown Verdict</p>
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label for="loginUsername">Username or Email</label>
-                    <input type="text" id="loginUsername" placeholder="counsel" required />
+            <p style="color:#6c757d;margin-bottom:1.5rem;">Enter your credentials to access Unknown Verdict</p>
+            <form onsubmit="handleLogin(event)">
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.2rem;">Username or Email</label>
+                    <input type="text" id="loginUsername" placeholder="counsel" required style="width:100%;padding:0.6rem 1rem;border:1px solid #d0d5dd;border-radius:8px;font-size:1rem;"/>
                 </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" placeholder="••••••••" required />
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.2rem;">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required style="width:100%;padding:0.6rem 1rem;border:1px solid #d0d5dd;border-radius:8px;font-size:1rem;"/>
                 </div>
-                <div class="login-error" id="loginError">Invalid credentials. Please try again.</div>
-                <button type="submit" class="btn-submit" id="loginSubmitBtn">Sign In</button>
+                <div id="loginError" style="color:#dc3545;font-size:0.85rem;display:none;margin-bottom:0.5rem;">Invalid credentials</div>
+                <button type="submit" class="btn-primary" style="width:100%;padding:0.7rem;font-size:1rem;" id="loginSubmitBtn">Sign In</button>
+                <p style="text-align:center;font-size:0.8rem;color:#6c757d;margin-top:0.75rem;">
+                    Demo: <strong>counsel</strong> / <strong>admin</strong>
+                </p>
             </form>
-            <p style="text-align:center;font-size:0.8rem;color:#6c757d;margin-top:1rem;">
-                Demo: <strong>counsel</strong> / <strong>admin</strong>
-            </p>
         </div>
     </div>
     
@@ -1134,36 +813,40 @@
          ═══════════════════════════════════════════════════════════════ -->
     <div class="modal" id="articleModal">
         <div class="modal-content">
-            <span class="close" onclick="closeArticleModal()">&times;</span>
+            <span class="close" onclick="closeArticle()">&times;</span>
             <h2 id="modalTitle">Article Title</h2>
-            <div class="article-body" id="modalBody">Content here...</div>
+            <div class="body" id="modalBody">Content here...</div>
             <div class="modal-actions">
-                <button class="btn-download" id="downloadArticleBtn">📥 Download as Markdown</button>
-                <button class="btn-copy" id="copyArticleBtn">📋 Copy to Clipboard</button>
+                <button class="btn-primary" onclick="downloadArticle()">📥 Download</button>
+                <button class="btn-secondary" onclick="copyArticle()">📋 Copy</button>
             </div>
         </div>
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════
-         JAVASCRIPT - ALL LOGIC
+         JAVASCRIPT
          ═══════════════════════════════════════════════════════════════ -->
     <script>
         // ═══════════════════════════════════════════════════════════════
-        // 🔱 UNKNOWN VERDICT v12.1 - COMPLETE FRONTEND LOGIC
+        // 🔱 UNKNOWN VERDICT v12.1 - COMPLETE FRONTEND
         // ═══════════════════════════════════════════════════════════════
         
-        // ─── CONFIGURATION ──────────────────────────────────────────
-        const REFRESH_INTERVAL = 300000; // 5 minutes
+        // ─── STATE ──────────────────────────────────────────────────
         let currentUser = null;
-        let isAuthenticated = false;
+        let isAuth = false;
+        let currentArticle = {};
         
         // ─── DOM REFS ──────────────────────────────────────────────
-        const $ = (id) => document.getElementById(id);
+        const $ = id => document.getElementById(id);
+        const chatMessages = $('chatMessages');
+        const chatInput = $('chatInput');
+        const sendBtn = $('sendBtn');
         const newsContainer = $('newsContainer');
         const blogContainer = $('blogContainer');
         const newsTimestamp = $('newsTimestamp');
         const blogTimestamp = $('blogTimestamp');
         const statNews = $('statNews');
+        const statBlog = $('statBlog');
         const authSection = $('authSection');
         const userSection = $('userSection');
         const userName = $('userName');
@@ -1171,28 +854,15 @@
         const userAvatar = $('userAvatar');
         
         // ─── AUTH ──────────────────────────────────────────────────
-        function getToken() {
-            return localStorage.getItem('access_token');
-        }
-        
-        function setToken(token) {
-            localStorage.setItem('access_token', token);
-        }
-        
-        function clearToken() {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user_data');
-        }
+        function getToken() { return localStorage.getItem('access_token'); }
+        function setToken(t) { localStorage.setItem('access_token', t); }
+        function clearToken() { localStorage.removeItem('access_token'); localStorage.removeItem('user_data'); }
         
         function loadUser() {
             try {
                 const data = localStorage.getItem('user_data');
-                if (data) {
-                    currentUser = JSON.parse(data);
-                    isAuthenticated = true;
-                    return currentUser;
-                }
-            } catch (e) {}
+                if (data) { currentUser = JSON.parse(data); isAuth = true; return currentUser; }
+            } catch(e) {}
             return null;
         }
         
@@ -1205,74 +875,61 @@
                 userTier.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
                 userTier.className = `user-tier ${tier}`;
                 userAvatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
-                isAuthenticated = true;
+                isAuth = true;
                 currentUser = user;
             } else {
                 authSection.style.display = 'flex';
                 userSection.style.display = 'none';
-                isAuthenticated = false;
+                isAuth = false;
                 currentUser = null;
             }
         }
         
-        // ─── LOGIN ──────────────────────────────────────────────────
-        function showLoginModal() {
-            $('loginModal').style.display = 'block';
-            $('loginError').className = 'login-error';
-            $('loginUsername').value = '';
-            $('loginPassword').value = '';
-            $('loginUsername').focus();
-        }
+        function showLogin() { $('loginModal').style.display = 'block'; $('loginUsername').focus(); }
+        function closeLogin() { $('loginModal').style.display = 'none'; }
         
-        function closeLoginModal() {
-            $('loginModal').style.display = 'none';
-        }
-        
-        async function handleLogin(event) {
-            event.preventDefault();
+        async function handleLogin(e) {
+            e.preventDefault();
             const username = $('loginUsername').value.trim();
             const password = $('loginPassword').value.trim();
             const errorEl = $('loginError');
             const submitBtn = $('loginSubmitBtn');
             
             if (!username || !password) {
-                errorEl.textContent = 'Please enter both username and password.';
-                errorEl.className = 'login-error show';
+                errorEl.textContent = 'Please enter both fields.';
+                errorEl.style.display = 'block';
                 return;
             }
             
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Signing in...';
-            errorEl.className = 'login-error';
+            errorEl.style.display = 'none';
             
             try {
-                const response = await fetch('/auth/login', {
+                const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
+                const data = await res.json();
+                if (res.ok) {
                     setToken(data.access_token);
                     if (data.user) {
                         localStorage.setItem('user_data', JSON.stringify(data.user));
                         updateUI(data.user);
                     }
-                    closeLoginModal();
-                    // Refresh news and blog with auth
+                    closeLogin();
                     fetchNews();
                     fetchBlogPosts();
+                    addMessage('system', '✅ Logged in successfully!');
                 } else {
-                    errorEl.textContent = data.detail || 'Invalid credentials. Please try again.';
-                    errorEl.className = 'login-error show';
+                    errorEl.textContent = data.detail || 'Invalid credentials.';
+                    errorEl.style.display = 'block';
                 }
-            } catch (error) {
-                errorEl.textContent = 'Network error. Please check your connection.';
-                errorEl.className = 'login-error show';
+            } catch(err) {
+                errorEl.textContent = 'Network error. Check connection.';
+                errorEl.style.display = 'block';
             }
-            
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In';
         }
@@ -1280,46 +937,264 @@
         function logoutUser() {
             clearToken();
             updateUI(null);
+            addMessage('system', '👋 Logged out.');
             fetchNews();
             fetchBlogPosts();
         }
         
-        // ─── CLOSE MODALS ON ESC ──────────────────────────────────
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeLoginModal();
-                closeArticleModal();
+        // ─── CHAT / CONSOLE ────────────────────────────────────────
+        function addMessage(type, content) {
+            const div = document.createElement('div');
+            div.className = `chat-message ${type}`;
+            div.innerHTML = content + `<span class="timestamp">${new Date().toLocaleTimeString()}</span>`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function quickQuery(service) {
+            chatInput.value = `Tell me about ${service} services`;
+            sendQuery();
+        }
+        
+        async function sendQuery() {
+            const query = chatInput.value.trim();
+            if (!query) return;
+            if (!isAuth) {
+                addMessage('system', '🔒 Please login first to query.');
+                showLogin();
+                return;
             }
-        });
-        
-        // ─── ARTICLE MODAL ──────────────────────────────────────────
-        let currentArticleData = {};
-        
-        function closeArticleModal() {
-            $('articleModal').style.display = 'none';
+            
+            addMessage('user', query);
+            chatInput.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = '⏳';
+            
+            try {
+                const token = getToken();
+                const formData = new FormData();
+                formData.append('query', query);
+                formData.append('model', 'llama-3.3-70b-versatile');
+                formData.append('search_web', 'off');
+                
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (res.status === 401) {
+                    addMessage('system', '🔒 Session expired. Please login again.');
+                    logoutUser();
+                    showLogin();
+                    return;
+                }
+                
+                if (res.status === 429) {
+                    addMessage('system', '⚠️ Daily limit reached. Upgrade to Premium.');
+                    return;
+                }
+                
+                if (!res.ok) {
+                    const error = await res.json();
+                    addMessage('system', `❌ Error: ${error.detail || 'Unknown'}`);
+                    return;
+                }
+                
+                // Handle streaming response
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let answer = '';
+                let buffer = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.token) {
+                                    answer += parsed.token;
+                                }
+                                if (parsed.verification) {
+                                    // Show verification summary
+                                    const v = parsed.verification;
+                                    addMessage('system', `⚖️ **Verification Complete**<br/>Confidence: ${v.final_confidence || 'MEDIUM'}<br/>Verifiers: ${v.jury_verifiers ? v.jury_verifiers.join(', ') : '10'}`);
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+                
+                if (answer) {
+                    addMessage('ai', answer);
+                } else {
+                    addMessage('system', '⚠️ No response received. Please try again.');
+                }
+                
+            } catch(err) {
+                addMessage('system', `❌ Error: ${err.message}`);
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.textContent = '➤ Send';
+            chatInput.focus();
         }
         
-        function showArticleModal(title, content, source) {
-            const modal = $('articleModal');
-            $('modalTitle').textContent = title || 'Untitled Article';
-            
-            let formatted = content || 'No content available.';
-            formatted = formatted
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
-                .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
-                .replace(/^### (.*?)$/gm, '<h3>$1</h3>');
-            
-            $('modalBody').innerHTML = formatted;
-            currentArticleData = { title, content, source };
-            modal.style.display = 'block';
+        // ─── FETCH NEWS ──────────────────────────────────────────────
+        async function fetchNews() {
+            try {
+                newsContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading news...</p></div>`;
+                const res = await fetch('/api/news?limit=12');
+                const data = await res.json();
+                
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    renderNews(data.articles);
+                    newsTimestamp.textContent = `Updated: ${new Date(data.last_updated).toLocaleString()}`;
+                    statNews.textContent = data.count || data.articles.length;
+                } else {
+                    newsContainer.innerHTML = `<div class="error-box">⚠️ No news available. Click Refresh.</div>`;
+                }
+            } catch(err) {
+                newsContainer.innerHTML = `<div class="error-box">❌ Failed to load news. <button onclick="fetchNews()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button></div>`;
+            }
         }
         
-        // Download article
-        document.getElementById('downloadArticleBtn')?.addEventListener('click', () => {
-            const { title, content } = currentArticleData;
+        function renderNews(articles) {
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = `<div class="info-box">No articles found.</div>`;
+                return;
+            }
+            newsContainer.innerHTML = articles.map(a => `
+                <div class="news-card">
+                    <div>
+                        <span class="source">${a.source || 'Unknown'}</span>
+                        <span class="date">${a.published || 'Today'}</span>
+                    </div>
+                    <div class="title">${a.title}</div>
+                    <div class="summary">${a.summary || ''}</div>
+                    <div class="actions">
+                        <button class="btn-sm generate" onclick="generateArticle('${a.id}')">✍️ Generate</button>
+                        <a href="${a.link}" target="_blank" class="btn-sm read" style="text-decoration:none;">📖 Read</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ─── GENERATE ARTICLE ────────────────────────────────────────
+        async function generateArticle(newsId) {
+            if (!isAuth) {
+                addMessage('system', '🔒 Please login to generate articles.');
+                showLogin();
+                return;
+            }
+            
+            const token = getToken();
+            try {
+                const res = await fetch('/api/news/generate-article', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ news_id: newsId })
+                });
+                
+                if (res.status === 401) {
+                    addMessage('system', '🔒 Session expired. Please login again.');
+                    logoutUser();
+                    showLogin();
+                    return;
+                }
+                
+                if (res.status === 403) {
+                    addMessage('system', '💎 Premium+ required to generate articles.');
+                    return;
+                }
+                
+                const data = await res.json();
+                if (res.ok) {
+                    currentArticle = data;
+                    $('modalTitle').textContent = data.title || 'Article';
+                    $('modalBody').textContent = data.content || 'No content.';
+                    $('articleModal').style.display = 'block';
+                    fetchBlogPosts();
+                    addMessage('system', `✅ Article generated: "${data.title}"`);
+                } else {
+                    addMessage('system', `❌ Generation failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch(err) {
+                addMessage('system', `❌ Error: ${err.message}`);
+            }
+        }
+        
+        // ─── FETCH BLOG ──────────────────────────────────────────────
+        async function fetchBlogPosts() {
+            try {
+                blogContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading articles...</p></div>`;
+                const res = await fetch('/api/blog/posts?limit=10');
+                const data = await res.json();
+                
+                if (data.status === 'ok' && data.posts && data.posts.length > 0) {
+                    renderBlog(data.posts);
+                    blogTimestamp.textContent = `${data.total} articles generated`;
+                    statBlog.textContent = data.total || data.posts.length;
+                } else {
+                    blogContainer.innerHTML = `<div class="info-box">📝 No articles yet. Generate one from the news above.</div>`;
+                }
+            } catch(err) {
+                blogContainer.innerHTML = `<div class="error-box">❌ Failed to load articles.</div>`;
+            }
+        }
+        
+        function renderBlog(posts) {
+            if (!posts || posts.length === 0) {
+                blogContainer.innerHTML = `<div class="info-box">No articles found.</div>`;
+                return;
+            }
+            blogContainer.innerHTML = posts.map(p => `
+                <div class="blog-card">
+                    <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#888;">
+                        <span>${new Date(p.created_at).toLocaleDateString()}</span>
+                        <span style="background:#d4edda;color:#155724;padding:0.1rem 0.5rem;border-radius:10px;">✅ Published</span>
+                    </div>
+                    <div class="title">${p.title}</div>
+                    <div class="summary">${(p.content || '').substring(0, 150)}...</div>
+                    <div class="actions">
+                        <button class="btn-sm read" onclick="viewArticle(${p.id})">📖 Read</button>
+                        ${p.source_url && p.source_url !== '#' ? `<a href="${p.source_url}" target="_blank" class="btn-sm read" style="text-decoration:none;">🔗 Source</a>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ─── VIEW ARTICLE ─────────────────────────────────────────────
+        async function viewArticle(postId) {
+            try {
+                const res = await fetch('/api/blog/posts?limit=20');
+                const data = await res.json();
+                if (data.status === 'ok' && data.posts) {
+                    const post = data.posts.find(p => p.id === postId);
+                    if (post) {
+                        currentArticle = post;
+                        $('modalTitle').textContent = post.title || 'Article';
+                        $('modalBody').textContent = post.content || 'No content.';
+                        $('articleModal').style.display = 'block';
+                    }
+                }
+            } catch(err) {
+                alert('Failed to load article.');
+            }
+        }
+        
+        function closeArticle() { $('articleModal').style.display = 'none'; }
+        
+        function downloadArticle() {
+            const { title, content } = currentArticle;
             if (!content) return;
             const blob = new Blob([`# ${title}\n\n${content}`], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
@@ -1330,270 +1205,70 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        });
+        }
         
-        // Copy article
-        document.getElementById('copyArticleBtn')?.addEventListener('click', async () => {
-            const { content } = currentArticleData;
+        async function copyArticle() {
+            const { content } = currentArticle;
             if (!content) return;
             try {
                 await navigator.clipboard.writeText(content);
-                const btn = document.getElementById('copyArticleBtn');
+                const btn = document.querySelector('.modal-actions .btn-secondary');
                 btn.textContent = '✅ Copied!';
-                setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; }, 2000);
+                setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
             } catch {
                 alert('Failed to copy. Please select and copy manually.');
             }
+        }
+        
+        // ─── KEYBOARD SHORTCUTS ─────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { closeLogin(); closeArticle(); }
         });
         
-        // ─── FETCH NEWS ──────────────────────────────────────────────
-        async function fetchNews() {
-            try {
-                newsContainer.innerHTML =
-                    `<div class="loading-spinner"><div class="spinner"></div><p>Loading news...</p></div>`;
-                
-                const response = await fetch('/api/news?limit=12');
-                const data = await response.json();
-                
-                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
-                    renderNews(data.articles);
-                    if (newsTimestamp) {
-                        newsTimestamp.textContent = `Last updated: ${new Date(data.last_updated).toLocaleString()}`;
-                    }
-                    if (statNews) {
-                        statNews.textContent = data.count || data.articles.length;
-                    }
-                } else {
-                    newsContainer.innerHTML = `
-                        <div class="error-box">
-                            <p>⚠️ No news available. Click Refresh to try again.</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('News fetch error:', error);
-                newsContainer.innerHTML = `
-                    <div class="error-box">
-                        <p>❌ Failed to load news. Please try again.</p>
-                        <button onclick="fetchNews()" class="btn-secondary" style="margin-top:0.75rem;">Retry</button>
-                    </div>
-                `;
-            }
-        }
-        
-        function renderNews(articles) {
-            if (!articles || articles.length === 0) {
-                newsContainer.innerHTML = `<div class="info-box"><p>No articles found.</p></div>`;
-                return;
-            }
-            
-            newsContainer.innerHTML = articles.map(article => `
-                <div class="news-card" data-id="${article.id}">
-                    <div class="news-badge">
-                        <span class="badge-source">${article.source || 'Unknown'}</span>
-                        <span class="badge-date">${article.published || 'Today'}</span>
-                    </div>
-                    <h3 class="news-title">${article.title}</h3>
-                    <p class="news-summary">${article.summary || 'Click to read full article...'}</p>
-                    <div class="news-footer">
-                        <div class="news-actions">
-                            <button class="btn-generate" data-id="${article.id}" onclick="generateArticle('${article.id}')">
-                                ✍️ Generate Article
-                            </button>
-                            <a href="${article.link}" target="_blank" class="btn-read">
-                                📖 Read Original
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // ─── GENERATE ARTICLE ────────────────────────────────────────
-        async function generateArticle(newsId) {
-            const card = document.querySelector(`.news-card[data-id="${newsId}"]`);
-            if (!card) return;
-            
-            const btn = card.querySelector('.btn-generate');
-            if (!btn) return;
-            
-            const originalText = btn.textContent;
-            btn.textContent = '⏳ Generating...';
-            btn.disabled = true;
-            
-            const token = getToken();
-            if (!token) {
-                showLoginModal();
-                btn.textContent = '🔒 Login Required';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                }, 3000);
-                return;
-            }
-            
-            try {
-                const formData = new FormData();
-                formData.append('news_id', newsId);
-                
-                const response = await fetch('/api/news/generate-article', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                
-                if (response.status === 401 || response.status === 403) {
-                    const error = await response.json();
-                    if (response.status === 401) {
-                        showLoginModal();
-                        btn.textContent = '🔒 Login Required';
-                    } else {
-                        btn.textContent = '💎 Upgrade Required';
-                        alert(error.detail || 'Premium+ subscription required.');
-                    }
-                    return;
-                }
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    showArticleModal(data.title, data.content, data.source);
-                    btn.textContent = '✅ Generated!';
-                    btn.style.background = '#28a745';
-                    fetchBlogPosts();
-                } else {
-                    const error = await response.json();
-                    btn.textContent = '❌ Error';
-                    alert(`Generation failed: ${error.detail || 'Unknown error'}`);
-                }
-            } catch (error) {
-                console.error('Generation error:', error);
-                btn.textContent = '❌ Failed';
-                alert('Failed to generate article. Please try again.');
-            }
-            
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.disabled = false;
-                btn.style.background = '';
-            }, 5000);
-        }
-        
-        // ─── FETCH BLOG POSTS ────────────────────────────────────────
-        async function fetchBlogPosts() {
-            try {
-                blogContainer.innerHTML =
-                    `<div class="loading-spinner"><div class="spinner"></div><p>Loading articles...</p></div>`;
-                
-                const response = await fetch('/api/blog/posts?limit=10');
-                const data = await response.json();
-                
-                if (data.status === 'ok' && data.posts && data.posts.length > 0) {
-                    renderBlogPosts(data.posts);
-                    if (blogTimestamp) {
-                        blogTimestamp.textContent = `${data.total} articles generated`;
-                    }
-                } else {
-                    blogContainer.innerHTML = `
-                        <div class="info-box">
-                            <p>📝 No articles generated yet. Click "Generate Article" on any news card above.</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Blog fetch error:', error);
-                blogContainer.innerHTML = `
-                    <div class="error-box">
-                        <p>❌ Failed to load articles.</p>
-                    </div>
-                `;
-            }
-        }
-        
-        function renderBlogPosts(posts) {
-            if (!posts || posts.length === 0) {
-                blogContainer.innerHTML = `<div class="info-box"><p>No articles found.</p></div>`;
-                return;
-            }
-            
-            blogContainer.innerHTML = posts.map(post => `
-                <div class="blog-card" data-id="${post.id}">
-                    <div class="blog-header">
-                        <span class="blog-date">${new Date(post.created_at).toLocaleDateString()}</span>
-                        <span class="blog-status ${post.published ? 'published' : 'draft'}">
-                            ${post.published ? '✅ Published' : '📝 Draft'}
-                        </span>
-                    </div>
-                    <h3 class="blog-title">${post.title}</h3>
-                    <p class="blog-preview">${(post.content || '').substring(0, 200)}...</p>
-                    <div class="blog-footer">
-                        <button class="btn-read-full" onclick="viewFullArticle(${post.id})">📖 Read Full Article</button>
-                        ${post.source_url && post.source_url !== '#' ? 
-                            `<a href="${post.source_url}" target="_blank" class="btn-source">🔗 Source</a>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // ─── VIEW FULL ARTICLE ───────────────────────────────────────
-        async function viewFullArticle(postId) {
-            try {
-                const response = await fetch('/api/blog/posts?limit=20');
-                const data = await response.json();
-                if (data.status === 'ok' && data.posts) {
-                    const post = data.posts.find(p => p.id === postId);
-                    if (post) {
-                        showArticleModal(post.title, post.content, 'Generated Article');
-                    }
-                }
-            } catch (error) {
-                console.error('View article error:', error);
-                alert('Failed to load article.');
-            }
-        }
+        document.querySelectorAll('.modal').forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) { m.style.display = 'none'; }
+            });
+        });
         
         // ─── INIT ──────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
-            // Load user
             const user = loadUser();
             updateUI(user);
-            
-            // Load news and blog
             fetchNews();
             fetchBlogPosts();
             
-            // Auto-refresh
+            // Auto-refresh every 5 minutes
             setInterval(() => {
                 fetchNews();
                 fetchBlogPosts();
-            }, REFRESH_INTERVAL);
+            }, 300000);
             
-            // Close modals on overlay click
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                    }
-                });
+            // Auto-resize textarea
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
             
             console.log('🔱 Unknown Verdict v12.1 initialized');
             console.log(`👤 User: ${currentUser ? currentUser.username : 'Not logged in'}`);
-            console.log(`📰 Auto-refresh every ${REFRESH_INTERVAL / 1000}s`);
         });
         
-        // ─── EXPOSE GLOBALLY ──────────────────────────────────────────
+        // ─── GLOBALS ──────────────────────────────────────────────────
         window.fetchNews = fetchNews;
         window.fetchBlogPosts = fetchBlogPosts;
         window.generateArticle = generateArticle;
-        window.showLoginModal = showLoginModal;
-        window.closeLoginModal = closeLoginModal;
+        window.sendQuery = sendQuery;
+        window.quickQuery = quickQuery;
+        window.showLogin = showLogin;
+        window.closeLogin = closeLogin;
         window.handleLogin = handleLogin;
         window.logoutUser = logoutUser;
-        window.showArticleModal = showArticleModal;
-        window.closeArticleModal = closeArticleModal;
-        window.viewFullArticle = viewFullArticle;
+        window.viewArticle = viewArticle;
+        window.closeArticle = closeArticle;
+        window.downloadArticle = downloadArticle;
+        window.copyArticle = copyArticle;
         window.getToken = getToken;
-        window.isAuthenticated = isAuthenticated;
     </script>
 </body>
 </html>
