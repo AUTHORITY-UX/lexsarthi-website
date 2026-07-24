@@ -1,13 +1,7 @@
-# =============================================================================
-# app.py - Main Application Entry Point
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
-# =============================================================================
-
+# app.py - Main Entry Point
 import os
 import logging
-import sys
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -16,9 +10,11 @@ from databases import Database
 import asyncpg
 import redis.asyncio as redis
 
-from config import DATABASE_URL, REDIS_URL, ADMIN_SECRET
+from config import DATABASE_URL, REDIS_URL
 from models import metadata, users
 from core import DIVINE_AGENTS, VERIFIERS, embedding_model
+
+# ─── IMPORT ROUTES ──────────────────────────────────────────────────
 import routes
 
 # ─── LOGGING ──────────────────────────────────────────────────────────
@@ -90,10 +86,9 @@ app = FastAPI(
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ─── INCLUDE ROUTES ──────────────────────────────────────────────────
-# Import routes from routes.py
-from routes import app as routes_app
-app.router.routes.extend(routes_app.router.routes)
+# ─── REGISTER ROUTES ──────────────────────────────────────────────────
+# ✅ FIX: Pass app to routes.register_routes()
+routes.register_routes(app)
 
 # ─── STATIC FILES ─────────────────────────────────────────────────────
 if os.path.exists("static"):
