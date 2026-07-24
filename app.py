@@ -5,6 +5,12 @@
 # =============================================================================
 
 import os
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DATABASE_URL_VAR")
+if not DATABASE_URL:
+    print("❌ DATABASE_URL is NOT set! Please check Hugging Face secrets.")
+else:
+    print("✅ DATABASE_URL found!")
+import os
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
