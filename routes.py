@@ -1,7 +1,7 @@
-# routes.py - All API Routes
 # =============================================================================
-
 # routes.py - All API Routes
+# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
 
 import os
@@ -12,7 +12,7 @@ import string
 import hashlib
 import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict, Any  # ← 'Any' is now imported
+from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, BackgroundTasks, Header, Body
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -23,23 +23,49 @@ from passlib.context import CryptContext
 
 from config import SYSTEM_BASE, TEMPLATES, VERIFIERS, ADMIN_SECRET
 from models import users, queries, payments, bulk_jobs, blog_posts, deliberations, UserLogin, UserCreate, PaymentCreate, LoginRequest
+
+# ─── IMPORT ALL FROM CORE ──────────────────────────────────────────────
 from core import (
-    DIVINE_AGENTS, route_agent, call_llm, jury_verification,
-    fetch_relevant_chunks, serpapi_search, embedding_model,
-    generate_all_agents
+    DIVINE_AGENTS,
+    route_agent,
+    call_llm,
+    jury_verification,
+    fetch_relevant_chunks,
+    serpapi_search,
+    embedding_model,
+    generate_all_agents,
+    EdgeAIManager,
+    AgentSwarm,
+    SelfImprovingSystem,
+    AgentDebate,
+    LegalKnowledgeGraph,
+    SmartDocumentGenerator,
+    AnalyticsDashboard,
+    set_database,
+    set_pg_pool,
+    set_redis_pool,
+    set_logger,
+    database,
+    pg_pool,
+    redis_pool,
+    logger
 )
 
-# ─── SECURITY ──────────────────────────────────────────────────────
+# ─── SECURITY ──────────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 security = HTTPBearer()
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
 
-def hash_password(p): return pwd_context.hash(p)
+def hash_password(p):
+    return pwd_context.hash(p)
+
 def verify_password(p, h):
-    try: return pwd_context.verify(p, h)
-    except: return False
+    try:
+        return pwd_context.verify(p, h)
+    except:
+        return False
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -47,8 +73,10 @@ def create_access_token(data: dict):
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_token(token):
-    try: return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except: raise HTTPException(status_code=401, detail="Invalid token")
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security)):
     payload = decode_token(cred.credentials)
@@ -60,25 +88,38 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
         q = users.select().where(users.c.id == uid)
     except ValueError:
         q = users.select().where(users.c.username == uid_or_username)
+    
+    if not database:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
     user = await database.fetch_one(q)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return dict(user)
 
-# ─── REGISTER ROUTES FUNCTION ──────────────────────────────────────
+# ─── INITIALIZE ALL AGI SYSTEMS ──────────────────────────────────────
+edge_ai = EdgeAIManager()
+agent_swarm = AgentSwarm()
+self_improving = SelfImprovingSystem()
+agent_debate = AgentDebate()
+knowledge_graph = LegalKnowledgeGraph()
+document_generator = SmartDocumentGenerator()
+analytics = AnalyticsDashboard()
+
+# ─── REGISTER ROUTES FUNCTION ──────────────────────────────────────────
 def register_routes(app: FastAPI):
     """Register all routes with the FastAPI app"""
-    
-    # ═══════════════════════════════════════════════════════════════
+
+    # ═══════════════════════════════════════════════════════════════════
     # HEALTH
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/health")
     async def health():
         return {"status": "healthy", "version": "12.1", "timestamp": datetime.now().isoformat()}
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # STATUS
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/status")
     async def system_status():
         return {
@@ -88,12 +129,13 @@ def register_routes(app: FastAPI):
             "verifiers": len(VERIFIERS),
             "judge": "Shakti",
             "knowledge_chunks": 1047,
+            "database": "connected" if database else "disconnected",
             "timestamp": datetime.now().isoformat()
         }
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # INFO
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/info")
     async def system_info():
         return {
@@ -106,9 +148,26 @@ def register_routes(app: FastAPI):
             "version": "v12.1"
         }
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
+    # LICENSE
+    # ═══════════════════════════════════════════════════════════════════
+    @app.get("/license")
+    async def get_license():
+        return {
+            "status": "ok",
+            "model": "Llama 3.1",
+            "release_date": "July 23, 2024",
+            "license": "Llama 3.1 Community License",
+            "license_url": "https://llama.meta.com/llama3_1/license/",
+            "attribution": "Built with Llama",
+            "copyright": "Copyright © Meta Platforms, Inc. All Rights Reserved.",
+            "project": "Unknown Verdict v12.1",
+            "owner": "THE ADVOCACY – A LAW FIRM"
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
     # AUTH
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.post("/auth/login")
     async def login(body: UserLogin):
         if not database:
@@ -152,9 +211,9 @@ def register_routes(app: FastAPI):
     async def me(cu: dict = Depends(get_current_user)):
         return cu
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # ASK
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.post("/ask")
     async def ask(
         query: str = Form(...),
@@ -209,9 +268,9 @@ def register_routes(app: FastAPI):
         yield f"data: {json.dumps({'verification': verification})}\n\n"
         yield "data: [DONE]\n\n"
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # NEWS
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/api/news")
     async def get_legal_news():
         import feedparser
@@ -239,9 +298,9 @@ def register_routes(app: FastAPI):
                 pass
         return {"status": "ok", "count": len(articles), "articles": articles[:20], "last_updated": datetime.now().isoformat()}
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # GENERATE ARTICLE
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.post("/api/news/generate-article")
     async def generate_article(request: Request, news_id: str = Form(...), cu: dict = Depends(get_current_user)):
         return {
@@ -252,9 +311,9 @@ def register_routes(app: FastAPI):
             "published": datetime.now().isoformat()
         }
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # BLOG POSTS
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/api/blog/posts")
     async def get_blog_posts(limit: int = 20, offset: int = 0):
         if not database:
@@ -263,9 +322,9 @@ def register_routes(app: FastAPI):
         total = await database.fetch_val("SELECT COUNT(*) FROM blog_posts")
         return {"status": "ok", "posts": [dict(r) for r in rows], "total": total}
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # TEMPLATES
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/api/templates")
     async def get_templates():
         return {"templates": [{"id": k, "name": v["name"], "fields": v["fields"]} for k, v in TEMPLATES.items()]}
@@ -279,16 +338,16 @@ def register_routes(app: FastAPI):
         result = await call_llm("You are a legal assistant.", prompt, "groq")
         return {"status": "success", "document": result}
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # BREACHES
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/breaches")
     async def list_breaches():
         return {"breaches": [], "count": 0, "message": "No breach records found"}
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # API ROOT
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     @app.get("/api/")
     async def api_root():
         return {
@@ -296,9 +355,341 @@ def register_routes(app: FastAPI):
             "endpoints": ["/api/news", "/breaches", "/status", "/info", "/auth/login", "/health", "/docs", "/ask"]
         }
 
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 2: EDGE AI
+    # ═══════════════════════════════════════════════════════════════════
+    @app.get("/api/edge/status")
+    async def edge_status():
+        metrics = edge_ai.get_metrics()
+        return {
+            "status": "ok",
+            "metrics": metrics,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/edge/process/audio")
+    async def edge_process_audio(
+        request: Request,
+        audio: UploadFile = File(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Edge AI requires Premium+ plan")
+        
+        audio_data = await audio.read()
+        result = await edge_ai.process_audio(audio_data)
+        
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/edge/process/vision")
+    async def edge_process_vision(
+        request: Request,
+        image: UploadFile = File(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Edge AI requires Premium+ plan")
+        
+        image_data = await image.read()
+        result = await edge_ai.process_vision(image_data)
+        
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 3: AGENT SWARMS
+    # ═══════════════════════════════════════════════════════════════════
+    @app.post("/api/swarm/execute")
+    async def swarm_execute(
+        request: Request,
+        task: str = Form(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Swarm requires Enterprise plan")
+        
+        result = await agent_swarm.execute(task)
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.get("/api/swarm/stats")
+    async def swarm_stats():
+        return {
+            "status": "ok",
+            "stats": {
+                "tasks_completed": agent_swarm.tasks_completed,
+                "agent_count": len(agent_swarm.agents),
+                "history_count": len(agent_swarm.execution_history)
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 4: SELF-IMPROVING
+    # ═══════════════════════════════════════════════════════════════════
+    @app.post("/api/feedback")
+    async def submit_feedback(
+        request: Request,
+        query: str = Form(...),
+        answer: str = Form(...),
+        rating: int = Form(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        if rating < 1 or rating > 5:
+            raise HTTPException(status_code=400, detail="Rating must be 1-5")
+        
+        result = await self_improving.collect_feedback(query, answer, rating, cu["id"])
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/improve")
+    async def run_improvement(request: Request, secret: str = Form(...)):
+        if secret != ADMIN_SECRET:
+            raise HTTPException(status_code=403, detail="Invalid secret")
+        
+        result = await self_improving.improve()
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.get("/api/improve/stats")
+    async def improvement_stats():
+        return {
+            "status": "ok",
+            "stats": self_improving.get_stats(),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 5: MULTI-AGENT DEBATE
+    # ═══════════════════════════════════════════════════════════════════
+    @app.post("/api/debate")
+    async def start_debate(
+        request: Request,
+        question: str = Form(...),
+        num_agents: int = Form(5),
+        rounds: int = Form(3),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Debate requires Enterprise plan")
+        
+        num_agents = min(max(num_agents, 3), 10)
+        rounds = min(max(rounds, 1), 5)
+        
+        result = await agent_debate.debate(question, num_agents, rounds)
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.get("/api/debate/stats")
+    async def debate_stats():
+        return {
+            "status": "ok",
+            "stats": agent_debate.get_stats(),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 6: KNOWLEDGE GRAPH
+    # ═══════════════════════════════════════════════════════════════════
+    @app.get("/api/graph/concept/{concept}")
+    async def query_concept(concept: str, depth: int = 2):
+        result = await knowledge_graph.query(concept, depth)
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/graph/relationship")
+    async def add_relationship(
+        request: Request,
+        from_concept: str = Form(...),
+        to_concept: str = Form(...),
+        relation: str = Form(...),
+        weight: float = Form(1.0),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Graph editing requires Enterprise plan")
+        
+        await knowledge_graph.add_relation(from_concept, to_concept, relation, weight)
+        return {
+            "status": "ok",
+            "message": "Relationship added",
+            "from": from_concept,
+            "to": to_concept,
+            "relation": relation,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.get("/api/graph/stats")
+    async def graph_stats():
+        return {
+            "status": "ok",
+            "stats": knowledge_graph.get_stats(),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 7: DOCUMENT ASSEMBLER
+    # ═══════════════════════════════════════════════════════════════════
+    @app.post("/api/document/generate")
+    async def generate_document(
+        request: Request,
+        template_id: str = Form(...),
+        data: str = Form(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Document generation requires Premium+ plan")
+        
+        try:
+            data_dict = json.loads(data)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid JSON data")
+        
+        result = await document_generator.generate(template_id, data_dict)
+        
+        if "error" in result:
+            raise HTTPException(status_code=404, detail=result["error"])
+        
+        return {
+            "status": "ok",
+            "result": {
+                "template": result["template"],
+                "name": result["name"],
+                "content": result["content"],
+                "generated_at": result["generated_at"]
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/document/batch")
+    async def generate_batch_documents(
+        request: Request,
+        template_id: str = Form(...),
+        data_list: str = Form(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Batch generation requires Enterprise plan")
+        
+        try:
+            data_list_dict = json.loads(data_list)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid JSON data")
+        
+        result = await document_generator.generate_batch(template_id, data_list_dict)
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.get("/api/document/templates")
+    async def list_document_templates():
+        return {
+            "status": "ok",
+            "templates": [{"id": k, "name": v["name"], "fields": v["fields"]} for k, v in TEMPLATES.items()],
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PHASE 8: ANALYTICS DASHBOARD
+    # ═══════════════════════════════════════════════════════════════════
+    @app.get("/api/analytics/dashboard")
+    async def get_analytics_dashboard():
+        result = await analytics.get_dashboard_data()
+        return result
+
+    @app.get("/api/analytics/user/{user_id}")
+    async def get_user_analytics(user_id: int, cu: dict = Depends(get_current_user)):
+        if cu["id"] != user_id and cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        result = await analytics.get_user_analytics(user_id)
+        return result
+
+    @app.get("/api/analytics/confidence")
+    async def get_confidence_stats():
+        if not database:
+            return {"status": "error", "message": "Database not available"}
+        
+        stats = await database.fetch_all(
+            """
+            SELECT 
+                COUNT(*) as total,
+                AVG(CAST(confidence AS FLOAT)) as avg_conf,
+                COUNT(CASE WHEN confidence = 'HIGH' THEN 1 END) as high_count,
+                COUNT(CASE WHEN confidence = 'MEDIUM' THEN 1 END) as medium_count,
+                COUNT(CASE WHEN confidence = 'LOW' THEN 1 END) as low_count
+            FROM deliberations
+            """
+        )
+        
+        row = stats[0] if stats else {}
+        return {
+            "status": "ok",
+            "stats": {
+                "total_deliberations": row.get("total", 0),
+                "average_confidence": row.get("avg_conf", 0),
+                "high_confidence": row.get("high_count", 0),
+                "medium_confidence": row.get("medium_count", 0),
+                "low_confidence": row.get("low_count", 0)
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ═══════════════════════════════════════════════════════════════════
+    # SYSTEM HEALTH
+    # ═══════════════════════════════════════════════════════════════════
+    @app.get("/api/system/health")
+    async def system_health():
+        health = {
+            "status": "healthy",
+            "version": "12.1",
+            "components": {
+                "database": "connected" if database else "disconnected",
+                "redis": "connected" if redis_pool else "disabled",
+                "edge_ai": edge_ai.get_metrics()["mode"],
+                "agents": len(DIVINE_AGENTS),
+                "verifiers": len(VERIFIERS)
+            },
+            "stats": {
+                "total_queries": await database.fetch_val("SELECT COUNT(*) FROM queries") if database else 0,
+                "total_users": await database.fetch_val("SELECT COUNT(*) FROM users") if database else 0,
+                "swarm_tasks": agent_swarm.tasks_completed,
+                "improvements": self_improving.improvements_made,
+                "debates": agent_debate.total_debates,
+                "documents_generated": document_generator.generated_count
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return health
+
+    # ═══════════════════════════════════════════════════════════════════
     # COMPLIANCE DASHBOARD
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     
     class ComplianceFramework:
         """Real-time compliance monitoring"""
@@ -460,9 +851,9 @@ def register_routes(app: FastAPI):
             ]
         }
 
-    # ═══════════════════════════════════════════════════════════════
-    # DATABASE HELPERS (needed for app.py)
-    # ═══════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
+    # DATABASE HELPERS
+    # ═══════════════════════════════════════════════════════════════════
     
     async def _create_tables():
         if not database:
@@ -519,13 +910,31 @@ def register_routes(app: FastAPI):
                 confidence TEXT,
                 sources JSONB,
                 timestamp TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE TABLE IF NOT EXISTS user_feedback (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                rating INTEGER,
+                comment TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE TABLE IF NOT EXISTS fine_tune_data (
+                id SERIAL PRIMARY KEY,
+                query TEXT NOT NULL,
+                initial_answer TEXT,
+                final_answer TEXT NOT NULL,
+                confidence TEXT,
+                is_low_confidence BOOLEAN DEFAULT FALSE,
+                used_for_training BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
             )"""
         ]
         for stmt in tables:
             try:
                 await database.execute(stmt)
             except Exception as e:
-                logger.warning(f"Table creation warning: {e}")
+                if logger:
+                    logger.warning(f"Table creation warning: {e}")
 
     async def _ensure_test_user():
         if not database:
@@ -541,372 +950,9 @@ def register_routes(app: FastAPI):
                 api_key="".join(random.choices(string.ascii_letters + string.digits, k=32)),
                 memory=json.dumps([])
             ))
-            logger.info("✅ Seeded test user 'counsel'.")
+            if logger:
+                logger.info("✅ Seeded test user 'counsel'.")
 
     # Make helpers available to app.py
     register_routes._create_tables = _create_tables
     register_routes._ensure_test_user = _ensure_test_user
-
-# =============================================================================
-# PHASE 2-8: NEW ROUTES
-# =============================================================================
-
-# Initialize all systems
-edge_ai = EdgeAIManager()
-agent_swarm = AgentSwarm()
-self_improving = SelfImprovingSystem()
-agent_debate = AgentDebate()
-knowledge_graph = LegalKnowledgeGraph()
-document_generator = SmartDocumentGenerator()
-analytics = AnalyticsDashboard()
-
-# ─── PHASE 2: EDGE AI ──────────────────────────────────────────────
-
-@app.get("/api/edge/status")
-async def edge_status():
-    """Get Edge AI status"""
-    metrics = edge_ai.get_metrics()
-    return {
-        "status": "ok",
-        "metrics": metrics,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.post("/api/edge/process/audio")
-async def edge_process_audio(
-    request: Request,
-    audio: UploadFile = File(...),
-    cu: dict = Depends(get_current_user)
-):
-    """Process audio on Edge AI"""
-    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Edge AI requires Premium+ plan")
-    
-    audio_data = await audio.read()
-    result = await edge_ai.process_audio(audio_data)
-    
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.post("/api/edge/process/vision")
-async def edge_process_vision(
-    request: Request,
-    image: UploadFile = File(...),
-    cu: dict = Depends(get_current_user)
-):
-    """Process image on Edge AI"""
-    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Edge AI requires Premium+ plan")
-    
-    image_data = await image.read()
-    result = await edge_ai.process_vision(image_data)
-    
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 3: AGENT SWARMS ──────────────────────────────────────────
-
-@app.post("/api/swarm/execute")
-async def swarm_execute(
-    request: Request,
-    task: str = Form(...),
-    cu: dict = Depends(get_current_user)
-):
-    """Execute task using agent swarm"""
-    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Swarm requires Enterprise plan")
-    
-    result = await agent_swarm.execute(task)
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/swarm/stats")
-async def swarm_stats():
-    """Get swarm statistics"""
-    return {
-        "status": "ok",
-        "stats": {
-            "tasks_completed": agent_swarm.tasks_completed,
-            "agent_count": len(agent_swarm.agents),
-            "history_count": len(agent_swarm.execution_history)
-        },
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 4: SELF-IMPROVING ────────────────────────────────────────
-
-@app.post("/api/feedback")
-async def submit_feedback(
-    request: Request,
-    query: str = Form(...),
-    answer: str = Form(...),
-    rating: int = Form(...),
-    cu: dict = Depends(get_current_user)
-):
-    """Submit feedback for improvement"""
-    if rating < 1 or rating > 5:
-        raise HTTPException(status_code=400, detail="Rating must be 1-5")
-    
-    result = await self_improving.collect_feedback(query, answer, rating, cu["id"])
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.post("/api/improve")
-async def run_improvement(request: Request, secret: str = Form(...)):
-    """Run self-improvement cycle (admin only)"""
-    if secret != ADMIN_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid secret")
-    
-    result = await self_improving.improve()
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/improve/stats")
-async def improvement_stats():
-    """Get improvement statistics"""
-    return {
-        "status": "ok",
-        "stats": self_improving.get_stats(),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 5: MULTI-AGENT DEBATE ────────────────────────────────────
-
-@app.post("/api/debate")
-async def start_debate(
-    request: Request,
-    question: str = Form(...),
-    num_agents: int = Form(5),
-    rounds: int = Form(3),
-    cu: dict = Depends(get_current_user)
-):
-    """Start a multi-agent debate"""
-    if cu["tier"] not in ("enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Debate requires Enterprise plan")
-    
-    num_agents = min(max(num_agents, 3), 10)
-    rounds = min(max(rounds, 1), 5)
-    
-    result = await agent_debate.debate(question, num_agents, rounds)
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/debate/stats")
-async def debate_stats():
-    """Get debate statistics"""
-    return {
-        "status": "ok",
-        "stats": agent_debate.get_stats(),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 6: KNOWLEDGE GRAPH ───────────────────────────────────────
-
-@app.get("/api/graph/concept/{concept}")
-async def query_concept(concept: str, depth: int = 2):
-    """Query knowledge graph for a concept"""
-    result = await knowledge_graph.query(concept, depth)
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.post("/api/graph/relationship")
-async def add_relationship(
-    request: Request,
-    from_concept: str = Form(...),
-    to_concept: str = Form(...),
-    relation: str = Form(...),
-    weight: float = Form(1.0),
-    cu: dict = Depends(get_current_user)
-):
-    """Add a relationship to the knowledge graph"""
-    if cu["tier"] not in ("enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Graph editing requires Enterprise plan")
-    
-    await knowledge_graph.add_relation(from_concept, to_concept, relation, weight)
-    return {
-        "status": "ok",
-        "message": "Relationship added",
-        "from": from_concept,
-        "to": to_concept,
-        "relation": relation,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/graph/stats")
-async def graph_stats():
-    """Get knowledge graph statistics"""
-    return {
-        "status": "ok",
-        "stats": knowledge_graph.get_stats(),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 7: DOCUMENT ASSEMBLER ─────────────────────────────────────
-
-@app.post("/api/document/generate")
-async def generate_document(
-    request: Request,
-    template_id: str = Form(...),
-    data: str = Form(...),
-    cu: dict = Depends(get_current_user)
-):
-    """Generate a legal document from template"""
-    if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Document generation requires Premium+ plan")
-    
-    try:
-        data_dict = json.loads(data)
-    except:
-        raise HTTPException(status_code=400, detail="Invalid JSON data")
-    
-    result = await document_generator.generate(template_id, data_dict)
-    
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    
-    return {
-        "status": "ok",
-        "result": {
-            "template": result["template"],
-            "name": result["name"],
-            "content": result["content"],
-            "generated_at": result["generated_at"]
-        },
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.post("/api/document/batch")
-async def generate_batch_documents(
-    request: Request,
-    template_id: str = Form(...),
-    data_list: str = Form(...),
-    cu: dict = Depends(get_current_user)
-):
-    """Generate multiple documents in batch"""
-    if cu["tier"] not in ("enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Batch generation requires Enterprise plan")
-    
-    try:
-        data_list_dict = json.loads(data_list)
-    except:
-        raise HTTPException(status_code=400, detail="Invalid JSON data")
-    
-    result = await document_generator.generate_batch(template_id, data_list_dict)
-    return {
-        "status": "ok",
-        "result": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/document/templates")
-async def list_document_templates():
-    """List all available document templates"""
-    return {
-        "status": "ok",
-        "templates": [{"id": k, "name": v["name"], "fields": v["fields"]} for k, v in TEMPLATES.items()],
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 8: ANALYTICS DASHBOARD ───────────────────────────────────
-
-@app.get("/api/analytics/dashboard")
-async def get_analytics_dashboard():
-    """Get complete analytics dashboard data"""
-    result = await analytics.get_dashboard_data()
-    return result
-
-@app.get("/api/analytics/user/{user_id}")
-async def get_user_analytics(user_id: int, cu: dict = Depends(get_current_user)):
-    """Get analytics for a specific user"""
-    if cu["id"] != user_id and cu["tier"] not in ("enterprise", "lifetime"):
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    result = await analytics.get_user_analytics(user_id)
-    return result
-
-@app.get("/api/analytics/confidence")
-async def get_confidence_stats():
-    """Get confidence distribution statistics"""
-    if not database:
-        return {"status": "error", "message": "Database not available"}
-    
-    stats = await database.fetch_all(
-        """
-        SELECT 
-            COUNT(*) as total,
-            AVG(CAST(confidence AS FLOAT)) as avg_conf,
-            COUNT(CASE WHEN confidence = 'HIGH' THEN 1 END) as high_count,
-            COUNT(CASE WHEN confidence = 'MEDIUM' THEN 1 END) as medium_count,
-            COUNT(CASE WHEN confidence = 'LOW' THEN 1 END) as low_count
-        FROM deliberations
-        """
-    )
-    
-    row = stats[0] if stats else {}
-    return {
-        "status": "ok",
-        "stats": {
-            "total_deliberations": row.get("total", 0),
-            "average_confidence": row.get("avg_conf", 0),
-            "high_confidence": row.get("high_count", 0),
-            "medium_confidence": row.get("medium_count", 0),
-            "low_confidence": row.get("low_count", 0)
-        },
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ─── PHASE 8: SYSTEM HEALTH ──────────────────────────────────────────
-
-@app.get("/api/system/health")
-async def system_health():
-    """Get complete system health status"""
-    health = {
-        "status": "healthy",
-        "version": "12.1",
-        "components": {
-            "database": "connected" if database else "disconnected",
-            "redis": "connected" if redis_pool else "disabled",
-            "edge_ai": edge_ai.get_metrics()["mode"],
-            "agents": len(DIVINE_AGENTS),
-            "verifiers": len(VERIFIERS)
-        },
-        "stats": {
-            "total_queries": await database.fetch_val("SELECT COUNT(*) FROM queries") if database else 0,
-            "total_users": await database.fetch_val("SELECT COUNT(*) FROM users") if database else 0,
-            "swarm_tasks": agent_swarm.tasks_completed,
-            "improvements": self_improving.improvements_made,
-            "debates": agent_debate.total_debates,
-            "documents_generated": document_generator.generated_count
-        },
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    return health
