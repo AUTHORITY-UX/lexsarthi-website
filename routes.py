@@ -3,7 +3,10 @@
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
-
+from passlib.context import CryptContext
+import random
+import string
+import json
 import os
 import time
 import json
@@ -1075,4 +1078,153 @@ async def ensure_test_user(db):
         ))
         logger.info("✅ Seeded test user 'counsel'.")
     else:
-        logger.info("✅ Test user 'counsel' already exists.")
+        logger.info("✅ Test user 'counsel' already exists.") 
+# ─── DATABASE HELPERS (EXPORTED FOR app.py) ──────────────────────────
+
+async def _create_tables():
+    """Create all database tables"""
+    if not database:
+        logger.warning("⚠️ Database not available - skipping table creation")
+        return
+    
+    try:
+        # Enable pgvector
+        await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+    except:
+        pass
+    
+    tables = [
+        """CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            username VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            full_name VARCHAR(255),
+            is_active BOOLEAN DEFAULT TRUE,
+            is_premium BOOLEAN DEFAULT FALSE,
+            tier VARCHAR(20) DEFAULT 'free',
+            queries_used_today INTEGER DEFAULT 0,
+            last_query_reset TIMESTAMP DEFAULT NOW(),
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW(),
+            api_key VARCHAR(64) UNIQUE,
+            preferences JSONB,
+            memory JSONB DEFAULT '[]'
+        )""",
+        """CREATE TABLE IF NOT EXISTS queries (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            query TEXT,
+            response TEXT,
+            metadata JSONB,
+            created_at TIMESTAMP DEFAULT NOW(),
+            expires_at TIMESTAMP
+        )""",
+        """CREATE TABLE IF NOT EXISTS blog_posts (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            content TEXT,
+            source_url TEXT,
+            created_at TIMESTAMP DEFAULT NOW(),
+            published BOOLEAN DEFAULT TRUE
+        )""",
+        """CREATE TABLE IF NOT EXISTS deliberations (
+            id SERIAL PRIMARY KEY,
+            query TEXT NOT NULL,
+            domain TEXT,
+            persona TEXT,
+            provider TEXT,
+            initial_answer TEXT,
+            verifier_results JSONB,
+            final_answer TEXT,
+            confidence TEXT,
+            sources JSONB,
+            timestamp TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS knowledge_chunks (
+            id SERIAL PRIMARY KEY,
+            content TEXT NOT NULL,
+            metadata JSONB NOT NULL,
+            embedding vector(384) NOT NULL
+        )""",
+        """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
+            ON knowledge_chunks 
+            USING hnsw (embedding vector_cosine_ops)""",
+        """CREATE TABLE IF NOT EXISTS context_chunks (
+            id SERIAL PRIMARY KEY,
+            source_id VARCHAR(64) NOT NULL,
+            content TEXT NOT NULL,
+            metadata JSONB,
+            embedding vector(384) NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE INDEX IF NOT EXISTS idx_context_chunks_embedding 
+            ON context_chunks 
+            USING hnsw (embedding vector_cosine_ops)""",
+        """CREATE TABLE IF NOT EXISTS webhook_events (
+            id SERIAL PRIMARY KEY,
+            event VARCHAR(100),
+            payload JSONB,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS user_feedback (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            rating INTEGER,
+            comment TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS fine_tune_data (
+            id SERIAL PRIMARY KEY,
+            query TEXT NOT NULL,
+            initial_answer TEXT,
+            final_answer TEXT NOT NULL,
+            confidence TEXT,
+            is_low_confidence BOOLEAN DEFAULT FALSE,
+            used_for_training BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT NOW()
+        )"""
+    ]
+    
+    for stmt in tables:
+        try:
+            await database.execute(stmt)
+        except Exception as e:
+            if logger:
+                logger.warning(f"Table creation warning: {e}")
+    
+    if logger:
+        logger.info("✅ All tables created/verified")
+
+async def _ensure_test_user():
+    """Create test user if it doesn't exist"""
+    if not database:
+        return
+    
+    try:
+        existing = await database.fetch_one(
+            "SELECT id FROM users WHERE username = 'counsel'"
+        )
+        if not existing:
+            import random
+            import string
+            import json
+            from passlib.context import CryptContext
+            pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+            
+            await database.execute(
+                """INSERT INTO users (username, email, password_hash, full_name, tier, api_key, memory)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)""",
+                "counsel",
+                "counsel@advocacyalawfrim.in",
+                pwd_context.hash("Password123!"),
+                "Counsel User",
+                "enterprise",
+                "".join(random.choices(string.ascii_letters + string.digits, k=32)),
+                json.dumps([])
+            )
+            if logger:
+                logger.info("✅ Seeded test user 'counsel'.")
+    except Exception as e:
+        if logger:
+            logger.error(f"❌ Failed to create test user: {e}")
