@@ -1,5 +1,5 @@
 # =============================================================================
-# core.py - Core Functions: Agents, LLM, Verifiers, RAG, Search
+# core.py - Core Functions: Agents, LLM, Verifiers, RAG, All AGI Phases
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # =============================================================================
 
@@ -8,7 +8,9 @@ import json
 import asyncio
 import re
 import hashlib
-from typing import Dict, List, Optional
+import random
+import time
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 import httpx
@@ -20,9 +22,8 @@ import openai
 from config import (
     SYSTEM_BASE, DOMAINS_FULL, DIVINE_NAMES_POOL, sub_specialties,
     VERIFIERS, OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY,
-    DEEPSEEK_API_KEY, OPENROUTER_API_KEY, SERPAPI_KEY
+    DEEPSEEK_API_KEY, OPENROUTER_API_KEY, SERPAPI_KEY, TEMPLATES
 )
-from models import deliberations
 
 # ─── PROVIDER CLIENTS ──────────────────────────────────────────────
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -34,6 +35,12 @@ if GEMINI_API_KEY:
 
 # ─── EMBEDDING MODEL ──────────────────────────────────────────────
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# ─── GLOBALS ──────────────────────────────────────────────────────
+pg_pool = None
+redis_pool = None
+database = None
+logger = None
 
 # ─── GENERATE AGENTS ──────────────────────────────────────────────
 def generate_all_agents():
@@ -292,50 +299,9 @@ async def serpapi_search(query: str, unrestricted: bool = False) -> List[Dict]:
                 return r.json().get("organic_results", [])
     except:
         pass
-    return [] 
-# ─── COMPLIANCE HELPERS ────────────────────────────────────────────
+    return []
 
-class ComplianceScorer:
-    """Calculate compliance scores dynamically"""
-    
-    @staticmethod
-    def calculate_jurisdiction_score(
-        country: str,
-        data_protection_laws: List[str],
-        audit_results: Dict
-    ) -> Dict:
-        """
-        Calculate compliance score for a specific jurisdiction
-        """
-        weights = {
-            "GDPR": 0.25,
-            "DPDPA": 0.20,
-            "CCPA": 0.20,
-            "PIPL": 0.15,
-            "LGPD": 0.10,
-            "Other": 0.10
-        }
-        
-        score = 0
-        details = []
-        
-        for law in data_protection_laws:
-            weight = weights.get(law, 0.10)
-            law_score = audit_results.get(law, {}).get("score", 80)
-            score += law_score * weight
-            details.append({
-                "law": law,
-                "score": law_score,
-                "weight": weight,
-                "status": "compliant" if law_score >= 85 else "needs_review"
-            })
-        
-        return {
-            "jurisdiction": country,
-            "overall_score": round(score, 1),
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        } 
+
 # =============================================================================
 # PHASE 2: EDGE AI DEPLOYMENT
 # =============================================================================
@@ -354,28 +320,31 @@ class EdgeAIManager:
         """Initialize Edge AI hardware"""
         if self.mode == "jetson":
             try:
-                # NVIDIA Jetson initialization
                 import jetson.inference
                 import jetson.utils
                 self.device = "jetson"
                 self.models_loaded.append("jetson-inference")
-                logger.info("✅ NVIDIA Jetson initialized")
+                if logger:
+                    logger.info("✅ NVIDIA Jetson initialized")
             except ImportError:
-                logger.warning("⚠️ Jetson modules not found - falling back to simulation")
+                if logger:
+                    logger.warning("⚠️ Jetson modules not found - falling back to simulation")
                 self.mode = "simulation"
         elif self.mode == "akida":
             try:
-                # Akida initialization
                 import akida
                 self.device = "akida"
                 self.models_loaded.append("akida")
-                logger.info("✅ Akida initialized")
+                if logger:
+                    logger.info("✅ Akida initialized")
             except ImportError:
-                logger.warning("⚠️ Akida modules not found - falling back to simulation")
+                if logger:
+                    logger.warning("⚠️ Akida modules not found - falling back to simulation")
                 self.mode = "simulation"
         else:
             self.mode = "simulation"
-            logger.info("⚠️ Running in Edge AI simulation mode")
+            if logger:
+                logger.info("⚠️ Running in Edge AI simulation mode")
         
         return {"mode": self.mode, "device": self.device}
     
@@ -391,7 +360,6 @@ class EdgeAIManager:
                 "confidence": 0.87
             }
         elif self.mode == "jetson":
-            # Real Jetson processing
             result = {
                 "status": "processed",
                 "device": "jetson",
@@ -399,7 +367,6 @@ class EdgeAIManager:
                 "confidence": 0.92
             }
         elif self.mode == "akida":
-            # Real Akida processing
             result = {
                 "status": "processed",
                 "device": "akida",
@@ -452,7 +419,7 @@ class AgentSwarm:
     """Self-organizing multi-agent system"""
     
     def __init__(self):
-        self.agents = DIVINE_AGENTS[:50]  # First 50 agents
+        self.agents = DIVINE_AGENTS[:50]
         self.leader = None
         self.tasks_completed = 0
         self.execution_history = []
@@ -475,7 +442,6 @@ class AgentSwarm:
         """Break down complex task into subtasks"""
         subtasks = []
         
-        # Legal domains to check
         domains = ["contract", "compliance", "corporate", "tax", "intellectual property", 
                    "employment", "dispute", "arbitration", "due diligence", "risk assessment"]
         
@@ -490,24 +456,19 @@ class AgentSwarm:
     
     async def execute(self, task: str) -> Dict:
         """Execute task using swarm intelligence"""
-        # Select leader
         leader = self._select_leader(task)
-        
-        # Decompose task
         subtasks = self._decompose_task(task)
         
-        # Execute subtasks in parallel
         results = []
         tasks = []
         
-        for i, subtask in enumerate(subtasks[:10]):  # Max 10 parallel
+        for i, subtask in enumerate(subtasks[:10]):
             agent = self.agents[i % len(self.agents)]
             tasks.append(self._execute_subtask(agent, subtask))
         
         subtask_results = await asyncio.gather(*tasks)
         results.extend(subtask_results)
         
-        # Synthesize final answer
         final_answer = await self._synthesize(results, task, leader)
         
         self.tasks_completed += 1
@@ -581,18 +542,13 @@ class SelfImprovingSystem:
             "timestamp": datetime.now().isoformat()
         })
         
-        # Update quality score
         self.quality_score = (self.quality_score * len(self.feedback_data) + rating * 10) / (len(self.feedback_data) + 1)
         
-        # Store in database
         if database:
             try:
                 await database.execute(
-                    user_feedback.insert().values(
-                        user_id=user_id,
-                        rating=rating,
-                        comment=f"Auto-collected feedback for query: {query[:100]}"
-                    )
+                    "INSERT INTO user_feedback (user_id, rating, comment) VALUES ($1, $2, $3)",
+                    user_id, rating, f"Auto-collected feedback for query: {query[:100]}"
                 )
             except:
                 pass
@@ -603,12 +559,10 @@ class SelfImprovingSystem:
         """Run self-improvement cycle"""
         self.improvement_cycles += 1
         
-        # Find low-rated responses
         low_rated = [f for f in self.feedback_data if f["rating"] < 3]
         
         improvements = []
-        for item in low_rated[:10]:  # Max 10 per cycle
-            # Generate improved response
+        for item in low_rated[:10]:
             improved = await call_llm(
                 "You are a legal expert. Improve this response for accuracy, clarity, and completeness. Return only the improved answer.",
                 f"Original query: {item['query']}\n\nOriginal answer: {item['answer']}",
@@ -622,17 +576,11 @@ class SelfImprovingSystem:
                     "improved": improved[:200]
                 })
                 
-                # Store improvement data
                 if database:
                     try:
                         await database.execute(
-                            fine_tune_data.insert().values(
-                                query=item["query"],
-                                initial_answer=item["answer"],
-                                final_answer=improved,
-                                confidence="improved",
-                                is_low_confidence=True
-                            )
+                            "INSERT INTO fine_tune_data (query, initial_answer, final_answer, confidence, is_low_confidence) VALUES ($1, $2, $3, $4, $5)",
+                            item["query"], item["answer"], improved, "improved", True
                         )
                     except:
                         pass
@@ -675,7 +623,6 @@ class AgentDebate:
         """Hold a debate among agents"""
         self.total_debates += 1
         
-        # Select agents with diverse domains
         selected_agents = random.sample(DIVINE_AGENTS, min(num_agents, len(DIVINE_AGENTS)))
         
         debate_rounds = []
@@ -684,7 +631,6 @@ class AgentDebate:
         for round_num in range(rounds):
             round_positions = []
             for agent in selected_agents:
-                # Each agent takes a position
                 position = await self._get_position(agent, question, positions)
                 round_positions.append({
                     "agent": agent["name"],
@@ -698,13 +644,9 @@ class AgentDebate:
                 "positions": round_positions
             })
         
-        # Find consensus
         consensus, confidence = await self._find_consensus(positions)
-        
-        # Generate final synthesis
         final_synthesis = await self._synthesize_consensus(positions, consensus, question)
         
-        # Calculate consensus rate
         self.consensus_rate = (self.consensus_rate * (self.total_debates - 1) + confidence) / self.total_debates
         
         debate_record = {
@@ -728,7 +670,10 @@ class AgentDebate:
         
         context = ""
         if previous_positions:
-            context = f"Previous positions:\n{chr(10).join([f"- {p['agent']}: {p['position'][:150]}" for p in previous_positions[-1]])}\n\n"
+            context = "Previous positions:\n"
+            for p in previous_positions[-1]:
+                context += f"- {p['agent']}: {p['position'][:150]}\n"
+            context += "\n"
         
         prompt = f"{context}Question: {question}\n\nYour position (be specific and justify):"
         
@@ -736,13 +681,11 @@ class AgentDebate:
     
     async def _find_consensus(self, positions: List) -> tuple:
         """Find consensus among positions"""
-        # Simplified consensus - use most common themes
         all_positions = []
         for round_positions in positions:
             for p in round_positions:
                 all_positions.append(p["position"])
         
-        # Use LLM to find consensus
         consensus_prompt = f"""
         These are positions from different legal experts:
         {chr(10).join([f"- {p[:200]}" for p in all_positions[:10]])}
@@ -783,9 +726,9 @@ class LegalKnowledgeGraph:
     """Graph of legal concepts and relationships"""
     
     def __init__(self):
-        self.nodes = {}  # Concept -> ID
-        self.node_data = {}  # ID -> {name, category, description}
-        self.edges = []  # (from_id, to_id, relation, weight)
+        self.nodes = {}
+        self.node_data = {}
+        self.edges = []
         self.next_id = 0
     
     async def add_concept(self, name: str, category: str, description: str = "") -> int:
@@ -828,7 +771,6 @@ class LegalKnowledgeGraph:
             "related_concepts": []
         }
         
-        # Direct relations
         for edge in self.edges:
             if edge["from"] == start_id:
                 results["direct_relations"].append({
@@ -843,7 +785,6 @@ class LegalKnowledgeGraph:
                     "weight": edge["weight"]
                 })
         
-        # Related concepts (depth 2)
         if depth >= 2:
             for edge in self.edges:
                 if edge["from"] == start_id:
@@ -916,22 +857,17 @@ class SmartDocumentGenerator:
         if not template:
             return {"error": f"Template '{template_id}' not found"}
         
-        # Generate content using AI
         prompt = template["prompt"].format(**data)
         content = await call_llm("You are a legal document drafter.", prompt, "groq")
         
-        # Create DOCX
         doc = Document()
         
-        # Add title
         title = doc.add_heading(template["name"], 0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
-        # Add date
         date_para = doc.add_paragraph(f"Date: {datetime.now().strftime('%B %d, %Y')}")
         date_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         
-        # Add content
         for line in content.split('\n'):
             if line.strip():
                 if line.startswith('#'):
@@ -941,14 +877,12 @@ class SmartDocumentGenerator:
                 else:
                     doc.add_paragraph(line)
         
-        # Add signature block
         doc.add_paragraph()
         signature_para = doc.add_paragraph()
         signature_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         signature_run = signature_para.add_run("_________________________\nSignature")
         signature_run.bold = True
         
-        # Save to memory
         doc_buffer = io.BytesIO()
         doc.save(doc_buffer)
         doc_buffer.seek(0)
@@ -1014,28 +948,21 @@ class AnalyticsDashboard:
         if not database:
             return {"error": "Database not available"}
         
-        # Total queries
         total_queries = await database.fetch_val("SELECT COUNT(*) FROM queries") or 0
-        
-        # Total users
         total_users = await database.fetch_val("SELECT COUNT(*) FROM users") or 0
         
-        # Active users (last 24 hours)
         active_users = await database.fetch_val(
             "SELECT COUNT(DISTINCT user_id) FROM queries WHERE created_at > NOW() - INTERVAL '24 hours'"
         ) or 0
         
-        # Average confidence
         avg_confidence = await database.fetch_val(
             "SELECT AVG(CAST(confidence AS FLOAT)) FROM deliberations WHERE confidence IS NOT NULL"
         ) or 0
         
-        # Confidence distribution
         confidence_dist = await database.fetch_all(
             "SELECT confidence, COUNT(*) as count FROM deliberations GROUP BY confidence"
         )
         
-        # Daily queries (last 7 days)
         daily_queries = await database.fetch_all(
             """
             SELECT DATE(created_at) as date, COUNT(*) as count 
@@ -1046,7 +973,6 @@ class AnalyticsDashboard:
             """
         )
         
-        # Most used domains
         top_domains = await database.fetch_all(
             """
             SELECT domain, COUNT(*) as count 
@@ -1087,3 +1013,10 @@ class AnalyticsDashboard:
             "queries_today": today,
             "timestamp": datetime.now().isoformat()
         }
+
+
+# =============================================================================
+# LLAMA 3.1 ATTRIBUTION
+# =============================================================================
+
+LLAMA_ATTRIBUTION = "Built with Llama 3.1 · Licensed under Llama 3.1 Community License"
