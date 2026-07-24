@@ -860,6 +860,9 @@
             <p style="font-size:0.7rem;color:#adb5bd;margin-top:0.2rem;">
                 🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE · Unknown Verdict v12.1 · Enterprise Edition
             </p>
+            <p style="font-size:0.65rem;color:#6c757d;margin-top:0.3rem;">
+                Built with Llama 3.1 · <a href="https://llama.meta.com" target="_blank" style="color:#6c757d;text-decoration:underline;">Llama 3.1 Community License</a>
+            </p>
         </footer>
     </div>
     
@@ -883,7 +886,7 @@
                 <div id="loginError" style="color:#dc3545;font-size:0.85rem;display:none;margin-bottom:0.5rem;">Invalid credentials</div>
                 <button type="submit" class="btn-primary" style="width:100%;padding:0.7rem;font-size:1rem;" id="loginSubmitBtn">Sign In</button>
                 <p style="text-align:center;font-size:0.8rem;color:#6c757d;margin-top:0.75rem;">
-                    Demo: <strong>counsel</strong> / <strong>admin</strong>
+                    Demo: <strong>counsel</strong> / <strong>Password123!</strong>
                 </p>
             </form>
         </div>
@@ -930,6 +933,7 @@
         let currentUser = null;
         let isAuth = false;
         let currentArticle = {};
+        let accessToken = null;
         
         // ─── DOM REFS ──────────────────────────────────────────────
         const $ = id => document.getElementById(id);
@@ -951,9 +955,9 @@
         const userAvatar = $('userAvatar');
         
         // ─── AUTH ──────────────────────────────────────────────────
-        function getToken() { return localStorage.getItem('access_token'); }
-        function setToken(t) { localStorage.setItem('access_token', t); }
-        function clearToken() { localStorage.removeItem('access_token'); localStorage.removeItem('user_data'); }
+        function getToken() { return accessToken || localStorage.getItem('access_token'); }
+        function setToken(t) { accessToken = t; localStorage.setItem('access_token', t); }
+        function clearToken() { accessToken = null; localStorage.removeItem('access_token'); localStorage.removeItem('user_data'); }
         
         function loadUser() {
             try {
@@ -1439,7 +1443,6 @@
         // ─── KEYBOARD SHORTCUTS ─────────────────────────────────────
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') { closeLogin(); closeArticle(); }
-            // Close compliance modal on Escape
             const complianceModal = $('complianceModal');
             if (e.key === 'Escape' && complianceModal.style.display === 'block') {
                 complianceModal.style.display = 'none';
@@ -1496,4 +1499,4 @@
         window.getToken = getToken;
     </script>
 </body>
-</html> 
+</html>
