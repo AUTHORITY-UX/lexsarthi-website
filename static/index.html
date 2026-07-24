@@ -398,7 +398,7 @@
         }
         
         /* ─── NEWS SECTION ──────────────────────────────────────────── */
-        .news-section, .blog-section {
+        .news-section, .blog-section, .compliance-section {
             background: white;
             border-radius: 14px;
             border: 1px solid #e9ecef;
@@ -424,6 +424,11 @@
         .news-grid, .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
         }
         .news-card, .blog-card {
@@ -487,12 +492,65 @@
         .btn-sm.read:hover {
             background: #dee2e6;
         }
-        .btn-sm.danger {
-            background: #dc3545;
-            color: white;
+        
+        /* ─── COMPLIANCE CARD ───────────────────────────────────────── */
+        .compliance-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.25s;
         }
-        .btn-sm.danger:hover {
-            background: #c82333;
+        .compliance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .compliance-card .jurisdiction {
+            font-size: 0.7rem;
+            color: #888;
+        }
+        .compliance-card .name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin: 0.2rem 0;
+        }
+        .compliance-card .score {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        .compliance-card .status {
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+        .compliance-card .count {
+            font-size: 0.65rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+        .overall-card {
+            grid-column: 1 / -1;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 2px solid #28a745;
+        }
+        .overall-card .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .overall-card .score {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        .overall-card .status {
+            font-size: 1.2rem;
+        }
+        .overall-card .details {
+            font-size: 0.7rem;
+            color: #888;
         }
         
         /* ─── LOADING ────────────────────────────────────────────────── */
@@ -597,7 +655,13 @@
             .main-grid { grid-template-columns: 1fr; }
             .chat-section { height: 450px; }
             .news-grid, .blog-grid { grid-template-columns: 1fr; }
+            .compliance-grid { grid-template-columns: 1fr 1fr; }
             .modal-content { margin: 5% 1rem; padding: 1.25rem; }
+        }
+        @media (max-width: 480px) {
+            .compliance-grid { grid-template-columns: 1fr; }
+            .services-grid { grid-template-columns: 1fr; }
+            .stats-bar { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -742,6 +806,23 @@
             </div>
         </div>
         
+        <!-- ─── COMPLIANCE DASHBOARD ───────────────────────────────── -->
+        <section class="compliance-section" id="complianceSection">
+            <div class="section-header">
+                <h3>🛡️ Global Compliance Snapshot</h3>
+                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="fetchCompliance()" style="padding:0.3rem 1rem;font-size:0.8rem;">🔄 Refresh</button>
+                    <span class="timestamp" id="complianceTimestamp">Live monitoring</span>
+                </div>
+            </div>
+            <div id="complianceContainer" class="compliance-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading compliance data...</p>
+                </div>
+            </div>
+        </section>
+        
         <!-- ─── NEWS SECTION ────────────────────────────────────────── -->
         <section class="news-section" id="newsSection">
             <div class="section-header">
@@ -824,6 +905,20 @@
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════
+         COMPLIANCE DETAIL MODAL
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="modal" id="complianceModal">
+        <div class="modal-content">
+            <span class="close" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+            <h2 id="complianceModalTitle">Framework Details</h2>
+            <div class="body" id="complianceModalBody">Loading...</div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.style.display='none'">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════
          JAVASCRIPT
          ═══════════════════════════════════════════════════════════════ -->
     <script>
@@ -843,8 +938,10 @@
         const sendBtn = $('sendBtn');
         const newsContainer = $('newsContainer');
         const blogContainer = $('blogContainer');
+        const complianceContainer = $('complianceContainer');
         const newsTimestamp = $('newsTimestamp');
         const blogTimestamp = $('blogTimestamp');
+        const complianceTimestamp = $('complianceTimestamp');
         const statNews = $('statNews');
         const statBlog = $('statBlog');
         const authSection = $('authSection');
@@ -921,6 +1018,7 @@
                     closeLogin();
                     fetchNews();
                     fetchBlogPosts();
+                    fetchCompliance();
                     addMessage('system', '✅ Logged in successfully!');
                 } else {
                     errorEl.textContent = data.detail || 'Invalid credentials.';
@@ -940,6 +1038,7 @@
             addMessage('system', '👋 Logged out.');
             fetchNews();
             fetchBlogPosts();
+            fetchCompliance();
         }
         
         // ─── CHAT / CONSOLE ────────────────────────────────────────
@@ -1024,7 +1123,6 @@
                                     answer += parsed.token;
                                 }
                                 if (parsed.verification) {
-                                    // Show verification summary
                                     const v = parsed.verification;
                                     addMessage('system', `⚖️ **Verification Complete**<br/>Confidence: ${v.final_confidence || 'MEDIUM'}<br/>Verifiers: ${v.jury_verifiers ? v.jury_verifiers.join(', ') : '10'}`);
                                 }
@@ -1220,9 +1318,132 @@
             }
         }
         
+        // ─── COMPLIANCE DASHBOARD ─────────────────────────────────────
+        async function fetchCompliance() {
+            try {
+                complianceContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading compliance data...</p></div>`;
+                
+                const res = await fetch('/api/compliance/snapshot');
+                const data = await res.json();
+                
+                if (data.status === 'ok') {
+                    const overallScore = data.overall_compliance || 0;
+                    const overallStatus = data.overall_status || '🟢 Excellent';
+                    
+                    let html = `
+                        <div class="overall-card" style="border-color: ${overallScore >= 90 ? '#28a745' : overallScore >= 75 ? '#ffc107' : '#dc3545'};">
+                            <div class="label">Overall Compliance</div>
+                            <div class="score">${overallScore}%</div>
+                            <div class="status">${overallStatus}</div>
+                            <div class="details">${data.total_compliant || 0} of ${data.total_requirements || 0} requirements met</div>
+                            <div style="font-size:0.65rem;color:#888;margin-top:0.25rem;">
+                                Updated: ${new Date(data.timestamp).toLocaleString()}
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (data.frameworks) {
+                        Object.entries(data.frameworks).forEach(([key, fw]) => {
+                            const score = fw.compliance_score || 0;
+                            const color = score >= 90 ? '#28a745' : score >= 75 ? '#ffc107' : '#dc3545';
+                            const statusEmoji = score >= 90 ? '🟢' : score >= 75 ? '🟡' : '🔴';
+                            
+                            html += `
+                                <div class="compliance-card" onclick="showFrameworkDetails('${key}')">
+                                    <div class="jurisdiction">${fw.jurisdiction || ''}</div>
+                                    <div class="name">${fw.framework || key.toUpperCase()}</div>
+                                    <div class="score" style="color:${color};">${score}%</div>
+                                    <div class="status">${statusEmoji} ${fw.status || 'active'}</div>
+                                    <div class="count">${fw.compliant_count || 0}/${fw.total_requirements || 0} compliant</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    complianceContainer.innerHTML = html;
+                    
+                    if (complianceTimestamp) {
+                        complianceTimestamp.textContent = `Updated: ${new Date(data.timestamp).toLocaleString()}`;
+                    }
+                } else {
+                    complianceContainer.innerHTML = `<div class="error-box">⚠️ Failed to load compliance data</div>`;
+                }
+            } catch(err) {
+                console.error('Compliance fetch error:', err);
+                complianceContainer.innerHTML = `
+                    <div class="error-box">
+                        ❌ Failed to load compliance data. 
+                        <button onclick="fetchCompliance()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // ─── SHOW FRAMEWORK DETAILS ──────────────────────────────────
+        async function showFrameworkDetails(frameworkId) {
+            try {
+                const modal = $('complianceModal');
+                $('complianceModalTitle').textContent = 'Loading...';
+                $('complianceModalBody').textContent = 'Fetching framework details...';
+                modal.style.display = 'block';
+                
+                const res = await fetch(`/api/compliance/framework/${frameworkId}`);
+                const data = await res.json();
+                
+                if (data && data.framework) {
+                    let details = `
+                        <p><strong>Framework:</strong> ${data.framework}</p>
+                        <p><strong>Jurisdiction:</strong> ${data.jurisdiction || 'Global'}</p>
+                        <p><strong>Compliance Score:</strong> ${data.compliance_score}%</p>
+                        <p><strong>Status:</strong> ${data.status || 'active'}</p>
+                        <hr/>
+                        <h3>Requirements</h3>
+                        <ul style="list-style:none;padding:0;">
+                    `;
+                    
+                    if (data.details) {
+                        data.details.forEach(req => {
+                            const emoji = req.compliant ? '✅' : '❌';
+                            details += `
+                                <li style="padding:0.4rem 0;border-bottom:1px solid #eee;">
+                                    ${emoji} <strong>${req.requirement}</strong>
+                                    <span style="float:right;color:${req.compliant ? '#28a745' : '#dc3545'};">${req.score}%</span>
+                                    <br/><small style="color:#888;">${req.notes || ''}</small>
+                                </li>
+                            `;
+                        });
+                    }
+                    details += `</ul>`;
+                    
+                    if (data.recommendations && data.recommendations.length > 0) {
+                        details += `<h3>💡 Recommendations</h3><ul style="padding-left:1.2rem;">`;
+                        data.recommendations.forEach(rec => {
+                            details += `<li style="color:#856404;">${rec}</li>`;
+                        });
+                        details += `</ul>`;
+                    }
+                    
+                    $('complianceModalTitle').textContent = data.framework;
+                    $('complianceModalBody').innerHTML = details;
+                } else {
+                    $('complianceModalTitle').textContent = 'Error';
+                    $('complianceModalBody').textContent = 'Failed to load framework details.';
+                }
+            } catch(err) {
+                console.error('Framework details error:', err);
+                $('complianceModalTitle').textContent = 'Error';
+                $('complianceModalBody').textContent = 'Failed to load framework details. Please try again.';
+            }
+        }
+        
         // ─── KEYBOARD SHORTCUTS ─────────────────────────────────────
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') { closeLogin(); closeArticle(); }
+            // Close compliance modal on Escape
+            const complianceModal = $('complianceModal');
+            if (e.key === 'Escape' && complianceModal.style.display === 'block') {
+                complianceModal.style.display = 'none';
+            }
         });
         
         document.querySelectorAll('.modal').forEach(m => {
@@ -1237,11 +1458,13 @@
             updateUI(user);
             fetchNews();
             fetchBlogPosts();
+            fetchCompliance();
             
             // Auto-refresh every 5 minutes
             setInterval(() => {
                 fetchNews();
                 fetchBlogPosts();
+                fetchCompliance();
             }, 300000);
             
             // Auto-resize textarea
@@ -1257,6 +1480,7 @@
         // ─── GLOBALS ──────────────────────────────────────────────────
         window.fetchNews = fetchNews;
         window.fetchBlogPosts = fetchBlogPosts;
+        window.fetchCompliance = fetchCompliance;
         window.generateArticle = generateArticle;
         window.sendQuery = sendQuery;
         window.quickQuery = quickQuery;
@@ -1268,6 +1492,7 @@
         window.closeArticle = closeArticle;
         window.downloadArticle = downloadArticle;
         window.copyArticle = copyArticle;
+        window.showFrameworkDetails = showFrameworkDetails;
         window.getToken = getToken;
     </script>
 </body>
