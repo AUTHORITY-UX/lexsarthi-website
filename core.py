@@ -292,4 +292,47 @@ async def serpapi_search(query: str, unrestricted: bool = False) -> List[Dict]:
                 return r.json().get("organic_results", [])
     except:
         pass
-    return []
+    return [] 
+# ─── COMPLIANCE HELPERS ────────────────────────────────────────────
+
+class ComplianceScorer:
+    """Calculate compliance scores dynamically"""
+    
+    @staticmethod
+    def calculate_jurisdiction_score(
+        country: str,
+        data_protection_laws: List[str],
+        audit_results: Dict
+    ) -> Dict:
+        """
+        Calculate compliance score for a specific jurisdiction
+        """
+        weights = {
+            "GDPR": 0.25,
+            "DPDPA": 0.20,
+            "CCPA": 0.20,
+            "PIPL": 0.15,
+            "LGPD": 0.10,
+            "Other": 0.10
+        }
+        
+        score = 0
+        details = []
+        
+        for law in data_protection_laws:
+            weight = weights.get(law, 0.10)
+            law_score = audit_results.get(law, {}).get("score", 80)
+            score += law_score * weight
+            details.append({
+                "law": law,
+                "score": law_score,
+                "weight": weight,
+                "status": "compliant" if law_score >= 85 else "needs_review"
+            })
+        
+        return {
+            "jurisdiction": country,
+            "overall_score": round(score, 1),
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
