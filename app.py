@@ -150,4 +150,36 @@ async def startup_banner():
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "7860"))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, workers=1, log_level="info")
+    uvicorn.run("app:app", host="0.0.0.0", port=port, workers=1, log_level="info") 
+# ─── CONNECT TO REDIS ──────────────────────────────────────────
+redis_url = os.environ.get("REDIS_URL")
+
+if redis_url:
+    try:
+        # Clean the URL
+        clean_url = redis_url.strip()
+        
+        # If using Upstash or any TLS Redis
+        if "upstash" in clean_url or "render" in clean_url:
+            if clean_url.startswith("redis://"):
+                clean_url = clean_url.replace("redis://", "rediss://", 1)
+        
+        redis_pool = redis.from_url(
+            clean_url,
+            decode_responses=True,
+            max_connections=10,
+            socket_keepalive=True,
+            socket_timeout=10,
+            retry_on_timeout=True,
+            retry_on_error=[ConnectionError, TimeoutError, OSError],
+            health_check_interval=30
+        )
+        await redis_pool.ping()
+        logger.info("✅ Redis connected successfully")
+        set_redis_pool(redis_pool)
+    except Exception as e:
+        logger.warning(f"⚠️ Redis connection failed: {e} - Using in-memory fallback")
+        redis_pool = None
+else:
+    logger.warning("⚠️ REDIS_URL not set – using in-memory fallback")
+    redis_pool = None
