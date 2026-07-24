@@ -3,10 +3,7 @@
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
-from passlib.context import CryptContext
-import random
-import string
-import json
+
 import os
 import time
 import json
@@ -14,6 +11,7 @@ import random
 import string
 import hashlib
 import asyncio
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, BackgroundTasks, Header, Body
@@ -53,6 +51,11 @@ from core import (
     redis_pool,
     logger
 )
+
+# ─── SETUP LOGGER ──────────────────────────────────────────────────
+# Ensure logger is set
+if not logger:
+    logger = logging.getLogger("unknown_verdict")
 
 # ─── SECURITY ──────────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
@@ -133,6 +136,7 @@ def register_routes(app: FastAPI):
             "judge": "Shakti",
             "knowledge_chunks": 1047,
             "database": "connected" if database else "disconnected",
+            "redis": "connected" if redis_pool else "disabled",
             "timestamp": datetime.now().isoformat()
         }
 
@@ -315,15 +319,34 @@ def register_routes(app: FastAPI):
         }
 
     # ═══════════════════════════════════════════════════════════════════
-    # BLOG POSTS
+    # BLOG POSTS - FIXED
     # ═══════════════════════════════════════════════════════════════════
     @app.get("/api/blog/posts")
     async def get_blog_posts(limit: int = 20, offset: int = 0):
+        """Get all generated blog posts"""
         if not database:
             return {"status": "ok", "posts": [], "total": 0}
-        rows = await database.fetch_all("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT $1 OFFSET $2", limit, offset)
-        total = await database.fetch_val("SELECT COUNT(*) FROM blog_posts")
-        return {"status": "ok", "posts": [dict(r) for r in rows], "total": total}
+        
+        try:
+            # ✅ FIXED: Use correct parameter binding for databases library
+            rows = await database.fetch_all(
+                "SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
+                {"limit": limit, "offset": offset}
+            )
+            
+            total = await database.fetch_val("SELECT COUNT(*) FROM blog_posts") or 0
+            
+            return {
+                "status": "ok",
+                "posts": [dict(r) for r in rows],
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        except Exception as e:
+            if logger:
+                logger.error(f"Blog posts fetch error: {e}")
+            return {"status": "error", "posts": [], "total": 0, "error": str(e)}
 
     # ═══════════════════════════════════════════════════════════════════
     # TEMPLATES
@@ -914,6 +937,32 @@ def register_routes(app: FastAPI):
                 sources JSONB,
                 timestamp TIMESTAMPTZ DEFAULT NOW()
             )""",
+            """CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                id SERIAL PRIMARY KEY,
+                content TEXT NOT NULL,
+                metadata JSONB NOT NULL,
+                embedding vector(384) NOT NULL
+            )""",
+            """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
+                ON knowledge_chunks 
+                USING hnsw (embedding vector_cosine_ops)""",
+            """CREATE TABLE IF NOT EXISTS context_chunks (
+                id SERIAL PRIMARY KEY,
+                source_id VARCHAR(64) NOT NULL,
+                content TEXT NOT NULL,
+                metadata JSONB,
+                embedding vector(384) NOT NULL,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE INDEX IF NOT EXISTS idx_context_chunks_embedding 
+                ON context_chunks 
+                USING hnsw (embedding vector_cosine_ops)""",
+            """CREATE TABLE IF NOT EXISTS webhook_events (
+                id SERIAL PRIMARY KEY,
+                event VARCHAR(100),
+                payload JSONB,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
             """CREATE TABLE IF NOT EXISTS user_feedback (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -959,272 +1008,3 @@ def register_routes(app: FastAPI):
     # Make helpers available to app.py
     register_routes._create_tables = _create_tables
     register_routes._ensure_test_user = _ensure_test_user
-
-# ─── EXPORTED DATABASE HELPERS ──────────────────────────────────────
-
-async def create_tables(db):
-    """Create all database tables"""
-    if not db:
-        logger.warning("⚠️ Cannot create tables - database not connected")
-        return
-    
-    try:
-        await db.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-        logger.info("✅ pgvector extension enabled")
-    except Exception as e:
-        logger.warning(f"pgvector extension warning: {e}")
-    
-    tables = [
-        """CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            username VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            full_name VARCHAR(255),
-            is_active BOOLEAN DEFAULT TRUE,
-            is_premium BOOLEAN DEFAULT FALSE,
-            tier VARCHAR(20) DEFAULT 'free',
-            queries_used_today INTEGER DEFAULT 0,
-            last_query_reset TIMESTAMP DEFAULT NOW(),
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(),
-            api_key VARCHAR(64) UNIQUE,
-            preferences JSONB,
-            memory JSONB DEFAULT '[]'
-        )""",
-        """CREATE TABLE IF NOT EXISTS queries (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            query TEXT,
-            response TEXT,
-            metadata JSONB,
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )""",
-        """CREATE TABLE IF NOT EXISTS blog_posts (
-            id SERIAL PRIMARY KEY,
-            title TEXT,
-            content TEXT,
-            source_url TEXT,
-            created_at TIMESTAMP DEFAULT NOW(),
-            published BOOLEAN DEFAULT TRUE
-        )""",
-        """CREATE TABLE IF NOT EXISTS deliberations (
-            id SERIAL PRIMARY KEY,
-            query TEXT NOT NULL,
-            domain TEXT,
-            persona TEXT,
-            provider TEXT,
-            initial_answer TEXT,
-            verifier_results JSONB,
-            final_answer TEXT,
-            confidence TEXT,
-            sources JSONB,
-            timestamp TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS user_feedback (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            rating INTEGER,
-            comment TEXT,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS fine_tune_data (
-            id SERIAL PRIMARY KEY,
-            query TEXT NOT NULL,
-            initial_answer TEXT,
-            final_answer TEXT NOT NULL,
-            confidence TEXT,
-            is_low_confidence BOOLEAN DEFAULT FALSE,
-            used_for_training BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS knowledge_chunks (
-            id SERIAL PRIMARY KEY,
-            content TEXT NOT NULL,
-            metadata JSONB NOT NULL,
-            embedding vector(384) NOT NULL
-        )""",
-        """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-            ON knowledge_chunks 
-            USING hnsw (embedding vector_cosine_ops)"""
-    ]
-    
-    for stmt in tables:
-        try:
-            await db.execute(stmt)
-            logger.info(f"✅ Table created/verified")
-        except Exception as e:
-            logger.warning(f"Table creation warning: {e}")
-
-async def ensure_test_user(db):
-    """Ensure test user exists"""
-    if not db:
-        logger.warning("⚠️ Cannot create test user - database not connected")
-        return
-    
-    from models import users
-    
-    existing = await db.fetch_one(users.select().where(users.c.username == "counsel"))
-    if not existing:
-        await db.execute(users.insert().values(
-            username="counsel",
-            email="counsel@advocacyalawfrim.in",
-            password_hash=hash_password("Password123!"),
-            full_name="Counsel User",
-            tier="enterprise",
-            api_key="".join(random.choices(string.ascii_letters + string.digits, k=32)),
-            memory=json.dumps([])
-        ))
-        logger.info("✅ Seeded test user 'counsel'.")
-    else:
-        logger.info("✅ Test user 'counsel' already exists.") 
-# ─── DATABASE HELPERS (EXPORTED FOR app.py) ──────────────────────────
-
-async def _create_tables():
-    """Create all database tables"""
-    if not database:
-        logger.warning("⚠️ Database not available - skipping table creation")
-        return
-    
-    try:
-        # Enable pgvector
-        await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-    except:
-        pass
-    
-    tables = [
-        """CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            username VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            full_name VARCHAR(255),
-            is_active BOOLEAN DEFAULT TRUE,
-            is_premium BOOLEAN DEFAULT FALSE,
-            tier VARCHAR(20) DEFAULT 'free',
-            queries_used_today INTEGER DEFAULT 0,
-            last_query_reset TIMESTAMP DEFAULT NOW(),
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(),
-            api_key VARCHAR(64) UNIQUE,
-            preferences JSONB,
-            memory JSONB DEFAULT '[]'
-        )""",
-        """CREATE TABLE IF NOT EXISTS queries (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            query TEXT,
-            response TEXT,
-            metadata JSONB,
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )""",
-        """CREATE TABLE IF NOT EXISTS blog_posts (
-            id SERIAL PRIMARY KEY,
-            title TEXT,
-            content TEXT,
-            source_url TEXT,
-            created_at TIMESTAMP DEFAULT NOW(),
-            published BOOLEAN DEFAULT TRUE
-        )""",
-        """CREATE TABLE IF NOT EXISTS deliberations (
-            id SERIAL PRIMARY KEY,
-            query TEXT NOT NULL,
-            domain TEXT,
-            persona TEXT,
-            provider TEXT,
-            initial_answer TEXT,
-            verifier_results JSONB,
-            final_answer TEXT,
-            confidence TEXT,
-            sources JSONB,
-            timestamp TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS knowledge_chunks (
-            id SERIAL PRIMARY KEY,
-            content TEXT NOT NULL,
-            metadata JSONB NOT NULL,
-            embedding vector(384) NOT NULL
-        )""",
-        """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-            ON knowledge_chunks 
-            USING hnsw (embedding vector_cosine_ops)""",
-        """CREATE TABLE IF NOT EXISTS context_chunks (
-            id SERIAL PRIMARY KEY,
-            source_id VARCHAR(64) NOT NULL,
-            content TEXT NOT NULL,
-            metadata JSONB,
-            embedding vector(384) NOT NULL,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE INDEX IF NOT EXISTS idx_context_chunks_embedding 
-            ON context_chunks 
-            USING hnsw (embedding vector_cosine_ops)""",
-        """CREATE TABLE IF NOT EXISTS webhook_events (
-            id SERIAL PRIMARY KEY,
-            event VARCHAR(100),
-            payload JSONB,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS user_feedback (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            rating INTEGER,
-            comment TEXT,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS fine_tune_data (
-            id SERIAL PRIMARY KEY,
-            query TEXT NOT NULL,
-            initial_answer TEXT,
-            final_answer TEXT NOT NULL,
-            confidence TEXT,
-            is_low_confidence BOOLEAN DEFAULT FALSE,
-            used_for_training BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT NOW()
-        )"""
-    ]
-    
-    for stmt in tables:
-        try:
-            await database.execute(stmt)
-        except Exception as e:
-            if logger:
-                logger.warning(f"Table creation warning: {e}")
-    
-    if logger:
-        logger.info("✅ All tables created/verified")
-
-async def _ensure_test_user():
-    """Create test user if it doesn't exist"""
-    if not database:
-        return
-    
-    try:
-        existing = await database.fetch_one(
-            "SELECT id FROM users WHERE username = 'counsel'"
-        )
-        if not existing:
-            import random
-            import string
-            import json
-            from passlib.context import CryptContext
-            pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
-            
-            await database.execute(
-                """INSERT INTO users (username, email, password_hash, full_name, tier, api_key, memory)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)""",
-                "counsel",
-                "counsel@advocacyalawfrim.in",
-                pwd_context.hash("Password123!"),
-                "Counsel User",
-                "enterprise",
-                "".join(random.choices(string.ascii_letters + string.digits, k=32)),
-                json.dumps([])
-            )
-            if logger:
-                logger.info("✅ Seeded test user 'counsel'.")
-    except Exception as e:
-        if logger:
-            logger.error(f"❌ Failed to create test user: {e}")
