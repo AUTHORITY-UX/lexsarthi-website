@@ -1,6 +1,7 @@
 # =============================================================================
 # core.py - Core Functions: Agents, LLM, Verifiers, RAG, All AGI Phases
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
 
 import os
@@ -41,6 +42,29 @@ pg_pool = None
 redis_pool = None
 database = None
 logger = None
+
+# ─── SETTER FUNCTIONS ─────────────────────────────────────────────
+def set_database(db):
+    global database
+    database = db
+    if logger:
+        logger.info("✅ Database set in core")
+
+def set_pg_pool(pool):
+    global pg_pool
+    pg_pool = pool
+    if logger:
+        logger.info("✅ PostgreSQL pool set in core")
+
+def set_redis_pool(pool):
+    global redis_pool
+    redis_pool = pool
+    if logger:
+        logger.info("✅ Redis pool set in core")
+
+def set_logger(log):
+    global logger
+    logger = log
 
 # ─── GENERATE AGENTS ──────────────────────────────────────────────
 def generate_all_agents():
