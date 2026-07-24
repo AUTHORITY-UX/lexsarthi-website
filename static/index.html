@@ -3,631 +3,1597 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>THE ADVOCACY – AI-Powered Legal Intelligence</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%91%81%3C/text%3E%3C/svg%3E" />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <title>Unknown Verdict AGI v12.1</title>
+    
+    <!-- ─── FAVICON ─── -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZUAAAAEdEVYdFRpdGxlAENvcHlyaWdodCDCqSAyMDI2IFRIRSBBRFZPQ0FDWSAtIEEgTEFXIEZJUk0uIEFsbCByaWdodHMgcmVzZXJ2ZWQuNURgZQAAAVVJREFUOMuVkz9Lw0AYxr83l8RJq0RBxME6iHQr4p/wg2BwcHNyE4qgo4OIi4XQQUH6AZycnARpBwW3LkIrrWAz1qJpoWmab+99xtxpy2nnh3vuuSfv83u+545gjDHiP+EoFAbAXqQTn+VvYmd3Sic3ll2fcX0gTbqPAKBQMQaAnZ1g5Ptm90qB53l4T3/yA3tNG8be9u7B3u9TvJ67UO4yfHa0RTRfKqKEsW5T23sxXRBHMWCA4CB+SAg1qxaLixNUjt30i0IYw1Y+/Hxcq3rrZRgGAEBb/xFIS4Z9e7TfOAAwe9Sy50mBk9Oh9r5AEK6C0xIdDLr2vusDaRwHUMkkUqZfOUMxI9nTbJ7sTFW4N5Z6iyWYUnahvQpQ3rYXvznLZ2pgs9VggBZBgNWNp4Y73drPAXxtNwTzAEjD7Q4k8sfhJJrMpSeN1fq/lD/Cjc/on/22sAAAAABJRU5ErkJggg==" />
+    
+    <!-- ─── GOOGLE FONTS ─── -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #050508;
-            --panel: rgba(10,10,20,0.82);
-            --border: rgba(212,175,55,0.15);
-            --gold: #d4af37;
-            --gold-soft: rgba(212,175,55,0.08);
-            --text: #f0ede8;
-            --muted: #8a8a95;
-            --ok: #34d399;
-            --err: #ff6b6b;
-            --shadow: 0 8px 32px rgba(0,0,0,0.6);
-            --radius: 16px;
-            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* ═══════════════════════════════════════════════════════════════
+           🔱 UNKNOWN VERDICT v12.1 - COMPLETE STYLES
+           ═══════════════════════════════════════════════════════════════ */
+        
+        /* ─── RESET ────────────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        html, body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            line-height: 1.6;
             min-height: 100vh;
-            background: radial-gradient(ellipse at 30% 20%, #0a0a1a 0%, #050508 80%);
-            font-size: 15px;
-            line-height: 1.55;
         }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
         
-        .eye-bg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30vmin; opacity: 0.03; pointer-events: none; z-index: 0; animation: eyePulse 6s ease-in-out infinite; filter: blur(2px); text-shadow: 0 0 80px rgba(212,175,55,0.2); }
-        @keyframes eyePulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.03; } 50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.07; } }
-        .moon { position: fixed; top: 5%; left: 5%; width: 22vmin; height: 22vmin; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,240,200,0.08), rgba(200,180,150,0.02)); box-shadow: 0 0 60px rgba(255,240,200,0.04); pointer-events: none; z-index: 0; border: 1px solid rgba(255,255,255,0.01); }
-        .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.3; animation: twinkle 4s infinite ease-in-out; }
-        @keyframes twinkle { 0%,100% { opacity:0.1; } 50% { opacity:0.6; } }
-        
-        .container { position: relative; z-index: 2; max-width: 1440px; margin: 0 auto; padding: 16px 20px 30px; min-height: 100vh; display: flex; flex-direction: column; }
-        
-        .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-        .brand { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
-        .brand .eye-icon { font-size: 1.8rem; animation: glowEye 3s ease-in-out infinite; }
-        @keyframes glowEye { 0%, 100% { text-shadow: 0 0 10px rgba(212,175,55,0.3); } 50% { text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3); } }
-        .brand small { font-size: 0.8rem; color: var(--muted); letter-spacing: 2px; font-weight: 300; }
-        .brand .version { background: var(--gold-soft); border: 1px solid var(--border); color: var(--gold); padding: 2px 10px; border-radius: 999px; font-size: 0.5rem; font-weight: 600; }
-        
-        .top-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .btn { border: none; cursor: pointer; font-family: inherit; font-weight: 600; border-radius: 30px; padding: 6px 14px; font-size: 0.7rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
-        .btn:hover { transform: translateY(-1px); }
-        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; box-shadow: 0 4px 12px rgba(212,175,55,0.25); }
-        .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
-        .btn-outline:hover { background: var(--gold-soft); }
-        .btn-sm { padding: 4px 12px; font-size: 0.65rem; }
-        .btn-icon { background: transparent; color: var(--gold); border: 1px solid var(--border); border-radius: 30px; padding: 6px 12px; cursor: pointer; font-size: 0.8rem; }
-        .btn-icon:hover { background: var(--gold-soft); }
-        
-        .live-badge { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.2); padding: 2px 12px; border-radius: 999px; font-size: 0.6rem; color: var(--ok); display: flex; align-items: center; gap: 6px; }
-        .live-badge .dot { width: 6px; height: 6px; background: var(--ok); border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-        
-        .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 40px 0 60px; align-items: center; }
-        .hero-content h1 { font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; font-weight: 700; color: var(--text); line-height: 1.1; margin-bottom: 16px; }
-        .hero-content h1 .gold { color: var(--gold); }
-        .hero-content p { color: var(--muted); font-size: 1.1rem; max-width: 500px; margin-bottom: 24px; line-height: 1.8; }
-        .hero-stats { display: flex; gap: 40px; margin-top: 20px; }
-        .hero-stats .stat { text-align: center; }
-        .hero-stats .stat .number { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 700; color: var(--gold); display: block; }
-        .hero-stats .stat .label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-        .hero-eye { font-size: 20vmin; animation: glowEye 4s ease-in-out infinite; color: var(--gold); opacity: 0.6; }
-        
-        .integration-banner { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--gold); border-radius: var(--radius); padding: 20px 24px; margin: 20px 0 30px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow), 0 0 40px rgba(212,175,55,0.05); }
-        .integration-banner .info { display: flex; align-items: center; gap: 16px; }
-        .integration-banner .info .icon { font-size: 2rem; color: var(--gold); }
-        .integration-banner .info .text h3 { font-family: 'Cormorant Garamond', serif; color: var(--gold); font-size: 1.1rem; }
-        .integration-banner .info .text p { color: var(--muted); font-size: 0.7rem; }
-        
-        .section-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--text); margin-bottom: 6px; }
-        .section-subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
-        
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 30px; }
-        
-        .chat-card { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 400px; }
-        .chat-area { flex: 1; max-height: 40vh; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .msg { max-width: 90%; padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
-        .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04)); border: 1px solid var(--border); }
-        .msg.agent { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
-        .msg .badge-verify { margin-top: 4px; padding: 2px 8px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.55rem; border: 1px solid var(--border); display: inline-block; }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
-        
-        .input-row { display: flex; gap: 6px; align-items: flex-end; }
-        .input-row textarea { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 10px; font-family: inherit; font-size: 0.8rem; resize: vertical; min-height: 40px; outline: none; }
-        .input-row textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.08); }
-        .input-row .send { background: linear-gradient(135deg, #d4af37, #b8901e); color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; height: 42px; display: flex; align-items: center; gap: 4px; }
-        .input-row .send:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
-        .status-text { font-size: 0.6rem; color: var(--muted); margin-top: 3px; }
-        
-        .sidebar { display: flex; flex-direction: column; gap: 14px; }
-        .sidebar .card { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
-        .sidebar .card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-        .sidebar .card .card-header .icon { color: var(--gold); }
-        
-        .news-item { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
-        .news-item:hover { color: var(--gold); }
-        .news-item .news-time { font-size: 0.5rem; color: var(--muted); display: block; margin-top: 1px; }
-        .news-item .news-source { font-size: 0.45rem; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 30px; }
-        
-        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 30px; }
-        .service-card { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; transition: var(--transition); box-shadow: var(--shadow); }
-        .service-card:hover { border-color: var(--gold); transform: translateY(-3px); }
-        .service-card .icon { font-size: 1.6rem; color: var(--gold); margin-bottom: 6px; }
-        .service-card h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
-        .service-card p { font-size: 0.7rem; color: var(--muted); line-height: 1.6; }
-        .service-card .tag { font-size: 0.5rem; color: var(--gold); background: var(--gold-soft); padding: 2px 8px; border-radius: 30px; display: inline-block; margin-top: 4px; }
-        
-        .cta-section { background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02)); border: 1px solid var(--gold); border-radius: var(--radius); padding: 30px; text-align: center; margin: 20px 0; }
-        .cta-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--text); margin-bottom: 8px; }
-        .cta-section p { color: var(--muted); margin-bottom: 16px; font-size: 0.9rem; }
-        .cta-section .btn-gold { padding: 10px 32px; font-size: 0.85rem; }
-        
-        .footer { margin-top: auto; padding: 24px 0 16px; border-top: 1px solid var(--border); }
-        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 24px; margin-bottom: 16px; }
-        .footer-brand h4 { font-family: 'Cormorant Garamond', serif; color: var(--gold); font-size: 1.2rem; }
-        .footer-brand p { color: var(--muted); font-size: 0.65rem; line-height: 1.8; max-width: 300px; }
-        .footer-col h5 { color: var(--text); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .footer-col a { display: block; color: var(--muted); text-decoration: none; font-size: 0.65rem; padding: 2px 0; transition: color 0.2s; }
-        .footer-col a:hover { color: var(--gold); }
-        .footer-bottom { border-top: 1px solid var(--border); padding-top: 12px; text-align: center; font-size: 0.55rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-        
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px; }
-        .modal.open { display: flex; }
-        .modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 18px; padding: 20px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: var(--shadow); }
-        .modal-box .close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
-        .modal-box .close:hover { color: var(--text); }
-        .modal-box h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 10px; }
-        .modal-box input { width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); border-radius: 8px; margin-bottom: 8px; font-family: inherit; font-size: 0.8rem; }
-        .modal-box .actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
-        
-        @media (max-width: 1024px) {
-            .hero { grid-template-columns: 1fr; text-align: center; }
-            .hero-content p { margin: 0 auto 24px; }
-            .hero-stats { justify-content: center; }
-            .main-grid { grid-template-columns: 1fr; }
-            .services-grid { grid-template-columns: 1fr 1fr; }
-            .footer-grid { grid-template-columns: 1fr 1fr; }
+        /* ─── SCROLLBAR ────────────────────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        @media (max-width: 640px) {
-            .header { flex-direction: column; align-items: stretch; }
-            .brand { font-size: 1.4rem; }
-            .hero-content h1 { font-size: 2.2rem; }
-            .services-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; }
-            .integration-banner { flex-direction: column; text-align: center; }
-            .hero-stats { flex-wrap: wrap; gap: 16px; }
-            .top-actions { flex-wrap: wrap; justify-content: center; }
-            .input-row { flex-direction: column; align-items: stretch; }
-            .input-row .send { width: 100%; justify-content: center; }
-            .chat-area { max-height: 30vh; }
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4c9d4;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0a8b8;
+        }
+        
+        /* ─── CONTAINER ────────────────────────────────────────────── */
+        .app-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 3rem;
+        }
+        
+        /* ─── HEADER ────────────────────────────────────────────────── */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0 1.5rem;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6c5ce7, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .logo-sub {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            -webkit-text-fill-color: #6c757d;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-dot.online {
+            background: #28a745;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(0.8);
+            }
+        }
+        
+        .btn-login,
+        .btn-logout {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-login {
+            background: #6c5ce7;
+            color: white;
+        }
+        
+        .btn-login:hover {
+            background: #5a4bd1;
+            transform: translateY(-1px);
+        }
+        
+        .btn-logout {
+            background: #e9ecef;
+            color: #1a1a2e;
+        }
+        
+        .btn-logout:hover {
+            background: #dee2e6;
+        }
+        
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem 0.4rem 0.4rem;
+            background: #f8f9fa;
+            border-radius: 30px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #6c5ce7;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1a1a2e;
+        }
+        
+        .user-tier {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .user-tier.free {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .user-tier.premium {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .user-tier.enterprise {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .user-tier.lifetime {
+            background: linear-gradient(135deg, #6c5ce7, #a855f7);
+            color: white;
+        }
+        
+        /* ─── HERO ──────────────────────────────────────────────────── */
+        .hero {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a1a2e, #6c5ce7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: #4a4a6a;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.75rem;
+        }
+        
+        /* ─── STATS BAR ────────────────────────────────────────────── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1.5rem 0 2rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1a1a2e;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        /* ─── SERVICES GRID ────────────────────────────────────────── */
+        .services-section {
+            margin: 2rem 0;
+        }
+        
+        .services-section h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1a1a2e;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.5rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.25s;
+            cursor: default;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            border-color: #d0d5dd;
+        }
+        
+        .service-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+        
+        .service-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 0.3rem;
+        }
+        
+        .service-desc {
+            font-size: 0.9rem;
+            color: #4a4a6a;
+            line-height: 1.5;
+        }
+        
+        .service-tag {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 12px;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        /* ─── NEWS SECTION ──────────────────────────────────────────── */
+        .news-section,
+        .blog-section {
+            padding: 2rem 1.5rem;
+            background: white;
+            border-radius: 16px;
+            margin: 2rem 0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0;
+        }
+        
+        .section-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .timestamp {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .btn-secondary {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #e9ecef;
+            color: #1a1a2e;
+        }
+        
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+        
+        .btn-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* ─── NEWS GRID ────────────────────────────────────────────── */
+        .news-grid,
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        /* ─── NEWS CARD ────────────────────────────────────────────── */
+        .news-card,
+        .blog-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.25s;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e9ecef;
+        }
+        
+        .news-card:hover,
+        .blog-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        }
+        
+        .news-badge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6c757d;
+        }
+        
+        .badge-source {
+            background: #6c5ce7;
+            color: white;
+            padding: 0.15rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+        
+        .badge-date {
+            color: #6c757d;
+            font-weight: 400;
+        }
+        
+        .news-title,
+        .blog-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            flex: 1;
+        }
+        
+        .news-summary,
+        .blog-preview {
+            color: #4a4a6a;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+        
+        .news-footer,
+        .blog-footer {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .news-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        /* ─── BUTTONS ────────────────────────────────────────────────── */
+        .btn-generate,
+        .btn-read,
+        .btn-read-full,
+        .btn-source {
+            padding: 0.35rem 0.85rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .btn-generate {
+            background: #6c5ce7;
+            color: white;
+        }
+        
+        .btn-generate:hover {
+            background: #5a4bd1;
+            transform: scale(1.02);
+        }
+        
+        .btn-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-read,
+        .btn-read-full {
+            background: #e9ecef;
+            color: #1a1a2e;
+        }
+        
+        .btn-read:hover,
+        .btn-read-full:hover {
+            background: #dee2e6;
+        }
+        
+        .btn-source {
+            background: #17a2b8;
+            color: white;
+            font-size: 0.7rem;
+        }
+        
+        .btn-source:hover {
+            background: #138496;
+        }
+        
+        /* ─── BLOG CARD ────────────────────────────────────────────── */
+        .blog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+        }
+        
+        .blog-date {
+            color: #6c757d;
+        }
+        
+        .blog-status {
+            padding: 0.1rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .blog-status.published {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .blog-status.draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        /* ─── MODAL ──────────────────────────────────────────────────── */
+        .modal {
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            overflow-y: auto;
+            backdrop-filter: blur(4px);
+            display: none;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 3% auto;
+            padding: 2.5rem;
+            max-width: 820px;
+            border-radius: 16px;
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal .close {
+            position: sticky;
+            top: 0;
+            float: right;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #888;
+            background: white;
+            padding: 0 0.5rem;
+            line-height: 1;
+            z-index: 10;
+        }
+        
+        .modal .close:hover {
+            color: #333;
+        }
+        
+        #modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0.5rem 0 1rem;
+            padding-right: 2.5rem;
+        }
+        
+        .modal-content .article-body {
+            line-height: 1.9;
+            font-size: 1.05rem;
+            color: #212529;
+            white-space: pre-wrap;
+            margin: 1.5rem 0;
+            padding: 0 0.5rem;
+        }
+        
+        .modal-content .article-body h1 {
+            font-size: 2rem;
+            margin: 1.5rem 0 1rem 0;
+            color: #1a1a2e;
+        }
+        
+        .modal-content .article-body h2 {
+            font-size: 1.5rem;
+            margin: 1.2rem 0 0.8rem 0;
+            color: #1a1a2e;
+        }
+        
+        .modal-content .article-body h3 {
+            font-size: 1.2rem;
+            margin: 1rem 0 0.6rem 0;
+            color: #1a1a2e;
+        }
+        
+        .modal-content .article-body strong {
+            color: #1a1a2e;
+        }
+        
+        .modal-content .article-body ul,
+        .modal-content .article-body ol {
+            margin: 0.8rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .modal-content .article-body li {
+            margin-bottom: 0.3rem;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .btn-download {
+            padding: 0.6rem 1.5rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-download:hover {
+            background: #218838;
+        }
+        
+        .btn-copy {
+            padding: 0.6rem 1.5rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-copy:hover {
+            background: #5a6268;
+        }
+        
+        /* ─── LOADING / ERROR STATES ────────────────────────────────── */
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e9ecef;
+            border-top-color: #6c5ce7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .error-box,
+        .info-box {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            grid-column: 1 / -1;
+        }
+        
+        .error-box {
+            color: #dc3545;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info-box {
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* ─── LOGIN MODAL ───────────────────────────────────────────── */
+        .login-modal .modal-content {
+            max-width: 420px;
+            padding: 2.5rem;
+        }
+        
+        .login-modal h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1a1a2e;
+        }
+        
+        .login-modal p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-modal .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .login-modal label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            color: #1a1a2e;
+        }
+        
+        .login-modal input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .login-modal input:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+        }
+        
+        .login-modal .btn-submit {
+            width: 100%;
+            padding: 0.8rem;
+            background: #6c5ce7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+        
+        .login-modal .btn-submit:hover {
+            background: #5a4bd1;
+        }
+        
+        .login-modal .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .login-error {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .login-error.show {
+            display: block;
+        }
+        
+        /* ─── FOOTER ────────────────────────────────────────────────── */
+        .app-footer {
+            text-align: center;
+            padding: 2rem 0 0;
+            margin-top: 2rem;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+        
+        .app-footer a {
+            color: #6c5ce7;
+            text-decoration: none;
+        }
+        
+        .app-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* ─── RESPONSIVE ────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .news-grid,
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .modal-content {
+                margin: 5% 1rem;
+                padding: 1.5rem;
+                max-height: 90vh;
+            }
+            
+            #modal-title {
+                font-size: 1.4rem;
+            }
+            
+            .modal-content .article-body {
+                font-size: 0.95rem;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+            
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .user-badge {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .logo-text {
+                font-size: 1.2rem;
+            }
+            
+            .hero h1 {
+                font-size: 1.6rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="eye-bg">👁️</div>
-    <div class="moon"></div>
-    <div class="stars" id="stars"></div>
-    
-    <div class="container">
-        <header class="header">
-            <div class="brand">
-                <span class="eye-icon">👁️</span> THE ADVOCACY
-                <small>global adjudicated law firm</small>
-                <span class="version">v12.1</span>
+    <!-- ═══════════════════════════════════════════════════════════════
+         APP CONTAINER
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="app-container" id="app">
+        
+        <!-- ─── HEADER ────────────────────────────────────────────── -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">🔱</span>
+                <span class="logo-text">Unknown Verdict</span>
+                <span class="logo-sub">v12.1</span>
             </div>
-            <div class="top-actions">
-                <span class="live-badge"><span class="dot"></span> AI Live</span>
-                <button class="btn btn-outline btn-sm" onclick="showLogin()">Login</button>
-                <button class="btn btn-gold btn-sm" onclick="showPayment()">Subscribe</button>
-                <button class="btn btn-icon" onclick="openUnknown()" title="Open Unknown Verdict"><i class="fas fa-robot"></i></button>
+            <div class="header-actions">
+                <div class="header-status">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span id="statusText">Online</span>
+                </div>
+                <div id="authSection">
+                    <button class="btn-login" id="loginBtn" onclick="showLoginModal()">🔑 Login</button>
+                </div>
+                <div id="userSection" style="display:none;">
+                    <div class="user-badge">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span class="user-name" id="userName">User</span>
+                        <span class="user-tier free" id="userTier">Free</span>
+                        <button class="btn-logout" onclick="logoutUser()">✕</button>
+                    </div>
+                </div>
             </div>
         </header>
         
-        <!-- HERO -->
+        <!-- ─── HERO ────────────────────────────────────────────────── -->
         <section class="hero">
-            <div class="hero-content">
-                <h1>Global Legal Intelligence<br><span class="gold">Powered by AI</span></h1>
-                <p>Expert legal solutions for business, powered by cutting-edge AI technology. From transactional to compliance, governance, and beyond.</p>
-                <div class="hero-stats">
-                    <div class="stat"><span class="number">250+</span><span class="label">Specialist Personas</span></div>
-                    <div class="stat"><span class="number">10</span><span class="label">Expert Verifiers</span></div>
-                    <div class="stat"><span class="number">1</span><span class="label">AI Adjudicator · Shakti</span></div>
-                </div>
-                <button class="btn btn-gold" style="margin-top:20px;padding:12px 32px;font-size:0.85rem;" onclick="scrollToServices()"><i class="fas fa-gavel"></i> EXPLORE SERVICES</button>
-            </div>
-            <div class="hero-right"><div class="hero-eye">👁️</div></div>
+            <h1>⚖️ AI-Powered Legal Intelligence</h1>
+            <p>250 specialist personas · 10 verifiers · Judge Shakti</p>
+            <span class="hero-badge">🔱 Enterprise Edition</span>
         </section>
         
-        <!-- INTEGRATION BANNER -->
-        <div class="integration-banner">
-            <div class="info">
-                <span class="icon">⚖️</span>
-                <div class="text">
-                    <h3>Unknown Verdict Engine</h3>
-                    <p>250 specialist personas · 10 verifiers · Judge Shakti — fully integrated into THE ADVOCACY workflow.</p>
-                </div>
+        <!-- ─── STATS ────────────────────────────────────────────────── -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-number" id="statAgents">250</span>
+                <span class="stat-label">AI Personas</span>
             </div>
-            <button class="btn btn-gold" onclick="openUnknown()"><i class="fas fa-rocket"></i> Launch Unknown</button>
-        </div>
-        
-        <!-- MAIN CHAT + SIDEBAR -->
-        <div class="main-grid">
-            <!-- CHAT -->
-            <div class="chat-card">
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="font-size:0.75rem;color:var(--muted);">Intelligence Console</span>
-                    <span style="font-size:0.55rem;color:var(--muted);">250 Personas · 10 Verifiers</span>
-                </div>
-                <div class="chat-area" id="chatArea">
-                    <div id="chat">
-                        <div class="msg agent" style="background:rgba(212,175,55,0.04);border-color:rgba(212,175,55,0.1);text-align:center;padding:16px;">
-                            <span style="font-size:1.8rem;display:block;">👁️</span>
-                            <p style="font-size:0.95rem;color:var(--text);font-weight:300;">Global AI governance intelligence at your command.</p>
-                            <span style="font-size:0.6rem;color:var(--muted);">Real‑time · Jurisdictional · Verified</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="input-row">
-                    <textarea id="queryInput" rows="1" placeholder="Ask about AI governance, compliance, or global risk…"></textarea>
-                    <button class="send" id="sendBtn"><i class="fas fa-paper-plane"></i> Analyze</button>
-                </div>
-                <div id="status" class="status-text">Ready · Global AI governance intelligence active</div>
+            <div class="stat-item">
+                <span class="stat-number" id="statVerifiers">10</span>
+                <span class="stat-label">Verifiers</span>
             </div>
-            
-            <!-- SIDEBAR -->
-            <div class="sidebar">
-                <!-- Real-time AI News -->
-                <div class="card">
-                    <div class="card-header">
-                        <span><i class="fas fa-newspaper" class="icon"></i> AI Governance News</span>
-                        <span id="newsCount" style="background:var(--gold-soft);color:var(--gold);padding:0 6px;border-radius:999px;font-size:0.5rem;">0</span>
-                    </div>
-                    <div id="newsFeed" style="max-height:300px;overflow-y:auto;">
-                        <div style="font-size:0.7rem;color:var(--muted);padding:8px 0;">Loading global AI updates…</div>
-                    </div>
-                    <div style="margin-top:4px;font-size:0.45rem;color:var(--muted);text-align:right;">Auto‑updates every 60s</div>
-                </div>
-                
-                <!-- Quick Actions -->
-                <div class="card" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px;">
-                    <button class="btn btn-outline btn-sm" onclick="showCompliance()"><i class="fas fa-balance-scale"></i> Compliance</button>
-                    <button class="btn btn-outline btn-sm" onclick="showBusiness()"><i class="fas fa-building"></i> Business</button>
-                    <button class="btn btn-outline btn-sm" onclick="showAIGovernance()"><i class="fas fa-robot"></i> AI Gov</button>
-                    <button class="btn btn-outline btn-sm" onclick="showNotices()"><i class="fas fa-file-signature"></i> Notices</button>
-                    <button class="btn btn-outline btn-sm" onclick="showDrafts()"><i class="fas fa-file-alt"></i> Drafts</button>
-                </div>
+            <div class="stat-item">
+                <span class="stat-number" id="statChunks">1,047</span>
+                <span class="stat-label">Knowledge Chunks</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="statNews">0</span>
+                <span class="stat-label">News Articles</span>
             </div>
         </div>
         
-        <!-- ALL SERVICES -->
-        <section id="services">
-            <h2 class="section-title">Unknown Verdict Services</h2>
-            <p class="section-subtitle">Complete AI-powered legal intelligence suite integrated into THE ADVOCACY.</p>
+        <!-- ─── SERVICES ────────────────────────────────────────────── -->
+        <section class="services-section">
+            <h2>🛠️ Services</h2>
             <div class="services-grid">
-                <div class="service-card"><div class="icon">🧠</div><h4>Legal Intelligence</h4><p>250 specialist personas across constitutional, corporate, criminal, tax, IP law.</p><span class="tag">250 Personas</span></div>
-                <div class="service-card"><div class="icon">🏢</div><h4>Business Services</h4><p>Registration, shareholder agreements, consultancy, SLAs, employment agreements.</p><span class="tag">Commercial</span></div>
-                <div class="service-card"><div class="icon">🛡️</div><h4>AI Compliance & Governance</h4><p>DPDPA, GDPR, CCPA, IT Act compliance. Risk assessment, ethics framework.</p><span class="tag">Regulatory</span></div>
-                <div class="service-card"><div class="icon">📜</div><h4>Legal Notices</h4><p>Impressum (TMG), Indian notices, US Terms (DMCA), GDPR Privacy Policy.</p><span class="tag">Documentation</span></div>
-                <div class="service-card"><div class="icon">🚨</div><h4>Breach Response</h4><p>72‑hour detection, automated notification, DPA reporting, remediation.</p><span class="tag">Security</span></div>
-                <div class="service-card"><div class="icon">📰</div><h4>AI Content Generation</h4><p>Auto‑draft articles from AI news, blog posts, LinkedIn content.</p><span class="tag">Marketing</span></div>
-                <div class="service-card"><div class="icon">⚡</div><h4>Edge AI Intelligence</h4><p>Local processing, offline capability, Akida/Edge Impulse integration.</p><span class="tag">Hardware</span></div>
-                <div class="service-card"><div class="icon">💉</div><h4>Self‑Healing Diagnostics</h4><p>Auto health checks, auto‑resolution, real‑time monitoring, kill switch.</p><span class="tag">Reliability</span></div>
-                <div class="service-card"><div class="icon">🌍</div><h4>Jurisdictional Compliance</h4><p>DPDPA, GDPR, CCPA, IT Act, AI Governance, Breach Response.</p><span class="tag">Global</span></div>
+                <div class="service-card">
+                    <span class="service-icon">⚖️</span>
+                    <div class="service-title">Legal Intelligence</div>
+                    <div class="service-desc">250 specialist personas across constitutional, corporate, criminal, tax, IP law.</div>
+                    <span class="service-tag">250 Personas</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">🏢</span>
+                    <div class="service-title">Business Services</div>
+                    <div class="service-desc">Registration, shareholder agreements, consultancy, SLAs, employment agreements.</div>
+                    <span class="service-tag">Commercial</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">🛡️</span>
+                    <div class="service-title">AI Compliance &amp; Governance</div>
+                    <div class="service-desc">DPDPA, GDPR, CCPA, IT Act compliance. Risk assessment, ethics framework.</div>
+                    <span class="service-tag">Regulatory</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">📄</span>
+                    <div class="service-title">Legal Notices</div>
+                    <div class="service-desc">Impressum (TMG), Indian notices, US Terms (DMCA), GDPR Privacy Policy.</div>
+                    <span class="service-tag">Documentation</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">🚨</span>
+                    <div class="service-title">Breach Response</div>
+                    <div class="service-desc">72-hour detection, automated notification, DPA reporting, remediation.</div>
+                    <span class="service-tag">Security</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">✍️</span>
+                    <div class="service-title">AI Content Generation</div>
+                    <div class="service-desc">Auto-draft articles from AI news, blog posts, LinkedIn content.</div>
+                    <span class="service-tag">Marketing</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">🧠</span>
+                    <div class="service-title">Edge AI Intelligence</div>
+                    <div class="service-desc">Local processing, offline capability, Akida/Edge Impulse integration.</div>
+                    <span class="service-tag">Hardware</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">🔄</span>
+                    <div class="service-title">Self-Healing Diagnostics</div>
+                    <div class="service-desc">Auto health checks, auto-resolution, real-time monitoring, kill switch.</div>
+                    <span class="service-tag">Reliability</span>
+                </div>
+                <div class="service-card">
+                    <span class="service-icon">🌍</span>
+                    <div class="service-title">Jurisdictional Compliance</div>
+                    <div class="service-desc">DPDPA, GDPR, CCPA, IT Act, AI Governance, Breach Response.</div>
+                    <span class="service-tag">Global</span>
+                </div>
             </div>
         </section>
         
-        <!-- CTA -->
-        <section class="cta-section" id="contact">
-            <h2>Navigate Your Legal Challenges with Confidence</h2>
-            <p>Schedule a consultation with our AI‑powered legal experts today.</p>
-            <button class="btn btn-gold" onclick="openConsultation()"><i class="fas fa-calendar-check"></i> BOOK YOUR CONSULTATION</button>
+        <!-- ─── NEWS SECTION ────────────────────────────────────────── -->
+        <section class="news-section" id="newsSection">
+            <div class="section-header">
+                <h2>📰 Latest AI News</h2>
+                <div class="section-actions">
+                    <button class="btn-secondary" id="refreshNewsBtn" onclick="fetchNews()">
+                        🔄 Refresh
+                    </button>
+                    <span class="timestamp" id="newsTimestamp">Last updated: loading...</span>
+                </div>
+            </div>
+            <div id="newsContainer" class="news-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading latest AI news...</p>
+                </div>
+            </div>
         </section>
         
-        <!-- FOOTER -->
-        <footer class="footer">
-            <div class="footer-grid">
-                <div class="footer-brand"><h4>👁️ THE ADVOCACY</h4><p>Global Adjudicated Law Firm · Powered by AI Intelligence. Expert legal solutions for business.</p></div>
-                <div class="footer-col"><h5>Services</h5><a href="#services">Legal Intelligence</a><a href="#services">Business Services</a><a href="#services">AI Compliance</a></div>
-                <div class="footer-col"><h5>Resources</h5><a href="#">Practice Areas</a><a href="#">AI Insights</a><a href="#">Compliance Hub</a></div>
-                <div class="footer-col"><h5>Contact</h5><a href="mailto:counsel@advocacyalawfrim.in">counsel@advocacyalawfrim.in</a><a href="#">+91 97186 65039</a></div>
+        <!-- ─── BLOG SECTION ────────────────────────────────────────── -->
+        <section class="blog-section" id="blogSection">
+            <div class="section-header">
+                <h2>✍️ Generated Articles</h2>
+                <span class="timestamp" id="blogTimestamp">Auto-generated from news</span>
             </div>
-            <div class="footer-bottom">
-                <span>© 2026 <span class="eye-small">👁️</span> THE ADVOCACY — A LAW FIRM. All rights reserved.</span>
-                <span><a onclick="openModal('termsModal')" style="color:var(--muted);cursor:pointer;">Terms</a> · <a onclick="openModal('privacyModal')" style="color:var(--muted);cursor:pointer;">Privacy</a> · <a onclick="openModal('verifiersModal')" style="color:var(--muted);cursor:pointer;">Verifiers</a></span>
+            <div id="blogContainer" class="blog-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading articles...</p>
+                </div>
             </div>
+        </section>
+        
+        <!-- ─── FOOTER ────────────────────────────────────────────────── -->
+        <footer class="app-footer">
+            <p>© 2026 <a href="https://www.advocacyalawfrim.in" target="_blank">THE ADVOCACY – A LAW FIRM</a> · All rights reserved.</p>
+            <p style="font-size:0.75rem;color:#adb5bd;margin-top:0.3rem;">
+                🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE · Unknown Verdict v12.1 · Enterprise Edition
+            </p>
         </footer>
     </div>
     
-    <!-- MODALS -->
-    <div class="modal" id="loginModal"><div class="modal-box"><button class="close" onclick="closeModal('loginModal')">&times;</button><h3>🔐 Login</h3><input id="loginEmail" type="email" placeholder="Email" value="counsel@advocacyalawfrim.in" /><input id="loginPassword" type="password" placeholder="Password" value="Password123!" /><div style="display:flex;gap:6px;"><button class="btn btn-gold" onclick="handleLogin()" style="flex:1;">Login</button><button class="btn btn-outline" onclick="handleRegister()" style="flex:1;">Register</button></div><div id="loginStatus" class="status-text" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div></div></div>
+    <!-- ═══════════════════════════════════════════════════════════════
+         LOGIN MODAL
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="modal login-modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2>🔑 Sign In</h2>
+            <p>Enter your credentials to access Unknown Verdict</p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">Username or Email</label>
+                    <input type="text" id="loginUsername" placeholder="counsel" required />
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required />
+                </div>
+                <div class="login-error" id="loginError">Invalid credentials. Please try again.</div>
+                <button type="submit" class="btn-submit" id="loginSubmitBtn">Sign In</button>
+            </form>
+            <p style="text-align:center;font-size:0.8rem;color:#6c757d;margin-top:1rem;">
+                Demo: <strong>counsel</strong> / <strong>admin</strong>
+            </p>
+        </div>
+    </div>
     
-    <div class="modal" id="paymentModal"><div class="modal-box"><button class="close" onclick="closeModal('paymentModal')">&times;</button><h3>💳 Plans</h3><div onclick="selectPlan('lifetime')" style="background:var(--gold-soft);border:2px solid var(--gold);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🙏 ₹2 Lifetime</strong> <span id="lifetimeCount"></span></div><div onclick="selectPlan('premium')" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>⭐ ₹102 / month · Premium</strong></div><div onclick="selectPlan('enterprise')" style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px;border-radius:12px;margin:6px 0;cursor:pointer;"><strong>🏢 ₹1011 / month · Enterprise</strong></div><input type="hidden" id="paymentPlan" value="lifetime" /><button class="btn btn-gold" onclick="processPayment()" style="width:100%;padding:8px;margin-top:6px;">Subscribe</button><div id="paymentStatus" style="font-size:0.6rem;color:var(--muted);margin-top:4px;"></div></div></div>
+    <!-- ═══════════════════════════════════════════════════════════════
+         ARTICLE MODAL
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="modal" id="articleModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeArticleModal()">&times;</span>
+            <h2 id="modalTitle">Article Title</h2>
+            <div class="article-body" id="modalBody">Content here...</div>
+            <div class="modal-actions">
+                <button class="btn-download" id="downloadArticleBtn">📥 Download as Markdown</button>
+                <button class="btn-copy" id="copyArticleBtn">📋 Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
     
-    <div class="modal" id="termsModal"><div class="modal-box"><button class="close" onclick="closeModal('termsModal')">&times;</button><h3>📜 Terms</h3><p style="font-size:0.8rem;color:var(--text);">AI‑generated responses are informational only, not professional legal advice.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('termsModal')">Close</button></div></div></div>
-    
-    <div class="modal" id="privacyModal"><div class="modal-box"><button class="close" onclick="closeModal('privacyModal')">&times;</button><h3>🔒 Privacy</h3><p style="font-size:0.8rem;color:var(--text);">All queries auto‑purged within 24h. DPDPA‑2023 compliant.</p><div class="actions"><button class="btn btn-gold" onclick="closeModal('privacyModal')">Close</button></div></div></div>
-    
-    <div class="modal" id="verifiersModal"><div class="modal-box"><button class="close" onclick="closeModal('verifiersModal')">&times;</button><h3>✅ The 10 Verifiers</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:0.7rem;"><div><strong style="color:var(--gold);">Ganesha</strong> — Citation</div><div><strong style="color:var(--gold);">Saraswati</strong> — Cross‑ref</div><div><strong style="color:var(--gold);">Hanuman</strong> — Compliance</div><div><strong style="color:var(--gold);">Kartikeya</strong> — Contradict</div><div><strong style="color:var(--gold);">Indra</strong> — Jurisdiction</div><div><strong style="color:var(--gold);">Yama</strong> — Bias</div><div><strong style="color:var(--gold);">Surya</strong> — Timelines</div><div><strong style="color:var(--gold);">Chandra</strong> — Precedents</div><div><strong style="color:var(--gold);">Vayu</strong> — PII filter</div><div><strong style="color:#ff8c42;">Shakti</strong> — Final Judge</div></div><div class="actions"><button class="btn btn-gold" onclick="closeModal('verifiersModal')">Close</button></div></div></div>
-    
+    <!-- ═══════════════════════════════════════════════════════════════
+         JAVASCRIPT - ALL LOGIC
+         ═══════════════════════════════════════════════════════════════ -->
     <script>
-        // ============================================================
-        // API & STATE
-        // ============================================================
-        const API_BASE = 'https://upamnyu12-LEX.hf.space';
-        let isProcessing = false;
-        let newsInterval = null;
+        // ═══════════════════════════════════════════════════════════════
+        // 🔱 UNKNOWN VERDICT v12.1 - COMPLETE FRONTEND LOGIC
+        // ═══════════════════════════════════════════════════════════════
         
-        function getToken(){ return localStorage.getItem('lex_token'); }
-        function openModal(id){ document.getElementById(id).classList.add('open'); }
-        function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-        function setStatus(t){ document.getElementById('status').textContent = t || ''; }
+        // ─── CONFIGURATION ──────────────────────────────────────────
+        const REFRESH_INTERVAL = 300000; // 5 minutes
+        let currentUser = null;
+        let isAuthenticated = false;
         
-        // ============================================================
-        // NAVIGATION
-        // ============================================================
-        function scrollToServices() {
-            document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
+        // ─── DOM REFS ──────────────────────────────────────────────
+        const $ = (id) => document.getElementById(id);
+        const newsContainer = $('newsContainer');
+        const blogContainer = $('blogContainer');
+        const newsTimestamp = $('newsTimestamp');
+        const blogTimestamp = $('blogTimestamp');
+        const statNews = $('statNews');
+        const authSection = $('authSection');
+        const userSection = $('userSection');
+        const userName = $('userName');
+        const userTier = $('userTier');
+        const userAvatar = $('userAvatar');
+        
+        // ─── AUTH ──────────────────────────────────────────────────
+        function getToken() {
+            return localStorage.getItem('access_token');
         }
         
-        function openUnknown() {
-            window.open('https://upamnyu12-LEX.hf.space', '_blank');
+        function setToken(token) {
+            localStorage.setItem('access_token', token);
         }
         
-        function openConsultation() {
-            alert('📋 Consultation request received. Our team will contact you within 24 hours.\n\nTHE ADVOCACY – A LAW FIRM');
+        function clearToken() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_data');
         }
         
-        // ============================================================
-        // AUTH
-        // ============================================================
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPassword').value;
-            const s = document.getElementById('loginStatus');
-            s.textContent = 'Logging in...';
+        function loadUser() {
             try {
-                const r = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ username: email, password: pass })
-                });
-                const d = await r.json();
-                if (r.ok) {
-                    localStorage.setItem('lex_token', d.access_token);
-                    s.textContent = '✅ Welcome!';
-                    closeModal('loginModal');
-                    openUnknown();
-                } else {
-                    s.textContent = '❌ ' + (d.detail || 'Login failed');
+                const data = localStorage.getItem('user_data');
+                if (data) {
+                    currentUser = JSON.parse(data);
+                    isAuthenticated = true;
+                    return currentUser;
                 }
-            } catch(e) { s.textContent = '❌ Network error'; }
+            } catch (e) {}
+            return null;
         }
         
-        async function handleRegister() {
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPassword').value;
-            const s = document.getElementById('loginStatus');
-            s.textContent = 'Registering...';
+        function updateUI(user) {
+            if (user) {
+                authSection.style.display = 'none';
+                userSection.style.display = 'flex';
+                userName.textContent = user.username || user.email || 'User';
+                const tier = user.tier || 'free';
+                userTier.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+                userTier.className = `user-tier ${tier}`;
+                userAvatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
+                isAuthenticated = true;
+                currentUser = user;
+            } else {
+                authSection.style.display = 'flex';
+                userSection.style.display = 'none';
+                isAuthenticated = false;
+                currentUser = null;
+            }
+        }
+        
+        // ─── LOGIN ──────────────────────────────────────────────────
+        function showLoginModal() {
+            $('loginModal').style.display = 'block';
+            $('loginError').className = 'login-error';
+            $('loginUsername').value = '';
+            $('loginPassword').value = '';
+            $('loginUsername').focus();
+        }
+        
+        function closeLoginModal() {
+            $('loginModal').style.display = 'none';
+        }
+        
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = $('loginUsername').value.trim();
+            const password = $('loginPassword').value.trim();
+            const errorEl = $('loginError');
+            const submitBtn = $('loginSubmitBtn');
+            
+            if (!username || !password) {
+                errorEl.textContent = 'Please enter both username and password.';
+                errorEl.className = 'login-error show';
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Signing in...';
+            errorEl.className = 'login-error';
+            
             try {
-                const r = await fetch(`${API_BASE}/auth/register`, {
+                const response = await fetch('/auth/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ username: email.split('@')[0], email: email, password: pass })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
-                if (r.ok) { s.textContent = '✅ Registered! Please login.'; }
-                else { s.textContent = '❌ Registration failed'; }
-            } catch(e) { s.textContent = '❌ Network error'; }
-        }
-        
-        function showLogin(){ openModal('loginModal'); }
-        
-        // ============================================================
-        // PAYMENTS
-        // ============================================================
-        function showPayment(){ openModal('paymentModal'); checkLifetime(); }
-        function selectPlan(p){ document.getElementById('paymentPlan').value = p; }
-        
-        async function checkLifetime(){
-            try {
-                const r = await fetch(`${API_BASE}/lifetime-count`);
-                const d = await r.json();
-                document.getElementById('lifetimeCount').textContent = `(${d.remaining} left)`;
-            } catch(e){}
-        }
-        
-        async function processPayment(){
-            const t = getToken();
-            if (!t) { alert('Login first'); return; }
-            const tier = document.getElementById('paymentPlan').value;
-            const s = document.getElementById('paymentStatus');
-            s.textContent = 'Creating order...';
-            try {
-                const r = await fetch(`${API_BASE}/create-order`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-                    body: JSON.stringify({ tier })
-                });
-                const d = await r.json();
-                if (!r.ok) { s.textContent = '❌ ' + d.detail; return; }
-                const opts = {
-                    key: d.razorpay_key,
-                    amount: d.amount,
-                    currency: 'INR',
-                    name: 'THE ADVOCACY – Unknown Verdict',
-                    order_id: d.order_id,
-                    handler: async function(resp) {
-                        const v = await fetch(`${API_BASE}/verify-payment`, {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${t}` },
-                            body: new URLSearchParams({
-                                razorpay_order_id: resp.razorpay_order_id,
-                                razorpay_payment_id: resp.razorpay_payment_id,
-                                razorpay_signature: resp.razorpay_signature
-                            })
-                        });
-                        const vd = await v.json();
-                        if (v.ok) { s.textContent = '✅ Success!'; closeModal('paymentModal'); }
-                        else { s.textContent = '❌ ' + vd.detail; }
-                    },
-                    theme: { color: '#d4af37' }
-                };
-                new Razorpay(opts).open();
-            } catch(e) { s.textContent = '❌ ' + e.message; }
-        }
-        
-        // ============================================================
-        // REAL-TIME NEWS
-        // ============================================================
-        async function fetchNews() {
-            const feed = document.getElementById('newsFeed');
-            try {
-                const response = await fetch(`${API_BASE}/api/news`);
-                if (!response.ok) throw new Error('News fetch failed');
+                
                 const data = await response.json();
                 
-                if (data.articles && data.articles.length) {
-                    let html = '';
-                    data.articles.slice(0, 8).forEach(item => {
-                        const timeStr = item.published ? new Date(item.published).toLocaleTimeString() : 'Just now';
-                        html += `
-                            <div class="news-item" onclick="window.open('${item.link}','_blank')">
-                                <span>${item.title}</span>
-                                <span class="news-time">${timeStr} · <span class="news-source">${item.source || 'AI News'}</span></span>
-                            </div>
-                        `;
-                    });
-                    feed.innerHTML = html;
-                    document.getElementById('newsCount').textContent = data.count || data.articles.length;
+                if (response.ok) {
+                    setToken(data.access_token);
+                    if (data.user) {
+                        localStorage.setItem('user_data', JSON.stringify(data.user));
+                        updateUI(data.user);
+                    }
+                    closeLoginModal();
+                    // Refresh news and blog with auth
+                    fetchNews();
+                    fetchBlogPosts();
                 } else {
-                    feed.innerHTML = '<div style="font-size:0.7rem;color:var(--muted);padding:8px 0;">No news at the moment.</div>';
+                    errorEl.textContent = data.detail || 'Invalid credentials. Please try again.';
+                    errorEl.className = 'login-error show';
                 }
-            } catch(e) {
-                feed.innerHTML = `
-                    <div class="news-item">NVIDIA Cosmos 3 Edge unveiled at SIGGRAPH 2026</div>
-                    <div class="news-item">EU AI Act: High-risk deadlines deferred to Dec 2027</div>
-                    <div class="news-item">India DPDPA consent managers registration Nov 2026</div>
-                    <div class="news-item">UN Global Dialogue on AI Governance ongoing</div>
-                    <div style="font-size:0.55rem;color:var(--muted);padding:4px 0;">↻ Live feed loading...</div>
+            } catch (error) {
+                errorEl.textContent = 'Network error. Please check your connection.';
+                errorEl.className = 'login-error show';
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
+        }
+        
+        function logoutUser() {
+            clearToken();
+            updateUI(null);
+            fetchNews();
+            fetchBlogPosts();
+        }
+        
+        // ─── CLOSE MODALS ON ESC ──────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                closeArticleModal();
+            }
+        });
+        
+        // ─── ARTICLE MODAL ──────────────────────────────────────────
+        let currentArticleData = {};
+        
+        function closeArticleModal() {
+            $('articleModal').style.display = 'none';
+        }
+        
+        function showArticleModal(title, content, source) {
+            const modal = $('articleModal');
+            $('modalTitle').textContent = title || 'Untitled Article';
+            
+            let formatted = content || 'No content available.';
+            formatted = formatted
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+                .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+                .replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+            
+            $('modalBody').innerHTML = formatted;
+            currentArticleData = { title, content, source };
+            modal.style.display = 'block';
+        }
+        
+        // Download article
+        document.getElementById('downloadArticleBtn')?.addEventListener('click', () => {
+            const { title, content } = currentArticleData;
+            if (!content) return;
+            const blob = new Blob([`# ${title}\n\n${content}`], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${(title || 'article').replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '_')}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Copy article
+        document.getElementById('copyArticleBtn')?.addEventListener('click', async () => {
+            const { content } = currentArticleData;
+            if (!content) return;
+            try {
+                await navigator.clipboard.writeText(content);
+                const btn = document.getElementById('copyArticleBtn');
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; }, 2000);
+            } catch {
+                alert('Failed to copy. Please select and copy manually.');
+            }
+        });
+        
+        // ─── FETCH NEWS ──────────────────────────────────────────────
+        async function fetchNews() {
+            try {
+                newsContainer.innerHTML =
+                    `<div class="loading-spinner"><div class="spinner"></div><p>Loading news...</p></div>`;
+                
+                const response = await fetch('/api/news?limit=12');
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    renderNews(data.articles);
+                    if (newsTimestamp) {
+                        newsTimestamp.textContent = `Last updated: ${new Date(data.last_updated).toLocaleString()}`;
+                    }
+                    if (statNews) {
+                        statNews.textContent = data.count || data.articles.length;
+                    }
+                } else {
+                    newsContainer.innerHTML = `
+                        <div class="error-box">
+                            <p>⚠️ No news available. Click Refresh to try again.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('News fetch error:', error);
+                newsContainer.innerHTML = `
+                    <div class="error-box">
+                        <p>❌ Failed to load news. Please try again.</p>
+                        <button onclick="fetchNews()" class="btn-secondary" style="margin-top:0.75rem;">Retry</button>
+                    </div>
                 `;
             }
         }
         
-        // ============================================================
-        // QUICK ACTIONS
-        // ============================================================
-        function showCompliance(){ appendMessage('agent', '📋 <strong>Global Compliance Snapshot</strong><br>• DPDPA (India): 96% compliant <br>• GDPR (EU): 94% compliant <br>• CCPA (US): 92% compliant <br>• AI Governance Framework: Monitoring'); }
-        function showBusiness(){ appendMessage('agent', '🏢 <strong>Business Services</strong><br>• Business Registration Guidance<br>• Shareholder Agreement Drafting<br>• Consultancy Agreement Drafting<br>• SLA Drafting<br>• Employment Agreement Drafting'); }
-        function showAIGovernance(){ appendMessage('agent', '🤖 <strong>AI Governance Risk Assessment</strong><br>Risk Score: 2/10 (Low)<br>Recommendations: model monitoring, bias detection, human review'); }
-        function showNotices(){ appendMessage('agent', '📜 <strong>Legal Notices</strong><br>• German Impressum (TMG)<br>• Indian Legal Notice<br>• US Terms of Service (DMCA)<br>• EU GDPR Privacy Policy<br>• Custom Legal Notices'); }
-        function showDrafts(){ appendMessage('agent', '📑 <strong>Your Drafts</strong><br>• Shareholder Agreement (Approved)<br>• Privacy Notice - DPDPA (Draft)<br>• NVIDIA Cosmos 3 Article (Draft)'); }
+        function renderNews(articles) {
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = `<div class="info-box"><p>No articles found.</p></div>`;
+                return;
+            }
+            
+            newsContainer.innerHTML = articles.map(article => `
+                <div class="news-card" data-id="${article.id}">
+                    <div class="news-badge">
+                        <span class="badge-source">${article.source || 'Unknown'}</span>
+                        <span class="badge-date">${article.published || 'Today'}</span>
+                    </div>
+                    <h3 class="news-title">${article.title}</h3>
+                    <p class="news-summary">${article.summary || 'Click to read full article...'}</p>
+                    <div class="news-footer">
+                        <div class="news-actions">
+                            <button class="btn-generate" data-id="${article.id}" onclick="generateArticle('${article.id}')">
+                                ✍️ Generate Article
+                            </button>
+                            <a href="${article.link}" target="_blank" class="btn-read">
+                                📖 Read Original
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
         
-        // ============================================================
-        // SEND QUERY
-        // ============================================================
-        async function sendQuery() {
-            if (isProcessing) return;
-            const q = document.getElementById('queryInput').value.trim();
-            if (!q) { setStatus('Please type a question.'); return; }
-            const t = getToken();
-            if (!t) { alert('Login first'); showLogin(); return; }
+        // ─── GENERATE ARTICLE ────────────────────────────────────────
+        async function generateArticle(newsId) {
+            const card = document.querySelector(`.news-card[data-id="${newsId}"]`);
+            if (!card) return;
             
-            isProcessing = true;
-            setStatus('👁️ Consulting intelligence...');
-            const chat = document.getElementById('chat');
-            const welcome = chat.querySelector('.msg.agent');
-            if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
+            const btn = card.querySelector('.btn-generate');
+            if (!btn) return;
             
-            appendMessage('user', q);
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
             
-            const fd = new FormData();
-            fd.append('query', q);
-            fd.append('search_web', 'on');
-            fd.append('model', 'llama-3.3-70b-versatile');
-            fd.append('lang', 'en');
-            fd.append('oracle_mode', 'false');
+            const token = getToken();
+            if (!token) {
+                showLoginModal();
+                btn.textContent = '🔒 Login Required';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 3000);
+                return;
+            }
             
             try {
-                const response = await fetch(`${API_BASE}/ask`, {
+                const formData = new FormData();
+                formData.append('news_id', newsId);
+                
+                const response = await fetch('/api/news/generate-article', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${t}` },
-                    body: fd
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
                 });
-                if (!response.ok) {
-                    const err = await response.json();
-                    appendMessage('agent', `❌ ${err.detail || 'Server error'}`);
-                    setStatus('Error');
-                    isProcessing = false;
+                
+                if (response.status === 401 || response.status === 403) {
+                    const error = await response.json();
+                    if (response.status === 401) {
+                        showLoginModal();
+                        btn.textContent = '🔒 Login Required';
+                    } else {
+                        btn.textContent = '💎 Upgrade Required';
+                        alert(error.detail || 'Premium+ subscription required.');
+                    }
                     return;
                 }
                 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let agentBubble = null;
-                let fullText = '';
-                let verification = null;
+                if (response.ok) {
+                    const data = await response.json();
+                    showArticleModal(data.title, data.content, data.source);
+                    btn.textContent = '✅ Generated!';
+                    btn.style.background = '#28a745';
+                    fetchBlogPosts();
+                } else {
+                    const error = await response.json();
+                    btn.textContent = '❌ Error';
+                    alert(`Generation failed: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Generation error:', error);
+                btn.textContent = '❌ Failed';
+                alert('Failed to generate article. Please try again.');
+            }
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                btn.style.background = '';
+            }, 5000);
+        }
+        
+        // ─── FETCH BLOG POSTS ────────────────────────────────────────
+        async function fetchBlogPosts() {
+            try {
+                blogContainer.innerHTML =
+                    `<div class="loading-spinner"><div class="spinner"></div><p>Loading articles...</p></div>`;
                 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            if (data === '[DONE]') break;
-                            try {
-                                const parsed = JSON.parse(data);
-                                if (parsed.token) {
-                                    fullText += parsed.token;
-                                    if (!agentBubble) {
-                                        agentBubble = document.createElement('div');
-                                        agentBubble.className = 'msg agent';
-                                        chat.appendChild(agentBubble);
-                                    }
-                                    agentBubble.innerHTML += parsed.token.replace(/\n/g, '<br>');
-                                    chat.scrollTop = chat.scrollHeight;
-                                }
-                                if (parsed.verification) {
-                                    verification = parsed.verification;
-                                }
-                            } catch(e) {}
-                        }
+                const response = await fetch('/api/blog/posts?limit=10');
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.posts && data.posts.length > 0) {
+                    renderBlogPosts(data.posts);
+                    if (blogTimestamp) {
+                        blogTimestamp.textContent = `${data.total} articles generated`;
+                    }
+                } else {
+                    blogContainer.innerHTML = `
+                        <div class="info-box">
+                            <p>📝 No articles generated yet. Click "Generate Article" on any news card above.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Blog fetch error:', error);
+                blogContainer.innerHTML = `
+                    <div class="error-box">
+                        <p>❌ Failed to load articles.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderBlogPosts(posts) {
+            if (!posts || posts.length === 0) {
+                blogContainer.innerHTML = `<div class="info-box"><p>No articles found.</p></div>`;
+                return;
+            }
+            
+            blogContainer.innerHTML = posts.map(post => `
+                <div class="blog-card" data-id="${post.id}">
+                    <div class="blog-header">
+                        <span class="blog-date">${new Date(post.created_at).toLocaleDateString()}</span>
+                        <span class="blog-status ${post.published ? 'published' : 'draft'}">
+                            ${post.published ? '✅ Published' : '📝 Draft'}
+                        </span>
+                    </div>
+                    <h3 class="blog-title">${post.title}</h3>
+                    <p class="blog-preview">${(post.content || '').substring(0, 200)}...</p>
+                    <div class="blog-footer">
+                        <button class="btn-read-full" onclick="viewFullArticle(${post.id})">📖 Read Full Article</button>
+                        ${post.source_url && post.source_url !== '#' ? 
+                            `<a href="${post.source_url}" target="_blank" class="btn-source">🔗 Source</a>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ─── VIEW FULL ARTICLE ───────────────────────────────────────
+        async function viewFullArticle(postId) {
+            try {
+                const response = await fetch('/api/blog/posts?limit=20');
+                const data = await response.json();
+                if (data.status === 'ok' && data.posts) {
+                    const post = data.posts.find(p => p.id === postId);
+                    if (post) {
+                        showArticleModal(post.title, post.content, 'Generated Article');
                     }
                 }
-                
-                if (agentBubble && verification) {
-                    const badge = document.createElement('div');
-                    badge.className = 'badge-verify';
-                    const confColor = verification.final_confidence === 'HIGH' ? 'var(--ok)' :
-                                      verification.final_confidence === 'MEDIUM' ? 'var(--gold)' : 'var(--err)';
-                    badge.innerHTML = `
-                        <span style="color:${confColor};font-weight:bold;">✓ Jury Verified</span> – ${verification.final_confidence || 'HIGH'} confidence
-                        <span style="color:var(--muted);font-size:0.5rem;"> · ${verification.judge || 'Shakti'}</span>
-                        <span style="color:var(--gold);font-size:0.5rem;display:block;">🧠 ${verification.agent || 'Unknown Agent'}</span>
-                    `;
-                    agentBubble.appendChild(badge);
-                }
-                setStatus('✅ Intelligence rendered');
-            } catch(e) {
-                appendMessage('agent', `❌ Network error: ${e.message}`);
-                setStatus('Error');
+            } catch (error) {
+                console.error('View article error:', error);
+                alert('Failed to load article.');
             }
-            document.getElementById('queryInput').value = '';
-            isProcessing = false;
         }
         
-        function appendMessage(role, content) {
-            const chat = document.getElementById('chat');
-            const welcome = chat.querySelector('.msg.agent');
-            if (welcome && welcome.textContent.includes('eye sees all')) { chat.innerHTML = ''; }
-            const div = document.createElement('div');
-            div.className = `msg ${role}`;
-            div.innerHTML = content;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        }
-        
-        // ============================================================
-        // STARS
-        // ============================================================
-        (function() {
-            const container = document.getElementById('stars');
-            for (let i=0; i<80; i++) {
-                const s = document.createElement('div');
-                s.className = 'star';
-                const sz = Math.random() * 2 + 0.5;
-                s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*5}s;`;
-                container.appendChild(s);
-            }
-        })();
-        
-        // ============================================================
-        // INIT
-        // ============================================================
+        // ─── INIT ──────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('queryInput');
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendQuery();
-                }
-            });
-            document.getElementById('sendBtn').addEventListener('click', sendQuery);
+            // Load user
+            const user = loadUser();
+            updateUI(user);
             
-            // Load news
+            // Load news and blog
             fetchNews();
-            newsInterval = setInterval(fetchNews, 60000);
+            fetchBlogPosts();
             
-            // Auto-login
-            if (getToken()) {
-                setStatus('✅ Connected · AI Governance active');
-            }
+            // Auto-refresh
+            setInterval(() => {
+                fetchNews();
+                fetchBlogPosts();
+            }, REFRESH_INTERVAL);
+            
+            // Close modals on overlay click
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+            
+            console.log('🔱 Unknown Verdict v12.1 initialized');
+            console.log(`👤 User: ${currentUser ? currentUser.username : 'Not logged in'}`);
+            console.log(`📰 Auto-refresh every ${REFRESH_INTERVAL / 1000}s`);
         });
+        
+        // ─── EXPOSE GLOBALLY ──────────────────────────────────────────
+        window.fetchNews = fetchNews;
+        window.fetchBlogPosts = fetchBlogPosts;
+        window.generateArticle = generateArticle;
+        window.showLoginModal = showLoginModal;
+        window.closeLoginModal = closeLoginModal;
+        window.handleLogin = handleLogin;
+        window.logoutUser = logoutUser;
+        window.showArticleModal = showArticleModal;
+        window.closeArticleModal = closeArticleModal;
+        window.viewFullArticle = viewFullArticle;
+        window.getToken = getToken;
+        window.isAuthenticated = isAuthenticated;
     </script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 </html>
