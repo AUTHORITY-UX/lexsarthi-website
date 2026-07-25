@@ -1,416 +1,301 @@
-# =============================================================================
-# routes.py - All API Routes
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
-# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-# =============================================================================
+# ============================================
+# ROUTES.PY - COMPLETE FIX
+# ============================================
 
-import os
-import json
-import random
-import string
-import hashlib
-import logging
-from datetime import datetime, timedelta, timezone
+# 1. IMPORTS (at the very top)
+from fastapi import APIRouter, HTTPException, Depends, Request, UploadFile, File, Form
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request, Response
-from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
+import json
+import os
+import logging
+from datetime import datetime, timedelta
+import asyncio
+import asyncpg
 
+# 2. CREATE ROUTER (THIS WAS MISSING!)
+router = APIRouter()
+
+# 3. Set up logger
+logger = logging.getLogger("unknown_verdict")
+
+# 4. Import models and services
+from models import User, Session, LegalDocument, ChatHistory, ComplianceRecord
+from core import UnknownVerdictEngine, get_engine
+from config import DATABASE_URL, JWT_SECRET, REDIS_URL
 import jwt
 from passlib.context import CryptContext
+import redis
+import hashlib
+import uuid
 
-from config import SYSTEM_BASE, TEMPLATES, VERIFIERS, ADMIN_SECRET
-from models import users, UserLogin, UserCreate
-
-# ─── IMPORT FROM CORE ──────────────────────────────────────────────
-from core import (
-    DIVINE_AGENTS,
-    route_agent,
-    call_llm,
-    jury_verification,
-    database,
-    logger
-)
-
-# ─── SETUP LOGGER ──────────────────────────────────────────────────
-if not logger:
-    logger = logging.getLogger("unknown_verdict")
-
-# ─── SECURITY ──────────────────────────────────────────────────────────
-pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
-security = HTTPBearer()
-JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_MINUTES = 60 * 24 * 7
-
-def hash_password(p):
-    return pwd_context.hash(p)
-
-def verify_password(p, h):
-    try:
-        return pwd_context.verify(p, h)
-    except:
-        return False
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    to_encode["exp"] = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRY_MINUTES)
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
-def decode_token(token):
-    try:
-        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security)):
-    payload = decode_token(cred.credentials)
-    uid_or_username = payload.get("sub")
-    if not uid_or_username:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    try:
-        uid = int(uid_or_username)
-        q = users.select().where(users.c.id == uid)
-    except ValueError:
-        q = users.select().where(users.c.username == uid_or_username)
-    
-    if not database:
-        raise HTTPException(status_code=503, detail="Database not available")
-    
-    user = await database.fetch_one(q)
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return dict(user)
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# ✅ register_routes - THIS IS THE FUNCTION app.py CALLS
-# ═══════════════════════════════════════════════════════════════════════
-
-def register_routes(app: FastAPI):
-    """Register all routes with the FastAPI app"""
-
-    # ─── HEALTH ──────────────────────────────────────────────────────
-    @app.get("/health")
-    async def health():
-        return {"status": "healthy", "version": "12.1", "timestamp": datetime.now().isoformat()}
-
-    # ─── STATUS ──────────────────────────────────────────────────────
-    @app.get("/status")
-    async def system_status():
-        return {
-            "status": "operational",
-            "agents": len(DIVINE_AGENTS),
-            "verifiers": len(VERIFIERS),
-            "judge": "Shakti",
-            "knowledge_chunks": 1047,
-            "database": "connected" if database else "disconnected",
-            "timestamp": datetime.now().isoformat()
-        }
-
-    # ─── INFO ────────────────────────────────────────────────────────
-    @app.get("/info")
-    async def system_info():
-        return {
-            "name": "Unknown Verdict AGI v1.0",
-            "owner": "THE ADVOCACY - A LAW FIRM",
-            "website": "www.advocacyalawfrim.in",
-            "deployment": "Hugging Face Space: upamnyu12/LEX",
-            "version": "v12.1"
-        }
-
-    # ─── AUTH LOGIN ──────────────────────────────────────────────────
-    @app.post("/auth/login")
-    async def login(body: UserLogin):
-        if not database:
-            raise HTTPException(status_code=503, detail="Database not available")
-        u = await database.fetch_one(
-            users.select().where(
-                (users.c.username == body.username) | (users.c.email == body.username.lower())
-            )
-        )
-        if not u or not verify_password(body.password, dict(u)["password_hash"]):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-        u = dict(u)
-        tok = create_access_token({"sub": str(u["id"])})
-        return {
-            "access_token": tok,
-            "token_type": "bearer",
-            "user": {"id": u["id"], "username": u["username"], "email": u["email"], "tier": u["tier"]}
-        }
-
-    # ─── ASK ─────────────────────────────────────────────────────────
-    @app.post("/ask")
-    async def ask(
-        query: str = Form(...),
-        cu: dict = Depends(get_current_user)
-    ):
-        combined_query = query
-        agent_id = route_agent(combined_query, False)
-        agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
-        agent_name = agent["name"] if agent else "General Council"
-        domain = agent["domain"] if agent else "General"
-        persona = agent["persona_prompt"] if agent else "You are a generalist."
-        
-        system_prompt = f"{SYSTEM_BASE}\nAgent: {agent_name}\nDomain: {domain}\nPersona: {persona}"
-        
-        initial_answer = await call_llm(system_prompt, combined_query, "groq")
-        jury_result = await jury_verification(initial_answer, combined_query, domain)
-        
-        answer = jury_result["final_answer"]
-        confidence = jury_result["confidence"]
-        sources = jury_result["sources"]
-        
-        metadata = {
-            "domain": domain,
-            "persona": agent_name,
-            "provider": "groq",
-            "jury_verifiers": jury_result["jury_verifiers"],
-            "judge": "Shakti"
-        }
-        
-        async def replay_stream():
-            for i in range(0, len(answer), 6):
-                yield f"data: {json.dumps({'token': answer[i:i+6]})}\n\n"
-                await asyncio.sleep(0.01)
-            verification = {
-                "final_confidence": confidence,
-                "sources": sources,
-                "jury_verifiers": metadata.get("jury_verifiers", []),
-                "judge": metadata.get("judge", "Shakti")
-            }
-            yield f"data: {json.dumps({'verification': verification})}\n\n"
-            yield "data: [DONE]\n\n"
-        
-        return StreamingResponse(replay_stream(), media_type="text/event-stream")
-
-    # ─── NEWS ─────────────────────────────────────────────────────────
-    @app.get("/api/news")
-    async def get_legal_news():
-        import feedparser
-        articles = []
-        feeds = [
-            "https://arxiv.org/rss/cs.AI",
-            "https://openai.com/blog/rss.xml",
-        ]
-        for feed_url in feeds:
-            try:
-                feed = feedparser.parse(feed_url)
-                for entry in feed.entries[:3]:
-                    articles.append({
-                        "id": hashlib.md5(entry.title.encode()).hexdigest()[:8],
-                        "title": entry.title,
-                        "summary": entry.get('summary', '')[:300],
-                        "link": entry.get('link', '#'),
-                        "source": feed_url.split('/')[2],
-                        "published": entry.get('published', datetime.now().strftime('%Y-%m-%d')),
-                    })
-            except:
-                pass
-        return {"status": "ok", "count": len(articles), "articles": articles[:20], "last_updated": datetime.now().isoformat()}
-
-    # ─── BLOG POSTS ──────────────────────────────────────────────────
-    @app.get("/api/blog/posts")
-    async def get_blog_posts(limit: int = 20, offset: int = 0):
-        if not database:
-            return {"status": "ok", "posts": [], "total": 0}
-        try:
-            rows = await database.fetch_all(
-                "SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
-                {"limit": limit, "offset": offset}
-            )
-            total = await database.fetch_val("SELECT COUNT(*) FROM blog_posts") or 0
-            return {
-                "status": "ok",
-                "posts": [dict(r) for r in rows],
-                "total": total
-            }
-        except Exception as e:
-            return {"status": "error", "posts": [], "total": 0, "error": str(e)}
-
-    # ─── API ROOT ────────────────────────────────────────────────────
-    @app.get("/api/")
-    async def api_root():
-        return {
-            "message": "Unknown Verdict AGI v1.0 API",
-            "endpoints": ["/api/news", "/status", "/info", "/auth/login", "/health", "/ask"]
-        }
-
-    # ─── COMPLIANCE ──────────────────────────────────────────────────
-    @app.get("/api/compliance/snapshot")
-    async def get_compliance_snapshot():
-        return {
-            "status": "ok",
-            "overall_compliance": 90,
-            "frameworks": {
-                "dpdpa": {"compliance_score": 96},
-                "gdpr": {"compliance_score": 94},
-                "ccpa": {"compliance_score": 92}
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-
-    # ─── LENS AGENTS ──────────────────────────────────────────────────
-    @app.get("/api/lens/agents")
-    async def list_lens_agents():
-        return {
-            "status": "ok",
-            "agents": [],
-            "count": 0
-        }
-
-    # ─── TRADING ──────────────────────────────────────────────────────
-    @app.get("/api/trading/indices")
-    async def get_indices():
-        return {
-            "status": "ok",
-            "indices": {
-                "NIFTY 50": {"price": 24500.50, "change_percent": 0.49},
-                "SENSEX": {"price": 81500.25, "change_percent": 0.31},
-                "BTC/USD": {"price": 65000.00, "change_percent": -1.81}
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-
-    # ─── TRENDS ────────────────────────────────────────────────────────
-    @app.get("/api/trends/ai")
-    async def get_ai_trends():
-        return {
-            "status": "ok",
-            "trends": {
-                "market_size": {"global": 1.8e12, "growth_rate": 37.3},
-                "investment": {"2026": 280e9},
-                "jobs": {"net": 350000}
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-
-    # ─── SPORTS ────────────────────────────────────────────────────────
-    @app.get("/api/sports/cricket")
-    async def get_cricket_scores():
-        return {
-            "status": "ok",
-            "matches": [
-                {"match": "India vs Australia", "status": "Live", "score": "245/3 (42.3 overs)"}
-            ],
-            "timestamp": datetime.now().isoformat()
-        }
-
-    # ─── DATABASE HELPERS ──────────────────────────────────────────────
-    
-    async def _create_tables():
-        if not database:
-            return
-        try:
-            await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-        except:
-            pass
-        
-        tables = [
-            """CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                full_name VARCHAR(255),
-                is_active BOOLEAN DEFAULT TRUE,
-                is_premium BOOLEAN DEFAULT FALSE,
-                tier VARCHAR(20) DEFAULT 'free',
-                queries_used_today INTEGER DEFAULT 0,
-                last_query_reset TIMESTAMP DEFAULT NOW(),
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW(),
-                api_key VARCHAR(64) UNIQUE,
-                preferences JSONB,
-                memory JSONB DEFAULT '[]'
-            )""",
-            """CREATE TABLE IF NOT EXISTS queries (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                query TEXT,
-                response TEXT,
-                metadata JSONB,
-                created_at TIMESTAMP DEFAULT NOW(),
-                expires_at TIMESTAMP
-            )""",
-            """CREATE TABLE IF NOT EXISTS blog_posts (
-                id SERIAL PRIMARY KEY,
-                title TEXT,
-                content TEXT,
-                source_url TEXT,
-                created_at TIMESTAMP DEFAULT NOW(),
-                published BOOLEAN DEFAULT TRUE
-            )""",
-            """CREATE TABLE IF NOT EXISTS deliberations (
-                id SERIAL PRIMARY KEY,
-                query TEXT NOT NULL,
-                domain TEXT,
-                persona TEXT,
-                provider TEXT,
-                initial_answer TEXT,
-                verifier_results JSONB,
-                final_answer TEXT,
-                confidence TEXT,
-                sources JSONB,
-                timestamp TIMESTAMPTZ DEFAULT NOW()
-            )""",
-            """CREATE TABLE IF NOT EXISTS knowledge_chunks (
-                id SERIAL PRIMARY KEY,
-                content TEXT NOT NULL,
-                metadata JSONB NOT NULL,
-                embedding vector(384) NOT NULL
-            )""",
-            """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-                ON knowledge_chunks 
-                USING hnsw (embedding vector_cosine_ops)"""
-        ]
-        
-        for stmt in tables:
-            try:
-                await database.execute(stmt)
-            except Exception as e:
-                if logger:
-                    logger.warning(f"Table creation warning: {e}")
-
-    async def _ensure_test_user():
-        if not database:
-            return
-        try:
-            existing = await database.fetch_one(
-                "SELECT id FROM users WHERE username = 'counsel'"
-            )
-            if not existing:
-                await database.execute(
-                    """INSERT INTO users (username, email, password_hash, full_name, tier, api_key, memory)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)""",
-                    "counsel",
-                    "counsel@advocacyalawfrim.in",
-                    pwd_context.hash("Password123!"),
-                    "Counsel User",
-                    "enterprise",
-                    "".join(random.choices(string.ascii_letters + string.digits, k=32)),
-                    json.dumps([])
-                )
-                if logger:
-                    logger.info("✅ Seeded test user 'counsel'.")
-        except Exception as e:
-            if logger:
-                logger.error(f"❌ Failed to create test user: {e}")
-
-    # Make helpers available to app.py
-    register_routes._create_tables = _create_tables
-    register_routes._ensure_test_user = _ensure_test_user
+# 5. Password context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # ============================================
-# ADD THESE ENDPOINTS TO routes.py
+# DATABASE INITIALIZATION FUNCTIONS
+# ============================================
+
+async def _create_tables():
+    """
+    Initialize database tables using SQLAlchemy ORM
+    """
+    try:
+        from sqlalchemy.ext.asyncio import create_async_engine
+        from sqlalchemy.orm import sessionmaker
+        from models import Base
+        
+        if not DATABASE_URL:
+            logger.error("❌ DATABASE_URL not configured")
+            return False
+        
+        async_db_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+        engine = create_async_engine(async_db_url, echo=False, pool_size=5, max_overflow=10)
+        
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            logger.info("✅ Database tables created successfully")
+        
+        await engine.dispose()
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to create tables: {e}")
+        return False
+
+async def _create_tables_sql():
+    """
+    Fallback: Create tables using raw SQL
+    """
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        
+        # Users table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                hashed_password VARCHAR(255) NOT NULL,
+                full_name VARCHAR(255),
+                is_active BOOLEAN DEFAULT TRUE,
+                is_admin BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Sessions table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                token VARCHAR(255) UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Chat history table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                session_id VARCHAR(100),
+                message TEXT,
+                response TEXT,
+                agent_name VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        await conn.close()
+        logger.info("✅ Tables created via SQL fallback")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ SQL fallback failed: {e}")
+        return False
+
+async def init_database():
+    """
+    Initialize database with tables
+    """
+    try:
+        success = await _create_tables()
+        if not success:
+            success = await _create_tables_sql()
+        
+        if success:
+            logger.info("✅ Database initialized successfully")
+            return True
+        else:
+            logger.warning("⚠️ Database initialization partially failed")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Database init error: {e}")
+        return False
+
+# ============================================
+# AUTHENTICATION FUNCTIONS
+# ============================================
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=7)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm="HS256")
+    return encoded_jwt
+
+async def get_current_user(token: str):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+        return {"id": user_id, "username": payload.get("username")}
+    except jwt.PyJWTError:
+        return None
+
+# ============================================
+# API ENDPOINTS
+# ============================================
+
+# Health check
+@router.get("/health")
+async def health_check():
+    return {"status": "healthy", "version": "12.1"}
+
+# ============================================
+# AUTH ENDPOINTS
+# ============================================
+
+@router.post("/api/register")
+async def register_user(username: str, email: str, password: str, full_name: Optional[str] = None):
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        
+        # Check if user exists
+        existing = await conn.fetchrow("SELECT id FROM users WHERE username = $1 OR email = $2", username, email)
+        if existing:
+            await conn.close()
+            raise HTTPException(status_code=400, detail="Username or email already registered")
+        
+        # Hash password
+        hashed = get_password_hash(password)
+        
+        # Insert user
+        result = await conn.fetchrow(
+            "INSERT INTO users (username, email, hashed_password, full_name) VALUES ($1, $2, $3, $4) RETURNING id",
+            username, email, hashed, full_name
+        )
+        
+        await conn.close()
+        
+        return {
+            "status": "success",
+            "message": "User registered successfully",
+            "user_id": result["id"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/api/login")
+async def login_user(username: str, password: str):
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        
+        user = await conn.fetchrow(
+            "SELECT id, username, email, hashed_password FROM users WHERE username = $1 OR email = $1",
+            username
+        )
+        
+        if not user:
+            await conn.close()
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        if not verify_password(password, user["hashed_password"]):
+            await conn.close()
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Create token
+        token = create_access_token({"sub": str(user["id"]), "username": user["username"]})
+        
+        # Store session
+        await conn.execute(
+            "INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)",
+            user["id"], token, datetime.utcnow() + timedelta(days=7)
+        )
+        
+        await conn.close()
+        
+        return {
+            "status": "success",
+            "token": token,
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# CHAT ENDPOINTS
+# ============================================
+
+@router.post("/api/chat")
+async def chat_endpoint(request: Request):
+    try:
+        data = await request.json()
+        message = data.get("message", "")
+        session_id = data.get("session_id", "default")
+        
+        if not message:
+            return JSONResponse({"error": "Message is required"}, status_code=400)
+        
+        # Get engine instance
+        engine = get_engine()
+        
+        # Process message
+        response = await engine.process_message(message, session_id)
+        
+        return {
+            "response": response.get("response", "I received your message. How can I help with your legal needs?"),
+            "session_id": session_id,
+            "agent_used": response.get("agent", "Legal Counsel")
+        }
+        
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+# ============================================
+# TRADING ENDPOINTS
 # ============================================
 
 @router.get("/api/trading/indices")
 async def get_indices():
     """Get live trading indices"""
     try:
-        # Return mock data for now (replace with real API calls)
         return [
             {"symbol": "NIFTY", "name": "NIFTY 50", "price": "₹24,500.50", "change": 0.49},
             {"symbol": "SENSEX", "name": "SENSEX", "price": "₹81,500.25", "change": 0.31},
@@ -419,6 +304,10 @@ async def get_indices():
     except Exception as e:
         logger.error(f"Trading indices error: {e}")
         return {"error": str(e)}
+
+# ============================================
+# COMPLIANCE ENDPOINTS
+# ============================================
 
 @router.get("/api/compliance/snapshot")
 async def get_compliance_snapshot():
@@ -435,6 +324,10 @@ async def get_compliance_snapshot():
         logger.error(f"Compliance snapshot error: {e}")
         return {"error": str(e)}
 
+# ============================================
+# TRENDS ENDPOINTS
+# ============================================
+
 @router.get("/api/trends/ai")
 async def get_ai_trends():
     """Get AI industry trends"""
@@ -450,6 +343,10 @@ async def get_ai_trends():
         logger.error(f"Trends error: {e}")
         return {"error": str(e)}
 
+# ============================================
+# NEWS ENDPOINTS
+# ============================================
+
 @router.get("/api/news")
 async def get_news(limit: int = 6):
     """Get legal news"""
@@ -458,12 +355,19 @@ async def get_news(limit: int = 6):
             "articles": [
                 {"title": "AI Regulation Update", "summary": "New EU AI Act provisions take effect", "source": "Legal Tech"},
                 {"title": "DPDPA Implementation", "summary": "India's digital privacy law enters phase 2", "source": "Indian Law"},
-                {"title": "Blockchain Legal Framework", "summary": "New guidelines for crypto assets", "source": "FinTech Law"}
-            ]
+                {"title": "Blockchain Legal Framework", "summary": "New guidelines for crypto assets", "source": "FinTech Law"},
+                {"title": "Supreme Court AI Ruling", "summary": "Landmark case on AI liability", "source": "Supreme Court"},
+                {"title": "Data Protection Bill", "summary": "New amendments proposed", "source": "Parliament"},
+                {"title": "Legal Tech Investment", "summary": "$500M raised in Q2 2024", "source": "TechCrunch"}
+            ][:limit]
         }
     except Exception as e:
         logger.error(f"News error: {e}")
         return {"error": str(e)}
+
+# ============================================
+# LENS ENDPOINTS
+# ============================================
 
 @router.get("/api/lens/agents")
 async def get_lens_agents():
@@ -473,8 +377,23 @@ async def get_lens_agents():
             "status": "active",
             "total_agents": 250,
             "active_agents": 248,
-            "domains": ["Legal", "Tech", "Markets", "Compliance"]
+            "domains": ["Legal", "Tech", "Markets", "Compliance", "Spiritual", "Scientific"]
         }
     except Exception as e:
         logger.error(f"Lens agents error: {e}")
-        return {"error": str(e)}    
+        return {"error": str(e)}
+
+# ============================================
+# ROOT ENDPOINTS (for frontend)
+# ============================================
+
+@router.get("/")
+async def root():
+    return FileResponse("static/index.html")
+
+# ============================================
+# EXPOSE router for app.py
+# ============================================
+
+# Make sure router is exported
+__all__ = ['router', 'init_database', '_create_tables', '_create_tables_sql']
