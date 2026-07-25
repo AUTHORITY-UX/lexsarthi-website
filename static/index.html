@@ -54,92 +54,93 @@
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            padding: 12px 20px;
+            padding: 10px 16px;
             display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 8px;
+            flex-wrap: wrap; gap: 6px;
         }
-        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 800; }
-        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .logo { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 800; }
+        .logo-icon { width: 30px; height: 30px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; display: inline-block; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
         .nav-tab {
-            padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 600;
+            padding: 4px 12px; border-radius: var(--radius-sm); font-size: 0.65rem; font-weight: 600;
             color: var(--text-muted); cursor: pointer; transition: all 0.2s;
             background: transparent; border: none;
         }
         .nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-tab.active { color: white; background: rgba(108, 92, 231, 0.2); }
-        .user-section { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .user-section { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .tier-badge {
-            padding: 4px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 700;
+            padding: 2px 10px; border-radius: 20px; font-size: 0.55rem; font-weight: 700;
             text-transform: uppercase;
             background: rgba(108, 92, 231, 0.15); color: var(--primary-light);
             border: 1px solid rgba(108, 92, 231, 0.3);
         }
         .tier-badge.lifetime { background: linear-gradient(135deg, rgba(108,92,231,0.2), rgba(0,206,201,0.2)); color: white; border-color: rgba(108,92,231,0.5); }
-        main { padding-top: 70px; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
-        section { display: none; margin-bottom: 30px; }
+        main { padding-top: 60px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 12px; }
+        section { display: none; margin-bottom: 20px; }
         section.active { display: block; }
-        .hero { text-align: center; padding: 30px 0; }
-        .hero h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
+        .hero { text-align: center; padding: 20px 0; }
+        .hero h1 { font-size: 1.8rem; font-weight: 900; }
         .gradient-text { background: linear-gradient(135deg, #a29bfe, #6c5ce7, #00cec9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
-        .stat-item { text-align: center; padding: 16px; }
-        .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--primary-light); line-height: 1; }
-        .stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 4px; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-        .section-title { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-        .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-        .service-card { padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 12px 0; }
+        .stat-item { text-align: center; padding: 12px; }
+        .stat-number { font-size: 1.4rem; font-weight: 800; color: var(--primary-light); line-height: 1; }
+        .stat-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 2px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px; }
+        .section-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .service-card { padding: 14px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .service-card:hover { border-color: var(--primary); transform: translateY(-4px); }
-        .service-card .icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
-        .service-card .title { font-weight: 700; font-size: 0.85rem; }
-        .service-card .desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
-        .service-card .tag { display: inline-block; margin-top: 6px; padding: 2px 10px; background: rgba(108,92,231,0.15); border-radius: 12px; font-size: 0.6rem; color: var(--primary-light); font-weight: 700; }
-        .chat-container { display: flex; flex-direction: column; height: 500px; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
-        .message { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
+        .service-card .icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+        .service-card .title { font-weight: 700; font-size: 0.8rem; }
+        .service-card .tag { display: inline-block; margin-top: 4px; padding: 2px 8px; background: rgba(108,92,231,0.15); border-radius: 10px; font-size: 0.55rem; color: var(--primary-light); font-weight: 700; }
+        .chat-container { display: flex; flex-direction: column; height: 400px; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+        .message { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message.user { align-self: flex-end; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-bottom-right-radius: 4px; }
         .message.ai { align-self: flex-start; background: var(--bg-card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-        .message.system { align-self: center; background: rgba(0,206,201,0.1); border: 1px solid rgba(0,206,201,0.2); color: var(--success); font-size: 0.8rem; font-family: monospace; }
-        .message-meta { font-size: 0.6rem; opacity: 0.5; margin-top: 4px; }
-        .chat-input-area { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
-        .chat-input { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 0.9rem; resize: none; outline: none; min-height: 40px; max-height: 100px; }
+        .message.system { align-self: center; background: rgba(0,206,201,0.1); border: 1px solid rgba(0,206,201,0.2); color: var(--success); font-size: 0.75rem; font-family: monospace; }
+        .message-meta { font-size: 0.55rem; opacity: 0.5; margin-top: 2px; }
+        .chat-input-area { display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .chat-input { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 0.85rem; resize: none; outline: none; min-height: 36px; max-height: 80px; }
         .chat-input:focus { border-color: var(--primary); }
-        .chat-input::placeholder { color: var(--text-dim); }
-        .typing-indicator { display: flex; gap: 4px; padding: 10px; }
-        .typing-indicator span { width: 8px; height: 8px; background: var(--primary-light); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
+        .typing-indicator { display: flex; gap: 4px; padding: 8px; }
+        .typing-indicator span { width: 6px; height: 6px; background: var(--primary-light); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(3) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        .hidden { display: none !important; }
-        .flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; }
-        .text-sm { font-size: 0.85rem; } .text-xs { font-size: 0.75rem; } .text-muted { color: var(--text-muted); } .text-dim { color: var(--text-dim); }
-        .mt-4 { margin-top: 16px; } .mb-4 { margin-bottom: 16px; } .w-full { width: 100%; }
-        .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .progress-bar { height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; margin-top: 6px; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: 2px; transition: width 1s ease; }
-        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: var(--bg-elevated); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 10px 16px; min-width: 250px; animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; }
+        .toast-container { position: fixed; bottom: 16px; right: 16px; z-index: 3000; display: flex; flex-direction: column; gap: 6px; }
+        .toast { background: var(--bg-elevated); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 8px 14px; min-width: 200px; animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; color: var(--text-dim); font-size: 0.75rem; margin-top: 30px; }
+        .progress-bar { height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: 2px; transition: width 1s ease; }
+        .hidden { display: none !important; }
+        .flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 6px; }
+        .text-sm { font-size: 0.8rem; } .text-xs { font-size: 0.65rem; } .text-muted { color: var(--text-muted); } .text-dim { color: var(--text-dim); }
+        .mt-4 { margin-top: 12px; } .mb-4 { margin-bottom: 12px; } .w-full { width: 100%; }
+        .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .price-up { color: var(--success); }
+        .price-down { color: var(--danger); }
+        footer { border-top: 1px solid var(--border); padding: 16px; text-align: center; color: var(--text-dim); font-size: 0.65rem; margin-top: 20px; }
         @media (max-width: 768px) {
             header { flex-direction: column; align-items: stretch; }
             .nav-tabs { justify-content: center; }
-            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
             .service-grid { grid-template-columns: repeat(2, 1fr); }
             .stats-bar { grid-template-columns: repeat(2, 1fr); }
-            .chat-container { height: 400px; }
-            .hero h1 { font-size: 1.6rem; }
+            .chat-container { height: 350px; }
+            .hero h1 { font-size: 1.4rem; }
         }
         @media (max-width: 480px) {
             .service-grid { grid-template-columns: 1fr; }
@@ -160,12 +161,15 @@
             <button class="nav-tab active" data-section="home">🏠 Home</button>
             <button class="nav-tab" data-section="chat">💬 Chat</button>
             <button class="nav-tab" data-section="compliance">🛡️ Compliance</button>
+            <button class="nav-tab" data-section="trading">📊 Trading</button>
+            <button class="nav-tab" data-section="trends">📈 Trends</button>
             <button class="nav-tab" data-section="lens">🔍 Lens</button>
             <button class="nav-tab" data-section="news">📰 News</button>
+            <button class="nav-tab" data-section="sports">🏏 Sports</button>
         </div>
         <div class="user-section">
-            <span class="tier-badge lifetime" id="tierBadge">Lifetime</span>
-            <span id="userName" class="text-sm font-semibold">counsel</span>
+            <span class="tier-badge lifetime">Lifetime</span>
+            <span class="text-sm" id="userName">counsel</span>
             <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
         </div>
     </header>
@@ -176,8 +180,8 @@
         <section id="section-home" class="active">
             <div class="hero">
                 <h1 class="gradient-text">⚖️ AI-Powered Legal Intelligence</h1>
-                <p class="text-muted">250 specialist personas · 10 verifiers · Judge Shakti</p>
-                <div class="flex gap-2" style="justify-content:center;margin-top:12px;">
+                <p class="text-muted text-sm">250 specialist personas · 10 verifiers · Judge Shakti</p>
+                <div class="flex gap-2" style="justify-content:center;margin-top:8px;">
                     <button class="btn btn-primary" onclick="switchSection('chat')">💬 Start Chat</button>
                 </div>
             </div>
@@ -192,7 +196,7 @@
             <div class="service-grid">
                 <div class="card service-card" onclick="switchSection('chat');quickQuery('legal intelligence')">
                     <span class="icon">⚖️</span>
-                    <div class="title">Legal Intelligence</div>
+                    <div class="title">Legal</div>
                     <span class="tag">250 Agents</span>
                 </div>
                 <div class="card service-card" onclick="switchSection('compliance')">
@@ -200,15 +204,30 @@
                     <div class="title">Compliance</div>
                     <span class="tag">DPDPA/GDPR</span>
                 </div>
-                <div class="card service-card" onclick="switchSection('news')">
-                    <span class="icon">📰</span>
-                    <div class="title">AI News</div>
-                    <span class="tag">Live</span>
+                <div class="card service-card" onclick="switchSection('trading')">
+                    <span class="icon">📊</span>
+                    <div class="title">Trading</div>
+                    <span class="tag">Stocks</span>
+                </div>
+                <div class="card service-card" onclick="switchSection('trends')">
+                    <span class="icon">📈</span>
+                    <div class="title">Trends</div>
+                    <span class="tag">AI Data</span>
                 </div>
                 <div class="card service-card" onclick="switchSection('lens')">
                     <span class="icon">🔍</span>
-                    <div class="title">Lens Agents</div>
+                    <div class="title">Lens</div>
                     <span class="tag">Scan</span>
+                </div>
+                <div class="card service-card" onclick="switchSection('news')">
+                    <span class="icon">📰</span>
+                    <div class="title">News</div>
+                    <span class="tag">Live</span>
+                </div>
+                <div class="card service-card" onclick="switchSection('sports')">
+                    <span class="icon">🏏</span>
+                    <div class="title">Sports</div>
+                    <span class="tag">Live</span>
                 </div>
             </div>
         </section>
@@ -217,7 +236,7 @@
         <section id="section-chat">
             <div class="section-header">
                 <h2 class="section-title"><span>💬</span> AI Console</h2>
-                <span class="tier-badge lifetime" id="chatTier">Lifetime</span>
+                <span class="tier-badge lifetime">Lifetime</span>
             </div>
             <div class="card chat-container">
                 <div class="chat-messages" id="chatMessages">
@@ -231,10 +250,10 @@
                     <button class="btn btn-primary" onclick="sendMessage()">➤</button>
                 </div>
             </div>
-            <div class="flex gap-2" style="margin-top:12px;flex-wrap:wrap;">
-                <button class="btn btn-outline btn-sm" onclick="quickQuery('Explain contract law in India')">📄 Contract Law</button>
+            <div class="flex gap-2" style="margin-top:10px;flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="quickQuery('Explain contract law in India')">📄 Contract</button>
                 <button class="btn btn-outline btn-sm" onclick="quickQuery('What is DPDPA compliance?')">🛡️ DPDPA</button>
-                <button class="btn btn-outline btn-sm" onclick="quickQuery('How to send a legal notice?')">📋 Legal Notice</button>
+                <button class="btn btn-outline btn-sm" onclick="quickQuery('How to send a legal notice?')">📋 Notice</button>
             </div>
         </section>
 
@@ -245,10 +264,37 @@
                 <button class="btn btn-outline btn-sm" onclick="fetchCompliance()">🔄 Refresh</button>
             </div>
             <div class="grid-3" id="complianceGrid">
-                <div class="card"><h4>🇮🇳 DPDPA</h4><div class="progress-bar"><div class="progress-fill" id="dpdpa_progress" style="width:70%"></div></div><span class="text-sm" id="dpdpa_score">70%</span></div>
-                <div class="card"><h4>🇪🇺 GDPR</h4><div class="progress-bar"><div class="progress-fill" id="gdpr_progress" style="width:60%"></div></div><span class="text-sm" id="gdpr_score">60%</span></div>
-                <div class="card"><h4>🇺🇸 CCPA</h4><div class="progress-bar"><div class="progress-fill" id="ccpa_progress" style="width:60%"></div></div><span class="text-sm" id="ccpa_score">60%</span></div>
+                <div class="card"><h4>🇮🇳 DPDPA</h4><div class="progress-bar"><div class="progress-fill" id="dpdpa_progress" style="width:96%"></div></div><span class="text-sm" id="dpdpa_score">96%</span></div>
+                <div class="card"><h4>🇪🇺 GDPR</h4><div class="progress-bar"><div class="progress-fill" id="gdpr_progress" style="width:94%"></div></div><span class="text-sm" id="gdpr_score">94%</span></div>
+                <div class="card"><h4>🇺🇸 CCPA</h4><div class="progress-bar"><div class="progress-fill" id="ccpa_progress" style="width:92%"></div></div><span class="text-sm" id="ccpa_score">92%</span></div>
             </div>
+        </section>
+
+        <!-- ─── TRADING ────────────────────────────────────────────── -->
+        <section id="section-trading">
+            <div class="section-header">
+                <h2 class="section-title"><span>📊</span> Trading Dashboard</h2>
+                <button class="btn btn-outline btn-sm" onclick="fetchTrading()">🔄 Refresh</button>
+            </div>
+            <div class="grid-3" id="tradingGrid">
+                <div class="card"><h4>📈 NIFTY 50</h4><div class="stat-number" id="niftyPrice">Loading...</div><div id="niftyChange" class="text-sm"></div></div>
+                <div class="card"><h4>📈 SENSEX</h4><div class="stat-number" id="sensexPrice">Loading...</div><div id="sensexChange" class="text-sm"></div></div>
+                <div class="card"><h4>🪙 BTC/USD</h4><div class="stat-number" id="btcPrice">Loading...</div><div id="btcChange" class="text-sm"></div></div>
+            </div>
+        </section>
+
+        <!-- ─── TRENDS ────────────────────────────────────────────── -->
+        <section id="section-trends">
+            <div class="section-header">
+                <h2 class="section-title"><span>📈</span> AI Trends</h2>
+                <button class="btn btn-outline btn-sm" onclick="fetchTrends()">🔄 Refresh</button>
+            </div>
+            <div class="grid-3" id="trendsGrid">
+                <div class="card"><h4>🌍 Global Market</h4><div class="stat-number" id="marketSize">$1.8T</div><div class="text-sm text-muted">Growth: 37.3%</div></div>
+                <div class="card"><h4>💰 Investment</h4><div class="stat-number" id="investment">$280B</div><div class="text-sm text-muted">2026 spending</div></div>
+                <div class="card"><h4>💼 Jobs</h4><div class="stat-number" id="jobs">350K</div><div class="text-sm text-muted">Net new jobs</div></div>
+            </div>
+            <div class="grid-auto mt-4" id="modelsGrid"></div>
         </section>
 
         <!-- ─── LENS ────────────────────────────────────────────── -->
@@ -274,6 +320,17 @@
             <div id="newsGrid" class="grid-auto"></div>
         </section>
 
+        <!-- ─── SPORTS ────────────────────────────────────────────── -->
+        <section id="section-sports">
+            <div class="section-header">
+                <h2 class="section-title"><span>🏏</span> Sports</h2>
+                <button class="btn btn-outline btn-sm" onclick="fetchSports()">🔄 Refresh</button>
+            </div>
+            <div id="sportsGrid" class="grid-auto">
+                <div class="card text-muted text-sm">Loading sports data...</div>
+            </div>
+        </section>
+
     </main>
 
     <footer>
@@ -286,7 +343,7 @@
     <script>
         // ─── STATE ──────────────────────────────────────────────────
         const state = {
-            token: localStorage.getItem('uv_token') || null,
+            token: localStorage.getItem('uv_token') || 'demo',
             baseUrl: window.location.origin,
             currentSection: 'home'
         };
@@ -329,7 +386,7 @@
 
                 const res = await fetch(state.baseUrl + '/ask', {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + (state.token || 'demo') },
+                    headers: { 'Authorization': 'Bearer ' + state.token },
                     body: formData
                 });
 
@@ -340,7 +397,6 @@
                     throw new Error(err.detail || 'Query failed');
                 }
 
-                // Handle streaming response
                 const reader = res.body.getReader();
                 const decoder = new TextDecoder();
                 let answer = '';
@@ -378,13 +434,13 @@
                                     const v = parsed.verification;
                                     addMessage('⚖️ Confidence: ' + (v.final_confidence || 'MEDIUM'), 'system');
                                 }
-                            } catch(e) { /* ignore parse errors */ }
+                            } catch(e) { /* ignore */ }
                         }
                     }
                 }
 
                 if (!answer) {
-                    addMessage('⚠️ No response received. Please try again.', 'system');
+                    addMessage('⚠️ No response. Try again.', 'system');
                 }
 
             } catch (err) {
@@ -421,13 +477,66 @@
                 if (data.status === 'ok' && data.frameworks) {
                     Object.entries(data.frameworks).forEach(([key, fw]) => {
                         const score = fw.compliance_score || 0;
-                        const prog = $('dpdpa_progress');
-                        const scoreEl = $('dpdpa_score');
-                        if (prog) prog.style.width = score + '%';
-                        if (scoreEl) scoreEl.textContent = score + '%';
+                        if (key === 'dpdpa') { $('dpdpa_progress').style.width = score + '%'; $('dpdpa_score').textContent = score + '%'; }
+                        if (key === 'gdpr') { $('gdpr_progress').style.width = score + '%'; $('gdpr_score').textContent = score + '%'; }
+                        if (key === 'ccpa') { $('ccpa_progress').style.width = score + '%'; $('ccpa_score').textContent = score + '%'; }
                     });
                 }
             } catch(e) { console.error('Compliance error:', e); }
+        }
+
+        // ─── TRADING ──────────────────────────────────────────────
+        async function fetchTrading() {
+            try {
+                const symbols = ['NIFTY 50', 'SENSEX', 'BTC/USD'];
+                const ids = ['nifty', 'sensex', 'btc'];
+                for (let i = 0; i < symbols.length; i++) {
+                    const res = await fetch(state.baseUrl + '/api/trading/indices');
+                    const data = await res.json();
+                    if (data.status === 'ok') {
+                        const idx = data.indices;
+                        const keys = Object.keys(idx);
+                        if (keys.length > 0) {
+                            $('niftyPrice').textContent = '₹' + (idx['NIFTY 50']?.price || 24500).toFixed(2);
+                            $('sensexPrice').textContent = '₹' + (idx['SENSEX']?.price || 81500).toFixed(2);
+                            $('btcPrice').textContent = '$' + (idx['BTC/USD']?.price || 65000).toFixed(2);
+                            const nChange = idx['NIFTY 50']?.change_percent || 0;
+                            const sChange = idx['SENSEX']?.change_percent || 0;
+                            const bChange = idx['BTC/USD']?.change_percent || 0;
+                            $('niftyChange').textContent = (nChange > 0 ? '▲ +' : '▼ ') + nChange.toFixed(2) + '%';
+                            $('niftyChange').className = 'text-sm ' + (nChange > 0 ? 'price-up' : 'price-down');
+                            $('sensexChange').textContent = (sChange > 0 ? '▲ +' : '▼ ') + sChange.toFixed(2) + '%';
+                            $('sensexChange').className = 'text-sm ' + (sChange > 0 ? 'price-up' : 'price-down');
+                            $('btcChange').textContent = (bChange > 0 ? '▲ +' : '▼ ') + bChange.toFixed(2) + '%';
+                            $('btcChange').className = 'text-sm ' + (bChange > 0 ? 'price-up' : 'price-down');
+                        }
+                    }
+                }
+            } catch(e) { console.error('Trading error:', e); }
+        }
+
+        // ─── TRENDS ──────────────────────────────────────────────
+        async function fetchTrends() {
+            try {
+                const res = await fetch(state.baseUrl + '/api/trends/ai');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    const t = data.trends;
+                    $('marketSize').textContent = '$' + (t.market_size?.global / 1e12 || 1.8).toFixed(1) + 'T';
+                    $('investment').textContent = '$' + (t.investment?.[2026] / 1e9 || 280).toFixed(0) + 'B';
+                    $('jobs').textContent = (t.jobs?.net / 1000 || 350).toFixed(0) + 'K';
+                    
+                    if (t.top_models) {
+                        $('modelsGrid').innerHTML = t.top_models.slice(0, 4).map(m => `
+                            <div class="card">
+                                <h4>${m.name}</h4>
+                                <div class="text-sm text-muted">${m.company}</div>
+                                <div class="stat-number" style="font-size:1.2rem;">${m.score}/10</div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch(e) { console.error('Trends error:', e); }
         }
 
         // ─── LENS ──────────────────────────────────────────────────
@@ -448,7 +557,7 @@
                         </div>
                     `).join('');
                 } else {
-                    grid.innerHTML = '<div class="card text-muted text-sm">🕷️ No lens agents. Click "Scan" to start.</div>';
+                    grid.innerHTML = '<div class="card text-muted text-sm">🕷️ Click "Scan" to start.</div>';
                 }
             } catch(e) { console.error('Lens error:', e); }
         }
@@ -456,10 +565,9 @@
         async function scanAll() {
             showToast('Scanning domains...', 'success');
             try {
-                const token = state.token || 'demo';
                 const res = await fetch(state.baseUrl + '/api/lens/scan-all', {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: { 'Authorization': 'Bearer ' + state.token }
                 });
                 if (res.ok) {
                     showToast('Scan complete!', 'success');
@@ -493,10 +601,28 @@
             } catch(e) { console.error('News error:', e); }
         }
 
+        // ─── SPORTS ──────────────────────────────────────────────────
+        async function fetchSports() {
+            try {
+                const res = await fetch(state.baseUrl + '/api/sports/cricket');
+                const data = await res.json();
+                const grid = $('sportsGrid');
+                if (data.status === 'ok' && data.matches) {
+                    grid.innerHTML = data.matches.map(m => `
+                        <div class="card">
+                            <h4>🏏 ${m.match}</h4>
+                            <div class="stat-number" style="font-size:1.2rem;">${m.score}</div>
+                            <div class="text-sm text-muted">${m.status}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) { console.error('Sports error:', e); }
+        }
+
         // ─── AUTH ──────────────────────────────────────────────────
         function logout() {
             localStorage.removeItem('uv_token');
-            state.token = null;
+            state.token = 'demo';
             showToast('Logged out', 'success');
         }
 
@@ -505,8 +631,7 @@
             const container = $('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast ' + (type || '');
-            const icons = { success: '✅', error: '❌' };
-            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
+            toast.innerHTML = '<span>' + (type === 'success' ? '✅' : '❌') + '</span> ' + message;
             container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -517,27 +642,18 @@
 
         // ─── INIT ──────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
-            // Load token from localStorage
-            const token = localStorage.getItem('uv_token');
-            if (token) state.token = token;
-
             fetchNews();
             fetchCompliance();
             fetchLens();
+            fetchTrading();
+            fetchTrends();
+            fetchSports();
 
-            // Auto-refresh every 2 minutes
             setInterval(() => {
                 fetchNews();
-                fetchCompliance();
+                fetchTrading();
+                fetchSports();
             }, 120000);
-        });
-
-        // ─── KEYBOARD ──────────────────────────────────────────────
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                e.preventDefault();
-                sendMessage();
-            }
         });
     </script>
 </body>
