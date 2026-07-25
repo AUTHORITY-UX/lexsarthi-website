@@ -117,7 +117,10 @@ document_generator = SmartDocumentGenerator()
 analytics = AnalyticsDashboard()
 multi_modal_processor = MultiModalProcessor()
 
-# ─── REGISTER ROUTES FUNCTION ──────────────────────────────────────────
+# =============================================================================
+# ✅ register_routes FUNCTION - THIS IS WHAT app.py CALLS
+# =============================================================================
+
 def register_routes(app: FastAPI):
     """Register all routes with the FastAPI app"""
 
@@ -929,10 +932,12 @@ def register_routes(app: FastAPI):
         
         result = await lens_agent_system.scan_domain(agent["id"])
         return {"status": "ok", "result": result}
+
     # ═══════════════════════════════════════════════════════════════════
-    # TRADING ROUTES
+    # 🆕 NEW ROUTES: TRADING, TRENDS, SPORTS, LANGUAGES
     # ═══════════════════════════════════════════════════════════════════
     
+    # ─── TRADING ──────────────────────────────────────────────────────
     @app.get("/api/trading/stocks/{symbol}")
     async def get_stock_data(symbol: str):
         """Get stock data"""
@@ -949,7 +954,6 @@ def register_routes(app: FastAPI):
                 "timestamp": datetime.now().isoformat()
             }
         except:
-            # Mock data if yfinance fails
             return {
                 "symbol": symbol,
                 "price": 24500.50,
@@ -972,10 +976,7 @@ def register_routes(app: FastAPI):
             "timestamp": datetime.now().isoformat()
         }
 
-    # ═══════════════════════════════════════════════════════════════════
-    # TRENDS ROUTES
-    # ═══════════════════════════════════════════════════════════════════
-    
+    # ─── TRENDS ──────────────────────────────────────────────────────
     @app.get("/api/trends/ai")
     async def get_ai_trends():
         """Get AI trends"""
@@ -1022,10 +1023,7 @@ def register_routes(app: FastAPI):
             "timestamp": datetime.now().isoformat()
         }
 
-    # ═══════════════════════════════════════════════════════════════════
-    # SPORTS ROUTES
-    # ═══════════════════════════════════════════════════════════════════
-    
+    # ─── SPORTS ──────────────────────────────────────────────────────
     @app.get("/api/sports/cricket")
     async def get_cricket_scores():
         """Get cricket scores"""
@@ -1038,10 +1036,7 @@ def register_routes(app: FastAPI):
             "timestamp": datetime.now().isoformat()
         }
 
-    # ═══════════════════════════════════════════════════════════════════
-    # LANGUAGES ROUTE
-    # ═══════════════════════════════════════════════════════════════════
-    
+    # ─── LANGUAGES ──────────────────────────────────────────────────
     @app.get("/api/languages")
     async def get_languages():
         """Get supported languages"""
@@ -1051,20 +1046,11 @@ def register_routes(app: FastAPI):
             "count": len(SUPPORTED_LANGUAGES),
             "timestamp": datetime.now().isoformat()
         }
+
     # ═══════════════════════════════════════════════════════════════════
-    # MULTI-MODAL PROCESSING ROUTES (SINGLE COPY)
+    # MULTI-MODAL ROUTES
     # ═══════════════════════════════════════════════════════════════════
     
-    @app.get("/api/languages")
-    async def get_supported_languages():
-        """Get all supported languages"""
-        return {
-            "status": "ok",
-            "languages": SUPPORTED_LANGUAGES,
-            "count": len(SUPPORTED_LANGUAGES),
-            "timestamp": datetime.now().isoformat()
-        }
-
     @app.post("/api/upload")
     async def upload_file(
         request: Request,
@@ -1072,7 +1058,6 @@ def register_routes(app: FastAPI):
         lang: str = Form("en"),
         cu: dict = Depends(get_current_user)
     ):
-        """Upload and process any file (PDF, DOCX, Image, Audio, Video)"""
         if cu["tier"] not in ("premium", "enterprise", "lifetime"):
             raise HTTPException(403, "File upload requires Premium+ plan")
         
@@ -1088,57 +1073,6 @@ def register_routes(app: FastAPI):
             "timestamp": datetime.now().isoformat()
         }
 
-    @app.post("/api/upload/query")
-    async def upload_and_query(
-        request: Request,
-        file: UploadFile = File(...),
-        query: str = Form(...),
-        lang: str = Form("en"),
-        cu: dict = Depends(get_current_user)
-    ):
-        """Upload file and query with its content"""
-        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-            raise HTTPException(403, "File upload requires Premium+ plan")
-        
-        if lang not in SUPPORTED_LANGUAGES:
-            lang = 'en'
-        
-        content = await file.read()
-        processed = await multi_modal_processor.process_file(content, file.filename, lang=lang)
-        
-        full_query = query + "\n\n═══ DOCUMENT CONTENT ═══\n" + processed['text'][:5000]
-        
-        agent_id = route_agent(full_query, False)
-        agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
-        agent_name = agent["name"] if agent else "General Council"
-        domain = agent["domain"] if agent else "General"
-        persona = agent["persona_prompt"] if agent else "You are a generalist."
-        
-        system_prompt = SYSTEM_BASE + "\n" + "Agent: " + agent_name + "\nDomain: " + domain + "\nPersona: " + persona + "\nYou have been given a document to analyze. Use its content in your response."
-        
-        initial_answer = await call_llm(system_prompt, full_query, "groq")
-        jury_result = await jury_verification(initial_answer, full_query, domain)
-        
-        answer = jury_result["final_answer"]
-        confidence = jury_result["confidence"]
-        sources = jury_result["sources"]
-        
-        metadata = {
-            "domain": domain,
-            "persona": agent_name,
-            "provider": "groq",
-            "jury_verifiers": jury_result["jury_verifiers"],
-            "judge": "Shakti",
-            "file": file.filename,
-            "file_type": processed["type"],
-            "language": lang
-        }
-        
-        return StreamingResponse(
-            replay_stream(answer, confidence, sources, metadata),
-            media_type="text/event-stream"
-        )
-
     @app.post("/api/export/docx")
     async def export_docx(
         request: Request,
@@ -1146,7 +1080,6 @@ def register_routes(app: FastAPI):
         title: str = Form("Legal Document"),
         cu: dict = Depends(get_current_user)
     ):
-        """Export content as DOCX"""
         if cu["tier"] not in ("premium", "enterprise", "lifetime"):
             raise HTTPException(403, "DOCX export requires Premium+ plan")
         
@@ -1161,43 +1094,6 @@ def register_routes(app: FastAPI):
             headers={"Content-Disposition": "attachment; filename=" + safe_filename}
         )
 
-    @app.post("/api/export/pdf")
-    async def export_pdf(
-        request: Request,
-        content: str = Form(...),
-        title: str = Form("Legal Document"),
-        cu: dict = Depends(get_current_user)
-    ):
-        """Export content as PDF"""
-        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
-            raise HTTPException(403, "PDF export requires Premium+ plan")
-        
-        try:
-            import pdfkit
-            safe_content = content.replace(chr(10), '<br>')
-            html_content = f"""
-            <html>
-                <head><title>{title}</title></head>
-                <body>
-                    <h1 style="text-align:center;">{title}</h1>
-                    <p style="text-align:right;">{datetime.now().strftime('%B %d, %Y')}</p>
-                    <hr/>
-                    <div style="font-size:12pt;line-height:1.6;">{safe_content}</div>
-                    <hr/>
-                    <p style="text-align:right;">_________________________<br/>Signature</p>
-                </body>
-            </html>
-            """
-            pdf_bytes = pdfkit.from_string(html_content, False)
-            safe_filename = title.replace(" ", "_") + ".pdf"
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={"Content-Disposition": "attachment; filename=" + safe_filename}
-            )
-        except Exception as e:
-            raise HTTPException(503, f"PDF generation not available: {str(e)}")
-
     @app.post("/api/export/audio")
     async def export_audio(
         request: Request,
@@ -1205,7 +1101,6 @@ def register_routes(app: FastAPI):
         lang: str = Form("en"),
         cu: dict = Depends(get_current_user)
     ):
-        """Convert text to audio (TTS)"""
         if cu["tier"] not in ("premium", "enterprise", "lifetime"):
             raise HTTPException(403, "Audio export requires Premium+ plan")
         
@@ -1226,7 +1121,6 @@ def register_routes(app: FastAPI):
 
     @app.get("/api/formats")
     async def get_supported_formats():
-        """Get list of supported file formats"""
         return {
             "status": "ok",
             "formats": multi_modal_processor.get_supported_formats(),
@@ -1234,145 +1128,149 @@ def register_routes(app: FastAPI):
             "timestamp": datetime.now().isoformat()
         }
 
-# ─── DATABASE HELPERS ──────────────────────────────────────────────
-
-async def _create_tables():
-    """Create all database tables"""
-    if not database:
-        return
+    # ═══════════════════════════════════════════════════════════════════
+    # DATABASE HELPERS
+    # ═══════════════════════════════════════════════════════════════════
     
-    try:
-        await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-    except:
-        pass
-    
-    tables = [
-        """CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            username VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            full_name VARCHAR(255),
-            is_active BOOLEAN DEFAULT TRUE,
-            is_premium BOOLEAN DEFAULT FALSE,
-            tier VARCHAR(20) DEFAULT 'free',
-            queries_used_today INTEGER DEFAULT 0,
-            last_query_reset TIMESTAMP DEFAULT NOW(),
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(),
-            api_key VARCHAR(64) UNIQUE,
-            preferences JSONB,
-            memory JSONB DEFAULT '[]'
-        )""",
-        """CREATE TABLE IF NOT EXISTS queries (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            query TEXT,
-            response TEXT,
-            metadata JSONB,
-            created_at TIMESTAMP DEFAULT NOW(),
-            expires_at TIMESTAMP
-        )""",
-        """CREATE TABLE IF NOT EXISTS blog_posts (
-            id SERIAL PRIMARY KEY,
-            title TEXT,
-            content TEXT,
-            source_url TEXT,
-            created_at TIMESTAMP DEFAULT NOW(),
-            published BOOLEAN DEFAULT TRUE
-        )""",
-        """CREATE TABLE IF NOT EXISTS deliberations (
-            id SERIAL PRIMARY KEY,
-            query TEXT NOT NULL,
-            domain TEXT,
-            persona TEXT,
-            provider TEXT,
-            initial_answer TEXT,
-            verifier_results JSONB,
-            final_answer TEXT,
-            confidence TEXT,
-            sources JSONB,
-            timestamp TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS knowledge_chunks (
-            id SERIAL PRIMARY KEY,
-            content TEXT NOT NULL,
-            metadata JSONB NOT NULL,
-            embedding vector(384) NOT NULL
-        )""",
-        """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-            ON knowledge_chunks 
-            USING hnsw (embedding vector_cosine_ops)""",
-        """CREATE TABLE IF NOT EXISTS context_chunks (
-            id SERIAL PRIMARY KEY,
-            source_id VARCHAR(64) NOT NULL,
-            content TEXT NOT NULL,
-            metadata JSONB,
-            embedding vector(384) NOT NULL,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE INDEX IF NOT EXISTS idx_context_chunks_embedding 
-            ON context_chunks 
-            USING hnsw (embedding vector_cosine_ops)""",
-        """CREATE TABLE IF NOT EXISTS webhook_events (
-            id SERIAL PRIMARY KEY,
-            event VARCHAR(100),
-            payload JSONB,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS user_feedback (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            rating INTEGER,
-            comment TEXT,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )""",
-        """CREATE TABLE IF NOT EXISTS fine_tune_data (
-            id SERIAL PRIMARY KEY,
-            query TEXT NOT NULL,
-            initial_answer TEXT,
-            final_answer TEXT NOT NULL,
-            confidence TEXT,
-            is_low_confidence BOOLEAN DEFAULT FALSE,
-            used_for_training BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT NOW()
-        )"""
-    ]
-    
-    for stmt in tables:
+    async def _create_tables():
+        if not database:
+            return
+        
         try:
-            await database.execute(stmt)
+            await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        except:
+            pass
+        
+        tables = [
+            """CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                full_name VARCHAR(255),
+                is_active BOOLEAN DEFAULT TRUE,
+                is_premium BOOLEAN DEFAULT FALSE,
+                tier VARCHAR(20) DEFAULT 'free',
+                queries_used_today INTEGER DEFAULT 0,
+                last_query_reset TIMESTAMP DEFAULT NOW(),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                api_key VARCHAR(64) UNIQUE,
+                preferences JSONB,
+                memory JSONB DEFAULT '[]'
+            )""",
+            """CREATE TABLE IF NOT EXISTS queries (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                query TEXT,
+                response TEXT,
+                metadata JSONB,
+                created_at TIMESTAMP DEFAULT NOW(),
+                expires_at TIMESTAMP
+            )""",
+            """CREATE TABLE IF NOT EXISTS blog_posts (
+                id SERIAL PRIMARY KEY,
+                title TEXT,
+                content TEXT,
+                source_url TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                published BOOLEAN DEFAULT TRUE
+            )""",
+            """CREATE TABLE IF NOT EXISTS deliberations (
+                id SERIAL PRIMARY KEY,
+                query TEXT NOT NULL,
+                domain TEXT,
+                persona TEXT,
+                provider TEXT,
+                initial_answer TEXT,
+                verifier_results JSONB,
+                final_answer TEXT,
+                confidence TEXT,
+                sources JSONB,
+                timestamp TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                id SERIAL PRIMARY KEY,
+                content TEXT NOT NULL,
+                metadata JSONB NOT NULL,
+                embedding vector(384) NOT NULL
+            )""",
+            """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
+                ON knowledge_chunks 
+                USING hnsw (embedding vector_cosine_ops)""",
+            """CREATE TABLE IF NOT EXISTS context_chunks (
+                id SERIAL PRIMARY KEY,
+                source_id VARCHAR(64) NOT NULL,
+                content TEXT NOT NULL,
+                metadata JSONB,
+                embedding vector(384) NOT NULL,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE INDEX IF NOT EXISTS idx_context_chunks_embedding 
+                ON context_chunks 
+                USING hnsw (embedding vector_cosine_ops)""",
+            """CREATE TABLE IF NOT EXISTS webhook_events (
+                id SERIAL PRIMARY KEY,
+                event VARCHAR(100),
+                payload JSONB,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE TABLE IF NOT EXISTS user_feedback (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                rating INTEGER,
+                comment TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE TABLE IF NOT EXISTS fine_tune_data (
+                id SERIAL PRIMARY KEY,
+                query TEXT NOT NULL,
+                initial_answer TEXT,
+                final_answer TEXT NOT NULL,
+                confidence TEXT,
+                is_low_confidence BOOLEAN DEFAULT FALSE,
+                used_for_training BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )"""
+        ]
+        
+        for stmt in tables:
+            try:
+                await database.execute(stmt)
+            except Exception as e:
+                if logger:
+                    logger.warning(f"Table creation warning: {e}")
+
+    async def _ensure_test_user():
+        if not database:
+            return
+        
+        try:
+            existing = await database.fetch_one(
+                "SELECT id FROM users WHERE username = 'counsel'"
+            )
+            if not existing:
+                import random
+                import string
+                import json
+                
+                await database.execute(
+                    """INSERT INTO users (username, email, password_hash, full_name, tier, api_key, memory)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)""",
+                    "counsel",
+                    "counsel@advocacyalawfrim.in",
+                    pwd_context.hash("Password123!"),
+                    "Counsel User",
+                    "enterprise",
+                    "".join(random.choices(string.ascii_letters + string.digits, k=32)),
+                    json.dumps([])
+                )
+                if logger:
+                    logger.info("✅ Seeded test user 'counsel'.")
         except Exception as e:
             if logger:
-                logger.warning(f"Table creation warning: {e}")
+                logger.error(f"❌ Failed to create test user: {e}")
 
-async def _ensure_test_user():
-    """Create test user if it doesn't exist"""
-    if not database:
-        return
-    
-    try:
-        existing = await database.fetch_one(
-            "SELECT id FROM users WHERE username = 'counsel'"
-        )
-        if not existing:
-            import random
-            import string
-            import json
-            
-            await database.execute(
-                """INSERT INTO users (username, email, password_hash, full_name, tier, api_key, memory)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)""",
-                "counsel",
-                "counsel@advocacyalawfrim.in",
-                pwd_context.hash("Password123!"),
-                "Counsel User",
-                "enterprise",
-                "".join(random.choices(string.ascii_letters + string.digits, k=32)),
-                json.dumps([])
-            )
-            if logger:
-                logger.info("✅ Seeded test user 'counsel'.")
-    except Exception as e:
-        if logger:
-            logger.error(f"❌ Failed to create test user: {e}") 
+    # Make helpers available to app.py
+    register_routes._create_tables = _create_tables
+    register_routes._ensure_test_user = _ensure_test_user
