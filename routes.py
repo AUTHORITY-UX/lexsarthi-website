@@ -1,16 +1,18 @@
 # ============================================
-# ROUTES.PY - WITH CORRECT IMPORTS
+# ROUTES.PY - PURE ASYNCPG (No SQLAlchemy)
 # ============================================
 
-from fastapi import APIRouter, HTTPException, Depends, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional, List, Dict, Any
 import json
 import os
 import logging
 from datetime import datetime, timedelta
-import asyncio
 import asyncpg
+import jwt
+import hashlib
+import uuid
 
 # CREATE ROUTER
 router = APIRouter()
@@ -18,20 +20,16 @@ router = APIRouter()
 # Set up logger
 logger = logging.getLogger("unknown_verdict")
 
-# IMPORT MODELS - USE CORRECT NAMES
-from models import (
-    User, Session, LegalDocument, ChatHistory, 
-    ComplianceRecord, TradeData, NewsArticle, LensScan
-)
+# Import core and config
 from core import UnknownVerdictEngine, get_engine
 from config import DATABASE_URL, JWT_SECRET, REDIS_URL
 
 # ============================================
-# SIMPLIFIED DATABASE INIT (without SQLAlchemy)
+# DATABASE INITIALIZATION (Pure asyncpg)
 # ============================================
 
 async def _create_tables():
-    """Create tables using raw SQL (most reliable)"""
+    """Create tables using raw SQL"""
     try:
         conn = await asyncpg.connect(DATABASE_URL)
         
@@ -54,7 +52,7 @@ async def _create_tables():
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 token VARCHAR(255) UNIQUE NOT NULL,
                 expires_at TIMESTAMP NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -65,13 +63,13 @@ async def _create_tables():
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 session_id VARCHAR(100) NOT NULL,
                 message TEXT NOT NULL,
                 response TEXT,
                 agent_name VARCHAR(100),
                 verifier_score FLOAT,
-                metadata JSONB,
+                meta JSONB,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -85,8 +83,8 @@ async def _create_tables():
                 category VARCHAR(100),
                 jurisdiction VARCHAR(100),
                 document_type VARCHAR(50),
-                metadata JSONB,
-                created_by INTEGER REFERENCES users(id),
+                meta JSONB,
+                created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -96,7 +94,7 @@ async def _create_tables():
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS compliance_records (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 framework VARCHAR(50) NOT NULL,
                 status VARCHAR(50) NOT NULL,
                 score INTEGER,
@@ -175,14 +173,10 @@ async def init_database():
         return False
 
 # ============================================
-# AUTHENTICATION FUNCTIONS
+# AUTHENTICATION
 # ============================================
 
 from passlib.context import CryptContext
-import jwt
-import hashlib
-import uuid
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password):
@@ -202,7 +196,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 # ============================================
-# API ENDPOINTS (Simplified - No ORM)
+# API ENDPOINTS
 # ============================================
 
 @router.get("/")
@@ -213,7 +207,11 @@ async def root():
 @router.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "version": "12.1", "database": "postgresql"}
+    return {
+        "status": "healthy",
+        "version": "12.1",
+        "database": "connected" if DATABASE_URL else "not configured"
+    }
 
 # ============================================
 # AUTH ENDPOINTS
@@ -335,7 +333,7 @@ async def chat_endpoint(request: Request):
         # Process
         response = await engine.process_message(message, session_id)
         
-        # Store in DB
+        # Store in DB (optional, fail silently)
         try:
             conn = await asyncpg.connect(DATABASE_URL)
             await conn.execute(
@@ -343,8 +341,8 @@ async def chat_endpoint(request: Request):
                 session_id, message, response.get("response", ""), response.get("agent", "Unknown")
             )
             await conn.close()
-        except:
-            pass  # Continue even if DB fails
+        except Exception as db_err:
+            logger.warning(f"Chat storage failed: {db_err}")
         
         return {
             "response": response.get("response", "I've processed your legal query. How can I further assist?"),
