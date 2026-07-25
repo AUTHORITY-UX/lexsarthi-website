@@ -36,6 +36,7 @@ from core import (
     embedding_model,
     generate_all_agents,
     EdgeAIManager,
+    LensAgentSystem,      # ✅ ADDED
     AgentSwarm,
     SelfImprovingSystem,
     AgentDebate,
@@ -53,7 +54,6 @@ from core import (
 )
 
 # ─── SETUP LOGGER ──────────────────────────────────────────────────
-# Ensure logger is set
 if not logger:
     logger = logging.getLogger("unknown_verdict")
 
@@ -105,6 +105,7 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
 
 # ─── INITIALIZE ALL AGI SYSTEMS ──────────────────────────────────────
 edge_ai = EdgeAIManager()
+lens_agent_system = LensAgentSystem()  # ✅ INITIALIZED
 agent_swarm = AgentSwarm()
 self_improving = SelfImprovingSystem()
 agent_debate = AgentDebate()
@@ -328,7 +329,6 @@ def register_routes(app: FastAPI):
             return {"status": "ok", "posts": [], "total": 0}
         
         try:
-            # ✅ FIXED: Use correct parameter binding for databases library
             rows = await database.fetch_all(
                 "SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
                 {"limit": limit, "offset": offset}
@@ -878,136 +878,54 @@ def register_routes(app: FastAPI):
         }
 
     # ═══════════════════════════════════════════════════════════════════
-    # DATABASE HELPERS
+    # LENS AGENTS ROUTES
     # ═══════════════════════════════════════════════════════════════════
     
-    async def _create_tables():
-        if not database:
-            return
-        try:
-            await database.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-        except:
-            pass
+    @app.post("/api/lens/init")
+    async def init_lens_agents(cu: dict = Depends(get_current_user)):
+        """Initialize lens agents for domain scanning"""
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(403, "Lens agents require Enterprise plan")
         
-        tables = [
-            """CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                full_name VARCHAR(255),
-                is_active BOOLEAN DEFAULT TRUE,
-                is_premium BOOLEAN DEFAULT FALSE,
-                tier VARCHAR(20) DEFAULT 'free',
-                queries_used_today INTEGER DEFAULT 0,
-                last_query_reset TIMESTAMP DEFAULT NOW(),
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW(),
-                api_key VARCHAR(64) UNIQUE,
-                preferences JSONB,
-                memory JSONB DEFAULT '[]'
-            )""",
-            """CREATE TABLE IF NOT EXISTS queries (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                query TEXT,
-                response TEXT,
-                metadata JSONB,
-                created_at TIMESTAMP DEFAULT NOW(),
-                expires_at TIMESTAMP
-            )""",
-            """CREATE TABLE IF NOT EXISTS blog_posts (
-                id SERIAL PRIMARY KEY,
-                title TEXT,
-                content TEXT,
-                source_url TEXT,
-                created_at TIMESTAMP DEFAULT NOW(),
-                published BOOLEAN DEFAULT TRUE
-            )""",
-            """CREATE TABLE IF NOT EXISTS deliberations (
-                id SERIAL PRIMARY KEY,
-                query TEXT NOT NULL,
-                domain TEXT,
-                persona TEXT,
-                provider TEXT,
-                initial_answer TEXT,
-                verifier_results JSONB,
-                final_answer TEXT,
-                confidence TEXT,
-                sources JSONB,
-                timestamp TIMESTAMPTZ DEFAULT NOW()
-            )""",
-            """CREATE TABLE IF NOT EXISTS knowledge_chunks (
-                id SERIAL PRIMARY KEY,
-                content TEXT NOT NULL,
-                metadata JSONB NOT NULL,
-                embedding vector(384) NOT NULL
-            )""",
-            """CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding 
-                ON knowledge_chunks 
-                USING hnsw (embedding vector_cosine_ops)""",
-            """CREATE TABLE IF NOT EXISTS context_chunks (
-                id SERIAL PRIMARY KEY,
-                source_id VARCHAR(64) NOT NULL,
-                content TEXT NOT NULL,
-                metadata JSONB,
-                embedding vector(384) NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT NOW()
-            )""",
-            """CREATE INDEX IF NOT EXISTS idx_context_chunks_embedding 
-                ON context_chunks 
-                USING hnsw (embedding vector_cosine_ops)""",
-            """CREATE TABLE IF NOT EXISTS webhook_events (
-                id SERIAL PRIMARY KEY,
-                event VARCHAR(100),
-                payload JSONB,
-                created_at TIMESTAMPTZ DEFAULT NOW()
-            )""",
-            """CREATE TABLE IF NOT EXISTS user_feedback (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                rating INTEGER,
-                comment TEXT,
-                created_at TIMESTAMPTZ DEFAULT NOW()
-            )""",
-            """CREATE TABLE IF NOT EXISTS fine_tune_data (
-                id SERIAL PRIMARY KEY,
-                query TEXT NOT NULL,
-                initial_answer TEXT,
-                final_answer TEXT NOT NULL,
-                confidence TEXT,
-                is_low_confidence BOOLEAN DEFAULT FALSE,
-                used_for_training BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT NOW()
-            )"""
-        ]
-        for stmt in tables:
-            try:
-                await database.execute(stmt)
-            except Exception as e:
-                if logger:
-                    logger.warning(f"Table creation warning: {e}")
+        result = await lens_agent_system.initialize_lens_agents()
+        return {"status": "ok", "result": result}
 
-    async def _ensure_test_user():
-        if not database:
-            return
-        existing = await database.fetch_one(users.select().where(users.c.username == "counsel"))
-        if not existing:
-            await database.execute(users.insert().values(
-                username="counsel",
-                email="counsel@advocacyalawfrim.in",
-                password_hash=hash_password("Password123!"),
-                full_name="Counsel User",
-                tier="enterprise",
-                api_key="".join(random.choices(string.ascii_letters + string.digits, k=32)),
-                memory=json.dumps([])
-            ))
-            if logger:
-                logger.info("✅ Seeded test user 'counsel'.")
+    @app.post("/api/lens/scan-all")
+    async def scan_all_domains(cu: dict = Depends(get_current_user)):
+        """Scan all domains using lens agents"""
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(403, "Lens agents require Enterprise plan")
+        
+        result = await lens_agent_system.scan_all_domains()
+        return {"status": "ok", "result": result}
 
-    # Make helpers available to app.py
-    register_routes._create_tables = _create_tables
-    register_routes._ensure_test_user = _ensure_test_user
+    @app.get("/api/lens/governance")
+    async def get_governance_report():
+        """Get AI governance report"""
+        return lens_agent_system.get_governance_report()
+
+    @app.get("/api/lens/agents")
+    async def list_lens_agents():
+        """List all lens agents"""
+        return {
+            "status": "ok",
+            "agents": lens_agent_system.lens_agents,
+            "count": len(lens_agent_system.lens_agents)
+        }
+
+    @app.post("/api/lens/scan/{domain}")
+    async def scan_specific_domain(domain: str, cu: dict = Depends(get_current_user)):
+        """Scan a specific domain"""
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(403, "Lens agents require Enterprise plan")
+        
+        agent = lens_agent_system.get_lens_agent_by_domain(domain)
+        if not agent:
+            raise HTTPException(404, f"Domain '{domain}' not found")
+        
+        result = await lens_agent_system.scan_domain(agent["id"])
+        return {"status": "ok", "result": result}
+
 # ─── DATABASE HELPERS ──────────────────────────────────────────────
 
 async def _create_tables():
@@ -1149,55 +1067,4 @@ async def _ensure_test_user():
                 logger.info("✅ Seeded test user 'counsel'.")
     except Exception as e:
         if logger:
-            logger.error(f"❌ Failed to create test user: {e}") 
-    # ═══════════════════════════════════════════════════════════════════
-    # LENS AGENTS ROUTES
-    # ═══════════════════════════════════════════════════════════════════
-    
-    # Initialize Lens Agent System
-    lens_agent_system = LensAgentSystem()
-    
-    @app.post("/api/lens/init")
-    async def init_lens_agents(cu: dict = Depends(get_current_user)):
-        """Initialize lens agents for domain scanning"""
-        if cu["tier"] not in ("enterprise", "lifetime"):
-            raise HTTPException(403, "Lens agents require Enterprise plan")
-        
-        result = await lens_agent_system.initialize_lens_agents()
-        return {"status": "ok", "result": result}
-
-    @app.post("/api/lens/scan-all")
-    async def scan_all_domains(cu: dict = Depends(get_current_user)):
-        """Scan all domains using lens agents"""
-        if cu["tier"] not in ("enterprise", "lifetime"):
-            raise HTTPException(403, "Lens agents require Enterprise plan")
-        
-        result = await lens_agent_system.scan_all_domains()
-        return {"status": "ok", "result": result}
-
-    @app.get("/api/lens/governance")
-    async def get_governance_report():
-        """Get AI governance report"""
-        return lens_agent_system.get_governance_report()
-
-    @app.get("/api/lens/agents")
-    async def list_lens_agents():
-        """List all lens agents"""
-        return {
-            "status": "ok",
-            "agents": lens_agent_system.lens_agents,
-            "count": len(lens_agent_system.lens_agents)
-        }
-
-    @app.post("/api/lens/scan/{domain}")
-    async def scan_specific_domain(domain: str, cu: dict = Depends(get_current_user)):
-        """Scan a specific domain"""
-        if cu["tier"] not in ("enterprise", "lifetime"):
-            raise HTTPException(403, "Lens agents require Enterprise plan")
-        
-        agent = lens_agent_system.get_lens_agent_by_domain(domain)
-        if not agent:
-            raise HTTPException(404, f"Domain '{domain}' not found")
-        
-        result = await lens_agent_system.scan_domain(agent["id"])
-        return {"status": "ok", "result": result}
+            logger.error(f"❌ Failed to create test user: {e}")
