@@ -1,13 +1,13 @@
 # ============================================
-# MODELS.PY - Complete Database Models
+# MODELS.PY - FIXED (Renamed 'metadata' to 'meta')
 # ============================================
 
 from sqlalchemy import (
     Column, Integer, String, Text, Boolean, DateTime, 
-    Float, JSON, ForeignKey, create_engine
+    Float, JSON, ForeignKey
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 
@@ -50,8 +50,8 @@ class LegalDocument(Base):
     content = Column(Text, nullable=True)
     category = Column(String(100), nullable=True)
     jurisdiction = Column(String(100), nullable=True)
-    document_type = Column(String(50), nullable=True)  # contract, notice, brief, etc.
-    metadata = Column(JSON, nullable=True)
+    document_type = Column(String(50), nullable=True)
+    meta = Column(JSON, nullable=True)  # ← RENAMED from 'metadata'
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
@@ -69,7 +69,7 @@ class ChatHistory(Base):
     response = Column(Text, nullable=True)
     agent_name = Column(String(100), nullable=True)
     verifier_score = Column(Float, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    meta = Column(JSON, nullable=True)  # ← RENAMED from 'metadata'
     created_at = Column(DateTime, default=func.now())
     
     # Relationships
@@ -80,8 +80,8 @@ class ComplianceRecord(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    framework = Column(String(50), nullable=False)  # GDPR, DPDPA, CCPA, etc.
-    status = Column(String(50), nullable=False)  # Compliant, In Progress, Non-Compliant
+    framework = Column(String(50), nullable=False)
+    status = Column(String(50), nullable=False)
     score = Column(Integer, nullable=True)
     details = Column(JSON, nullable=True)
     recommendations = Column(JSON, nullable=True)
@@ -101,8 +101,6 @@ class TradeData(Base):
     change_percent = Column(Float, nullable=True)
     volume = Column(Float, nullable=True)
     timestamp = Column(DateTime, default=func.now(), index=True)
-    
-    # Metadata
     source = Column(String(50), nullable=True)
 
 class NewsArticle(Base):
@@ -139,12 +137,9 @@ def init_db(database_url):
     Base.metadata.create_all(bind=engine)
     return engine
 
-# For async operations
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-
 async def init_async_db(database_url):
     """Initialize async database"""
+    from sqlalchemy.ext.asyncio import create_async_engine
     async_db_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
     engine = create_async_engine(async_db_url, echo=False, pool_size=5, max_overflow=10)
     async with engine.begin() as conn:
