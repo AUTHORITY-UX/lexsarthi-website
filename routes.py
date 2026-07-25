@@ -3,13 +3,6 @@
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
-
-from core import (
-    # ... existing imports ...
-    MultiModalProcessor,
-    get_language,
-    SUPPORTED_LANGUAGES
-)
 import os
 import time
 import json
