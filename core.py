@@ -1120,3 +1120,31 @@ class AnalyticsDashboard:
 # =============================================================================
 
 LLAMA_ATTRIBUTION = "Built with Llama 3.1 · Licensed under Llama 3.1 Community License"
+
+# ─── EXPORTS ──────────────────────────────────────────────────────
+__all__ = [
+    'EDGE_AI_AVAILABLE',
+    'DIVINE_AGENTS',
+    'VERIFIERS',
+    'embedding_model',
+    'route_agent',
+    'call_llm',
+    'jury_verification',
+    'fetch_relevant_chunks',
+    'serpapi_search',
+    'set_database',
+    'set_pg_pool',
+    'set_redis_pool',
+    'set_logger',
+    'database',
+    'pg_pool',
+    'redis_pool',
+    'logger',
+    'EdgeAIManager',
+    'AgentSwarm',
+    'SelfImprovingSystem',
+    'AgentDebate',
+    'LegalKnowledgeGraph',
+    'SmartDocumentGenerator',
+    'AnalyticsDashboard'
+]
