@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Unknown Verdict AGI v12.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════════════════
            🔱 UNKNOWN VERDICT v12.1 - COMPLETE STYLES
            ═══════════════════════════════════════════════════════════════ */
-        
+
         * {
             margin: 0;
             padding: 0;
@@ -22,14 +23,14 @@
             line-height: 1.6;
             min-height: 100vh;
         }
-        
+
         /* ─── LAYOUT ────────────────────────────────────────────────── */
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 1rem 1.5rem 2rem;
         }
-        
+
         /* ─── HEADER ────────────────────────────────────────────────── */
         .header {
             display: flex;
@@ -81,7 +82,7 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.8); }
         }
-        .btn-primary, .btn-secondary, .btn-danger {
+        .btn-primary, .btn-secondary, .btn-danger, .btn-success {
             padding: 0.45rem 1.2rem;
             border: none;
             border-radius: 8px;
@@ -112,11 +113,18 @@
         .btn-danger:hover {
             background: #c82333;
         }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
         .btn-primary:disabled, .btn-secondary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
-        
+
         .user-badge {
             display: flex;
             align-items: center;
@@ -152,7 +160,7 @@
         .user-tier.premium { background: #d4edda; color: #155724; }
         .user-tier.enterprise { background: #cce5ff; color: #004085; }
         .user-tier.lifetime { background: linear-gradient(135deg, #6c5ce7, #a855f7); color: white; }
-        
+
         /* ─── HERO ──────────────────────────────────────────────────── */
         .hero {
             text-align: center;
@@ -179,7 +187,7 @@
             font-size: 0.8rem;
             color: #6c757d;
         }
-        
+
         /* ─── STATS ──────────────────────────────────────────────────── */
         .stats-bar {
             display: grid;
@@ -206,7 +214,7 @@
             color: #6c757d;
             font-weight: 500;
         }
-        
+
         /* ─── MAIN LAYOUT ───────────────────────────────────────────── */
         .main-grid {
             display: grid;
@@ -219,7 +227,7 @@
                 grid-template-columns: 1fr;
             }
         }
-        
+
         /* ─── CHAT / CONSOLE ────────────────────────────────────────── */
         .chat-section {
             background: white;
@@ -295,7 +303,7 @@
         }
         .chat-message.user .timestamp { color: rgba(255,255,255,0.7); }
         .chat-message.ai .timestamp { color: #6c757d; }
-        
+
         .chat-input-area {
             padding: 0.75rem 1.25rem;
             border-top: 1px solid #e9ecef;
@@ -341,7 +349,7 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         /* ─── SERVICES PANEL ────────────────────────────────────────── */
         .services-panel {
             display: flex;
@@ -396,9 +404,9 @@
             background: #f8f9fa;
             color: #6c757d;
         }
-        
-        /* ─── NEWS SECTION ──────────────────────────────────────────── */
-        .news-section, .blog-section, .compliance-section {
+
+        /* ─── COMPLIANCE SECTION ────────────────────────────────────── */
+        .compliance-section, .news-section, .blog-section, .lens-section, .payment-section {
             background: white;
             border-radius: 14px;
             border: 1px solid #e9ecef;
@@ -421,79 +429,11 @@
             font-size: 0.75rem;
             color: #888;
         }
-        .news-grid, .blog-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-        }
         .compliance-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
         }
-        .news-card, .blog-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem 1.25rem;
-            border: 1px solid #e9ecef;
-            transition: all 0.2s;
-        }
-        .news-card:hover, .blog-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .news-card .source {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #6c5ce7;
-        }
-        .news-card .date {
-            font-size: 0.7rem;
-            color: #888;
-            float: right;
-        }
-        .news-card .title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin: 0.3rem 0;
-            color: #1a1a2e;
-        }
-        .news-card .summary {
-            font-size: 0.85rem;
-            color: #4a4a6a;
-            line-height: 1.5;
-        }
-        .news-card .actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-            flex-wrap: wrap;
-        }
-        .btn-sm {
-            padding: 0.25rem 0.75rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-sm.generate {
-            background: #6c5ce7;
-            color: white;
-        }
-        .btn-sm.generate:hover {
-            background: #5a4bd1;
-        }
-        .btn-sm.read {
-            background: #e9ecef;
-            color: #1a1a2e;
-        }
-        .btn-sm.read:hover {
-            background: #dee2e6;
-        }
-        
-        /* ─── COMPLIANCE CARD ───────────────────────────────────────── */
         .compliance-card {
             background: #f8f9fa;
             border-radius: 12px;
@@ -552,7 +492,121 @@
             font-size: 0.7rem;
             color: #888;
         }
-        
+
+        /* ─── NEWS / BLOG / LENS GRID ──────────────────────────────── */
+        .news-grid, .blog-grid, .lens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .news-card, .blog-card, .lens-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        .news-card:hover, .blog-card:hover, .lens-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .news-card .source, .lens-card .category {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6c5ce7;
+        }
+        .news-card .date, .lens-card .date {
+            font-size: 0.7rem;
+            color: #888;
+            float: right;
+        }
+        .news-card .title, .lens-card .title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0.3rem 0;
+            color: #1a1a2e;
+        }
+        .news-card .summary {
+            font-size: 0.85rem;
+            color: #4a4a6a;
+            line-height: 1.5;
+        }
+        .news-card .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-sm.generate {
+            background: #6c5ce7;
+            color: white;
+        }
+        .btn-sm.generate:hover {
+            background: #5a4bd1;
+        }
+        .btn-sm.read {
+            background: #e9ecef;
+            color: #1a1a2e;
+        }
+        .btn-sm.read:hover {
+            background: #dee2e6;
+        }
+        .btn-sm.success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-sm.success:hover {
+            background: #218838;
+        }
+
+        /* ─── PAYMENT SECTION ───────────────────────────────────────── */
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .payment-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.25s;
+        }
+        .payment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border-color: #28a745;
+        }
+        .payment-card .price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1a1a2e;
+        }
+        .payment-card .currency {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+        .payment-card .plan {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 0.3rem 0;
+        }
+        .payment-card .features {
+            font-size: 0.8rem;
+            color: #4a4a6a;
+            line-height: 1.6;
+        }
+
         /* ─── LOADING ────────────────────────────────────────────────── */
         .loading-spinner {
             text-align: center;
@@ -580,7 +634,7 @@
         }
         .error-box { color: #dc3545; background: #f8d7da; }
         .info-box { color: #0c5460; background: #d1ecf1; }
-        
+
         /* ─── MODAL ──────────────────────────────────────────────────── */
         .modal {
             position: fixed;
@@ -630,7 +684,7 @@
             padding-top: 1rem;
             border-top: 1px solid #e9ecef;
         }
-        
+
         /* ─── FOOTER ────────────────────────────────────────────────── */
         .footer {
             text-align: center;
@@ -645,7 +699,7 @@
             text-decoration: none;
         }
         .footer a:hover { text-decoration: underline; }
-        
+
         /* ─── RESPONSIVE ────────────────────────────────────────────── */
         @media (max-width: 768px) {
             .app-container { padding: 0.75rem 1rem; }
@@ -654,7 +708,7 @@
             .header-actions { justify-content: space-between; }
             .main-grid { grid-template-columns: 1fr; }
             .chat-section { height: 450px; }
-            .news-grid, .blog-grid { grid-template-columns: 1fr; }
+            .news-grid, .blog-grid, .lens-grid { grid-template-columns: 1fr; }
             .compliance-grid { grid-template-columns: 1fr 1fr; }
             .modal-content { margin: 5% 1rem; padding: 1.25rem; }
         }
@@ -662,6 +716,7 @@
             .compliance-grid { grid-template-columns: 1fr; }
             .services-grid { grid-template-columns: 1fr; }
             .stats-bar { grid-template-columns: 1fr 1fr; }
+            .payment-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -670,7 +725,7 @@
          APP
          ═══════════════════════════════════════════════════════════════ -->
     <div class="app-container" id="app">
-        
+
         <!-- ─── HEADER ────────────────────────────────────────────── -->
         <header class="header">
             <div class="logo">
@@ -694,14 +749,14 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- ─── HERO ────────────────────────────────────────────────── -->
         <section class="hero">
             <h1>⚖️ AI-Powered Legal Intelligence</h1>
             <p>250 specialist personas · 10 verifiers · Judge Shakti</p>
             <span class="hero-badge">🔱 Enterprise Edition</span>
         </section>
-        
+
         <!-- ─── STATS ────────────────────────────────────────────────── -->
         <div class="stats-bar">
             <div class="stat-item">
@@ -725,10 +780,10 @@
                 <span class="stat-label">Articles Generated</span>
             </div>
         </div>
-        
+
         <!-- ─── MAIN GRID: CHAT + SERVICES ─────────────────────────── -->
         <div class="main-grid">
-            
+
             <!-- ─── CHAT / CONSOLE ──────────────────────────────────── -->
             <div class="chat-section">
                 <div class="chat-header">
@@ -746,7 +801,7 @@
                     <button class="btn-send" id="sendBtn" onclick="sendQuery()">➤ Send</button>
                 </div>
             </div>
-            
+
             <!-- ─── SERVICES PANEL ──────────────────────────────────── -->
             <div class="services-panel">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -805,7 +860,58 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- ─── PAYMENT SECTION ──────────────────────────────────────── -->
+        <section class="payment-section">
+            <div class="section-header">
+                <h3>💳 Upgrade Your Plan</h3>
+                <span style="font-size:0.75rem;color:#888;">Secure payments via Razorpay</span>
+            </div>
+            <div class="payment-grid">
+                <div class="payment-card">
+                    <div class="plan">Free</div>
+                    <div class="price">₹0</div>
+                    <div class="features">
+                        5 queries/month<br/>
+                        Basic agents
+                    </div>
+                    <button class="btn-secondary" style="margin-top:0.75rem;width:100%;" disabled>Current Plan</button>
+                </div>
+                <div class="payment-card" style="border-color:#6c5ce7;">
+                    <div class="plan">Pro</div>
+                    <div class="price">₹99 <span class="currency">/month</span></div>
+                    <div class="features">
+                        Unlimited queries<br/>
+                        All 250 agents<br/>
+                        Priority support
+                    </div>
+                    <button class="btn-primary" style="margin-top:0.75rem;width:100%;" onclick="initiatePayment('pro')">Upgrade</button>
+                </div>
+                <div class="payment-card" style="border-color:#28a745;">
+                    <div class="plan">Enterprise</div>
+                    <div class="price">₹999 <span class="currency">/month</span></div>
+                    <div class="features">
+                        Everything in Pro<br/>
+                        Custom personas<br/>
+                        Dedicated support<br/>
+                        White-labeling
+                    </div>
+                    <button class="btn-success" style="margin-top:0.75rem;width:100%;" onclick="initiatePayment('enterprise')">Upgrade</button>
+                </div>
+                <div class="payment-card" style="border-color:#a855f7;">
+                    <div class="plan">Lifetime</div>
+                    <div class="price">₹9,999 <span class="currency">one-time</span></div>
+                    <div class="features">
+                        Everything in Enterprise<br/>
+                        Lifetime access<br/>
+                        Priority feature requests<br/>
+                        VIP support
+                    </div>
+                    <button class="btn-primary" style="margin-top:0.75rem;width:100%;background:#a855f7;" onclick="initiatePayment('lifetime')">Buy Now</button>
+                </div>
+            </div>
+        </section>
+
         <!-- ─── COMPLIANCE DASHBOARD ───────────────────────────────── -->
         <section class="compliance-section" id="complianceSection">
             <div class="section-header">
@@ -822,7 +928,25 @@
                 </div>
             </div>
         </section>
-        
+
+        <!-- ─── LENS AGENTS SECTION ─────────────────────────────────── -->
+        <section class="lens-section" id="lensSection">
+            <div class="section-header">
+                <h3>🕷️ Lens Agents - Domain Scanning</h3>
+                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="fetchLensAgents()" style="padding:0.3rem 1rem;font-size:0.8rem;">🔄 Refresh</button>
+                    <button class="btn-primary" onclick="scanAllDomains()" style="padding:0.3rem 1rem;font-size:0.8rem;">📡 Scan All</button>
+                    <span class="timestamp" id="lensTimestamp">Ready</span>
+                </div>
+            </div>
+            <div id="lensContainer" class="lens-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading lens agents...</p>
+                </div>
+            </div>
+        </section>
+
         <!-- ─── NEWS SECTION ────────────────────────────────────────── -->
         <section class="news-section" id="newsSection">
             <div class="section-header">
@@ -839,7 +963,7 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- ─── BLOG SECTION ────────────────────────────────────────── -->
         <section class="blog-section" id="blogSection">
             <div class="section-header">
@@ -853,7 +977,7 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- ─── FOOTER ────────────────────────────────────────────────── -->
         <footer class="footer">
             <p>© 2026 <a href="https://www.advocacyalawfrim.in" target="_blank">THE ADVOCACY – A LAW FIRM</a> · All rights reserved.</p>
@@ -865,7 +989,7 @@
             </p>
         </footer>
     </div>
-    
+
     <!-- ═══════════════════════════════════════════════════════════════
          LOGIN MODAL
          ═══════════════════════════════════════════════════════════════ -->
@@ -891,7 +1015,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- ═══════════════════════════════════════════════════════════════
          ARTICLE MODAL
          ═══════════════════════════════════════════════════════════════ -->
@@ -906,7 +1030,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- ═══════════════════════════════════════════════════════════════
          COMPLIANCE DETAIL MODAL
          ═══════════════════════════════════════════════════════════════ -->
@@ -920,7 +1044,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- ═══════════════════════════════════════════════════════════════
          JAVASCRIPT
          ═══════════════════════════════════════════════════════════════ -->
@@ -928,13 +1052,13 @@
         // ═══════════════════════════════════════════════════════════════
         // 🔱 UNKNOWN VERDICT v12.1 - COMPLETE FRONTEND
         // ═══════════════════════════════════════════════════════════════
-        
+
         // ─── STATE ──────────────────────────────────────────────────
         let currentUser = null;
         let isAuth = false;
         let currentArticle = {};
         let accessToken = null;
-        
+
         // ─── DOM REFS ──────────────────────────────────────────────
         const $ = id => document.getElementById(id);
         const chatMessages = $('chatMessages');
@@ -943,9 +1067,11 @@
         const newsContainer = $('newsContainer');
         const blogContainer = $('blogContainer');
         const complianceContainer = $('complianceContainer');
+        const lensContainer = $('lensContainer');
         const newsTimestamp = $('newsTimestamp');
         const blogTimestamp = $('blogTimestamp');
         const complianceTimestamp = $('complianceTimestamp');
+        const lensTimestamp = $('lensTimestamp');
         const statNews = $('statNews');
         const statBlog = $('statBlog');
         const authSection = $('authSection');
@@ -953,12 +1079,12 @@
         const userName = $('userName');
         const userTier = $('userTier');
         const userAvatar = $('userAvatar');
-        
+
         // ─── AUTH ──────────────────────────────────────────────────
         function getToken() { return accessToken || localStorage.getItem('access_token'); }
         function setToken(t) { accessToken = t; localStorage.setItem('access_token', t); }
         function clearToken() { accessToken = null; localStorage.removeItem('access_token'); localStorage.removeItem('user_data'); }
-        
+
         function loadUser() {
             try {
                 const data = localStorage.getItem('user_data');
@@ -966,7 +1092,7 @@
             } catch(e) {}
             return null;
         }
-        
+
         function updateUI(user) {
             if (user) {
                 authSection.style.display = 'none';
@@ -985,27 +1111,27 @@
                 currentUser = null;
             }
         }
-        
+
         function showLogin() { $('loginModal').style.display = 'block'; $('loginUsername').focus(); }
         function closeLogin() { $('loginModal').style.display = 'none'; }
-        
+
         async function handleLogin(e) {
             e.preventDefault();
             const username = $('loginUsername').value.trim();
             const password = $('loginPassword').value.trim();
             const errorEl = $('loginError');
             const submitBtn = $('loginSubmitBtn');
-            
+
             if (!username || !password) {
                 errorEl.textContent = 'Please enter both fields.';
                 errorEl.style.display = 'block';
                 return;
             }
-            
+
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Signing in...';
             errorEl.style.display = 'none';
-            
+
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
@@ -1020,9 +1146,7 @@
                         updateUI(data.user);
                     }
                     closeLogin();
-                    fetchNews();
-                    fetchBlogPosts();
-                    fetchCompliance();
+                    fetchAll();
                     addMessage('system', '✅ Logged in successfully!');
                 } else {
                     errorEl.textContent = data.detail || 'Invalid credentials.';
@@ -1035,16 +1159,14 @@
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In';
         }
-        
+
         function logoutUser() {
             clearToken();
             updateUI(null);
             addMessage('system', '👋 Logged out.');
-            fetchNews();
-            fetchBlogPosts();
-            fetchCompliance();
+            fetchAll();
         }
-        
+
         // ─── CHAT / CONSOLE ────────────────────────────────────────
         function addMessage(type, content) {
             const div = document.createElement('div');
@@ -1053,12 +1175,12 @@
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-        
+
         function quickQuery(service) {
             chatInput.value = `Tell me about ${service} services`;
             sendQuery();
         }
-        
+
         async function sendQuery() {
             const query = chatInput.value.trim();
             if (!query) return;
@@ -1067,56 +1189,55 @@
                 showLogin();
                 return;
             }
-            
+
             addMessage('user', query);
             chatInput.value = '';
             sendBtn.disabled = true;
             sendBtn.textContent = '⏳';
-            
+
             try {
                 const token = getToken();
                 const formData = new FormData();
                 formData.append('query', query);
                 formData.append('model', 'llama-3.3-70b-versatile');
                 formData.append('search_web', 'off');
-                
+
                 const res = await fetch('/ask', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
-                
+
                 if (res.status === 401) {
                     addMessage('system', '🔒 Session expired. Please login again.');
                     logoutUser();
                     showLogin();
                     return;
                 }
-                
+
                 if (res.status === 429) {
                     addMessage('system', '⚠️ Daily limit reached. Upgrade to Premium.');
                     return;
                 }
-                
+
                 if (!res.ok) {
                     const error = await res.json();
                     addMessage('system', `❌ Error: ${error.detail || 'Unknown'}`);
                     return;
                 }
-                
-                // Handle streaming response
+
                 const reader = res.body.getReader();
                 const decoder = new TextDecoder();
                 let answer = '';
                 let buffer = '';
-                
+
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
                     buffer += decoder.decode(value, { stream: true });
                     const lines = buffer.split('\n\n');
                     buffer = lines.pop() || '';
-                    
+
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
                             const data = line.slice(6);
@@ -1134,29 +1255,37 @@
                         }
                     }
                 }
-                
+
                 if (answer) {
                     addMessage('ai', answer);
                 } else {
                     addMessage('system', '⚠️ No response received. Please try again.');
                 }
-                
+
             } catch(err) {
                 addMessage('system', `❌ Error: ${err.message}`);
             }
-            
+
             sendBtn.disabled = false;
             sendBtn.textContent = '➤ Send';
             chatInput.focus();
         }
-        
+
+        // ─── FETCH ALL ───────────────────────────────────────────────
+        function fetchAll() {
+            fetchNews();
+            fetchBlogPosts();
+            fetchCompliance();
+            fetchLensAgents();
+        }
+
         // ─── FETCH NEWS ──────────────────────────────────────────────
         async function fetchNews() {
             try {
                 newsContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading news...</p></div>`;
                 const res = await fetch('/api/news?limit=12');
                 const data = await res.json();
-                
+
                 if (data.status === 'ok' && data.articles && data.articles.length > 0) {
                     renderNews(data.articles);
                     newsTimestamp.textContent = `Updated: ${new Date(data.last_updated).toLocaleString()}`;
@@ -1168,7 +1297,7 @@
                 newsContainer.innerHTML = `<div class="error-box">❌ Failed to load news. <button onclick="fetchNews()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button></div>`;
             }
         }
-        
+
         function renderNews(articles) {
             if (!articles || articles.length === 0) {
                 newsContainer.innerHTML = `<div class="info-box">No articles found.</div>`;
@@ -1189,7 +1318,7 @@
                 </div>
             `).join('');
         }
-        
+
         // ─── GENERATE ARTICLE ────────────────────────────────────────
         async function generateArticle(newsId) {
             if (!isAuth) {
@@ -1197,7 +1326,7 @@
                 showLogin();
                 return;
             }
-            
+
             const token = getToken();
             try {
                 const res = await fetch('/api/news/generate-article', {
@@ -1205,19 +1334,19 @@
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ news_id: newsId })
                 });
-                
+
                 if (res.status === 401) {
                     addMessage('system', '🔒 Session expired. Please login again.');
                     logoutUser();
                     showLogin();
                     return;
                 }
-                
+
                 if (res.status === 403) {
                     addMessage('system', '💎 Premium+ required to generate articles.');
                     return;
                 }
-                
+
                 const data = await res.json();
                 if (res.ok) {
                     currentArticle = data;
@@ -1233,14 +1362,14 @@
                 addMessage('system', `❌ Error: ${err.message}`);
             }
         }
-        
+
         // ─── FETCH BLOG ──────────────────────────────────────────────
         async function fetchBlogPosts() {
             try {
                 blogContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading articles...</p></div>`;
                 const res = await fetch('/api/blog/posts?limit=10');
                 const data = await res.json();
-                
+
                 if (data.status === 'ok' && data.posts && data.posts.length > 0) {
                     renderBlog(data.posts);
                     blogTimestamp.textContent = `${data.total} articles generated`;
@@ -1252,7 +1381,7 @@
                 blogContainer.innerHTML = `<div class="error-box">❌ Failed to load articles.</div>`;
             }
         }
-        
+
         function renderBlog(posts) {
             if (!posts || posts.length === 0) {
                 blogContainer.innerHTML = `<div class="info-box">No articles found.</div>`;
@@ -1273,7 +1402,7 @@
                 </div>
             `).join('');
         }
-        
+
         // ─── VIEW ARTICLE ─────────────────────────────────────────────
         async function viewArticle(postId) {
             try {
@@ -1292,9 +1421,9 @@
                 alert('Failed to load article.');
             }
         }
-        
+
         function closeArticle() { $('articleModal').style.display = 'none'; }
-        
+
         function downloadArticle() {
             const { title, content } = currentArticle;
             if (!content) return;
@@ -1308,7 +1437,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
-        
+
         async function copyArticle() {
             const { content } = currentArticle;
             if (!content) return;
@@ -1321,19 +1450,19 @@
                 alert('Failed to copy. Please select and copy manually.');
             }
         }
-        
+
         // ─── COMPLIANCE DASHBOARD ─────────────────────────────────────
         async function fetchCompliance() {
             try {
                 complianceContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading compliance data...</p></div>`;
-                
+
                 const res = await fetch('/api/compliance/snapshot');
                 const data = await res.json();
-                
+
                 if (data.status === 'ok') {
                     const overallScore = data.overall_compliance || 0;
                     const overallStatus = data.overall_status || '🟢 Excellent';
-                    
+
                     let html = `
                         <div class="overall-card" style="border-color: ${overallScore >= 90 ? '#28a745' : overallScore >= 75 ? '#ffc107' : '#dc3545'};">
                             <div class="label">Overall Compliance</div>
@@ -1345,13 +1474,13 @@
                             </div>
                         </div>
                     `;
-                    
+
                     if (data.frameworks) {
                         Object.entries(data.frameworks).forEach(([key, fw]) => {
                             const score = fw.compliance_score || 0;
                             const color = score >= 90 ? '#28a745' : score >= 75 ? '#ffc107' : '#dc3545';
                             const statusEmoji = score >= 90 ? '🟢' : score >= 75 ? '🟡' : '🔴';
-                            
+
                             html += `
                                 <div class="compliance-card" onclick="showFrameworkDetails('${key}')">
                                     <div class="jurisdiction">${fw.jurisdiction || ''}</div>
@@ -1363,9 +1492,9 @@
                             `;
                         });
                     }
-                    
+
                     complianceContainer.innerHTML = html;
-                    
+
                     if (complianceTimestamp) {
                         complianceTimestamp.textContent = `Updated: ${new Date(data.timestamp).toLocaleString()}`;
                     }
@@ -1376,13 +1505,13 @@
                 console.error('Compliance fetch error:', err);
                 complianceContainer.innerHTML = `
                     <div class="error-box">
-                        ❌ Failed to load compliance data. 
+                        ❌ Failed to load compliance data.
                         <button onclick="fetchCompliance()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button>
                     </div>
                 `;
             }
         }
-        
+
         // ─── SHOW FRAMEWORK DETAILS ──────────────────────────────────
         async function showFrameworkDetails(frameworkId) {
             try {
@@ -1390,10 +1519,10 @@
                 $('complianceModalTitle').textContent = 'Loading...';
                 $('complianceModalBody').textContent = 'Fetching framework details...';
                 modal.style.display = 'block';
-                
+
                 const res = await fetch(`/api/compliance/framework/${frameworkId}`);
                 const data = await res.json();
-                
+
                 if (data && data.framework) {
                     let details = `
                         <p><strong>Framework:</strong> ${data.framework}</p>
@@ -1404,7 +1533,7 @@
                         <h3>Requirements</h3>
                         <ul style="list-style:none;padding:0;">
                     `;
-                    
+
                     if (data.details) {
                         data.details.forEach(req => {
                             const emoji = req.compliant ? '✅' : '❌';
@@ -1418,7 +1547,7 @@
                         });
                     }
                     details += `</ul>`;
-                    
+
                     if (data.recommendations && data.recommendations.length > 0) {
                         details += `<h3>💡 Recommendations</h3><ul style="padding-left:1.2rem;">`;
                         data.recommendations.forEach(rec => {
@@ -1426,7 +1555,7 @@
                         });
                         details += `</ul>`;
                     }
-                    
+
                     $('complianceModalTitle').textContent = data.framework;
                     $('complianceModalBody').innerHTML = details;
                 } else {
@@ -1439,7 +1568,182 @@
                 $('complianceModalBody').textContent = 'Failed to load framework details. Please try again.';
             }
         }
-        
+
+        // ─── LENS AGENTS ──────────────────────────────────────────────
+        async function fetchLensAgents() {
+            try {
+                lensContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading lens agents...</p></div>`;
+
+                const res = await fetch('/api/lens/agents');
+                const data = await res.json();
+
+                if (data.status === 'ok' && data.agents && data.agents.length > 0) {
+                    renderLensAgents(data.agents);
+                    lensTimestamp.textContent = `${data.count} agents active`;
+                } else {
+                    lensContainer.innerHTML = `<div class="info-box">🕷️ No lens agents initialized. Click "Scan All" to start.</div>`;
+                }
+            } catch(err) {
+                console.error('Lens agents error:', err);
+                lensContainer.innerHTML = `
+                    <div class="error-box">
+                        ❌ Failed to load lens agents.
+                        <button onclick="fetchLensAgents()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderLensAgents(agents) {
+            if (!agents || agents.length === 0) {
+                lensContainer.innerHTML = `<div class="info-box">No lens agents found.</div>`;
+                return;
+            }
+
+            lensContainer.innerHTML = agents.slice(0, 12).map(a => {
+                const statusColor = a.status === 'active' ? '#28a745' : '#dc3545';
+                const lastScan = a.last_scan ? new Date(a.last_scan).toLocaleString() : 'Never';
+                return `
+                    <div class="lens-card">
+                        <div>
+                            <span class="category">${a.category || 'Unknown'}</span>
+                            <span class="date">${lastScan}</span>
+                        </div>
+                        <div class="title">${a.domain}</div>
+                        <div style="display:flex;justify-content:space-between;margin-top:0.5rem;font-size:0.75rem;color:#6c757d;">
+                            <span>Findings: ${a.findings_count || 0}</span>
+                            <span style="color:${statusColor};">● ${a.status || 'active'}</span>
+                            <span>Governance: ${Math.round((a.governance_score || 0) * 100)}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function scanAllDomains() {
+            if (!isAuth) {
+                addMessage('system', '🔒 Please login to scan domains.');
+                showLogin();
+                return;
+            }
+
+            const token = getToken();
+            const btn = document.querySelector('#lensSection .btn-primary');
+            btn.textContent = '⏳ Scanning...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/lens/scan-all', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    lensTimestamp.textContent = `✅ Scanned ${data.result?.scans?.length || 0} domains`;
+                    addMessage('system', `🕷️ Lens agents scanned all domains.`);
+                    fetchLensAgents();
+                } else {
+                    addMessage('system', `❌ Scan failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch(err) {
+                addMessage('system', `❌ Scan error: ${err.message}`);
+            }
+
+            btn.textContent = '📡 Scan All';
+            btn.disabled = false;
+        }
+
+        // ─── PAYMENT ──────────────────────────────────────────────────
+        async function initiatePayment(tier) {
+            if (!isAuth) {
+                addMessage('system', '🔒 Please login first to upgrade.');
+                showLogin();
+                return;
+            }
+
+            const token = getToken();
+            const prices = { pro: 99, enterprise: 999, lifetime: 9999 };
+
+            try {
+                // Create order
+                const formData = new FormData();
+                formData.append('tier', tier);
+
+                const res = await fetch('/create-order', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    const options = {
+                        key: data.razorpay_key || 'rzp_test_XXXXXXXXXXXXXXXX',
+                        amount: data.amount,
+                        currency: 'INR',
+                        name: 'Unknown Verdict',
+                        description: `Upgrade to ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
+                        order_id: data.order_id,
+                        handler: function(response) {
+                            // Verify payment
+                            verifyPayment(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature);
+                        },
+                        prefill: {
+                            name: currentUser?.full_name || currentUser?.username || 'User',
+                            email: currentUser?.email || 'user@example.com'
+                        },
+                        theme: {
+                            color: '#6c5ce7'
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    addMessage('system', `❌ Payment error: ${data.detail || 'Could not create order'}`);
+                }
+            } catch(err) {
+                addMessage('system', `❌ Payment error: ${err.message}`);
+            }
+        }
+
+        async function verifyPayment(paymentId, orderId, signature) {
+            const token = getToken();
+            const formData = new FormData();
+            formData.append('razorpay_payment_id', paymentId);
+            formData.append('razorpay_order_id', orderId);
+            formData.append('razorpay_signature', signature);
+
+            try {
+                const res = await fetch('/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    addMessage('system', `🎉 Payment successful! Upgraded to ${data.tier || 'Premium'} plan.`);
+                    // Refresh user data
+                    const userRes = await fetch('/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (userRes.ok) {
+                        const userData = await userRes.json();
+                        localStorage.setItem('user_data', JSON.stringify(userData));
+                        updateUI(userData);
+                    }
+                } else {
+                    addMessage('system', `❌ Payment verification failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch(err) {
+                addMessage('system', `❌ Verification error: ${err.message}`);
+            }
+        }
+
         // ─── KEYBOARD SHORTCUTS ─────────────────────────────────────
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') { closeLogin(); closeArticle(); }
@@ -1448,42 +1752,40 @@
                 complianceModal.style.display = 'none';
             }
         });
-        
+
         document.querySelectorAll('.modal').forEach(m => {
             m.addEventListener('click', (e) => {
                 if (e.target === m) { m.style.display = 'none'; }
             });
         });
-        
+
         // ─── INIT ──────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const user = loadUser();
             updateUI(user);
-            fetchNews();
-            fetchBlogPosts();
-            fetchCompliance();
-            
-            // Auto-refresh every 5 minutes
+            fetchAll();
+
             setInterval(() => {
                 fetchNews();
                 fetchBlogPosts();
                 fetchCompliance();
             }, 300000);
-            
-            // Auto-resize textarea
+
             chatInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
-            
+
             console.log('🔱 Unknown Verdict v12.1 initialized');
             console.log(`👤 User: ${currentUser ? currentUser.username : 'Not logged in'}`);
         });
-        
+
         // ─── GLOBALS ──────────────────────────────────────────────────
         window.fetchNews = fetchNews;
         window.fetchBlogPosts = fetchBlogPosts;
         window.fetchCompliance = fetchCompliance;
+        window.fetchLensAgents = fetchLensAgents;
+        window.scanAllDomains = scanAllDomains;
         window.generateArticle = generateArticle;
         window.sendQuery = sendQuery;
         window.quickQuery = quickQuery;
@@ -1496,6 +1798,7 @@
         window.downloadArticle = downloadArticle;
         window.copyArticle = copyArticle;
         window.showFrameworkDetails = showFrameworkDetails;
+        window.initiatePayment = initiatePayment;
         window.getToken = getToken;
     </script>
 </body>
