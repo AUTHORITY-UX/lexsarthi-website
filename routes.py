@@ -1150,3 +1150,54 @@ async def _ensure_test_user():
     except Exception as e:
         if logger:
             logger.error(f"❌ Failed to create test user: {e}") 
+    # ═══════════════════════════════════════════════════════════════════
+    # LENS AGENTS ROUTES
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # Initialize Lens Agent System
+    lens_agent_system = LensAgentSystem()
+    
+    @app.post("/api/lens/init")
+    async def init_lens_agents(cu: dict = Depends(get_current_user)):
+        """Initialize lens agents for domain scanning"""
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(403, "Lens agents require Enterprise plan")
+        
+        result = await lens_agent_system.initialize_lens_agents()
+        return {"status": "ok", "result": result}
+
+    @app.post("/api/lens/scan-all")
+    async def scan_all_domains(cu: dict = Depends(get_current_user)):
+        """Scan all domains using lens agents"""
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(403, "Lens agents require Enterprise plan")
+        
+        result = await lens_agent_system.scan_all_domains()
+        return {"status": "ok", "result": result}
+
+    @app.get("/api/lens/governance")
+    async def get_governance_report():
+        """Get AI governance report"""
+        return lens_agent_system.get_governance_report()
+
+    @app.get("/api/lens/agents")
+    async def list_lens_agents():
+        """List all lens agents"""
+        return {
+            "status": "ok",
+            "agents": lens_agent_system.lens_agents,
+            "count": len(lens_agent_system.lens_agents)
+        }
+
+    @app.post("/api/lens/scan/{domain}")
+    async def scan_specific_domain(domain: str, cu: dict = Depends(get_current_user)):
+        """Scan a specific domain"""
+        if cu["tier"] not in ("enterprise", "lifetime"):
+            raise HTTPException(403, "Lens agents require Enterprise plan")
+        
+        agent = lens_agent_system.get_lens_agent_by_domain(domain)
+        if not agent:
+            raise HTTPException(404, f"Domain '{domain}' not found")
+        
+        result = await lens_agent_system.scan_domain(agent["id"])
+        return {"status": "ok", "result": result}
