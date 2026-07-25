@@ -1,118 +1,159 @@
-# =============================================================================
-# models.py - Database Models & Pydantic Schemas
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
-# =============================================================================
+# ============================================
+# MODELS.PY - Complete Database Models
+# ============================================
 
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, Boolean, JSON, Float, func, UniqueConstraint
-from pydantic import BaseModel, EmailStr
-from typing import Optional, Dict, Any, List
+from sqlalchemy import (
+    Column, Integer, String, Text, Boolean, DateTime, 
+    Float, JSON, ForeignKey, create_engine
+)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.sql import func
 from datetime import datetime
 
-# ─── METADATA ──────────────────────────────────────────────────────
-metadata = MetaData()
+Base = declarative_base()
 
-# ─── TABLE DEFINITIONS ─────────────────────────────────────────────
-users = Table("users", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("email", String(255), unique=True, index=True),
-    Column("username", String(100), unique=True),
-    Column("password_hash", String(255)),
-    Column("full_name", String(255)),
-    Column("is_active", Boolean, server_default="true"),
-    Column("is_premium", Boolean, server_default="false"),
-    Column("tier", String(20), server_default="free"),
-    Column("queries_used_today", Integer, server_default="0"),
-    Column("last_query_reset", DateTime, server_default=func.now()),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
-    Column("api_key", String(64), nullable=True, unique=True),
-    Column("preferences", JSON, nullable=True),
-    Column("memory", JSON, server_default="[]"),
-)
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
+    chat_history = relationship("ChatHistory", back_populates="user", cascade="all, delete-orphan")
 
-queries = Table("queries", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("user_id", Integer, index=True),
-    Column("query", Text),
-    Column("response", Text),
-    Column("metadata", JSON, nullable=True),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime),
-)
+class Session(Base):
+    __tablename__ = "sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="sessions")
 
-payments = Table("payments", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("user_id", Integer),
-    Column("razorpay_order_id", String(100)),
-    Column("razorpay_payment_id", String(100), nullable=True),
-    Column("razorpay_signature", String(255), nullable=True),
-    Column("amount", Float),
-    Column("currency", String(3), server_default="INR"),
-    Column("tier", String(20)),
-    Column("status", String(20), server_default="created"),
-    Column("created_at", DateTime, server_default=func.now()),
-)
+class LegalDocument(Base):
+    __tablename__ = "legal_documents"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(500), nullable=False)
+    content = Column(Text, nullable=True)
+    category = Column(String(100), nullable=True)
+    jurisdiction = Column(String(100), nullable=True)
+    document_type = Column(String(50), nullable=True)  # contract, notice, brief, etc.
+    metadata = Column(JSON, nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    creator = relationship("User")
 
-bulk_jobs = Table("bulk_jobs", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("user_id", Integer),
-    Column("job_id", String(64), unique=True, index=True),
-    Column("status", String(20), server_default="pending"),
-    Column("total_files", Integer, server_default="0"),
-    Column("processed_files", Integer, server_default="0"),
-    Column("result_data", Text, nullable=True),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("expires_at", DateTime),
-)
+class ChatHistory(Base):
+    __tablename__ = "chat_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    message = Column(Text, nullable=False)
+    response = Column(Text, nullable=True)
+    agent_name = Column(String(100), nullable=True)
+    verifier_score = Column(Float, nullable=True)
+    metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="chat_history")
 
-blog_posts = Table("blog_posts", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("title", Text),
-    Column("content", Text),
-    Column("source_url", Text),
-    Column("created_at", DateTime, server_default=func.now()),
-    Column("published", Boolean, server_default="true"),
-)
+class ComplianceRecord(Base):
+    __tablename__ = "compliance_records"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    framework = Column(String(50), nullable=False)  # GDPR, DPDPA, CCPA, etc.
+    status = Column(String(50), nullable=False)  # Compliant, In Progress, Non-Compliant
+    score = Column(Integer, nullable=True)
+    details = Column(JSON, nullable=True)
+    recommendations = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User")
 
-knowledge_chunks = Table("knowledge_chunks", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("content", Text, nullable=False),
-    Column("metadata", JSON, nullable=False),
-    Column("embedding", Text, nullable=False),
-)
+class TradeData(Base):
+    __tablename__ = "trade_data"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String(20), nullable=False, index=True)
+    price = Column(Float, nullable=False)
+    change = Column(Float, nullable=True)
+    change_percent = Column(Float, nullable=True)
+    volume = Column(Float, nullable=True)
+    timestamp = Column(DateTime, default=func.now(), index=True)
+    
+    # Metadata
+    source = Column(String(50), nullable=True)
 
-deliberations = Table("deliberations", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("query", Text, nullable=False),
-    Column("domain", Text),
-    Column("persona", Text),
-    Column("provider", Text),
-    Column("initial_answer", Text),
-    Column("verifier_results", JSON),
-    Column("final_answer", Text),
-    Column("confidence", Text),
-    Column("sources", JSON),
-    Column("timestamp", DateTime, server_default=func.now()),
-    Column("used_for_training", Boolean, server_default="false"),
-)
+class NewsArticle(Base):
+    __tablename__ = "news_articles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(500), nullable=False)
+    summary = Column(Text, nullable=True)
+    content = Column(Text, nullable=True)
+    source = Column(String(100), nullable=True)
+    url = Column(String(500), nullable=True)
+    category = Column(String(50), nullable=True)
+    published_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.now())
 
-# ─── PYDANTIC MODELS ──────────────────────────────────────────────
-class UserCreate(BaseModel):
-    email: EmailStr
-    username: str
-    password: str
-    full_name: str
+class LensScan(Base):
+    __tablename__ = "lens_scans"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    domain = Column(String(100), nullable=False)
+    agent_name = Column(String(100), nullable=False)
+    status = Column(String(50), default="active")
+    results = Column(JSON, nullable=True)
+    scanned_at = Column(DateTime, default=func.now())
 
-class UserLogin(BaseModel):
-    username: str
-    password: str
+# ============================================
+# DATABASE INITIALIZATION
+# ============================================
 
-class PaymentCreate(BaseModel):
-    tier: str
+def init_db(database_url):
+    """Initialize database with all tables"""
+    from sqlalchemy import create_engine
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+    return engine
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
+# For async operations
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 
-class GenerateArticleRequest(BaseModel):
-    news_id: str
+async def init_async_db(database_url):
+    """Initialize async database"""
+    async_db_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+    engine = create_async_engine(async_db_url, echo=False, pool_size=5, max_overflow=10)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    return engine
+
+# Export all models
+__all__ = [
+    'Base', 'User', 'Session', 'LegalDocument', 'ChatHistory', 
+    'ComplianceRecord', 'TradeData', 'NewsArticle', 'LensScan',
+    'init_db', 'init_async_db'
+]
