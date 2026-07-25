@@ -1254,4 +1254,4 @@ async def _ensure_test_user():
                 logger.info("✅ Seeded test user 'counsel'.")
     except Exception as e:
         if logger:
-            logger.error(f"❌ Failed to create test user: {e}")
+            logger.error(f"❌ Failed to create test user: {e}") 
