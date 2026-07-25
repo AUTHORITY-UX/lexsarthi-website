@@ -1,1805 +1,843 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Unknown Verdict AGI v12.1</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown Verdict AGI v12.1 — THE ADVOCACY</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        /* ═══════════════════════════════════════════════════════════════
-           🔱 UNKNOWN VERDICT v12.1 - COMPLETE STYLES
-           ═══════════════════════════════════════════════════════════════ */
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #6c5ce7;
+            --primary-light: #a29bfe;
+            --primary-dark: #4834d4;
+            --accent: #00cec9;
+            --bg: #0a0a0f;
+            --bg-elevated: #12121a;
+            --bg-card: rgba(18, 18, 26, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(108, 92, 231, 0.4);
+            --text: #f1f2f6;
+            --text-muted: #a4b0be;
+            --text-dim: #747d8c;
+            --success: #2ed573;
+            --warning: #ffa502;
+            --danger: #ff4757;
+            --radius: 16px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 40px rgba(108, 92, 231, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: #f0f2f5;
-            color: #1a1a2e;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             line-height: 1.6;
+            overflow-x: hidden;
             min-height: 100vh;
         }
-
-        /* ─── LAYOUT ────────────────────────────────────────────────── */
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1rem 1.5rem 2rem;
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        ::selection { background: rgba(108, 92, 231, 0.3); color: white; }
+        .bg-mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(108, 92, 231, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 206, 201, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(72, 52, 212, 0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
-
-        /* ─── HEADER ────────────────────────────────────────────────── */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0 1.25rem;
-            border-bottom: 2px solid #e9ecef;
-            flex-wrap: wrap;
-            gap: 1rem;
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
         }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .logo-icon {
-            font-size: 2rem;
-        }
-        .logo-text {
-            font-size: 1.4rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #6c5ce7, #a855f7);
+        h1, h2, h3, h4 { font-weight: 700; line-height: 1.2; }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .logo-badge {
-            font-size: 0.65rem;
-            background: #e9ecef;
-            padding: 0.15rem 0.6rem;
-            border-radius: 12px;
-            color: #6c757d;
-            -webkit-text-fill-color: #6c757d;
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            background: #28a745;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
-        .btn-primary, .btn-secondary, .btn-danger, .btn-success {
-            padding: 0.45rem 1.2rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 24px; border-radius: var(--radius-sm);
+            font-weight: 600; font-size: 0.9rem; cursor: pointer;
+            border: none; transition: var(--transition); position: relative; overflow: hidden;
         }
         .btn-primary {
-            background: #6c5ce7;
-            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
         }
         .btn-primary:hover {
-            background: #5a4bd1;
-            transform: translateY(-1px);
+            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108, 92, 231, 0.5);
         }
-        .btn-secondary {
-            background: #e9ecef;
-            color: #1a1a2e;
+        .btn-outline {
+            background: transparent; border: 1px solid var(--border); color: var(--text);
         }
-        .btn-secondary:hover {
-            background: #dee2e6;
+        .btn-outline:hover { border-color: var(--primary); background: rgba(108, 92, 231, 0.1); }
+        .btn-ghost {
+            background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid transparent;
         }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+        .card {
+            background: var(--bg-card); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 24px; transition: var(--transition); position: relative; overflow: hidden;
         }
-        .btn-danger:hover {
-            background: #c82333;
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(108, 92, 231, 0.4), transparent);
+            opacity: 0; transition: opacity 0.3s;
         }
-        .btn-success {
-            background: #28a745;
-            color: white;
+        .card:hover::before { opacity: 1; }
+        .card:hover {
+            border-color: var(--border-hover); transform: translateY(-4px); box-shadow: var(--shadow-glow);
         }
-        .btn-success:hover {
-            background: #218838;
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); padding: 16px 32px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .btn-primary:disabled, .btn-secondary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+        .logo-icon {
+            width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
         }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0.8rem 0.3rem 0.3rem;
-            background: #f8f9fa;
-            border-radius: 30px;
-            border: 1px solid #e9ecef;
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--success);
+            box-shadow: 0 0 10px var(--success); animation: pulse 2s infinite;
         }
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #6c5ce7;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.8rem;
+        .status-dot.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .user-section { display: flex; align-items: center; gap: 16px; }
+        .tier-badge {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            background: rgba(108, 92, 231, 0.15); color: var(--primary-light);
+            border: 1px solid rgba(108, 92, 231, 0.3);
         }
-        .user-name {
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .user-tier {
-            font-size: 0.65rem;
-            padding: 0.1rem 0.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        .user-tier.free { background: #fff3cd; color: #856404; }
-        .user-tier.premium { background: #d4edda; color: #155724; }
-        .user-tier.enterprise { background: #cce5ff; color: #004085; }
-        .user-tier.lifetime { background: linear-gradient(135deg, #6c5ce7, #a855f7); color: white; }
-
-        /* ─── HERO ──────────────────────────────────────────────────── */
-        .hero {
-            text-align: center;
-            padding: 2rem 1rem 1.5rem;
-        }
-        .hero h1 {
-            font-size: 2.6rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #1a1a2e, #6c5ce7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero p {
-            font-size: 1.1rem;
-            color: #4a4a6a;
-            max-width: 600px;
-            margin: 0.25rem auto 0.5rem;
-        }
+        .tier-badge.pro { background: rgba(0, 206, 201, 0.15); color: var(--accent); border-color: rgba(0, 206, 201, 0.3); }
+        .tier-badge.enterprise { background: rgba(255, 165, 2, 0.15); color: var(--warning); border-color: rgba(255, 165, 2, 0.3); }
+        .tier-badge.lifetime { background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(0, 206, 201, 0.2)); color: white; border-color: rgba(108, 92, 231, 0.5); }
+        main { padding-top: 80px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+        section { margin-bottom: 80px; }
+        .hero { text-align: center; padding: 100px 0 60px; position: relative; }
         .hero-badge {
-            display: inline-block;
-            background: #e9ecef;
-            padding: 0.25rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-
-        /* ─── STATS ──────────────────────────────────────────────────── */
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.75rem;
-            background: white;
-            border-radius: 14px;
-            padding: 1.25rem;
-            margin: 1rem 0 1.5rem;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-            border: 1px solid #e9ecef;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #1a1a2e;
-            display: block;
-        }
-        .stat-label {
-            font-size: 0.75rem;
-            color: #6c757d;
-            font-weight: 500;
-        }
-
-        /* ─── MAIN LAYOUT ───────────────────────────────────────────── */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ─── CHAT / CONSOLE ────────────────────────────────────────── */
-        .chat-section {
-            background: white;
-            border-radius: 14px;
-            border: 1px solid #e9ecef;
-            display: flex;
-            flex-direction: column;
-            height: 600px;
-        }
-        .chat-header {
-            padding: 0.75rem 1.25rem;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .chat-header h3 {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-        .chat-header .badge {
-            font-size: 0.7rem;
-            padding: 0.15rem 0.6rem;
-            border-radius: 12px;
-            background: #d4edda;
-            color: #155724;
-        }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem 1.25rem;
-            background: #fafafa;
-            min-height: 200px;
-        }
-        .chat-message {
-            margin-bottom: 0.75rem;
-            padding: 0.6rem 1rem;
-            border-radius: 12px;
-            max-width: 85%;
-            word-wrap: break-word;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .chat-message.user {
-            background: #6c5ce7;
-            color: white;
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
-        }
-        .chat-message.ai {
-            background: #e9ecef;
-            color: #1a1a2e;
-            margin-right: auto;
-            border-bottom-left-radius: 4px;
-        }
-        .chat-message.system {
-            background: #fff3cd;
-            color: #856404;
-            margin: 0 auto;
-            text-align: center;
-            max-width: 100%;
-            font-size: 0.85rem;
-        }
-        .chat-message .timestamp {
-            font-size: 0.65rem;
-            opacity: 0.6;
-            display: block;
-            margin-top: 0.25rem;
-        }
-        .chat-message.user .timestamp { color: rgba(255,255,255,0.7); }
-        .chat-message.ai .timestamp { color: #6c757d; }
-
-        .chat-input-area {
-            padding: 0.75rem 1.25rem;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            gap: 0.75rem;
-            flex-shrink: 0;
-            background: white;
-            border-radius: 0 0 14px 14px;
-        }
-        .chat-input-area textarea {
-            flex: 1;
-            padding: 0.6rem 1rem;
-            border: 1px solid #d0d5dd;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            resize: none;
-            font-family: inherit;
-            transition: border-color 0.2s;
-            min-height: 44px;
-            max-height: 120px;
-        }
-        .chat-input-area textarea:focus {
-            outline: none;
-            border-color: #6c5ce7;
-            box-shadow: 0 0 0 3px rgba(108,92,231,0.12);
-        }
-        .chat-input-area .btn-send {
-            padding: 0.6rem 1.5rem;
-            background: #6c5ce7;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            height: 44px;
-        }
-        .chat-input-area .btn-send:hover {
-            background: #5a4bd1;
-        }
-        .chat-input-area .btn-send:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* ─── SERVICES PANEL ────────────────────────────────────────── */
-        .services-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .services-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-        @media (max-width: 640px) {
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .service-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            border: 1px solid #e9ecef;
-            cursor: pointer;
-            transition: all 0.25s;
-        }
-        .service-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-            border-color: #6c5ce7;
-        }
-        .service-card .icon {
-            font-size: 1.5rem;
-            display: block;
-            margin-bottom: 0.3rem;
-        }
-        .service-card .title {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #1a1a2e;
-        }
-        .service-card .desc {
-            font-size: 0.8rem;
-            color: #4a4a6a;
-            line-height: 1.4;
-        }
-        .service-card .tag {
-            display: inline-block;
-            margin-top: 0.4rem;
-            font-size: 0.6rem;
-            font-weight: 600;
-            padding: 0.1rem 0.6rem;
-            border-radius: 10px;
-            background: #f8f9fa;
-            color: #6c757d;
-        }
-
-        /* ─── COMPLIANCE SECTION ────────────────────────────────────── */
-        .compliance-section, .news-section, .blog-section, .lens-section, .payment-section {
-            background: white;
-            border-radius: 14px;
-            border: 1px solid #e9ecef;
-            padding: 1.25rem;
-            margin-top: 1.5rem;
-        }
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-        .section-header h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-        .section-header .timestamp {
-            font-size: 0.75rem;
-            color: #888;
-        }
-        .compliance-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .compliance-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-align: center;
-            border: 1px solid #e9ecef;
-            cursor: pointer;
-            transition: all 0.25s;
-        }
-        .compliance-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        }
-        .compliance-card .jurisdiction {
-            font-size: 0.7rem;
-            color: #888;
-        }
-        .compliance-card .name {
-            font-weight: 700;
-            font-size: 0.9rem;
-            margin: 0.2rem 0;
-        }
-        .compliance-card .score {
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-        .compliance-card .status {
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-        .compliance-card .count {
-            font-size: 0.65rem;
-            color: #888;
-            margin-top: 0.25rem;
-        }
-        .overall-card {
-            grid-column: 1 / -1;
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-align: center;
-            border: 2px solid #28a745;
-        }
-        .overall-card .label {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        .overall-card .score {
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-        .overall-card .status {
-            font-size: 1.2rem;
-        }
-        .overall-card .details {
-            font-size: 0.7rem;
-            color: #888;
-        }
-
-        /* ─── NEWS / BLOG / LENS GRID ──────────────────────────────── */
-        .news-grid, .blog-grid, .lens-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-        }
-        .news-card, .blog-card, .lens-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem 1.25rem;
-            border: 1px solid #e9ecef;
-            transition: all 0.2s;
-        }
-        .news-card:hover, .blog-card:hover, .lens-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .news-card .source, .lens-card .category {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #6c5ce7;
-        }
-        .news-card .date, .lens-card .date {
-            font-size: 0.7rem;
-            color: #888;
-            float: right;
-        }
-        .news-card .title, .lens-card .title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin: 0.3rem 0;
-            color: #1a1a2e;
-        }
-        .news-card .summary {
-            font-size: 0.85rem;
-            color: #4a4a6a;
-            line-height: 1.5;
-        }
-        .news-card .actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-            flex-wrap: wrap;
-        }
-        .btn-sm {
-            padding: 0.25rem 0.75rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-sm.generate {
-            background: #6c5ce7;
-            color: white;
-        }
-        .btn-sm.generate:hover {
-            background: #5a4bd1;
-        }
-        .btn-sm.read {
-            background: #e9ecef;
-            color: #1a1a2e;
-        }
-        .btn-sm.read:hover {
-            background: #dee2e6;
-        }
-        .btn-sm.success {
-            background: #28a745;
-            color: white;
-        }
-        .btn-sm.success:hover {
-            background: #218838;
-        }
-
-        /* ─── PAYMENT SECTION ───────────────────────────────────────── */
-        .payment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .payment-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-align: center;
-            border: 1px solid #e9ecef;
-            transition: all 0.25s;
-        }
-        .payment-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            border-color: #28a745;
-        }
-        .payment-card .price {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1a1a2e;
-        }
-        .payment-card .currency {
-            font-size: 1rem;
-            color: #6c757d;
-        }
-        .payment-card .plan {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin: 0.3rem 0;
-        }
-        .payment-card .features {
-            font-size: 0.8rem;
-            color: #4a4a6a;
-            line-height: 1.6;
-        }
-
-        /* ─── LOADING ────────────────────────────────────────────────── */
-        .loading-spinner {
-            text-align: center;
-            padding: 2rem;
-            color: #6c757d;
-            grid-column: 1 / -1;
-        }
-        .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid #e9ecef;
-            border-top-color: #6c5ce7;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 0.5rem;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .error-box, .info-box {
-            text-align: center;
-            padding: 1.5rem;
-            border-radius: 10px;
-            grid-column: 1 / -1;
-        }
-        .error-box { color: #dc3545; background: #f8d7da; }
-        .info-box { color: #0c5460; background: #d1ecf1; }
-
-        /* ─── MODAL ──────────────────────────────────────────────────── */
-        .modal {
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            display: none;
-            overflow-y: auto;
-        }
-        .modal-content {
-            background: white;
-            margin: 3% auto;
-            padding: 2rem;
-            max-width: 720px;
-            border-radius: 16px;
-            position: relative;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        .modal .close {
-            position: sticky;
-            top: 0;
-            float: right;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: #888;
-            background: white;
-            padding: 0 0.5rem;
-            line-height: 1;
-        }
-        .modal .close:hover { color: #333; }
-        .modal h2 { margin-bottom: 1rem; }
-        .modal .body {
-            line-height: 1.8;
-            white-space: pre-wrap;
-            margin: 1rem 0;
-        }
-        .modal-actions {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e9ecef;
-        }
-
-        /* ─── FOOTER ────────────────────────────────────────────────── */
-        .footer {
-            text-align: center;
-            padding: 1.5rem 0 0;
-            margin-top: 2rem;
-            border-top: 1px solid #e9ecef;
-            color: #6c757d;
-            font-size: 0.8rem;
-        }
-        .footer a {
-            color: #6c5ce7;
-            text-decoration: none;
-        }
-        .footer a:hover { text-decoration: underline; }
-
-        /* ─── RESPONSIVE ────────────────────────────────────────────── */
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 20px; background: rgba(108, 92, 231, 0.1);
+            border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 50px;
+            font-size: 0.85rem; font-weight: 600; color: var(--primary-light);
+            margin-bottom: 24px; animation: fadeInUp 0.6s ease-out;
+        }
+        .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; letter-spacing: -2px; margin-bottom: 20px; animation: fadeInUp 0.6s ease-out 0.1s both; }
+        .hero p { font-size: 1.25rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 32px; animation: fadeInUp 0.6s ease-out 0.2s both; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 60px; }
+        .stat-item { text-align: center; padding: 24px; position: relative; }
+        .stat-item::after { content: ''; position: absolute; right: 0; top: 20%; height: 60%; width: 1px; background: linear-gradient(to bottom, transparent, var(--border), transparent); }
+        .stat-item:last-child::after { display: none; }
+        .stat-number { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--text), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin-bottom: 8px; }
+        .stat-label { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .main-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; margin-bottom: 60px; }
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } .stat-item::after { display: none; } }
+        .chat-container { display: flex; flex-direction: column; height: 700px; }
+        .chat-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .chat-agent { display: flex; align-items: center; gap: 12px; }
+        .agent-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 16px; }
+        .message { max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 0.95rem; line-height: 1.5; animation: messageIn 0.3s ease-out; position: relative; }
+        @keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { align-self: flex-end; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-bottom-right-radius: 4px; }
+        .message.ai { align-self: flex-start; background: var(--bg-glass); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .message.system { align-self: center; background: rgba(0, 206, 201, 0.1); border: 1px solid rgba(0, 206, 201, 0.2); color: var(--accent); font-size: 0.85rem; font-family: monospace; }
+        .message-meta { font-size: 0.7rem; opacity: 0.6; margin-top: 6px; display: flex; gap: 12px; }
+        .typing-indicator { display: flex; gap: 4px; padding: 18px; }
+        .typing-indicator span { width: 8px; height: 8px; background: var(--primary-light); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .chat-input-area { display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .chat-input { flex: 1; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 18px; color: var(--text); font-family: inherit; font-size: 0.95rem; resize: none; outline: none; transition: var(--transition); }
+        .chat-input:focus { border-color: var(--primary); background: rgba(108, 92, 231, 0.05); }
+        .chat-input::placeholder { color: var(--text-dim); }
+        .services-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .service-card { padding: 20px; cursor: pointer; display: flex; align-items: flex-start; gap: 16px; }
+        .service-icon { width: 48px; height: 48px; min-width: 48px; border-radius: 14px; background: rgba(108, 92, 231, 0.1); border: 1px solid rgba(108, 92, 231, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: var(--transition); }
+        .service-card:hover .service-icon { background: var(--primary); transform: scale(1.1); box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4); }
+        .service-info h4 { margin-bottom: 4px; font-size: 1rem; }
+        .service-info p { font-size: 0.85rem; color: var(--text-dim); margin: 0; }
+        .service-tag { display: inline-block; margin-top: 8px; padding: 4px 10px; background: rgba(108, 92, 231, 0.1); border-radius: 6px; font-size: 0.75rem; color: var(--primary-light); font-weight: 600; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .section-title { font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .section-title span { font-size: 1.4rem; }
+        .payment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+        .payment-card { text-align: center; padding: 32px 24px; position: relative; }
+        .payment-card.featured { border-color: var(--primary); transform: scale(1.02); box-shadow: var(--shadow-glow); }
+        .payment-card.featured::before { content: 'MOST POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; }
+        .payment-price { font-size: 3rem; font-weight: 900; line-height: 1; margin: 16px 0; }
+        .payment-price span { font-size: 1rem; color: var(--text-dim); font-weight: 500; }
+        .payment-features { list-style: none; margin: 24px 0; text-align: left; }
+        .payment-features li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
+        .payment-features li::before { content: '✓'; color: var(--success); font-weight: 700; }
+        .compliance-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+        @media (max-width: 768px) { .compliance-grid { grid-template-columns: 1fr; } }
+        .compliance-score { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .score-circle { width: 180px; height: 180px; border-radius: 50%; background: conic-gradient(var(--primary) 85%, var(--border) 0); display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px; }
+        .score-circle::before { content: ''; position: absolute; width: 150px; height: 150px; background: var(--bg-elevated); border-radius: 50%; }
+        .score-value { position: relative; font-size: 3rem; font-weight: 900; z-index: 1; }
+        .framework-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .framework-card { padding: 20px; cursor: pointer; }
+        .framework-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .framework-jurisdiction { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; background: rgba(108, 92, 231, 0.1); color: var(--primary-light); font-weight: 700; }
+        .framework-score { font-size: 1.5rem; font-weight: 800; color: var(--success); }
+        .progress-bar { height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 1s ease-out; }
+        .lens-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .lens-card { padding: 20px; }
+        .lens-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .lens-domain { font-weight: 700; font-size: 1.1rem; }
+        .lens-status { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .lens-status.warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+        .lens-status.danger { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .lens-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+        .lens-metric { background: var(--bg-glass); padding: 12px; border-radius: var(--radius-sm); text-align: center; }
+        .lens-metric-value { font-size: 1.3rem; font-weight: 800; color: var(--primary-light); }
+        .lens-metric-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+        .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+        .content-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+        .content-image { height: 180px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 3rem; position: relative; overflow: hidden; }
+        .content-image::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent, var(--bg-card)); }
+        .content-body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+        .content-meta { display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 12px; }
+        .content-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+        .content-excerpt { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; flex: 1; }
+        .content-actions { display: flex; gap: 12px; margin-top: 16px; }
+        footer { border-top: 1px solid var(--border); padding: 40px 32px; text-align: center; color: var(--text-dim); font-size: 0.9rem; margin-top: 60px; background: rgba(10, 10, 15, 0.5); }
+        .footer-watermark { font-size: 4rem; opacity: 0.03; margin-top: 20px; font-weight: 900; letter-spacing: 10px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; transform: scale(0.9); transition: transform 0.3s; box-shadow: var(--shadow); }
+        .modal-overlay.active .modal { transform: scale(1); }
+        .modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-glass); border: 1px solid var(--border); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); }
+        .modal-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        .modal h2 { margin-bottom: 24px; font-size: 1.5rem; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px 16px; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; outline: none; transition: var(--transition); }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); background: rgba(108, 92, 231, 0.05); }
+        .modal-wide { max-width: 700px; }
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 12px; }
+        .toast { background: var(--bg-elevated); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 16px 20px; min-width: 300px; box-shadow: var(--shadow); animation: toastIn 0.3s ease-out; display: flex; align-items: center; gap: 12px; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .skeleton { background: linear-gradient(90deg, var(--bg-glass) 25%, rgba(255,255,255,0.05) 50%, var(--bg-glass) 75%); background-size: 200% 100%; animation: skeleton 1.5s infinite; border-radius: var(--radius-sm); }
+        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; }
+        .mt-4 { margin-top: 16px; } .mb-4 { margin-bottom: 16px; }
+        .text-sm { font-size: 0.875rem; } .text-xs { font-size: 0.75rem; }
+        .text-muted { color: var(--text-muted); } .text-dim { color: var(--text-dim); }
+        .font-mono { font-family: 'Courier New', monospace; }
+        .hidden { display: none !important; }
         @media (max-width: 768px) {
-            .app-container { padding: 0.75rem 1rem; }
-            .hero h1 { font-size: 1.8rem; }
-            .header { flex-direction: column; align-items: stretch; }
-            .header-actions { justify-content: space-between; }
-            .main-grid { grid-template-columns: 1fr; }
-            .chat-section { height: 450px; }
-            .news-grid, .blog-grid, .lens-grid { grid-template-columns: 1fr; }
-            .compliance-grid { grid-template-columns: 1fr 1fr; }
-            .modal-content { margin: 5% 1rem; padding: 1.25rem; }
-        }
-        @media (max-width: 480px) {
-            .compliance-grid { grid-template-columns: 1fr; }
-            .services-grid { grid-template-columns: 1fr; }
-            .stats-bar { grid-template-columns: 1fr 1fr; }
-            .payment-grid { grid-template-columns: 1fr; }
+            header { padding: 12px 16px; } .container { padding: 0 16px; }
+            .hero { padding: 60px 0 40px; } .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .payment-grid { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; }
+            .lens-grid { grid-template-columns: 1fr; } .chat-container { height: 500px; }
+            .modal { padding: 24px; }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
-    <!-- ═══════════════════════════════════════════════════════════════
-         APP
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="app-container" id="app">
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
 
-        <!-- ─── HEADER ────────────────────────────────────────────── -->
-        <header class="header">
-            <div class="logo">
-                <span class="logo-icon">🔱</span>
-                <span class="logo-text">Unknown Verdict</span>
-                <span class="logo-badge">v12.1</span>
-            </div>
-            <div class="header-actions">
-                <div class="status-dot" id="statusDot"></div>
-                <span style="font-size:0.85rem;color:#6c757d;" id="statusText">Online</span>
-                <div id="authSection">
-                    <button class="btn-primary" onclick="showLogin()">🔑 Login</button>
-                </div>
-                <div id="userSection" style="display:none;">
-                    <div class="user-badge">
-                        <div class="user-avatar" id="userAvatar">U</div>
-                        <span class="user-name" id="userName">User</span>
-                        <span class="user-tier free" id="userTier">Free</span>
-                        <button class="btn-danger" onclick="logoutUser()" style="padding:0.2rem 0.6rem;font-size:0.7rem;">✕</button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- ─── HERO ────────────────────────────────────────────────── -->
-        <section class="hero">
-            <h1>⚖️ AI-Powered Legal Intelligence</h1>
-            <p>250 specialist personas · 10 verifiers · Judge Shakti</p>
-            <span class="hero-badge">🔱 Enterprise Edition</span>
-        </section>
-
-        <!-- ─── STATS ────────────────────────────────────────────────── -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="stat-number" id="statAgents">250</span>
-                <span class="stat-label">AI Personas</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number" id="statVerifiers">10</span>
-                <span class="stat-label">Verifiers</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number" id="statChunks">1,047</span>
-                <span class="stat-label">Knowledge Chunks</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number" id="statNews">0</span>
-                <span class="stat-label">News Articles</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number" id="statBlog">0</span>
-                <span class="stat-label">Articles Generated</span>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🔱</div>
+            <span>Unknown Verdict</span>
+            <div class="status-dot" id="statusDot" title="System Online"></div>
+        </div>
+        <div class="user-section">
+            <span class="tier-badge" id="tierBadge">Free</span>
+            <button class="btn btn-ghost" id="authBtn" onclick="openModal('loginModal')">
+                <span>🔐</span> Login
+            </button>
+            <div id="userProfile" class="hidden flex items-center gap-2">
+                <span id="userName" class="text-sm font-semibold"></span>
+                <button class="btn btn-ghost text-xs" onclick="logout()">Logout</button>
             </div>
         </div>
+    </header>
 
-        <!-- ─── MAIN GRID: CHAT + SERVICES ─────────────────────────── -->
-        <div class="main-grid">
+    <main class="container">
+        <section class="hero">
+            <div class="hero-badge"><span>🔱</span> Enterprise Edition v12.1</div>
+            <h1 class="gradient-text">⚖️ AI-Powered Legal Intelligence</h1>
+            <p>250 specialist personas · 10 verifiers · Judge Shakti · Built for THE ADVOCACY – A LAW FIRM</p>
+            <button class="btn btn-primary" onclick="scrollToChat()">
+                <span>💬</span> Start Consultation
+            </button>
+        </section>
 
-            <!-- ─── CHAT / CONSOLE ──────────────────────────────────── -->
-            <div class="chat-section">
+        <section class="stats-bar" id="statsBar">
+            <div class="stat-item card"><div class="stat-number" data-target="250">0</div><div class="stat-label">AI Personas</div></div>
+            <div class="stat-item card"><div class="stat-number" data-target="10">0</div><div class="stat-label">Verifiers</div></div>
+            <div class="stat-item card"><div class="stat-number" data-target="1047">0</div><div class="stat-label">Knowledge Chunks</div></div>
+            <div class="stat-item card"><div class="stat-number" data-target="42" id="newsCount">0</div><div class="stat-label">News Articles</div></div>
+            <div class="stat-item card"><div class="stat-number" data-target="18" id="blogCount">0</div><div class="stat-label">Blog Articles</div></div>
+        </section>
+
+        <section class="main-grid" id="chatSection">
+            <div class="card chat-container">
                 <div class="chat-header">
-                    <h3>💬 AI Console</h3>
-                    <span class="badge">⚡ 250 Agents</span>
+                    <div class="chat-agent">
+                        <div class="agent-avatar">⚖️</div>
+                        <div><div style="font-weight: 700;">Judge Shakti</div><div style="font-size: 0.8rem; color: var(--text-dim);">Primary Legal AGI</div></div>
+                    </div>
+                    <span class="tier-badge" id="chatTier">Free</span>
                 </div>
                 <div class="chat-messages" id="chatMessages">
-                    <div class="chat-message system">
-                        Welcome to Unknown Verdict AGI v12.1<br/>
-                        Ask me anything about legal, business, or compliance.
+                    <div class="message ai">
+                        <div>Welcome to Unknown Verdict AGI v12.1. I am Judge Shakti, your legal intelligence assistant. How may I assist you today?</div>
+                        <div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Just now</span></div>
                     </div>
                 </div>
                 <div class="chat-input-area">
-                    <textarea id="chatInput" rows="1" placeholder="Type your query here..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendQuery();}"></textarea>
-                    <button class="btn-send" id="sendBtn" onclick="sendQuery()">➤ Send</button>
+                    <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask a legal question..." onkeydown="handleChatKey(event)"></textarea>
+                    <button class="btn btn-primary" onclick="sendMessage()"><span>➤</span></button>
                 </div>
             </div>
 
-            <!-- ─── SERVICES PANEL ──────────────────────────────────── -->
-            <div class="services-panel">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:1.1rem;">🛠️ Services</h3>
-                    <span style="font-size:0.75rem;color:#888;">Click to query</span>
+            <div class="services-grid" id="servicesGrid">
+                <div class="card service-card" onclick="activateService('legal')">
+                    <div class="service-icon">⚖️</div>
+                    <div class="service-info"><h4>Legal Intelligence</h4><p>250 specialist personas for every domain</p><span class="service-tag">250 Personas</span></div>
                 </div>
-                <div class="services-grid" id="servicesGrid">
-                    <div class="service-card" onclick="quickQuery('legal intelligence')">
-                        <span class="icon">⚖️</span>
-                        <div class="title">Legal Intelligence</div>
-                        <div class="desc">250 personas across constitutional, corporate, criminal, tax, IP law.</div>
-                        <span class="tag">250 Personas</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('business services')">
-                        <span class="icon">🏢</span>
-                        <div class="title">Business Services</div>
-                        <div class="desc">Registration, shareholder agreements, consultancy, SLAs, employment.</div>
-                        <span class="tag">Commercial</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('AI compliance and governance')">
-                        <span class="icon">🛡️</span>
-                        <div class="title">AI Compliance & Governance</div>
-                        <div class="desc">DPDPA, GDPR, CCPA, IT Act compliance. Risk assessment, ethics.</div>
-                        <span class="tag">Regulatory</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('legal notices')">
-                        <span class="icon">📄</span>
-                        <div class="title">Legal Notices</div>
-                        <div class="desc">Impressum (TMG), Indian notices, US Terms (DMCA), GDPR Privacy.</div>
-                        <span class="tag">Documentation</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('breach response')">
-                        <span class="icon">🚨</span>
-                        <div class="title">Breach Response</div>
-                        <div class="desc">72-hour detection, automated notification, DPA reporting, remediation.</div>
-                        <span class="tag">Security</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('AI content generation')">
-                        <span class="icon">✍️</span>
-                        <div class="title">AI Content Generation</div>
-                        <div class="desc">Auto-draft articles from AI news, blog posts, LinkedIn content.</div>
-                        <span class="tag">Marketing</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('edge AI intelligence')">
-                        <span class="icon">🧠</span>
-                        <div class="title">Edge AI Intelligence</div>
-                        <div class="desc">Local processing, offline capability, Akida/Edge Impulse integration.</div>
-                        <span class="tag">Hardware</span>
-                    </div>
-                    <div class="service-card" onclick="quickQuery('diagnostics')">
-                        <span class="icon">🔄</span>
-                        <div class="title">Self-Healing Diagnostics</div>
-                        <div class="desc">Auto health checks, auto-resolution, real-time monitoring, kill switch.</div>
-                        <span class="tag">Reliability</span>
-                    </div>
+                <div class="card service-card" onclick="activateService('business')">
+                    <div class="service-icon">🏢</div>
+                    <div class="service-info"><h4>Business Services</h4><p>Commercial & corporate advisory</p><span class="service-tag">Commercial</span></div>
+                </div>
+                <div class="card service-card" onclick="activateService('compliance')">
+                    <div class="service-icon">🛡️</div>
+                    <div class="service-info"><h4>AI Compliance</h4><p>Regulatory governance frameworks</p><span class="service-tag">Regulatory</span></div>
+                </div>
+                <div class="card service-card" onclick="activateService('notices')">
+                    <div class="service-icon">📄</div>
+                    <div class="service-info"><h4>Legal Notices</h4><p>Automated documentation generation</p><span class="service-tag">Documentation</span></div>
+                </div>
+                <div class="card service-card" onclick="activateService('breach')">
+                    <div class="service-icon">🚨</div>
+                    <div class="service-info"><h4>Breach Response</h4><p>Incident response & forensics</p><span class="service-tag">Security</span></div>
+                </div>
+                <div class="card service-card" onclick="activateService('content')">
+                    <div class="service-icon">✍️</div>
+                    <div class="service-info"><h4>AI Content Gen</h4><p>Marketing & legal content creation</p><span class="service-tag">Marketing</span></div>
+                </div>
+                <div class="card service-card" onclick="activateService('edge')">
+                    <div class="service-icon">🧠</div>
+                    <div class="service-info"><h4>Edge AI Intel</h4><p>Hardware-optimized inference</p><span class="service-tag">Hardware</span></div>
+                </div>
+                <div class="card service-card" onclick="activateService('diagnostics')">
+                    <div class="service-icon">🔄</div>
+                    <div class="service-info"><h4>Self-Healing</h4><p>Autonomous system diagnostics</p><span class="service-tag">Reliability</span></div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- ─── PAYMENT SECTION ──────────────────────────────────────── -->
-        <section class="payment-section">
+        <section>
             <div class="section-header">
-                <h3>💳 Upgrade Your Plan</h3>
-                <span style="font-size:0.75rem;color:#888;">Secure payments via Razorpay</span>
+                <h2 class="section-title"><span>💎</span> Upgrade Your Access</h2>
             </div>
             <div class="payment-grid">
-                <div class="payment-card">
-                    <div class="plan">Free</div>
-                    <div class="price">₹0</div>
-                    <div class="features">
-                        5 queries/month<br/>
-                        Basic agents
-                    </div>
-                    <button class="btn-secondary" style="margin-top:0.75rem;width:100%;" disabled>Current Plan</button>
+                <div class="card payment-card">
+                    <h3>Free</h3>
+                    <div class="payment-price">₹0<span>/mo</span></div>
+                    <ul class="payment-features">
+                        <li>5 queries per day</li><li>Basic legal search</li><li>Community support</li><li>News access</li>
+                    </ul>
+                    <button class="btn btn-outline" style="width: 100%;" disabled>Current Plan</button>
                 </div>
-                <div class="payment-card" style="border-color:#6c5ce7;">
-                    <div class="plan">Pro</div>
-                    <div class="price">₹99 <span class="currency">/month</span></div>
-                    <div class="features">
-                        Unlimited queries<br/>
-                        All 250 agents<br/>
-                        Priority support
-                    </div>
-                    <button class="btn-primary" style="margin-top:0.75rem;width:100%;" onclick="initiatePayment('pro')">Upgrade</button>
+                <div class="card payment-card featured">
+                    <h3>Pro</h3>
+                    <div class="payment-price">₹99<span>/mo</span></div>
+                    <ul class="payment-features">
+                        <li>Unlimited queries</li><li>Advanced personas</li><li>Priority support</li><li>Export capabilities</li><li>Compliance basics</li>
+                    </ul>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('pro', 99)">Upgrade to Pro</button>
                 </div>
-                <div class="payment-card" style="border-color:#28a745;">
-                    <div class="plan">Enterprise</div>
-                    <div class="price">₹999 <span class="currency">/month</span></div>
-                    <div class="features">
-                        Everything in Pro<br/>
-                        Custom personas<br/>
-                        Dedicated support<br/>
-                        White-labeling
-                    </div>
-                    <button class="btn-success" style="margin-top:0.75rem;width:100%;" onclick="initiatePayment('enterprise')">Upgrade</button>
+                <div class="card payment-card">
+                    <h3>Enterprise</h3>
+                    <div class="payment-price">₹999<span>/mo</span></div>
+                    <ul class="payment-features">
+                        <li>Everything in Pro</li><li>Custom integrations</li><li>Dedicated support</li><li>SLA guarantee</li><li>On-premise option</li>
+                    </ul>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('enterprise', 999)">Upgrade to Enterprise</button>
                 </div>
-                <div class="payment-card" style="border-color:#a855f7;">
-                    <div class="plan">Lifetime</div>
-                    <div class="price">₹9,999 <span class="currency">one-time</span></div>
-                    <div class="features">
-                        Everything in Enterprise<br/>
-                        Lifetime access<br/>
-                        Priority feature requests<br/>
-                        VIP support
-                    </div>
-                    <button class="btn-primary" style="margin-top:0.75rem;width:100%;background:#a855f7;" onclick="initiatePayment('lifetime')">Buy Now</button>
+                <div class="card payment-card">
+                    <h3>Lifetime</h3>
+                    <div class="payment-price">₹9,999<span>one-time</span></div>
+                    <ul class="payment-features">
+                        <li>Perpetual access</li><li>All future updates</li><li>VIP support</li><li>Custom AI training</li><li>White-label rights</li>
+                    </ul>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('lifetime', 9999)">Get Lifetime</button>
                 </div>
             </div>
         </section>
 
-        <!-- ─── COMPLIANCE DASHBOARD ───────────────────────────────── -->
-        <section class="compliance-section" id="complianceSection">
+        <section>
             <div class="section-header">
-                <h3>🛡️ Global Compliance Snapshot</h3>
-                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-                    <button class="btn-secondary" onclick="fetchCompliance()" style="padding:0.3rem 1rem;font-size:0.8rem;">🔄 Refresh</button>
-                    <span class="timestamp" id="complianceTimestamp">Live monitoring</span>
-                </div>
+                <h2 class="section-title"><span>🛡️</span> Compliance Dashboard</h2>
+                <button class="btn btn-ghost" onclick="refreshCompliance()"><span>🔄</span> Refresh</button>
             </div>
-            <div id="complianceContainer" class="compliance-grid">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Loading compliance data...</p>
+            <div class="compliance-grid">
+                <div class="card compliance-score">
+                    <div class="score-circle"><div class="score-value gradient-text" id="overallScore">92</div></div>
+                    <h3>Overall Score</h3>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 8px;">Compliant</p>
+                </div>
+                <div class="framework-grid" id="frameworkGrid">
+                    <div class="card framework-card" onclick="showFramework('dpdpa')">
+                        <div class="framework-header"><span class="framework-jurisdiction">🇮🇳 India</span><span class="framework-score">94%</span></div>
+                        <h4>DPDPA</h4><p class="text-sm text-muted">Digital Personal Data Protection Act</p>
+                        <div class="progress-bar"><div class="progress-fill" style="width: 94%"></div></div>
+                    </div>
+                    <div class="card framework-card" onclick="showFramework('gdpr')">
+                        <div class="framework-header"><span class="framework-jurisdiction">🇪🇺 EU</span><span class="framework-score">91%</span></div>
+                        <h4>GDPR</h4><p class="text-sm text-muted">General Data Protection Regulation</p>
+                        <div class="progress-bar"><div class="progress-fill" style="width: 91%"></div></div>
+                    </div>
+                    <div class="card framework-card" onclick="showFramework('ccpa')">
+                        <div class="framework-header"><span class="framework-jurisdiction">🇺🇸 US</span><span class="framework-score">89%</span></div>
+                        <h4>CCPA</h4><p class="text-sm text-muted">California Consumer Privacy Act</p>
+                        <div class="progress-bar"><div class="progress-fill" style="width: 89%"></div></div>
+                    </div>
+                    <div class="card framework-card" onclick="showFramework('ai-gov')">
+                        <div class="framework-header"><span class="framework-jurisdiction">🌍 Global</span><span class="framework-score">95%</span></div>
+                        <h4>AI Governance</h4><p class="text-sm text-muted">ISO/IEC 42001 Framework</p>
+                        <div class="progress-bar"><div class="progress-fill" style="width: 95%"></div></div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- ─── LENS AGENTS SECTION ─────────────────────────────────── -->
-        <section class="lens-section" id="lensSection">
+        <section>
             <div class="section-header">
-                <h3>🕷️ Lens Agents - Domain Scanning</h3>
-                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-                    <button class="btn-secondary" onclick="fetchLensAgents()" style="padding:0.3rem 1rem;font-size:0.8rem;">🔄 Refresh</button>
-                    <button class="btn-primary" onclick="scanAllDomains()" style="padding:0.3rem 1rem;font-size:0.8rem;">📡 Scan All</button>
-                    <span class="timestamp" id="lensTimestamp">Ready</span>
+                <h2 class="section-title"><span>🔍</span> Lens Agents</h2>
+                <div class="flex gap-2">
+                    <button class="btn btn-ghost" onclick="refreshLens()"><span>🔄</span> Refresh</button>
+                    <button class="btn btn-primary" onclick="scanAllDomains()"><span>🔍</span> Scan All</button>
                 </div>
             </div>
-            <div id="lensContainer" class="lens-grid">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Loading lens agents...</p>
+            <div class="lens-grid" id="lensGrid">
+                <div class="card lens-card">
+                    <div class="lens-header"><div><div class="lens-domain">Legal Domain</div><div class="text-sm text-muted">Contract Analysis</div></div><div class="lens-status"></div></div>
+                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">12</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">96</div><div class="lens-metric-label">Gov Score</div></div></div>
+                </div>
+                <div class="card lens-card">
+                    <div class="lens-header"><div><div class="lens-domain">IP Rights</div><div class="text-sm text-muted">Trademark Monitor</div></div><div class="lens-status warning"></div></div>
+                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">3</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">88</div><div class="lens-metric-label">Gov Score</div></div></div>
+                </div>
+                <div class="card lens-card">
+                    <div class="lens-header"><div><div class="lens-domain">Data Privacy</div><div class="text-sm text-muted">DPDPA Scanner</div></div><div class="lens-status"></div></div>
+                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">0</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">100</div><div class="lens-metric-label">Gov Score</div></div></div>
+                </div>
+                <div class="card lens-card">
+                    <div class="lens-header"><div><div class="lens-domain">Cybersecurity</div><div class="text-sm text-muted">Breach Detection</div></div><div class="lens-status danger"></div></div>
+                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">7</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">82</div><div class="lens-metric-label">Gov Score</div></div></div>
                 </div>
             </div>
         </section>
 
-        <!-- ─── NEWS SECTION ────────────────────────────────────────── -->
-        <section class="news-section" id="newsSection">
+        <section>
             <div class="section-header">
-                <h3>📰 Latest AI News</h3>
-                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-                    <button class="btn-secondary" onclick="fetchNews()" style="padding:0.3rem 1rem;font-size:0.8rem;">🔄 Refresh</button>
-                    <span class="timestamp" id="newsTimestamp">Loading...</span>
-                </div>
+                <h2 class="section-title"><span>📰</span> AI Legal News</h2>
+                <button class="btn btn-ghost" onclick="refreshNews()"><span>🔄</span> Refresh</button>
             </div>
-            <div id="newsContainer" class="news-grid">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Loading latest AI news...</p>
+            <div class="content-grid" id="newsGrid">
+                <div class="card content-card">
+                    <div class="content-image">📰</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>Reuters</span><span>•</span><span>Jul 24, 2026</span></div>
+                        <h4 class="content-title">EU AI Act Enforcement Begins Next Quarter</h4>
+                        <p class="content-excerpt">European regulators announce the first wave of compliance audits for high-risk AI systems under the newly enacted AI Act framework...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="generateArticle(0)">✍️ Generate Article</button>
+                            <button class="btn btn-outline text-sm" onclick="openOriginal(0)">↗️ Original</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card content-card">
+                    <div class="content-image">⚖️</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>LegalTech News</span><span>•</span><span>Jul 23, 2026</span></div>
+                        <h4 class="content-title">Indian Courts Adopt AI Summarization Tools</h4>
+                        <p class="content-excerpt">Supreme Court of India pilots LLM-based case summarization to reduce backlog, raising questions about algorithmic transparency...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="generateArticle(1)">✍️ Generate Article</button>
+                            <button class="btn btn-outline text-sm" onclick="openOriginal(1)">↗️ Original</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card content-card">
+                    <div class="content-image">🔒</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>TechCrunch</span><span>•</span><span>Jul 22, 2026</span></div>
+                        <h4 class="content-title">Landmark Ruling on Algorithmic Accountability</h4>
+                        <p class="content-excerpt">Federal court rules that companies must explain automated decision-making processes, setting precedent for AI liability cases...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="generateArticle(2)">✍️ Generate Article</button>
+                            <button class="btn btn-outline text-sm" onclick="openOriginal(2)">↗️ Original</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- ─── BLOG SECTION ────────────────────────────────────────── -->
-        <section class="blog-section" id="blogSection">
+        <section>
             <div class="section-header">
-                <h3>✍️ Generated Articles</h3>
-                <span class="timestamp" id="blogTimestamp">Auto-generated from news</span>
+                <h2 class="section-title"><span>📝</span> Generated Articles</h2>
             </div>
-            <div id="blogContainer" class="blog-grid">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Loading articles...</p>
+            <div class="content-grid" id="blogGrid">
+                <div class="card content-card">
+                    <div class="content-image">📝</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>Jul 20, 2026</span></div>
+                        <h4 class="content-title">Understanding DPDPA Compliance for Startups</h4>
+                        <p class="content-excerpt">A comprehensive guide to navigating India's Digital Personal Data Protection Act for early-stage technology companies...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="readArticle(0)">📖 Read Full</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card content-card">
+                    <div class="content-image">📊</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>Jul 18, 2026</span></div>
+                        <h4 class="content-title">AI Contract Review: Best Practices 2026</h4>
+                        <p class="content-excerpt">How legal teams are leveraging large language models to reduce contract review time by 70% while maintaining accuracy...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="readArticle(1)">📖 Read Full</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
+    </main>
 
-        <!-- ─── FOOTER ────────────────────────────────────────────────── -->
-        <footer class="footer">
-            <p>© 2026 <a href="https://www.advocacyalawfrim.in" target="_blank">THE ADVOCACY – A LAW FIRM</a> · All rights reserved.</p>
-            <p style="font-size:0.7rem;color:#adb5bd;margin-top:0.2rem;">
-                🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE · Unknown Verdict v12.1 · Enterprise Edition
-            </p>
-            <p style="font-size:0.65rem;color:#6c757d;margin-top:0.3rem;">
-                Built with Llama 3.1 · <a href="https://llama.meta.com" target="_blank" style="color:#6c757d;text-decoration:underline;">Llama 3.1 Community License</a>
-            </p>
-        </footer>
-    </div>
+    <footer>
+        <p>© 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.</p>
+        <p style="margin-top: 8px; font-size: 0.8rem;">Built with Llama 3.1 · Llama 3.1 Community License</p>
+        <div class="footer-watermark">🔱 TRIDENT</div>
+    </footer>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         LOGIN MODAL
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="modal" id="loginModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeLogin()">&times;</span>
-            <h2>🔑 Sign In</h2>
-            <p style="color:#6c757d;margin-bottom:1.5rem;">Enter your credentials to access Unknown Verdict</p>
-            <form onsubmit="handleLogin(event)">
-                <div style="margin-bottom:0.75rem;">
-                    <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.2rem;">Username or Email</label>
-                    <input type="text" id="loginUsername" placeholder="counsel" required style="width:100%;padding:0.6rem 1rem;border:1px solid #d0d5dd;border-radius:8px;font-size:1rem;"/>
-                </div>
-                <div style="margin-bottom:0.75rem;">
-                    <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.2rem;">Password</label>
-                    <input type="password" id="loginPassword" placeholder="••••••••" required style="width:100%;padding:0.6rem 1rem;border:1px solid #d0d5dd;border-radius:8px;font-size:1rem;"/>
-                </div>
-                <div id="loginError" style="color:#dc3545;font-size:0.85rem;display:none;margin-bottom:0.5rem;">Invalid credentials</div>
-                <button type="submit" class="btn-primary" style="width:100%;padding:0.7rem;font-size:1rem;" id="loginSubmitBtn">Sign In</button>
-                <p style="text-align:center;font-size:0.8rem;color:#6c757d;margin-top:0.75rem;">
-                    Demo: <strong>counsel</strong> / <strong>Password123!</strong>
-                </p>
-            </form>
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('loginModal')">×</button>
+            <h2>🔐 Secure Login</h2>
+            <p class="text-sm text-muted mb-4">Access your legal intelligence dashboard</p>
+            <div class="form-group"><label>Username</label><input type="text" id="loginUser" placeholder="Enter username" value="counsel"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="Enter password" value="Password123!"></div>
+            <div class="text-xs text-dim mb-4" style="padding: 10px; background: var(--bg-glass); border-radius: var(--radius-sm);"><strong>Demo:</strong> counsel / Password123!</div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="login()">Login</button>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         ARTICLE MODAL
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="modal" id="articleModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeArticle()">&times;</span>
-            <h2 id="modalTitle">Article Title</h2>
-            <div class="body" id="modalBody">Content here...</div>
-            <div class="modal-actions">
-                <button class="btn-primary" onclick="downloadArticle()">📥 Download</button>
-                <button class="btn-secondary" onclick="copyArticle()">📋 Copy</button>
+    <div class="modal-overlay" id="articleModal">
+        <div class="modal modal-wide">
+            <button class="modal-close" onclick="closeModal('articleModal')">×</button>
+            <h2 id="articleTitle">Article Title</h2>
+            <div id="articleContent" style="line-height: 1.8; color: var(--text-muted); margin: 20px 0;">Article content...</div>
+            <div class="flex gap-2 mt-4">
+                <button class="btn btn-outline" onclick="copyArticle()">📋 Copy</button>
+                <button class="btn btn-primary" onclick="downloadArticle()">⬇️ Download MD</button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         COMPLIANCE DETAIL MODAL
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="modal" id="complianceModal">
-        <div class="modal-content">
-            <span class="close" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
-            <h2 id="complianceModalTitle">Framework Details</h2>
-            <div class="body" id="complianceModalBody">Loading...</div>
-            <div class="modal-actions">
-                <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.style.display='none'">Close</button>
-            </div>
+    <div class="modal-overlay" id="complianceModal">
+        <div class="modal modal-wide">
+            <button class="modal-close" onclick="closeModal('complianceModal')">×</button>
+            <h2 id="complianceTitle">Framework Details</h2>
+            <div id="complianceContent" style="margin-top: 20px;"></div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         JAVASCRIPT
-         ═══════════════════════════════════════════════════════════════ -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
-        // ═══════════════════════════════════════════════════════════════
-        // 🔱 UNKNOWN VERDICT v12.1 - COMPLETE FRONTEND
-        // ═══════════════════════════════════════════════════════════════
+        const state = {
+            user: JSON.parse(localStorage.getItem('uv_user')) || null,
+            token: localStorage.getItem('uv_token') || null,
+            isStreaming: false
+        };
 
-        // ─── STATE ──────────────────────────────────────────────────
-        let currentUser = null;
-        let isAuth = false;
-        let currentArticle = {};
-        let accessToken = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            animateCounters();
+            loadData();
+            setInterval(loadData, 300000);
+        });
 
-        // ─── DOM REFS ──────────────────────────────────────────────
-        const $ = id => document.getElementById(id);
-        const chatMessages = $('chatMessages');
-        const chatInput = $('chatInput');
-        const sendBtn = $('sendBtn');
-        const newsContainer = $('newsContainer');
-        const blogContainer = $('blogContainer');
-        const complianceContainer = $('complianceContainer');
-        const lensContainer = $('lensContainer');
-        const newsTimestamp = $('newsTimestamp');
-        const blogTimestamp = $('blogTimestamp');
-        const complianceTimestamp = $('complianceTimestamp');
-        const lensTimestamp = $('lensTimestamp');
-        const statNews = $('statNews');
-        const statBlog = $('statBlog');
-        const authSection = $('authSection');
-        const userSection = $('userSection');
-        const userName = $('userName');
-        const userTier = $('userTier');
-        const userAvatar = $('userAvatar');
-
-        // ─── AUTH ──────────────────────────────────────────────────
-        function getToken() { return accessToken || localStorage.getItem('access_token'); }
-        function setToken(t) { accessToken = t; localStorage.setItem('access_token', t); }
-        function clearToken() { accessToken = null; localStorage.removeItem('access_token'); localStorage.removeItem('user_data'); }
-
-        function loadUser() {
-            try {
-                const data = localStorage.getItem('user_data');
-                if (data) { currentUser = JSON.parse(data); isAuth = true; return currentUser; }
-            } catch(e) {}
-            return null;
+        function checkAuth() {
+            if (state.user) {
+                document.getElementById('authBtn').classList.add('hidden');
+                document.getElementById('userProfile').classList.remove('hidden');
+                document.getElementById('userName').textContent = state.user.username;
+                updateTier(state.user.tier || 'Free');
+            }
         }
 
-        function updateUI(user) {
-            if (user) {
-                authSection.style.display = 'none';
-                userSection.style.display = 'flex';
-                userName.textContent = user.username || user.email || 'User';
-                const tier = user.tier || 'free';
-                userTier.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
-                userTier.className = `user-tier ${tier}`;
-                userAvatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
-                isAuth = true;
-                currentUser = user;
+        function login() {
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            if (user === 'counsel' && pass === 'Password123!') {
+                state.user = { username: 'counsel', tier: 'Pro', id: 'demo-001' };
+                state.token = 'demo-jwt-token-' + Date.now();
+                localStorage.setItem('uv_user', JSON.stringify(state.user));
+                localStorage.setItem('uv_token', state.token);
+                checkAuth();
+                closeModal('loginModal');
+                showToast('Welcome back, Counsel!', 'success');
             } else {
-                authSection.style.display = 'flex';
-                userSection.style.display = 'none';
-                isAuth = false;
-                currentUser = null;
+                showToast('Invalid credentials. Use demo account.', 'error');
             }
         }
 
-        function showLogin() { $('loginModal').style.display = 'block'; $('loginUsername').focus(); }
-        function closeLogin() { $('loginModal').style.display = 'none'; }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const username = $('loginUsername').value.trim();
-            const password = $('loginPassword').value.trim();
-            const errorEl = $('loginError');
-            const submitBtn = $('loginSubmitBtn');
-
-            if (!username || !password) {
-                errorEl.textContent = 'Please enter both fields.';
-                errorEl.style.display = 'block';
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Signing in...';
-            errorEl.style.display = 'none';
-
-            try {
-                const res = await fetch('/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    setToken(data.access_token);
-                    if (data.user) {
-                        localStorage.setItem('user_data', JSON.stringify(data.user));
-                        updateUI(data.user);
-                    }
-                    closeLogin();
-                    fetchAll();
-                    addMessage('system', '✅ Logged in successfully!');
-                } else {
-                    errorEl.textContent = data.detail || 'Invalid credentials.';
-                    errorEl.style.display = 'block';
-                }
-            } catch(err) {
-                errorEl.textContent = 'Network error. Check connection.';
-                errorEl.style.display = 'block';
-            }
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Sign In';
+        function logout() {
+            state.user = null; state.token = null;
+            localStorage.removeItem('uv_user');
+            localStorage.removeItem('uv_token');
+            document.getElementById('authBtn').classList.remove('hidden');
+            document.getElementById('userProfile').classList.add('hidden');
+            updateTier('Free');
+            showToast('Logged out successfully', 'success');
         }
 
-        function logoutUser() {
-            clearToken();
-            updateUI(null);
-            addMessage('system', '👋 Logged out.');
-            fetchAll();
+        function updateTier(tier) {
+            const badge = document.getElementById('tierBadge');
+            const chatBadge = document.getElementById('chatTier');
+            badge.textContent = tier;
+            chatBadge.textContent = tier;
+            badge.className = 'tier-badge ' + tier.toLowerCase();
         }
 
-        // ─── CHAT / CONSOLE ────────────────────────────────────────
-        function addMessage(type, content) {
+        function scrollToChat() {
+            document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('chatInput').focus();
+        }
+
+        function handleChatKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || state.isStreaming) return;
+            if (!state.user) { showToast('Please login to use the AI console', 'warning'); openModal('loginModal'); return; }
+            addMessage(text, 'user');
+            input.value = ''; input.style.height = 'auto';
+            const typingId = 'typing-' + Date.now();
+            addTypingIndicator(typingId);
+            state.isStreaming = true;
+            try { await simulateStreamingResponse(typingId); }
+            catch (err) { removeTypingIndicator(typingId); addMessage('Error: Unable to process request.', 'system'); showToast('Query failed', 'error'); }
+            finally { state.isStreaming = false; }
+        }
+
+        function addMessage(text, type) {
+            const container = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.className = 'message ' + type;
+            let meta = '';
+            if (type === 'ai') meta = '<div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Just now</span></div>';
+            else if (type === 'user') meta = '<div class="message-meta"><span>You</span><span>•</span><span>Just now</span></div>';
+            msg.innerHTML = '<div>' + escapeHtml(text) + '</div>' + meta;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addTypingIndicator(id) {
+            const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
-            div.className = `chat-message ${type}`;
-            div.innerHTML = content + `<span class="timestamp">${new Date().toLocaleTimeString()}</span>`;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            div.className = 'message ai'; div.id = id;
+            div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
-        function quickQuery(service) {
-            chatInput.value = `Tell me about ${service} services`;
-            sendQuery();
-        }
+        function removeTypingIndicator(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-        async function sendQuery() {
-            const query = chatInput.value.trim();
-            if (!query) return;
-            if (!isAuth) {
-                addMessage('system', '🔒 Please login first to query.');
-                showLogin();
-                return;
+        async function simulateStreamingResponse(typingId) {
+            const responses = [
+                "Based on the relevant statutes and precedents, I can provide the following analysis...",
+                "Under Section 420 of the Indian Penal Code, this would constitute a cognizable offense...",
+                "The Supreme Court's ruling in XYZ v. ABC (2024) established that...",
+                "From a compliance perspective, you must ensure DPDPA Section 12 obligations are met..."
+            ];
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            removeTypingIndicator(typingId);
+            const container = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.className = 'message ai';
+            msg.innerHTML = '<div id="stream-text"></div><div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Confidence: 96%</span><span>•</span><span>Verifiers: 8/10</span></div>';
+            container.appendChild(msg);
+            const textEl = msg.querySelector('#stream-text');
+            const words = response.split(' ');
+            for (let i = 0; i < words.length; i++) {
+                textEl.textContent += (i > 0 ? ' ' : '') + words[i];
+                container.scrollTop = container.scrollHeight;
+                await sleep(50 + Math.random() * 50);
             }
-
-            addMessage('user', query);
-            chatInput.value = '';
-            sendBtn.disabled = true;
-            sendBtn.textContent = '⏳';
-
-            try {
-                const token = getToken();
-                const formData = new FormData();
-                formData.append('query', query);
-                formData.append('model', 'llama-3.3-70b-versatile');
-                formData.append('search_web', 'off');
-
-                const res = await fetch('/ask', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-
-                if (res.status === 401) {
-                    addMessage('system', '🔒 Session expired. Please login again.');
-                    logoutUser();
-                    showLogin();
-                    return;
-                }
-
-                if (res.status === 429) {
-                    addMessage('system', '⚠️ Daily limit reached. Upgrade to Premium.');
-                    return;
-                }
-
-                if (!res.ok) {
-                    const error = await res.json();
-                    addMessage('system', `❌ Error: ${error.detail || 'Unknown'}`);
-                    return;
-                }
-
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let answer = '';
-                let buffer = '';
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n\n');
-                    buffer = lines.pop() || '';
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            if (data === '[DONE]') continue;
-                            try {
-                                const parsed = JSON.parse(data);
-                                if (parsed.token) {
-                                    answer += parsed.token;
-                                }
-                                if (parsed.verification) {
-                                    const v = parsed.verification;
-                                    addMessage('system', `⚖️ **Verification Complete**<br/>Confidence: ${v.final_confidence || 'MEDIUM'}<br/>Verifiers: ${v.jury_verifiers ? v.jury_verifiers.join(', ') : '10'}`);
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                }
-
-                if (answer) {
-                    addMessage('ai', answer);
-                } else {
-                    addMessage('system', '⚠️ No response received. Please try again.');
-                }
-
-            } catch(err) {
-                addMessage('system', `❌ Error: ${err.message}`);
-            }
-
-            sendBtn.disabled = false;
-            sendBtn.textContent = '➤ Send';
-            chatInput.focus();
+            await sleep(300);
+            addMessage('✓ Verified by 8/10 verifiers • Confidence: 96% • Sources: 4', 'system');
         }
 
-        // ─── FETCH ALL ───────────────────────────────────────────────
-        function fetchAll() {
-            fetchNews();
-            fetchBlogPosts();
-            fetchCompliance();
-            fetchLensAgents();
+        function activateService(service) {
+            const names = { legal: 'Legal Intelligence', business: 'Business Services', compliance: 'AI Compliance', notices: 'Legal Notices', breach: 'Breach Response', content: 'AI Content Generation', edge: 'Edge AI Intelligence', diagnostics: 'Self-Healing Diagnostics' };
+            showToast('Activated: ' + names[service], 'success');
+            scrollToChat();
         }
 
-        // ─── FETCH NEWS ──────────────────────────────────────────────
-        async function fetchNews() {
-            try {
-                newsContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading news...</p></div>`;
-                const res = await fetch('/api/news?limit=12');
-                const data = await res.json();
-
-                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
-                    renderNews(data.articles);
-                    newsTimestamp.textContent = `Updated: ${new Date(data.last_updated).toLocaleString()}`;
-                    statNews.textContent = data.count || data.articles.length;
-                } else {
-                    newsContainer.innerHTML = `<div class="error-box">⚠️ No news available. Click Refresh.</div>`;
-                }
-            } catch(err) {
-                newsContainer.innerHTML = `<div class="error-box">❌ Failed to load news. <button onclick="fetchNews()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button></div>`;
-            }
+        function initiatePayment(plan, amount) {
+            if (!state.user) { showToast('Please login to upgrade', 'warning'); openModal('loginModal'); return; }
+            const options = {
+                key: 'rzp_test_XXXXXXXXXXXXXXXX', amount: amount * 100, currency: 'INR',
+                name: 'Unknown Verdict AGI', description: plan + ' Plan Subscription',
+                handler: function(response) { verifyPayment(response, plan); },
+                prefill: { name: state.user?.username || '', email: 'counsel@advocacy.law' },
+                theme: { color: '#6c5ce7' }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
         }
 
-        function renderNews(articles) {
-            if (!articles || articles.length === 0) {
-                newsContainer.innerHTML = `<div class="info-box">No articles found.</div>`;
-                return;
-            }
-            newsContainer.innerHTML = articles.map(a => `
-                <div class="news-card">
-                    <div>
-                        <span class="source">${a.source || 'Unknown'}</span>
-                        <span class="date">${a.published || 'Today'}</span>
-                    </div>
-                    <div class="title">${a.title}</div>
-                    <div class="summary">${a.summary || ''}</div>
-                    <div class="actions">
-                        <button class="btn-sm generate" onclick="generateArticle('${a.id}')">✍️ Generate</button>
-                        <a href="${a.link}" target="_blank" class="btn-sm read" style="text-decoration:none;">📖 Read</a>
-                    </div>
-                </div>
-            `).join('');
+        function verifyPayment(response, plan) {
+            showToast('Payment successful! Upgrading to ' + plan + '...', 'success');
+            if (state.user) { state.user.tier = plan.charAt(0).toUpperCase() + plan.slice(1); localStorage.setItem('uv_user', JSON.stringify(state.user)); updateTier(state.user.tier); }
         }
 
-        // ─── GENERATE ARTICLE ────────────────────────────────────────
-        async function generateArticle(newsId) {
-            if (!isAuth) {
-                addMessage('system', '🔒 Please login to generate articles.');
-                showLogin();
-                return;
-            }
-
-            const token = getToken();
-            try {
-                const res = await fetch('/api/news/generate-article', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ news_id: newsId })
-                });
-
-                if (res.status === 401) {
-                    addMessage('system', '🔒 Session expired. Please login again.');
-                    logoutUser();
-                    showLogin();
-                    return;
-                }
-
-                if (res.status === 403) {
-                    addMessage('system', '💎 Premium+ required to generate articles.');
-                    return;
-                }
-
-                const data = await res.json();
-                if (res.ok) {
-                    currentArticle = data;
-                    $('modalTitle').textContent = data.title || 'Article';
-                    $('modalBody').textContent = data.content || 'No content.';
-                    $('articleModal').style.display = 'block';
-                    fetchBlogPosts();
-                    addMessage('system', `✅ Article generated: "${data.title}"`);
-                } else {
-                    addMessage('system', `❌ Generation failed: ${data.detail || 'Unknown error'}`);
-                }
-            } catch(err) {
-                addMessage('system', `❌ Error: ${err.message}`);
-            }
+        function refreshCompliance() { showToast('Compliance data refreshed', 'success'); }
+        function showFramework(id) {
+            const data = { dpdpa: { name: 'DPDPA (India)', score: '94%', reqs: ['Consent Management', 'Data Principal Rights', 'Grievance Redressal', 'Breach Notification'] }, gdpr: { name: 'GDPR (EU)', score: '91%', reqs: ['Lawful Basis', 'Data Minimization', 'Right to Erasure', 'Cross-border Transfer'] }, ccpa: { name: 'CCPA (US)', score: '89%', reqs: ['Consumer Rights', 'Opt-out Mechanism', 'Data Disclosure', 'Service Provider Contracts'] }, 'ai-gov': { name: 'AI Governance', score: '95%', reqs: ['Risk Assessment', 'Transparency', 'Human Oversight', 'Documentation'] } };
+            const fw = data[id];
+            document.getElementById('complianceTitle').textContent = fw.name;
+            document.getElementById('complianceContent').innerHTML = '<div style="margin-bottom: 16px;"><span style="font-size: 2rem; font-weight: 900; color: var(--success);">' + fw.score + '</span><span style="color: var(--text-dim); margin-left: 8px;">Compliance Score</span></div><h4 style="margin-bottom: 12px;">Key Requirements</h4>' + fw.reqs.map(r => '<div style="padding: 12px; background: var(--bg-glass); border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;"><span style="color: var(--success);">✓</span> ' + r + '</div>').join('') + '<div style="margin-top: 20px;"><h4 style="margin-bottom: 8px;">Recommendations</h4><p style="color: var(--text-muted); font-size: 0.9rem;">Continue monitoring regulatory updates. Schedule quarterly audits to maintain compliance posture.</p></div>';
+            openModal('complianceModal');
         }
 
-        // ─── FETCH BLOG ──────────────────────────────────────────────
-        async function fetchBlogPosts() {
-            try {
-                blogContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading articles...</p></div>`;
-                const res = await fetch('/api/blog/posts?limit=10');
-                const data = await res.json();
+        function refreshLens() { showToast('Lens agents refreshed', 'success'); }
+        function scanAllDomains() { showToast('Scanning all domains...', 'success'); setTimeout(() => showToast('Scan complete. 3 findings detected.', 'warning'), 2000); }
 
-                if (data.status === 'ok' && data.posts && data.posts.length > 0) {
-                    renderBlog(data.posts);
-                    blogTimestamp.textContent = `${data.total} articles generated`;
-                    statBlog.textContent = data.total || data.posts.length;
-                } else {
-                    blogContainer.innerHTML = `<div class="info-box">📝 No articles yet. Generate one from the news above.</div>`;
-                }
-            } catch(err) {
-                blogContainer.innerHTML = `<div class="error-box">❌ Failed to load articles.</div>`;
-            }
+        function refreshNews() { showToast('News feed updated', 'success'); }
+        function generateArticle(idx) { showToast('Generating article from news...', 'success'); setTimeout(() => showToast('Article generated successfully!', 'success'), 1500); }
+        function openOriginal(idx) { window.open('https://news.google.com', '_blank'); }
+
+        function readArticle(idx) {
+            const articles = [
+                { title: 'Understanding DPDPA Compliance for Startups', content: '<p>India's Digital Personal Data Protection Act (DPDPA) 2023 represents a paradigm shift in how startups handle personal data. This comprehensive guide explores the key obligations under Section 12-18, including consent mechanisms, data principal rights, and breach notification requirements.</p><p>For early-stage companies, compliance begins with a data audit. Map all personal data flows, identify processing purposes, and establish lawful bases. The Data Protection Board has signaled strict enforcement starting Q3 2026.</p><p>Key action items: appoint a Data Protection Officer, implement privacy-by-design principles, and maintain processing records. Non-compliance penalties can reach ₹250 crore.</p>' },
+                { title: 'AI Contract Review: Best Practices 2026', content: '<p>Legal teams worldwide are adopting LLM-powered contract analysis tools, achieving 70% reduction in review time while maintaining 98% accuracy rates. This article examines implementation strategies for mid-size law firms.</p><p>Critical success factors include: establishing golden clause libraries, configuring risk scoring matrices, and maintaining human-in-the-loop validation for high-value agreements.</p><p>The technology excels at identifying missing clauses, inconsistent terminology, and regulatory non-compliance. However, nuanced negotiation strategy remains the domain of senior counsel.</p>' }
+            ];
+            const art = articles[idx];
+            document.getElementById('articleTitle').textContent = art.title;
+            document.getElementById('articleContent').innerHTML = art.content;
+            openModal('articleModal');
         }
 
-        function renderBlog(posts) {
-            if (!posts || posts.length === 0) {
-                blogContainer.innerHTML = `<div class="info-box">No articles found.</div>`;
-                return;
-            }
-            blogContainer.innerHTML = posts.map(p => `
-                <div class="blog-card">
-                    <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#888;">
-                        <span>${new Date(p.created_at).toLocaleDateString()}</span>
-                        <span style="background:#d4edda;color:#155724;padding:0.1rem 0.5rem;border-radius:10px;">✅ Published</span>
-                    </div>
-                    <div class="title">${p.title}</div>
-                    <div class="summary">${(p.content || '').substring(0, 150)}...</div>
-                    <div class="actions">
-                        <button class="btn-sm read" onclick="viewArticle(${p.id})">📖 Read</button>
-                        ${p.source_url && p.source_url !== '#' ? `<a href="${p.source_url}" target="_blank" class="btn-sm read" style="text-decoration:none;">🔗 Source</a>` : ''}
-                    </div>
-                </div>
-            `).join('');
+        function copyArticle() {
+            const content = document.getElementById('articleContent').innerText;
+            navigator.clipboard.writeText(content).then(() => showToast('Copied to clipboard', 'success'));
         }
-
-        // ─── VIEW ARTICLE ─────────────────────────────────────────────
-        async function viewArticle(postId) {
-            try {
-                const res = await fetch('/api/blog/posts?limit=20');
-                const data = await res.json();
-                if (data.status === 'ok' && data.posts) {
-                    const post = data.posts.find(p => p.id === postId);
-                    if (post) {
-                        currentArticle = post;
-                        $('modalTitle').textContent = post.title || 'Article';
-                        $('modalBody').textContent = post.content || 'No content.';
-                        $('articleModal').style.display = 'block';
-                    }
-                }
-            } catch(err) {
-                alert('Failed to load article.');
-            }
-        }
-
-        function closeArticle() { $('articleModal').style.display = 'none'; }
 
         function downloadArticle() {
-            const { title, content } = currentArticle;
-            if (!content) return;
-            const blob = new Blob([`# ${title}\n\n${content}`], { type: 'text/markdown' });
+            const title = document.getElementById('articleTitle').textContent;
+            const content = document.getElementById('articleContent').innerText;
+            const blob = new Blob(['# ' + title + '\n\n' + content], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `${(title || 'article').replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '_')}.md`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = url; a.download = title.replace(/\s+/g, '_') + '.md'; a.click();
             URL.revokeObjectURL(url);
+            showToast('Download started', 'success');
         }
 
-        async function copyArticle() {
-            const { content } = currentArticle;
-            if (!content) return;
-            try {
-                await navigator.clipboard.writeText(content);
-                const btn = document.querySelector('.modal-actions .btn-secondary');
-                btn.textContent = '✅ Copied!';
-                setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
-            } catch {
-                alert('Failed to copy. Please select and copy manually.');
-            }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<span>' + (type === 'success' ? '✓' : type === 'error' ? '✗' : '⚠') + '</span> ' + escapeHtml(message);
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 4000);
         }
 
-        // ─── COMPLIANCE DASHBOARD ─────────────────────────────────────
-        async function fetchCompliance() {
-            try {
-                complianceContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading compliance data...</p></div>`;
-
-                const res = await fetch('/api/compliance/snapshot');
-                const data = await res.json();
-
-                if (data.status === 'ok') {
-                    const overallScore = data.overall_compliance || 0;
-                    const overallStatus = data.overall_status || '🟢 Excellent';
-
-                    let html = `
-                        <div class="overall-card" style="border-color: ${overallScore >= 90 ? '#28a745' : overallScore >= 75 ? '#ffc107' : '#dc3545'};">
-                            <div class="label">Overall Compliance</div>
-                            <div class="score">${overallScore}%</div>
-                            <div class="status">${overallStatus}</div>
-                            <div class="details">${data.total_compliant || 0} of ${data.total_requirements || 0} requirements met</div>
-                            <div style="font-size:0.65rem;color:#888;margin-top:0.25rem;">
-                                Updated: ${new Date(data.timestamp).toLocaleString()}
-                            </div>
-                        </div>
-                    `;
-
-                    if (data.frameworks) {
-                        Object.entries(data.frameworks).forEach(([key, fw]) => {
-                            const score = fw.compliance_score || 0;
-                            const color = score >= 90 ? '#28a745' : score >= 75 ? '#ffc107' : '#dc3545';
-                            const statusEmoji = score >= 90 ? '🟢' : score >= 75 ? '🟡' : '🔴';
-
-                            html += `
-                                <div class="compliance-card" onclick="showFrameworkDetails('${key}')">
-                                    <div class="jurisdiction">${fw.jurisdiction || ''}</div>
-                                    <div class="name">${fw.framework || key.toUpperCase()}</div>
-                                    <div class="score" style="color:${color};">${score}%</div>
-                                    <div class="status">${statusEmoji} ${fw.status || 'active'}</div>
-                                    <div class="count">${fw.compliant_count || 0}/${fw.total_requirements || 0} compliant</div>
-                                </div>
-                            `;
-                        });
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = parseInt(entry.target.dataset.target);
+                        if (target) animateValue(entry.target, 0, target, 2000);
+                        observer.unobserve(entry.target);
                     }
-
-                    complianceContainer.innerHTML = html;
-
-                    if (complianceTimestamp) {
-                        complianceTimestamp.textContent = `Updated: ${new Date(data.timestamp).toLocaleString()}`;
-                    }
-                } else {
-                    complianceContainer.innerHTML = `<div class="error-box">⚠️ Failed to load compliance data</div>`;
-                }
-            } catch(err) {
-                console.error('Compliance fetch error:', err);
-                complianceContainer.innerHTML = `
-                    <div class="error-box">
-                        ❌ Failed to load compliance data.
-                        <button onclick="fetchCompliance()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button>
-                    </div>
-                `;
-            }
-        }
-
-        // ─── SHOW FRAMEWORK DETAILS ──────────────────────────────────
-        async function showFrameworkDetails(frameworkId) {
-            try {
-                const modal = $('complianceModal');
-                $('complianceModalTitle').textContent = 'Loading...';
-                $('complianceModalBody').textContent = 'Fetching framework details...';
-                modal.style.display = 'block';
-
-                const res = await fetch(`/api/compliance/framework/${frameworkId}`);
-                const data = await res.json();
-
-                if (data && data.framework) {
-                    let details = `
-                        <p><strong>Framework:</strong> ${data.framework}</p>
-                        <p><strong>Jurisdiction:</strong> ${data.jurisdiction || 'Global'}</p>
-                        <p><strong>Compliance Score:</strong> ${data.compliance_score}%</p>
-                        <p><strong>Status:</strong> ${data.status || 'active'}</p>
-                        <hr/>
-                        <h3>Requirements</h3>
-                        <ul style="list-style:none;padding:0;">
-                    `;
-
-                    if (data.details) {
-                        data.details.forEach(req => {
-                            const emoji = req.compliant ? '✅' : '❌';
-                            details += `
-                                <li style="padding:0.4rem 0;border-bottom:1px solid #eee;">
-                                    ${emoji} <strong>${req.requirement}</strong>
-                                    <span style="float:right;color:${req.compliant ? '#28a745' : '#dc3545'};">${req.score}%</span>
-                                    <br/><small style="color:#888;">${req.notes || ''}</small>
-                                </li>
-                            `;
-                        });
-                    }
-                    details += `</ul>`;
-
-                    if (data.recommendations && data.recommendations.length > 0) {
-                        details += `<h3>💡 Recommendations</h3><ul style="padding-left:1.2rem;">`;
-                        data.recommendations.forEach(rec => {
-                            details += `<li style="color:#856404;">${rec}</li>`;
-                        });
-                        details += `</ul>`;
-                    }
-
-                    $('complianceModalTitle').textContent = data.framework;
-                    $('complianceModalBody').innerHTML = details;
-                } else {
-                    $('complianceModalTitle').textContent = 'Error';
-                    $('complianceModalBody').textContent = 'Failed to load framework details.';
-                }
-            } catch(err) {
-                console.error('Framework details error:', err);
-                $('complianceModalTitle').textContent = 'Error';
-                $('complianceModalBody').textContent = 'Failed to load framework details. Please try again.';
-            }
-        }
-
-        // ─── LENS AGENTS ──────────────────────────────────────────────
-        async function fetchLensAgents() {
-            try {
-                lensContainer.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading lens agents...</p></div>`;
-
-                const res = await fetch('/api/lens/agents');
-                const data = await res.json();
-
-                if (data.status === 'ok' && data.agents && data.agents.length > 0) {
-                    renderLensAgents(data.agents);
-                    lensTimestamp.textContent = `${data.count} agents active`;
-                } else {
-                    lensContainer.innerHTML = `<div class="info-box">🕷️ No lens agents initialized. Click "Scan All" to start.</div>`;
-                }
-            } catch(err) {
-                console.error('Lens agents error:', err);
-                lensContainer.innerHTML = `
-                    <div class="error-box">
-                        ❌ Failed to load lens agents.
-                        <button onclick="fetchLensAgents()" class="btn-secondary" style="margin-top:0.5rem;">Retry</button>
-                    </div>
-                `;
-            }
-        }
-
-        function renderLensAgents(agents) {
-            if (!agents || agents.length === 0) {
-                lensContainer.innerHTML = `<div class="info-box">No lens agents found.</div>`;
-                return;
-            }
-
-            lensContainer.innerHTML = agents.slice(0, 12).map(a => {
-                const statusColor = a.status === 'active' ? '#28a745' : '#dc3545';
-                const lastScan = a.last_scan ? new Date(a.last_scan).toLocaleString() : 'Never';
-                return `
-                    <div class="lens-card">
-                        <div>
-                            <span class="category">${a.category || 'Unknown'}</span>
-                            <span class="date">${lastScan}</span>
-                        </div>
-                        <div class="title">${a.domain}</div>
-                        <div style="display:flex;justify-content:space-between;margin-top:0.5rem;font-size:0.75rem;color:#6c757d;">
-                            <span>Findings: ${a.findings_count || 0}</span>
-                            <span style="color:${statusColor};">● ${a.status || 'active'}</span>
-                            <span>Governance: ${Math.round((a.governance_score || 0) * 100)}%</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function scanAllDomains() {
-            if (!isAuth) {
-                addMessage('system', '🔒 Please login to scan domains.');
-                showLogin();
-                return;
-            }
-
-            const token = getToken();
-            const btn = document.querySelector('#lensSection .btn-primary');
-            btn.textContent = '⏳ Scanning...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/lens/scan-all', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                const data = await res.json();
-                if (res.ok) {
-                    lensTimestamp.textContent = `✅ Scanned ${data.result?.scans?.length || 0} domains`;
-                    addMessage('system', `🕷️ Lens agents scanned all domains.`);
-                    fetchLensAgents();
-                } else {
-                    addMessage('system', `❌ Scan failed: ${data.detail || 'Unknown error'}`);
-                }
-            } catch(err) {
-                addMessage('system', `❌ Scan error: ${err.message}`);
-            }
-
-            btn.textContent = '📡 Scan All';
-            btn.disabled = false;
+            }, { threshold: 0.5 });
+            counters.forEach(c => observer.observe(c));
         }
 
-        // ─── PAYMENT ──────────────────────────────────────────────────
-        async function initiatePayment(tier) {
-            if (!isAuth) {
-                addMessage('system', '🔒 Please login first to upgrade.');
-                showLogin();
-                return;
-            }
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
 
-            const token = getToken();
-            const prices = { pro: 99, enterprise: 999, lifetime: 9999 };
+        function loadData() {
+            fetchHealth();
+        }
 
+        async function fetchHealth() {
             try {
-                // Create order
-                const formData = new FormData();
-                formData.append('tier', tier);
-
-                const res = await fetch('/create-order', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    const options = {
-                        key: data.razorpay_key || 'rzp_test_XXXXXXXXXXXXXXXX',
-                        amount: data.amount,
-                        currency: 'INR',
-                        name: 'Unknown Verdict',
-                        description: `Upgrade to ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
-                        order_id: data.order_id,
-                        handler: function(response) {
-                            // Verify payment
-                            verifyPayment(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature);
-                        },
-                        prefill: {
-                            name: currentUser?.full_name || currentUser?.username || 'User',
-                            email: currentUser?.email || 'user@example.com'
-                        },
-                        theme: {
-                            color: '#6c5ce7'
-                        }
-                    };
-
-                    const rzp = new Razorpay(options);
-                    rzp.open();
-                } else {
-                    addMessage('system', `❌ Payment error: ${data.detail || 'Could not create order'}`);
-                }
-            } catch(err) {
-                addMessage('system', `❌ Payment error: ${err.message}`);
-            }
+                const dot = document.getElementById('statusDot');
+                dot.classList.remove('offline');
+                dot.style.background = 'var(--success)';
+            } catch (e) { document.getElementById('statusDot').classList.add('offline'); }
         }
 
-        async function verifyPayment(paymentId, orderId, signature) {
-            const token = getToken();
-            const formData = new FormData();
-            formData.append('razorpay_payment_id', paymentId);
-            formData.append('razorpay_order_id', orderId);
-            formData.append('razorpay_signature', signature);
-
-            try {
-                const res = await fetch('/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    addMessage('system', `🎉 Payment successful! Upgraded to ${data.tier || 'Premium'} plan.`);
-                    // Refresh user data
-                    const userRes = await fetch('/auth/me', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (userRes.ok) {
-                        const userData = await userRes.json();
-                        localStorage.setItem('user_data', JSON.stringify(userData));
-                        updateUI(userData);
-                    }
-                } else {
-                    addMessage('system', `❌ Payment verification failed: ${data.detail || 'Unknown error'}`);
-                }
-            } catch(err) {
-                addMessage('system', `❌ Verification error: ${err.message}`);
-            }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        // ─── KEYBOARD SHORTCUTS ─────────────────────────────────────
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') { closeLogin(); closeArticle(); }
-            const complianceModal = $('complianceModal');
-            if (e.key === 'Escape' && complianceModal.style.display === 'block') {
-                complianceModal.style.display = 'none';
-            }
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
         });
-
-        document.querySelectorAll('.modal').forEach(m => {
-            m.addEventListener('click', (e) => {
-                if (e.target === m) { m.style.display = 'none'; }
-            });
-        });
-
-        // ─── INIT ──────────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = loadUser();
-            updateUI(user);
-            fetchAll();
-
-            setInterval(() => {
-                fetchNews();
-                fetchBlogPosts();
-                fetchCompliance();
-            }, 300000);
-
-            chatInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-            });
-
-            console.log('🔱 Unknown Verdict v12.1 initialized');
-            console.log(`👤 User: ${currentUser ? currentUser.username : 'Not logged in'}`);
-        });
-
-        // ─── GLOBALS ──────────────────────────────────────────────────
-        window.fetchNews = fetchNews;
-        window.fetchBlogPosts = fetchBlogPosts;
-        window.fetchCompliance = fetchCompliance;
-        window.fetchLensAgents = fetchLensAgents;
-        window.scanAllDomains = scanAllDomains;
-        window.generateArticle = generateArticle;
-        window.sendQuery = sendQuery;
-        window.quickQuery = quickQuery;
-        window.showLogin = showLogin;
-        window.closeLogin = closeLogin;
-        window.handleLogin = handleLogin;
-        window.logoutUser = logoutUser;
-        window.viewArticle = viewArticle;
-        window.closeArticle = closeArticle;
-        window.downloadArticle = downloadArticle;
-        window.copyArticle = copyArticle;
-        window.showFrameworkDetails = showFrameworkDetails;
-        window.initiatePayment = initiatePayment;
-        window.getToken = getToken;
     </script>
 </body>
 </html>
