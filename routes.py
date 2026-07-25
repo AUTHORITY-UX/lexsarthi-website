@@ -1068,3 +1068,164 @@ async def _ensure_test_user():
     except Exception as e:
         if logger:
             logger.error(f"❌ Failed to create test user: {e}")
+    # ═══════════════════════════════════════════════════════════════════
+    # MULTI-MODAL FILE PROCESSING ROUTES
+    # ═══════════════════════════════════════════════════════════════════
+    
+    from core import multi_modal_processor
+
+    @app.post("/api/upload")
+    async def upload_file(
+        request: Request,
+        file: UploadFile = File(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Upload and process any file (PDF, DOCX, Image, Audio, Video)"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "File upload requires Premium+ plan")
+        
+        content = await file.read()
+        result = await multi_modal_processor.process_file(content, file.filename)
+        
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/upload/query")
+    async def upload_and_query(
+        request: Request,
+        file: UploadFile = File(...),
+        query: str = Form(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Upload file and query with its content"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "File upload requires Premium+ plan")
+        
+        content = await file.read()
+        processed = await multi_modal_processor.process_file(content, file.filename)
+        
+        # Combine file text with query
+        full_query = f"{query}\n\n═══ DOCUMENT CONTENT ═══\n{processed['text'][:5000]}"
+        
+        # Use existing ask logic
+        agent_id = route_agent(full_query, False)
+        agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
+        agent_name = agent["name"] if agent else "General Council"
+        domain = agent["domain"] if agent else "General"
+        persona = agent["persona_prompt"] if agent else "You are a generalist."
+        
+        system_prompt = f"""{SYSTEM_BASE}
+        Agent: {agent_name}
+        Domain: {domain}
+        Persona: {persona}
+        You have been given a document to analyze. Use its content in your response."""
+        
+        initial_answer = await call_llm(system_prompt, full_query, "groq")
+        jury_result = await jury_verification(initial_answer, full_query, domain)
+        
+        answer = jury_result["final_answer"]
+        confidence = jury_result["confidence"]
+        sources = jury_result["sources"]
+        
+        metadata = {
+            "domain": domain,
+            "persona": agent_name,
+            "provider": "groq",
+            "jury_verifiers": jury_result["jury_verifiers"],
+            "judge": "Shakti",
+            "file": file.filename,
+            "file_type": processed["type"]
+        }
+        
+        return StreamingResponse(
+            replay_stream(answer, confidence, sources, metadata),
+            media_type="text/event-stream"
+        )
+
+    @app.post("/api/export/docx")
+    async def export_docx(
+        request: Request,
+        content: str = Form(...),
+        title: str = Form("Legal Document"),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Export content as DOCX"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "DOCX export requires Premium+ plan")
+        
+        docx_bytes = await multi_modal_processor.generate_docx(content, title)
+        if not docx_bytes:
+            raise HTTPException(503, "DOCX generation not available")
+        
+        return Response(
+            content=docx_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={title.replace(' ', '_')}.docx"}
+        )
+
+    @app.post("/api/export/pdf")
+    async def export_pdf(
+        request: Request,
+        content: str = Form(...),
+        title: str = Form("Legal Document"),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Export content as PDF"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "PDF export requires Premium+ plan")
+        
+        try:
+            import pdfkit
+            html_content = f"""
+            <html>
+                <head><title>{title}</title></head>
+                <body>
+                    <h1 style="text-align:center;">{title}</h1>
+                    <p style="text-align:right;">{datetime.now().strftime('%B %d, %Y')}</p>
+                    <hr/>
+                    <div style="font-size:12pt;line-height:1.6;">{content.replace('\n', '<br>')}</div>
+                    <hr/>
+                    <p style="text-align:right;">_________________________<br/>Signature</p>
+                </body>
+            </html>
+            """
+            pdf_bytes = pdfkit.from_string(html_content, False)
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={title.replace(' ', '_')}.pdf"}
+            )
+        except:
+            raise HTTPException(503, "PDF generation not available")
+
+    @app.post("/api/export/audio")
+    async def export_audio(
+        request: Request,
+        content: str = Form(...),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Convert text to audio (TTS)"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "Audio export requires Premium+ plan")
+        
+        audio_bytes = await multi_modal_processor.text_to_audio(content)
+        if not audio_bytes:
+            raise HTTPException(503, "Audio generation not available")
+        
+        return Response(
+            content=audio_bytes,
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": f"attachment; filename=legal_audio_{datetime.now().strftime('%Y%m%d')}.mp3"}
+        )
+
+    @app.get("/api/formats")
+    async def get_supported_formats():
+        """Get list of supported file formats"""
+        return {
+            "status": "ok",
+            "formats": multi_modal_processor.get_supported_formats(),
+            "timestamp": datetime.now().isoformat()
+        }
