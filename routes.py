@@ -4,6 +4,12 @@
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
 
+from core import (
+    # ... existing imports ...
+    MultiModalProcessor,
+    get_language,
+    SUPPORTED_LANGUAGES
+)
 import os
 import time
 import json
@@ -18,7 +24,11 @@ from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Req
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-
+from core import (
+     MultiModalProcessor,
+     get_language,
+     SUPPORTED_LANGUAGES
+)
 import jwt
 from passlib.context import CryptContext
 
@@ -1227,5 +1237,156 @@ async def _ensure_test_user():
         return {
             "status": "ok",
             "formats": multi_modal_processor.get_supported_formats(),
+            "timestamp": datetime.now().isoformat()
+        }   
+    # ─── MULTI-MODAL PROCESSOR ──────────────────────────────────────────
+    multi_modal_processor = MultiModalProcessor()
+
+    # ─── LANGUAGE SETTINGS ──────────────────────────────────────────────
+    @app.get("/api/languages")
+    async def get_supported_languages():
+        """Get all supported languages"""
+        return {
+            "status": "ok",
+            "languages": SUPPORTED_LANGUAGES,
+            "count": len(SUPPORTED_LANGUAGES),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ─── FILE UPLOAD ────────────────────────────────────────────────────
+    @app.post("/api/upload")
+    async def upload_file(
+        request: Request,
+        file: UploadFile = File(...),
+        lang: str = Form("en"),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Upload and process any file (PDF, DOCX, Image, Audio, Video)"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "File upload requires Premium+ plan")
+        
+        # Validate language
+        if lang not in SUPPORTED_LANGUAGES:
+            lang = 'en'
+        
+        content = await file.read()
+        result = await multi_modal_processor.process_file(content, file.filename, lang=lang)
+        
+        return {
+            "status": "ok",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    @app.post("/api/upload/query")
+    async def upload_and_query(
+        request: Request,
+        file: UploadFile = File(...),
+        query: str = Form(...),
+        lang: str = Form("en"),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Upload file and query with its content"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "File upload requires Premium+ plan")
+        
+        # Validate language
+        if lang not in SUPPORTED_LANGUAGES:
+            lang = 'en'
+        
+        content = await file.read()
+        processed = await multi_modal_processor.process_file(content, file.filename, lang=lang)
+        
+        # Combine file text with query
+        full_query = query + "\n\n═══ DOCUMENT CONTENT ═══\n" + processed['text'][:5000]
+        
+        # Use existing ask logic
+        agent_id = route_agent(full_query, False)
+        agent = next((a for a in DIVINE_AGENTS if a["id"] == agent_id), None)
+        agent_name = agent["name"] if agent else "General Council"
+        domain = agent["domain"] if agent else "General"
+        persona = agent["persona_prompt"] if agent else "You are a generalist."
+        
+        system_prompt = SYSTEM_BASE + "\n" + "Agent: " + agent_name + "\nDomain: " + domain + "\nPersona: " + persona + "\nYou have been given a document to analyze. Use its content in your response."
+        
+        initial_answer = await call_llm(system_prompt, full_query, "groq")
+        jury_result = await jury_verification(initial_answer, full_query, domain)
+        
+        answer = jury_result["final_answer"]
+        confidence = jury_result["confidence"]
+        sources = jury_result["sources"]
+        
+        metadata = {
+            "domain": domain,
+            "persona": agent_name,
+            "provider": "groq",
+            "jury_verifiers": jury_result["jury_verifiers"],
+            "judge": "Shakti",
+            "file": file.filename,
+            "file_type": processed["type"],
+            "language": lang
+        }
+        
+        return StreamingResponse(
+            replay_stream(answer, confidence, sources, metadata),
+            media_type="text/event-stream"
+        )
+
+    # ─── EXPORT ENDPOINTS ──────────────────────────────────────────────
+    @app.post("/api/export/docx")
+    async def export_docx(
+        request: Request,
+        content: str = Form(...),
+        title: str = Form("Legal Document"),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Export content as DOCX"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "DOCX export requires Premium+ plan")
+        
+        docx_bytes = await multi_modal_processor.generate_docx(content, title)
+        if not docx_bytes:
+            raise HTTPException(503, "DOCX generation not available")
+        
+        safe_filename = title.replace(" ", "_") + ".docx"
+        return Response(
+            content=docx_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": "attachment; filename=" + safe_filename}
+        )
+
+    @app.post("/api/export/audio")
+    async def export_audio(
+        request: Request,
+        content: str = Form(...),
+        lang: str = Form("en"),
+        cu: dict = Depends(get_current_user)
+    ):
+        """Convert text to audio (TTS)"""
+        if cu["tier"] not in ("premium", "enterprise", "lifetime"):
+            raise HTTPException(403, "Audio export requires Premium+ plan")
+        
+        if lang not in SUPPORTED_LANGUAGES:
+            lang = 'en'
+        
+        audio_bytes = await multi_modal_processor.text_to_audio(content, lang)
+        if not audio_bytes:
+            raise HTTPException(503, "Audio generation not available")
+        
+        date_str = datetime.now().strftime('%Y%m%d')
+        safe_filename = "legal_audio_" + date_str + ".mp3"
+        return Response(
+            content=audio_bytes,
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "attachment; filename=" + safe_filename}
+        )
+
+    @app.get("/api/formats")
+    async def get_supported_formats():
+        """Get list of supported file formats"""
+        return {
+            "status": "ok",
+            "formats": multi_modal_processor.get_supported_formats(),
+            "languages": SUPPORTED_LANGUAGES,
             "timestamp": datetime.now().isoformat()
         }
