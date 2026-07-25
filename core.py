@@ -830,3 +830,329 @@ __all__ = [
 ]
 
 LLAMA_ATTRIBUTION = "Built with Llama 3.1 · Licensed under Llama 3.1 Community License"
+
+# =============================================================================
+# MULTI-MODAL FILE PROCESSING - Add to core.py
+# =============================================================================
+
+import io
+import os
+import json
+import asyncio
+import hashlib
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+
+# ─── PDF PROCESSING ──────────────────────────────────────────────────
+try:
+    import PyPDF2
+    import pdfplumber
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+
+# ─── DOCX PROCESSING ──────────────────────────────────────────────────
+try:
+    from docx import Document
+    from docx.shared import Inches, Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
+# ─── IMAGE PROCESSING ──────────────────────────────────────────────────
+try:
+    from PIL import Image
+    import pytesseract
+    IMAGE_AVAILABLE = True
+except ImportError:
+    IMAGE_AVAILABLE = False
+
+# ─── AUDIO PROCESSING ──────────────────────────────────────────────────
+try:
+    import speech_recognition as sr
+    from pydub import AudioSegment
+    AUDIO_AVAILABLE = True
+except ImportError:
+    AUDIO_AVAILABLE = False
+
+# ─── VIDEO PROCESSING ──────────────────────────────────────────────────
+try:
+    import cv2
+    import moviepy.editor as mp
+    VIDEO_AVAILABLE = True
+except ImportError:
+    VIDEO_AVAILABLE = False
+
+# ─── MULTI-MODAL PROCESSOR ────────────────────────────────────────────
+
+class MultiModalProcessor:
+    """Process text, PDF, DOCX, Images, Audio, Video"""
+
+    def __init__(self):
+        self.supported_formats = {
+            'pdf': ['.pdf'],
+            'docx': ['.docx', '.doc'],
+            'image': ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'],
+            'audio': ['.wav', '.mp3', '.m4a', '.flac', '.ogg'],
+            'video': ['.mp4', '.avi', '.mov', '.mkv', '.webm'],
+            'text': ['.txt', '.md', '.json', '.csv', '.xlsx']
+        }
+        self.processed_files = []
+
+    async def process_file(self, file_bytes: bytes, filename: str, file_type: str = None) -> Dict:
+        """Process any file type and extract text/content"""
+        ext = os.path.splitext(filename)[1].lower()
+        file_id = hashlib.md5(file_bytes).hexdigest()[:8]
+        
+        result = {
+            'file_id': file_id,
+            'filename': filename,
+            'extension': ext,
+            'type': file_type or self._detect_type(ext),
+            'text': '',
+            'metadata': {},
+            'timestamp': datetime.now().isoformat()
+        }
+
+        if ext in ['.pdf']:
+            result.update(await self._process_pdf(file_bytes))
+        elif ext in ['.docx', '.doc']:
+            result.update(await self._process_docx(file_bytes))
+        elif ext in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif']:
+            result.update(await self._process_image(file_bytes))
+        elif ext in ['.wav', '.mp3', '.m4a', '.flac', '.ogg']:
+            result.update(await self._process_audio(file_bytes))
+        elif ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+            result.update(await self._process_video(file_bytes))
+        else:
+            # Try as text
+            try:
+                result['text'] = file_bytes.decode('utf-8', errors='ignore')
+                result['type'] = 'text'
+            except:
+                result['text'] = 'Binary file - cannot extract text'
+                result['type'] = 'binary'
+
+        self.processed_files.append(result)
+        return result
+
+    def _detect_type(self, ext: str) -> str:
+        for type_name, exts in self.supported_formats.items():
+            if ext in exts:
+                return type_name
+        return 'unknown'
+
+    async def _process_pdf(self, file_bytes: bytes) -> Dict:
+        """Extract text from PDF"""
+        if not PDF_AVAILABLE:
+            return {'text': 'PDF processing not available', 'metadata': {}}
+        
+        try:
+            # Try pdfplumber first (better)
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                text = "\n".join([page.extract_text() or "" for page in pdf.pages])
+                pages = len(pdf.pages)
+            
+            if not text.strip():
+                # Fallback to PyPDF2
+                reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
+                text = "\n".join([page.extract_text() or "" for page in reader.pages])
+                pages = len(reader.pages)
+            
+            return {
+                'text': text,
+                'metadata': {'pages': pages, 'pages_extracted': pages}
+            }
+        except Exception as e:
+            return {'text': f'PDF extraction failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_docx(self, file_bytes: bytes) -> Dict:
+        """Extract text from DOCX"""
+        if not DOCX_AVAILABLE:
+            return {'text': 'DOCX processing not available', 'metadata': {}}
+        
+        try:
+            doc = Document(io.BytesIO(file_bytes))
+            text = "\n".join([p.text for p in doc.paragraphs])
+            
+            # Extract tables
+            tables_text = []
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = [cell.text for cell in row.cells]
+                    tables_text.append(" | ".join(row_text))
+            
+            if tables_text:
+                text += "\n\n--- TABLES ---\n" + "\n".join(tables_text)
+            
+            return {
+                'text': text,
+                'metadata': {'paragraphs': len(doc.paragraphs), 'tables': len(doc.tables)}
+            }
+        except Exception as e:
+            return {'text': f'DOCX extraction failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_image(self, file_bytes: bytes) -> Dict:
+        """Extract text from image using OCR"""
+        if not IMAGE_AVAILABLE:
+            return {'text': 'Image processing not available', 'metadata': {}}
+        
+        try:
+            image = Image.open(io.BytesIO(file_bytes))
+            text = pytesseract.image_to_string(image)
+            
+            return {
+                'text': text,
+                'metadata': {
+                    'width': image.width,
+                    'height': image.height,
+                    'format': image.format,
+                    'mode': image.mode
+                }
+            }
+        except Exception as e:
+            return {'text': f'Image OCR failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_audio(self, file_bytes: bytes) -> Dict:
+        """Transcribe audio to text"""
+        if not AUDIO_AVAILABLE:
+            return {'text': 'Audio processing not available', 'metadata': {}}
+        
+        try:
+            # Save to temp file
+            temp_path = f"/tmp/audio_{hashlib.md5(file_bytes).hexdigest()[:8]}.wav"
+            with open(temp_path, 'wb') as f:
+                f.write(file_bytes)
+            
+            # Convert if needed
+            if not temp_path.endswith('.wav'):
+                audio = AudioSegment.from_file(temp_path)
+                temp_path = temp_path.replace('.wav', '_converted.wav')
+                audio.export(temp_path, format='wav')
+            
+            # Transcribe
+            recognizer = sr.Recognizer()
+            with sr.AudioFile(temp_path) as source:
+                audio_data = recognizer.record(source)
+                text = recognizer.recognize_google(audio_data)
+            
+            os.remove(temp_path)
+            
+            return {
+                'text': text,
+                'metadata': {'duration': 'unknown', 'transcribed': True}
+            }
+        except Exception as e:
+            return {'text': f'Audio transcription failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_video(self, file_bytes: bytes) -> Dict:
+        """Extract audio from video and transcribe"""
+        if not VIDEO_AVAILABLE:
+            return {'text': 'Video processing not available', 'metadata': {}}
+        
+        try:
+            # Save to temp file
+            temp_path = f"/tmp/video_{hashlib.md5(file_bytes).hexdigest()[:8]}.mp4"
+            with open(temp_path, 'wb') as f:
+                f.write(file_bytes)
+            
+            # Extract audio
+            video = mp.VideoFileClip(temp_path)
+            audio_path = temp_path.replace('.mp4', '_audio.wav')
+            video.audio.write_audiofile(audio_path)
+            
+            # Transcribe audio
+            with open(audio_path, 'rb') as f:
+                audio_bytes = f.read()
+            
+            audio_result = await self._process_audio(audio_bytes)
+            
+            # Cleanup
+            os.remove(temp_path)
+            os.remove(audio_path)
+            
+            return {
+                'text': audio_result.get('text', ''),
+                'metadata': {
+                    'duration': video.duration,
+                    'fps': video.fps,
+                    'size': video.size,
+                    'transcribed': True
+                }
+            }
+        except Exception as e:
+            return {'text': f'Video processing failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def generate_docx(self, content: str, title: str = "Document") -> bytes:
+        """Generate DOCX from text content"""
+        if not DOCX_AVAILABLE:
+            return b''
+        
+        doc = Document()
+        
+        # Title
+        title_para = doc.add_heading(title, 0)
+        title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Date
+        date_para = doc.add_paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}")
+        date_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        
+        # Content
+        for line in content.split('\n'):
+            if line.strip():
+                if line.startswith('#'):
+                    doc.add_heading(line.replace('#', '').strip(), 2)
+                elif line.startswith('##'):
+                    doc.add_heading(line.replace('##', '').strip(), 3)
+                else:
+                    doc.add_paragraph(line)
+        
+        # Signature
+        doc.add_paragraph()
+        sig_para = doc.add_paragraph()
+        sig_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        sig_run = sig_para.add_run("_________________________\nSignature")
+        sig_run.bold = True
+        
+        # Save to bytes
+        doc_buffer = io.BytesIO()
+        doc.save(doc_buffer)
+        doc_buffer.seek(0)
+        return doc_buffer.getvalue()
+
+    async def text_to_audio(self, text: str) -> bytes:
+        """Convert text to audio (TTS)"""
+        try:
+            from gtts import gTTS
+            tts = gTTS(text=text, lang='en', slow=False)
+            audio_buffer = io.BytesIO()
+            tts.write_to_fp(audio_buffer)
+            audio_buffer.seek(0)
+            return audio_buffer.getvalue()
+        except:
+            return b''
+
+    def get_supported_formats(self) -> Dict:
+        """Get list of supported file formats"""
+        formats = {}
+        for type_name, exts in self.supported_formats.items():
+            available = False
+            if type_name == 'pdf':
+                available = PDF_AVAILABLE
+            elif type_name == 'docx':
+                available = DOCX_AVAILABLE
+            elif type_name == 'image':
+                available = IMAGE_AVAILABLE
+            elif type_name == 'audio':
+                available = AUDIO_AVAILABLE
+            elif type_name == 'video':
+                available = VIDEO_AVAILABLE
+            else:
+                available = True
+            formats[type_name] = {'extensions': exts, 'available': available}
+        return formats
+
+# ─── GLOBAL INSTANCE ──────────────────────────────────────────────────
+multi_modal_processor = MultiModalProcessor()
