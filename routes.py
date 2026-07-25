@@ -401,3 +401,80 @@ def register_routes(app: FastAPI):
     # Make helpers available to app.py
     register_routes._create_tables = _create_tables
     register_routes._ensure_test_user = _ensure_test_user
+
+# ============================================
+# ADD THESE ENDPOINTS TO routes.py
+# ============================================
+
+@router.get("/api/trading/indices")
+async def get_indices():
+    """Get live trading indices"""
+    try:
+        # Return mock data for now (replace with real API calls)
+        return [
+            {"symbol": "NIFTY", "name": "NIFTY 50", "price": "₹24,500.50", "change": 0.49},
+            {"symbol": "SENSEX", "name": "SENSEX", "price": "₹81,500.25", "change": 0.31},
+            {"symbol": "BTC", "name": "BTC/USD", "price": "$65,000.00", "change": -1.81}
+        ]
+    except Exception as e:
+        logger.error(f"Trading indices error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/compliance/snapshot")
+async def get_compliance_snapshot():
+    """Get compliance snapshot"""
+    try:
+        return {
+            "frameworks": [
+                {"name": "GDPR", "score": 85, "status": "Compliant"},
+                {"name": "DPDPA", "score": 70, "status": "In Progress"},
+                {"name": "CCPA", "score": 90, "status": "Compliant"}
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Compliance snapshot error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/trends/ai")
+async def get_ai_trends():
+    """Get AI industry trends"""
+    try:
+        return {
+            "trends": [
+                {"title": "Market Size", "value": "$150B", "description": "2024 Global AI Market"},
+                {"title": "Investment", "value": "$25B", "description": "2024 AI Investment"},
+                {"title": "Jobs", "value": "1.2M", "description": "AI Jobs Worldwide"}
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Trends error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/news")
+async def get_news(limit: int = 6):
+    """Get legal news"""
+    try:
+        return {
+            "articles": [
+                {"title": "AI Regulation Update", "summary": "New EU AI Act provisions take effect", "source": "Legal Tech"},
+                {"title": "DPDPA Implementation", "summary": "India's digital privacy law enters phase 2", "source": "Indian Law"},
+                {"title": "Blockchain Legal Framework", "summary": "New guidelines for crypto assets", "source": "FinTech Law"}
+            ]
+        }
+    except Exception as e:
+        logger.error(f"News error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/lens/agents")
+async def get_lens_agents():
+    """Get lens agents status"""
+    try:
+        return {
+            "status": "active",
+            "total_agents": 250,
+            "active_agents": 248,
+            "domains": ["Legal", "Tech", "Markets", "Compliance"]
+        }
+    except Exception as e:
+        logger.error(f"Lens agents error: {e}")
+        return {"error": str(e)}    
