@@ -1196,7 +1196,7 @@ async def _ensure_test_user():
                     <h1 style="text-align:center;">{title}</h1>
                     <p style="text-align:right;">{datetime.now().strftime('%B %d, %Y')}</p>
                     <hr/>
-                    <div style="font-size:12pt;line-height:1.6;">{content.replace('\n', '<br>')}</div>
+                    <div style="font-size:12pt;line-height:1.6;">{content.replace(chr(10), '<br>')}</div>
                     <hr/>
                     <p style="text-align:right;">_________________________<br/>Signature</p>
                 </body>
