@@ -1,221 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>THE ADVOCACY - AI Super Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE ADVOCACY - Unknown Verdict</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #6c5ce7;
             --primary-light: #a29bfe;
             --primary-dark: #4834d4;
-            --accent: #00cec9;
             --bg: #0a0a0f;
             --bg-elevated: #12121a;
             --bg-card: rgba(18, 18, 26, 0.7);
-            --bg-glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.08);
             --text: #f1f2f6;
             --text-muted: #a4b0be;
             --text-dim: #747d8c;
             --success: #2ed573;
-            --warning: #ffa502;
             --danger: #ff4757;
-            --radius: 16px;
+            --radius: 12px;
             --radius-sm: 8px;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 40px rgba(108, 92, 231, 0.15);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            overflow-x: hidden;
             min-height: 100vh;
         }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-        ::selection { background: rgba(108, 92, 231, 0.3); color: white; }
         .bg-mesh {
             position: fixed; inset: 0; z-index: -2;
-            background: radial-gradient(ellipse at 20% 20%, rgba(108, 92, 231, 0.15) 0%, transparent 50%),
-                        radial-gradient(ellipse at 80% 80%, rgba(0, 206, 201, 0.08) 0%, transparent 50%);
-        }
-        .bg-grid {
-            position: fixed; inset: 0; z-index: -1;
-            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
-            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, var(--primary-light), var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            background: radial-gradient(ellipse at 20% 20%, rgba(108, 92, 231, 0.15) 0%, transparent 50%);
         }
         .btn {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 10px 20px; border-radius: var(--radius-sm);
             font-weight: 600; font-size: 0.85rem; cursor: pointer;
-            border: none; transition: var(--transition);
+            border: none; transition: all 0.2s;
         }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108, 92, 231, 0.5); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-outline:hover { border-color: var(--primary); background: rgba(108, 92, 231, 0.1); }
-        .btn-ghost { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid transparent; }
-        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { background: #26b85e; transform: translateY(-2px); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #e04350; transform: translateY(-2px); }
         .btn-sm { padding: 6px 14px; font-size: 0.75rem; }
         .card {
             background: var(--bg-card); backdrop-filter: blur(20px);
             border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 24px; transition: var(--transition);
+            padding: 20px;
         }
-        .card:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: var(--shadow-glow); }
         header {
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            padding: 12px 24px;
+            padding: 12px 20px;
             display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
+            flex-wrap: wrap; gap: 8px;
         }
-        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 800; }
-        .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 800; }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; display: inline-block; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
         .nav-tab {
-            padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600;
-            color: var(--text-muted); cursor: pointer; transition: var(--transition);
+            padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 600;
+            color: var(--text-muted); cursor: pointer; transition: all 0.2s;
             background: transparent; border: none;
         }
         .nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-tab.active { color: white; background: rgba(108, 92, 231, 0.2); }
-        .user-section { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .user-section { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .tier-badge {
-            padding: 4px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 700;
+            text-transform: uppercase;
             background: rgba(108, 92, 231, 0.15); color: var(--primary-light);
             border: 1px solid rgba(108, 92, 231, 0.3);
         }
-        .tier-badge.pro { background: rgba(0, 206, 201, 0.15); color: var(--accent); border-color: rgba(0, 206, 201, 0.3); }
-        .tier-badge.enterprise { background: rgba(255, 165, 2, 0.15); color: var(--warning); border-color: rgba(255, 165, 2, 0.3); }
-        .tier-badge.lifetime { background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(0, 206, 201, 0.2)); color: white; border-color: rgba(108, 92, 231, 0.5); }
+        .tier-badge.lifetime { background: linear-gradient(135deg, rgba(108,92,231,0.2), rgba(0,206,201,0.2)); color: white; border-color: rgba(108,92,231,0.5); }
         main { padding-top: 70px; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
-        section { margin-bottom: 40px; }
-        .hero { text-align: center; padding: 40px 0 30px; }
-        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; }
-        .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; }
-        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
-        .stat-item { text-align: center; padding: 20px; }
-        .stat-number { font-size: 2rem; font-weight: 800; color: var(--primary-light); line-height: 1; }
-        .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 4px; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .section-title { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .chat-container { display: flex; flex-direction: column; height: 550px; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 12px; }
-        .message { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+        section { display: none; margin-bottom: 30px; }
+        section.active { display: block; }
+        .hero { text-align: center; padding: 30px 0; }
+        .hero h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
+        .gradient-text { background: linear-gradient(135deg, #a29bfe, #6c5ce7, #00cec9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
+        .stat-item { text-align: center; padding: 16px; }
+        .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--primary-light); line-height: 1; }
+        .stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 4px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+        .section-title { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+        .service-card { padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .service-card:hover { border-color: var(--primary); transform: translateY(-4px); }
+        .service-card .icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+        .service-card .title { font-weight: 700; font-size: 0.85rem; }
+        .service-card .desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+        .service-card .tag { display: inline-block; margin-top: 6px; padding: 2px 10px; background: rgba(108,92,231,0.15); border-radius: 12px; font-size: 0.6rem; color: var(--primary-light); font-weight: 700; }
+        .chat-container { display: flex; flex-direction: column; height: 500px; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message.user { align-self: flex-end; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-bottom-right-radius: 4px; }
-        .message.ai { align-self: flex-start; background: var(--bg-glass); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-        .message.system { align-self: center; background: rgba(0, 206, 201, 0.1); border: 1px solid rgba(0, 206, 201, 0.2); color: var(--accent); font-size: 0.8rem; font-family: monospace; }
-        .message-meta { font-size: 0.65rem; opacity: 0.5; margin-top: 4px; }
+        .message.ai { align-self: flex-start; background: var(--bg-card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .message.system { align-self: center; background: rgba(0,206,201,0.1); border: 1px solid rgba(0,206,201,0.2); color: var(--success); font-size: 0.8rem; font-family: monospace; }
+        .message-meta { font-size: 0.6rem; opacity: 0.5; margin-top: 4px; }
         .chat-input-area { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
-        .chat-input { flex: 1; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text); font-family: inherit; font-size: 0.9rem; resize: none; outline: none; transition: var(--transition); min-height: 44px; max-height: 120px; }
-        .chat-input:focus { border-color: var(--primary); background: rgba(108, 92, 231, 0.05); }
+        .chat-input { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 0.9rem; resize: none; outline: none; min-height: 40px; max-height: 100px; }
+        .chat-input:focus { border-color: var(--primary); }
         .chat-input::placeholder { color: var(--text-dim); }
-        .typing-indicator { display: flex; gap: 4px; padding: 12px; }
+        .typing-indicator { display: flex; gap: 4px; padding: 10px; }
         .typing-indicator span { width: 8px; height: 8px; background: var(--primary-light); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(3) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-        .service-card { padding: 16px; text-align: center; cursor: pointer; transition: var(--transition); }
-        .service-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: var(--shadow-glow); }
-        .service-card .icon { font-size: 2rem; display: block; margin-bottom: 8px; }
-        .service-card .title { font-weight: 700; font-size: 0.9rem; }
-        .service-card .desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
-        .service-card .tag { display: inline-block; margin-top: 8px; padding: 2px 10px; background: rgba(108, 92, 231, 0.15); border-radius: 12px; font-size: 0.6rem; color: var(--primary-light); font-weight: 700; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; transform: scale(0.9); transition: transform 0.3s; }
-        .modal-overlay.active .modal { transform: scale(1); }
-        .modal-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-glass); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 1.2rem; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
-        .modal-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
-        .modal h2 { margin-bottom: 16px; font-size: 1.3rem; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 4px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-        .form-group input { width: 100%; padding: 10px 14px; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.9rem; outline: none; transition: var(--transition); }
-        .form-group input:focus { border-color: var(--primary); background: rgba(108, 92, 231, 0.05); }
-        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: var(--bg-elevated); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 12px 16px; min-width: 280px; box-shadow: var(--shadow); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; }
-        .toast.success { border-left-color: var(--success); }
-        .toast.error { border-left-color: var(--danger); }
-        .toast.warning { border-left-color: var(--warning); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .hidden { display: none !important; }
         .flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; }
-        .text-sm { font-size: 0.85rem; } .text-xs { font-size: 0.75rem; }
-        .text-muted { color: var(--text-muted); } .text-dim { color: var(--text-dim); }
-        .mt-4 { margin-top: 16px; } .mb-4 { margin-bottom: 16px; }
-        .w-full { width: 100%; }
+        .text-sm { font-size: 0.85rem; } .text-xs { font-size: 0.75rem; } .text-muted { color: var(--text-muted); } .text-dim { color: var(--text-dim); }
+        .mt-4 { margin-top: 16px; } .mb-4 { margin-bottom: 16px; } .w-full { width: 100%; }
         .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading { text-align: center; padding: 40px; color: var(--text-dim); }
-        .error-box { color: var(--danger); background: rgba(255, 71, 87, 0.1); padding: 16px; border-radius: var(--radius-sm); text-align: center; grid-column: 1 / -1; }
-        .info-box { color: var(--accent); background: rgba(0, 206, 201, 0.1); padding: 16px; border-radius: var(--radius-sm); text-align: center; grid-column: 1 / -1; }
-        .progress-bar { height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; margin-top: 6px; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 1s ease; }
-        .compliance-score { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
-        .score-circle { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(var(--primary) 0%, var(--border) 0%); display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 12px; }
-        .score-circle::before { content: ''; position: absolute; width: 100px; height: 100px; background: var(--bg-elevated); border-radius: 50%; }
-        .score-value { position: relative; font-size: 2rem; font-weight: 900; z-index: 1; }
-        footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-dim); font-size: 0.8rem; margin-top: 40px; }
-        @media (max-width: 1024px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; } }
+        .progress-bar { height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: 2px; transition: width 1s ease; }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: var(--bg-elevated); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 10px 16px; min-width: 250px; animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; color: var(--text-dim); font-size: 0.75rem; margin-top: 30px; }
         @media (max-width: 768px) {
-            header { padding: 10px 16px; flex-direction: column; align-items: stretch; }
-            .logo { justify-content: center; }
+            header { flex-direction: column; align-items: stretch; }
             .nav-tabs { justify-content: center; }
-            .user-section { justify-content: center; }
-            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
             .service-grid { grid-template-columns: repeat(2, 1fr); }
             .stats-bar { grid-template-columns: repeat(2, 1fr); }
             .chat-container { height: 400px; }
-            .container { padding: 0 12px; }
-            .modal { padding: 20px; margin: 10px; }
+            .hero h1 { font-size: 1.6rem; }
         }
         @media (max-width: 480px) {
             .service-grid { grid-template-columns: 1fr; }
             .stats-bar { grid-template-columns: 1fr 1fr; }
-            .nav-tab { font-size: 0.65rem; padding: 4px 10px; }
         }
     </style>
 </head>
 <body>
     <div class="bg-mesh"></div>
-    <div class="bg-grid"></div>
 
-    <!-- ─── HEADER ────────────────────────────────────────────────── -->
     <header>
         <div class="logo">
             <div class="logo-icon">🔱</div>
@@ -225,108 +159,71 @@
         <div class="nav-tabs" id="navTabs">
             <button class="nav-tab active" data-section="home">🏠 Home</button>
             <button class="nav-tab" data-section="chat">💬 Chat</button>
-            <button class="nav-tab" data-section="legal">⚖️ Legal</button>
             <button class="nav-tab" data-section="compliance">🛡️ Compliance</button>
-            <button class="nav-tab" data-section="trading">📊 Trading</button>
-            <button class="nav-tab" data-section="news">📰 News</button>
-            <button class="nav-tab" data-section="trends">📈 Trends</button>
             <button class="nav-tab" data-section="lens">🔍 Lens</button>
-            <button class="nav-tab" data-section="upload">📤 Upload</button>
+            <button class="nav-tab" data-section="news">📰 News</button>
         </div>
         <div class="user-section">
-            <span class="tier-badge" id="tierBadge">Free</span>
-            <button class="btn btn-ghost btn-sm" id="authBtn" onclick="openModal('loginModal')">🔐 Login</button>
-            <div id="userProfile" class="hidden flex items-center gap-2">
-                <span id="userName" class="text-sm font-semibold">User</span>
-                <button class="btn btn-danger btn-sm" onclick="logout()">✕</button>
-            </div>
+            <span class="tier-badge lifetime" id="tierBadge">Lifetime</span>
+            <span id="userName" class="text-sm font-semibold">counsel</span>
+            <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
         </div>
     </header>
 
     <main class="container">
 
-        <!-- ─── HOME SECTION ────────────────────────────────────── -->
-        <section id="section-home">
+        <!-- ─── HOME ────────────────────────────────────────────── -->
+        <section id="section-home" class="active">
             <div class="hero">
                 <h1 class="gradient-text">⚖️ AI-Powered Legal Intelligence</h1>
-                <p>250 specialist personas · 10 verifiers · Judge Shakti</p>
-                <div class="flex gap-2" style="justify-content:center;margin-top:16px;">
+                <p class="text-muted">250 specialist personas · 10 verifiers · Judge Shakti</p>
+                <div class="flex gap-2" style="justify-content:center;margin-top:12px;">
                     <button class="btn btn-primary" onclick="switchSection('chat')">💬 Start Chat</button>
-                    <button class="btn btn-outline" onclick="switchSection('upload')">📤 Upload Document</button>
                 </div>
             </div>
 
             <div class="stats-bar">
-                <div class="stat-item card"><div class="stat-number" id="statAgents">250</div><div class="stat-label">AI Personas</div></div>
-                <div class="stat-item card"><div class="stat-number" id="statVerifiers">10</div><div class="stat-label">Verifiers</div></div>
-                <div class="stat-item card"><div class="stat-number" id="statChunks">1,047</div><div class="stat-label">Knowledge Chunks</div></div>
-                <div class="stat-item card"><div class="stat-number" id="statNews">0</div><div class="stat-label">News Articles</div></div>
-                <div class="stat-item card"><div class="stat-number" id="statBlog">0</div><div class="stat-label">Blog Articles</div></div>
+                <div class="card stat-item"><div class="stat-number">250</div><div class="stat-label">AI Personas</div></div>
+                <div class="card stat-item"><div class="stat-number">10</div><div class="stat-label">Verifiers</div></div>
+                <div class="card stat-item"><div class="stat-number">1,047</div><div class="stat-label">Knowledge Chunks</div></div>
+                <div class="card stat-item"><div class="stat-number" id="statNews">0</div><div class="stat-label">News Articles</div></div>
             </div>
 
-            <div class="service-grid" id="serviceGrid">
+            <div class="service-grid">
                 <div class="card service-card" onclick="switchSection('chat');quickQuery('legal intelligence')">
                     <span class="icon">⚖️</span>
                     <div class="title">Legal Intelligence</div>
-                    <div class="desc">250 specialist personas</div>
                     <span class="tag">250 Agents</span>
                 </div>
                 <div class="card service-card" onclick="switchSection('compliance')">
                     <span class="icon">🛡️</span>
-                    <div class="title">Global Compliance</div>
-                    <div class="desc">DPDPA · GDPR · CCPA · ESG</div>
-                    <span class="tag">10 Frameworks</span>
-                </div>
-                <div class="card service-card" onclick="switchSection('trading')">
-                    <span class="icon">📊</span>
-                    <div class="title">Trading Dashboard</div>
-                    <div class="desc">Stocks · Forex · Crypto</div>
-                    <span class="tag">Live Data</span>
+                    <div class="title">Compliance</div>
+                    <span class="tag">DPDPA/GDPR</span>
                 </div>
                 <div class="card service-card" onclick="switchSection('news')">
                     <span class="icon">📰</span>
                     <div class="title">AI News</div>
-                    <div class="desc">Legal · Business · Sports</div>
-                    <span class="tag">Aggregated</span>
-                </div>
-                <div class="card service-card" onclick="switchSection('trends')">
-                    <span class="icon">📈</span>
-                    <div class="title">AI Trends</div>
-                    <div class="desc">Market · Investment · Jobs</div>
-                    <span class="tag">2026 Data</span>
+                    <span class="tag">Live</span>
                 </div>
                 <div class="card service-card" onclick="switchSection('lens')">
                     <span class="icon">🔍</span>
                     <div class="title">Lens Agents</div>
-                    <div class="desc">Domain scanning</div>
-                    <span class="tag">AI Governance</span>
-                </div>
-                <div class="card service-card" onclick="switchSection('upload')">
-                    <span class="icon">📤</span>
-                    <div class="title">Upload & Analyze</div>
-                    <div class="desc">PDF · DOCX · Images · Audio</div>
-                    <span class="tag">Multi-Modal</span>
-                </div>
-                <div class="card service-card" onclick="switchSection('chat');quickQuery('diagnostics')">
-                    <span class="icon">🔄</span>
-                    <div class="title">Self-Healing</div>
-                    <div class="desc">Auto diagnostics</div>
-                    <span class="tag">Reliability</span>
+                    <span class="tag">Scan</span>
                 </div>
             </div>
         </section>
 
-        <!-- ─── CHAT SECTION ────────────────────────────────────── -->
-        <section id="section-chat" class="hidden">
+        <!-- ─── CHAT ────────────────────────────────────────────── -->
+        <section id="section-chat">
             <div class="section-header">
                 <h2 class="section-title"><span>💬</span> AI Console</h2>
-                <span class="tier-badge" id="chatTier">Free</span>
+                <span class="tier-badge lifetime" id="chatTier">Lifetime</span>
             </div>
             <div class="card chat-container">
                 <div class="chat-messages" id="chatMessages">
                     <div class="message ai">
-                        <div>Welcome to Unknown Verdict AGI v12.1. I am Judge Shakti. How may I assist you?</div>
-                        <div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Just now</span></div>
+                        <div>Welcome to Unknown Verdict. I am Judge Shakti. How may I assist you?</div>
+                        <div class="message-meta">Judge Shakti • Just now</div>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -334,274 +231,78 @@
                     <button class="btn btn-primary" onclick="sendMessage()">➤</button>
                 </div>
             </div>
-            <div class="grid-3" style="margin-top:16px;">
-                <button class="btn btn-outline" onclick="quickQuery('contract law')">📄 Contract Law</button>
-                <button class="btn btn-outline" onclick="quickQuery('DPDPA compliance')">🛡️ DPDPA</button>
-                <button class="btn btn-outline" onclick="quickQuery('legal notice')">📋 Legal Notice</button>
+            <div class="flex gap-2" style="margin-top:12px;flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="quickQuery('Explain contract law in India')">📄 Contract Law</button>
+                <button class="btn btn-outline btn-sm" onclick="quickQuery('What is DPDPA compliance?')">🛡️ DPDPA</button>
+                <button class="btn btn-outline btn-sm" onclick="quickQuery('How to send a legal notice?')">📋 Legal Notice</button>
             </div>
         </section>
 
-        <!-- ─── LEGAL SECTION ────────────────────────────────────── -->
-        <section id="section-legal" class="hidden">
-            <div class="section-header">
-                <h2 class="section-title"><span>⚖️</span> Legal Intelligence</h2>
-            </div>
-            <div class="grid-2">
-                <div class="card">
-                    <h3>📄 Contract Drafting</h3>
-                    <p class="text-sm text-muted">Generate NDAs, agreements, MoUs</p>
-                    <div class="flex gap-2 mt-4">
-                        <input type="text" id="contractQuery" placeholder="Describe your contract..." class="chat-input" style="flex:1;">
-                        <button class="btn btn-primary btn-sm" onclick="draftContract()">Draft</button>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>🔍 Legal Research</h3>
-                    <p class="text-sm text-muted">Case law, precedents, sections</p>
-                    <div class="flex gap-2 mt-4">
-                        <input type="text" id="researchQuery" placeholder="Search legal topic..." class="chat-input" style="flex:1;">
-                        <button class="btn btn-primary btn-sm" onclick="legalResearch()">Search</button>
-                    </div>
-                </div>
-            </div>
-            <div id="legalResult" class="card mt-4 hidden">
-                <div id="legalContent"></div>
-            </div>
-        </section>
-
-        <!-- ─── COMPLIANCE SECTION ──────────────────────────────── -->
-        <section id="section-compliance" class="hidden">
+        <!-- ─── COMPLIANCE ────────────────────────────────────────── -->
+        <section id="section-compliance">
             <div class="section-header">
                 <h2 class="section-title"><span>🛡️</span> Compliance Dashboard</h2>
-                <button class="btn btn-ghost btn-sm" onclick="fetchCompliance()">🔄 Refresh</button>
+                <button class="btn btn-outline btn-sm" onclick="fetchCompliance()">🔄 Refresh</button>
             </div>
-            <div class="grid-4" id="complianceGrid">
-                <div class="card compliance-score">
-                    <div class="score-circle"><div class="score-value gradient-text" id="overallScore">0</div></div>
-                    <h4>Overall Score</h4>
-                    <p class="text-sm text-muted" id="overallStatus">Loading...</p>
-                </div>
-                <div class="card" id="fw_dpdpa"><h4>🇮🇳 DPDPA</h4><p class="text-sm text-muted">Digital Personal Data Protection Act</p><div class="progress-bar"><div class="progress-fill" id="prog_dpdpa" style="width:0%"></div></div><span class="text-sm" id="score_dpdpa">0%</span></div>
-                <div class="card" id="fw_gdpr"><h4>🇪🇺 GDPR</h4><p class="text-sm text-muted">General Data Protection Regulation</p><div class="progress-bar"><div class="progress-fill" id="prog_gdpr" style="width:0%"></div></div><span class="text-sm" id="score_gdpr">0%</span></div>
-                <div class="card" id="fw_ccpa"><h4>🇺🇸 CCPA</h4><p class="text-sm text-muted">California Consumer Privacy Act</p><div class="progress-bar"><div class="progress-fill" id="prog_ccpa" style="width:0%"></div></div><span class="text-sm" id="score_ccpa">0%</span></div>
-                <div class="card" id="fw_ai_gov"><h4>🌍 AI Governance</h4><p class="text-sm text-muted">ISO/IEC 42001</p><div class="progress-bar"><div class="progress-fill" id="prog_ai_gov" style="width:0%"></div></div><span class="text-sm" id="score_ai_gov">0%</span></div>
+            <div class="grid-3" id="complianceGrid">
+                <div class="card"><h4>🇮🇳 DPDPA</h4><div class="progress-bar"><div class="progress-fill" id="dpdpa_progress" style="width:70%"></div></div><span class="text-sm" id="dpdpa_score">70%</span></div>
+                <div class="card"><h4>🇪🇺 GDPR</h4><div class="progress-bar"><div class="progress-fill" id="gdpr_progress" style="width:60%"></div></div><span class="text-sm" id="gdpr_score">60%</span></div>
+                <div class="card"><h4>🇺🇸 CCPA</h4><div class="progress-bar"><div class="progress-fill" id="ccpa_progress" style="width:60%"></div></div><span class="text-sm" id="ccpa_score">60%</span></div>
             </div>
         </section>
 
-        <!-- ─── TRADING SECTION ──────────────────────────────────── -->
-        <section id="section-trading" class="hidden">
-            <div class="section-header">
-                <h2 class="section-title"><span>📊</span> Trading Dashboard</h2>
-                <button class="btn btn-ghost btn-sm" onclick="fetchStocks()">🔄 Refresh</button>
-            </div>
-            <div class="grid-3" id="stockGrid">
-                <div class="card"><h4>📈 NIFTY 50</h4><div class="stat-number" id="niftyPrice">Loading...</div><div id="niftyChange" class="text-sm"></div></div>
-                <div class="card"><h4>📈 SENSEX</h4><div class="stat-number" id="sensexPrice">Loading...</div><div id="sensexChange" class="text-sm"></div></div>
-                <div class="card"><h4>🪙 BTC/USD</h4><div class="stat-number" id="btcPrice">Loading...</div><div id="btcChange" class="text-sm"></div></div>
-            </div>
-            <div class="grid-2">
-                <div class="card">
-                    <h4>🔍 Stock Search</h4>
-                    <div class="flex gap-2 mt-4">
-                        <input type="text" id="stockSymbol" placeholder="e.g., RELIANCE.NS" class="chat-input" style="flex:1;">
-                        <button class="btn btn-primary btn-sm" onclick="searchStock()">Search</button>
-                    </div>
-                    <div id="stockResult" class="mt-4"></div>
-                </div>
-                <div class="card">
-                    <h4>📊 Major Indices</h4>
-                    <div id="indicesResult"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ─── NEWS SECTION ────────────────────────────────────── -->
-        <section id="section-news" class="hidden">
-            <div class="section-header">
-                <h2 class="section-title"><span>📰</span> AI Legal News</h2>
-                <button class="btn btn-ghost btn-sm" onclick="fetchNews()">🔄 Refresh</button>
-            </div>
-            <div id="newsGrid" class="grid-auto"></div>
-        </section>
-
-        <!-- ─── TRENDS SECTION ───────────────────────────────────── -->
-        <section id="section-trends" class="hidden">
-            <div class="section-header">
-                <h2 class="section-title"><span>📈</span> AI Trends</h2>
-                <button class="btn btn-ghost btn-sm" onclick="fetchTrends()">🔄 Refresh</button>
-            </div>
-            <div id="trendsGrid" class="grid-3"></div>
-        </section>
-
-        <!-- ─── LENS SECTION ────────────────────────────────────── -->
-        <section id="section-lens" class="hidden">
+        <!-- ─── LENS ────────────────────────────────────────────── -->
+        <section id="section-lens">
             <div class="section-header">
                 <h2 class="section-title"><span>🔍</span> Lens Agents</h2>
                 <div class="flex gap-2">
-                    <button class="btn btn-ghost btn-sm" onclick="fetchLens()">🔄 Refresh</button>
-                    <button class="btn btn-primary btn-sm" onclick="scanAll()">🔍 Scan All</button>
+                    <button class="btn btn-outline btn-sm" onclick="fetchLens()">🔄 Refresh</button>
+                    <button class="btn btn-primary btn-sm" onclick="scanAll()">🔍 Scan</button>
                 </div>
             </div>
-            <div id="lensGrid" class="grid-auto"></div>
+            <div id="lensGrid" class="grid-auto">
+                <div class="card text-muted text-sm">🕷️ Click "Scan" to initialize lens agents</div>
+            </div>
         </section>
 
-        <!-- ─── UPLOAD SECTION ──────────────────────────────────── -->
-        <section id="section-upload" class="hidden">
+        <!-- ─── NEWS ────────────────────────────────────────────── -->
+        <section id="section-news">
             <div class="section-header">
-                <h2 class="section-title"><span>📤</span> Upload & Analyze</h2>
+                <h2 class="section-title"><span>📰</span> AI News</h2>
+                <button class="btn btn-outline btn-sm" onclick="fetchNews()">🔄 Refresh</button>
             </div>
-            <div class="card">
-                <h4>📁 Upload Document</h4>
-                <p class="text-sm text-muted">Supports: PDF, DOCX, Images, Audio, Video</p>
-                <div class="flex gap-2 mt-4">
-                    <input type="file" id="fileInput" class="chat-input" style="flex:1;padding:8px;">
-                    <button class="btn btn-primary btn-sm" onclick="uploadFile()">Upload</button>
-                </div>
-                <div id="uploadResult" class="mt-4"></div>
-            </div>
-            <div class="grid-2 mt-4">
-                <div class="card">
-                    <h4>📄 Export as DOCX</h4>
-                    <p class="text-sm text-muted">Export legal content to Word</p>
-                    <div class="flex gap-2 mt-4">
-                        <input type="text" id="docxContent" placeholder="Content to export..." class="chat-input" style="flex:1;">
-                        <button class="btn btn-success btn-sm" onclick="exportDocx()">⬇️ Download</button>
-                    </div>
-                </div>
-                <div class="card">
-                    <h4>🎵 Export as Audio</h4>
-                    <p class="text-sm text-muted">Convert text to speech</p>
-                    <div class="flex gap-2 mt-4">
-                        <input type="text" id="audioContent" placeholder="Text to speak..." class="chat-input" style="flex:1;">
-                        <button class="btn btn-success btn-sm" onclick="exportAudio()">🎵 Generate</button>
-                    </div>
-                </div>
-            </div>
+            <div id="newsGrid" class="grid-auto"></div>
         </section>
 
     </main>
 
     <footer>
-        <p>© 2026 THE ADVOCACY – A LAW FIRM · All rights reserved · Built with Llama 3.1</p>
-        <p style="font-size:0.7rem;color:var(--text-dim);margin-top:8px;">🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE · Unknown Verdict v12.1</p>
+        <p>© 2026 THE ADVOCACY – A LAW FIRM · Built with Llama 3.1</p>
+        <p class="text-xs text-dim">🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE · v12.1</p>
     </footer>
-
-    <!-- ─── LOGIN MODAL ────────────────────────────────────────────── -->
-    <div class="modal-overlay" id="loginModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('loginModal')">×</button>
-            <h2>🔐 Login</h2>
-            <div class="form-group"><label>Username</label><input type="text" id="loginUser" value="counsel"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="loginPass" value="Password123!"></div>
-            <button class="btn btn-primary w-full" onclick="login()">Login</button>
-            <p class="text-xs text-dim mt-4">Demo: counsel / Password123!</p>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="articleModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('articleModal')">×</button>
-            <h2 id="articleTitle">Article</h2>
-            <div id="articleContent" style="line-height:1.8;color:var(--text-muted);margin:16px 0;"></div>
-            <div class="flex gap-2">
-                <button class="btn btn-outline btn-sm" onclick="copyArticle()">📋 Copy</button>
-                <button class="btn btn-primary btn-sm" onclick="downloadArticle()">⬇️ Download</button>
-            </div>
-        </div>
-    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
         // ─── STATE ──────────────────────────────────────────────────
         const state = {
-            user: JSON.parse(localStorage.getItem('uv_user')) || null,
             token: localStorage.getItem('uv_token') || null,
             baseUrl: window.location.origin,
             currentSection: 'home'
         };
 
-        // ─── DOM REFS ──────────────────────────────────────────────
+        // ─── DOM ──────────────────────────────────────────────────
         const $ = id => document.getElementById(id);
-        const sections = ['home', 'chat', 'legal', 'compliance', 'trading', 'news', 'trends', 'lens', 'upload'];
         const chatMessages = $('chatMessages');
 
-        // ─── INIT ──────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            switchSection('home');
-            fetchNews();
-            fetchCompliance();
-            fetchLens();
-            fetchStocks();
-            fetchTrends();
-            setInterval(() => { fetchNews(); fetchCompliance(); }, 300000);
-        });
-
-        // ─── NAVIGATION ─────────────────────────────────────────────
+        // ─── NAVIGATION ──────────────────────────────────────────
         function switchSection(section) {
-            sections.forEach(s => {
-                const el = $('section-' + s);
-                if (el) el.classList.add('hidden');
-            });
+            document.querySelectorAll('main section').forEach(s => s.classList.remove('active'));
             const target = $('section-' + section);
-            if (target) target.classList.remove('hidden');
-            state.currentSection = section;
+            if (target) target.classList.add('active');
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.section === section);
             });
-        }
-
-        // ─── AUTH ──────────────────────────────────────────────────
-        function getToken() { return state.token || localStorage.getItem('uv_token'); }
-        function setToken(t) { state.token = t; localStorage.setItem('uv_token', t); }
-        function clearToken() { state.token = null; localStorage.removeItem('uv_token'); localStorage.removeItem('uv_user'); }
-
-        function checkAuth() {
-            if (state.user) {
-                $('authBtn').classList.add('hidden');
-                $('userProfile').classList.remove('hidden');
-                $('userName').textContent = state.user.username || 'User';
-                updateTier(state.user.tier || 'Free');
-            }
-        }
-
-        function updateTier(tier) {
-            const badge = $('tierBadge');
-            const chatBadge = $('chatTier');
-            const t = tier.toLowerCase();
-            badge.textContent = tier;
-            chatBadge.textContent = tier;
-            badge.className = 'tier-badge ' + (t === 'free' ? '' : t);
-        }
-
-        function login() {
-            const user = $('loginUser').value.trim();
-            const pass = $('loginPass').value.trim();
-            fetch(state.baseUrl + '/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass })
-            })
-            .then(res => { if (!res.ok) throw new Error('Invalid credentials'); return res.json(); })
-            .then(data => {
-                state.user = data.user || { username: user, tier: 'Pro' };
-                setToken(data.access_token);
-                localStorage.setItem('uv_user', JSON.stringify(state.user));
-                checkAuth();
-                closeModal('loginModal');
-                showToast('Welcome, ' + (state.user.username || 'User') + '!', 'success');
-            })
-            .catch(err => showToast('Login failed: ' + err.message, 'error'));
-        }
-
-        function logout() {
-            state.user = null;
-            clearToken();
-            $('authBtn').classList.remove('hidden');
-            $('userProfile').classList.add('hidden');
-            updateTier('Free');
-            showToast('Logged out', 'success');
         }
 
         // ─── CHAT ──────────────────────────────────────────────────
@@ -615,26 +316,78 @@
             const input = $('chatInput');
             const text = input.value.trim();
             if (!text) return;
-            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
+
             addMessage(text, 'user');
             input.value = '';
             const typingId = 'typing-' + Date.now();
             addTypingIndicator(typingId);
+
             try {
-                const token = getToken();
                 const formData = new FormData();
                 formData.append('query', text);
                 formData.append('model', 'llama-3.3-70b-versatile');
+
                 const res = await fetch(state.baseUrl + '/ask', {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
+                    headers: { 'Authorization': 'Bearer ' + (state.token || 'demo') },
                     body: formData
                 });
+
                 removeTypingIndicator(typingId);
-                if (!res.ok) throw new Error('Query failed');
-                const data = await res.json();
-                addMessage(data.answer || 'No response', 'ai');
-            } catch(err) {
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Query failed');
+                }
+
+                // Handle streaming response
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let answer = '';
+                let buffer = '';
+                let msgDiv = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.token) {
+                                    if (!msgDiv) {
+                                        msgDiv = document.createElement('div');
+                                        msgDiv.className = 'message ai';
+                                        msgDiv.innerHTML = '<div id="stream-text"></div><div class="message-meta">Judge Shakti • Streaming...</div>';
+                                        chatMessages.appendChild(msgDiv);
+                                    }
+                                    const textEl = msgDiv.querySelector('#stream-text');
+                                    if (textEl) {
+                                        answer += parsed.token;
+                                        textEl.textContent = answer;
+                                    }
+                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                }
+                                if (parsed.verification) {
+                                    const v = parsed.verification;
+                                    addMessage('⚖️ Confidence: ' + (v.final_confidence || 'MEDIUM'), 'system');
+                                }
+                            } catch(e) { /* ignore parse errors */ }
+                        }
+                    }
+                }
+
+                if (!answer) {
+                    addMessage('⚠️ No response received. Please try again.', 'system');
+                }
+
+            } catch (err) {
                 removeTypingIndicator(typingId);
                 addMessage('❌ ' + err.message, 'system');
                 showToast('Error: ' + err.message, 'error');
@@ -644,7 +397,8 @@
         function addMessage(text, type) {
             const div = document.createElement('div');
             div.className = 'message ' + type;
-            div.innerHTML = text + '<div class="message-meta">' + (type === 'user' ? 'You' : type === 'system' ? 'System' : 'Judge Shakti') + ' • Just now</div>';
+            const label = type === 'user' ? 'You' : type === 'system' ? 'System' : 'Judge Shakti';
+            div.innerHTML = text + '<div class="message-meta">' + label + ' • Just now</div>';
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -659,102 +413,59 @@
 
         function removeTypingIndicator(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-        // ─── LEGAL ──────────────────────────────────────────────────
-        async function draftContract() {
-            const query = $('contractQuery').value.trim();
-            if (!query) { showToast('Enter contract description', 'warning'); return; }
-            showToast('Drafting contract...', 'success');
-            const result = $('legalResult');
-            result.classList.remove('hidden');
-            $('legalContent').textContent = 'Drafting...';
-            try {
-                const token = getToken();
-                const formData = new FormData();
-                formData.append('query', 'Draft a contract: ' + query);
-                const res = await fetch(state.baseUrl + '/ask', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
-                    body: formData
-                });
-                const data = await res.json();
-                $('legalContent').textContent = data.answer || 'No response';
-            } catch(err) {
-                $('legalContent').textContent = 'Error: ' + err.message;
-            }
-        }
-
-        async function legalResearch() {
-            const query = $('researchQuery').value.trim();
-            if (!query) { showToast('Enter a legal topic', 'warning'); return; }
-            showToast('Searching...', 'success');
-            const result = $('legalResult');
-            result.classList.remove('hidden');
-            $('legalContent').textContent = 'Searching...';
-            try {
-                const token = getToken();
-                const formData = new FormData();
-                formData.append('query', 'Research: ' + query);
-                const res = await fetch(state.baseUrl + '/ask', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
-                    body: formData
-                });
-                const data = await res.json();
-                $('legalContent').textContent = data.answer || 'No results';
-            } catch(err) {
-                $('legalContent').textContent = 'Error: ' + err.message;
-            }
-        }
-
-        // ─── COMPLIANCE ─────────────────────────────────────────────
+        // ─── COMPLIANCE ──────────────────────────────────────────
         async function fetchCompliance() {
             try {
                 const res = await fetch(state.baseUrl + '/api/compliance/snapshot');
                 const data = await res.json();
-                if (data.status === 'ok') {
-                    $('overallScore').textContent = data.overall_compliance || 0;
-                    $('overallStatus').textContent = data.overall_status || 'Loading...';
-                    Object.entries(data.frameworks || {}).forEach(([key, fw]) => {
+                if (data.status === 'ok' && data.frameworks) {
+                    Object.entries(data.frameworks).forEach(([key, fw]) => {
                         const score = fw.compliance_score || 0;
-                        const prog = $('prog_' + key);
-                        const scoreEl = $('score_' + key);
+                        const prog = $('dpdpa_progress');
+                        const scoreEl = $('dpdpa_score');
                         if (prog) prog.style.width = score + '%';
                         if (scoreEl) scoreEl.textContent = score + '%';
                     });
                 }
-            } catch(err) { console.error('Compliance error:', err); }
+            } catch(e) { console.error('Compliance error:', e); }
         }
 
-        // ─── STOCKS ──────────────────────────────────────────────────
-        async function fetchStocks() {
+        // ─── LENS ──────────────────────────────────────────────────
+        async function fetchLens() {
             try {
-                const symbols = ['^NSEI', '^BSESN', 'BTC-USD'];
-                const ids = ['nifty', 'sensex', 'btc'];
-                for (let i = 0; i < symbols.length; i++) {
-                    const res = await fetch(state.baseUrl + '/api/trading/stocks/' + symbols[i]);
-                    const data = await res.json();
-                    if (data.price) {
-                        $('niftyPrice').textContent = '₹' + data.price.toFixed(2);
-                        $('sensexPrice').textContent = '₹' + data.price.toFixed(2);
-                        $('btcPrice').textContent = '$' + data.price.toFixed(2);
-                    }
-                }
-            } catch(err) { console.error('Stocks error:', err); }
-        }
-
-        async function searchStock() {
-            const symbol = $('stockSymbol').value.trim();
-            if (!symbol) { showToast('Enter a stock symbol', 'warning'); return; }
-            try {
-                const res = await fetch(state.baseUrl + '/api/trading/stocks/' + symbol);
+                const res = await fetch(state.baseUrl + '/api/lens/agents');
                 const data = await res.json();
-                $('stockResult').innerHTML = `
-                    <div class="card"><h4>${data.symbol}</h4>
-                    <div class="stat-number">₹${data.price || 0}</div>
-                    <div style="color:${data.change >= 0 ? 'var(--success)' : 'var(--danger)'}">${data.change_percent || 0}%</div>
-                    </div>
-                `;
-            } catch(err) { showToast('Stock not found', 'error'); }
+                const grid = $('lensGrid');
+                if (data.status === 'ok' && data.agents && data.agents.length > 0) {
+                    grid.innerHTML = data.agents.slice(0, 6).map(a => `
+                        <div class="card">
+                            <h4>${a.domain || 'Unknown'}</h4>
+                            <div class="text-sm text-muted">${a.category || 'General'}</div>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs text-dim">Findings: ${a.findings_count || 0}</span>
+                                <span class="text-xs text-dim">Gov: ${Math.round((a.governance_score || 0) * 100)}%</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<div class="card text-muted text-sm">🕷️ No lens agents. Click "Scan" to start.</div>';
+                }
+            } catch(e) { console.error('Lens error:', e); }
+        }
+
+        async function scanAll() {
+            showToast('Scanning domains...', 'success');
+            try {
+                const token = state.token || 'demo';
+                const res = await fetch(state.baseUrl + '/api/lens/scan-all', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    showToast('Scan complete!', 'success');
+                    fetchLens();
+                }
+            } catch(e) { showToast('Scan failed', 'error'); }
         }
 
         // ─── NEWS ──────────────────────────────────────────────────
@@ -767,220 +478,67 @@
                     grid.innerHTML = data.articles.map(a => `
                         <div class="card">
                             <h4>${a.title}</h4>
-                            <p class="text-sm text-muted">${(a.summary || '').substring(0, 150)}...</p>
+                            <p class="text-sm text-muted">${(a.summary || '').substring(0, 120)}...</p>
                             <div class="flex gap-2 mt-4">
                                 <span class="text-xs text-dim">${a.source || 'Unknown'}</span>
                                 <span class="text-xs text-dim">${a.published || ''}</span>
                             </div>
                             <div class="flex gap-2 mt-4">
-                                <button class="btn btn-primary btn-sm" onclick="generateArticle('${a.id}')">✍️ Generate</button>
                                 <a href="${a.link || '#'}" target="_blank" class="btn btn-outline btn-sm">📖 Read</a>
                             </div>
                         </div>
                     `).join('');
                     $('statNews').textContent = data.count || data.articles.length || 0;
-                } else {
-                    grid.innerHTML = '<div class="info-box">No news available</div>';
                 }
-            } catch(err) {
-                $('newsGrid').innerHTML = '<div class="error-box">Failed to load news</div>';
-            }
+            } catch(e) { console.error('News error:', e); }
         }
 
-        async function generateArticle(newsId) {
-            showToast('Generating article...', 'success');
-            try {
-                const token = getToken();
-                const formData = new FormData();
-                formData.append('news_id', newsId);
-                const res = await fetch(state.baseUrl + '/api/news/generate-article', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
-                    body: formData
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    $('articleTitle').textContent = data.title || 'Article';
-                    $('articleContent').textContent = data.content || '';
-                    openModal('articleModal');
-                    showToast('Article generated!', 'success');
-                }
-            } catch(err) { showToast('Error: ' + err.message, 'error'); }
+        // ─── AUTH ──────────────────────────────────────────────────
+        function logout() {
+            localStorage.removeItem('uv_token');
+            state.token = null;
+            showToast('Logged out', 'success');
         }
-
-        // ─── TRENDS ──────────────────────────────────────────────────
-        async function fetchTrends() {
-            try {
-                const res = await fetch(state.baseUrl + '/api/trends/ai');
-                const data = await res.json();
-                if (data.status === 'ok') {
-                    const t = data.trends;
-                    $('trendsGrid').innerHTML = `
-                        <div class="card"><h4>🌍 Global AI Market</h4><div class="stat-number">$${(t.market_size?.global / 1e12 || 1.8).toFixed(1)}T</div><div class="text-sm text-muted">Growth: ${t.market_size?.growth_rate || 37}%</div></div>
-                        <div class="card"><h4>💰 Investment</h4><div class="stat-number">$${(t.investment?.[2026] / 1e9 || 280).toFixed(0)}B</div><div class="text-sm text-muted">2026 spending</div></div>
-                        <div class="card"><h4>💼 Jobs</h4><div class="stat-number">${(t.jobs?.net / 1000 || 350).toFixed(0)}K</div><div class="text-sm text-muted">Net new jobs</div></div>
-                        <div class="card"><h4>🇮🇳 India AI</h4><div class="stat-number">${t.countries?.find(c => c.name === 'India')?.score || 78}</div><div class="text-sm text-muted">AI Readiness Score</div></div>
-                        <div class="card"><h4>🏆 Top Model</h4><div class="stat-number" style="font-size:1.2rem;">${t.top_models?.[0]?.name || 'Llama 3.3'}</div><div class="text-sm text-muted">Score: ${t.top_models?.[0]?.score || 9.5}</div></div>
-                        <div class="card"><h4>📈 Top Trend</h4><div class="stat-number" style="font-size:1rem;">${t.trends?.[0]?.name || 'Agentic AI'}</div><div class="text-sm text-muted">Growth: ${t.trends?.[0]?.growth || 65}%</div></div>
-                    `;
-                }
-            } catch(err) { console.error('Trends error:', err); }
-        }
-
-        // ─── LENS AGENTS ─────────────────────────────────────────────
-        async function fetchLens() {
-            try {
-                const res = await fetch(state.baseUrl + '/api/lens/agents');
-                const data = await res.json();
-                const grid = $('lensGrid');
-                if (data.status === 'ok' && data.agents && data.agents.length > 0) {
-                    grid.innerHTML = data.agents.slice(0, 8).map(a => `
-                        <div class="card">
-                            <h4>${a.domain || 'Unknown'}</h4>
-                            <div class="text-sm text-muted">${a.category || 'General'}</div>
-                            <div class="flex gap-2 mt-4">
-                                <span class="text-xs text-dim">Findings: ${a.findings_count || 0}</span>
-                                <span class="text-xs text-dim">Gov: ${Math.round((a.governance_score || 0) * 100)}%</span>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    grid.innerHTML = '<div class="info-box">🕷️ No lens agents initialized. Click "Scan All" to start.</div>';
-                }
-            } catch(err) { $('lensGrid').innerHTML = '<div class="error-box">Failed to load lens agents</div>'; }
-        }
-
-        async function scanAll() {
-            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
-            showToast('Scanning all domains...', 'success');
-            const token = getToken();
-            try {
-                const res = await fetch(state.baseUrl + '/api/lens/scan-all', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) { showToast('Scan complete!', 'success'); fetchLens(); }
-                else { showToast('Scan failed', 'error'); }
-            } catch(err) { showToast('Error: ' + err.message, 'error'); }
-        }
-
-        // ─── UPLOAD ──────────────────────────────────────────────────
-        async function uploadFile() {
-            const file = $('fileInput').files[0];
-            if (!file) { showToast('Select a file first', 'warning'); return; }
-            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
-            showToast('Uploading...', 'success');
-            const formData = new FormData();
-            formData.append('file', file);
-            const token = getToken();
-            try {
-                const res = await fetch(state.baseUrl + '/api/upload', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
-                    body: formData
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    const text = data.result?.text || 'No text extracted';
-                    $('uploadResult').innerHTML = `<div class="card"><h4>📄 ${file.name}</h4><p class="text-sm text-muted">${text.substring(0, 500)}${text.length > 500 ? '...' : ''}</p></div>`;
-                    showToast('File processed!', 'success');
-                } else { showToast('Upload failed', 'error'); }
-            } catch(err) { showToast('Error: ' + err.message, 'error'); }
-        }
-
-        // ─── EXPORT ──────────────────────────────────────────────────
-        async function exportDocx() {
-            const content = $('docxContent').value.trim();
-            if (!content) { showToast('Enter content to export', 'warning'); return; }
-            const token = getToken();
-            const formData = new FormData();
-            formData.append('content', content);
-            try {
-                const res = await fetch(state.baseUrl + '/api/export/docx', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
-                    body: formData
-                });
-                if (res.ok) {
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = 'document.docx'; a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('Download started!', 'success');
-                }
-            } catch(err) { showToast('Export failed', 'error'); }
-        }
-
-        async function exportAudio() {
-            const content = $('audioContent').value.trim();
-            if (!content) { showToast('Enter text to speak', 'warning'); return; }
-            const token = getToken();
-            const formData = new FormData();
-            formData.append('content', content);
-            try {
-                const res = await fetch(state.baseUrl + '/api/export/audio', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
-                    body: formData
-                });
-                if (res.ok) {
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = 'audio.mp3'; a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('Audio generated!', 'success');
-                }
-            } catch(err) { showToast('Export failed', 'error'); }
-        }
-
-        // ─── MODALS ──────────────────────────────────────────────────
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        document.querySelectorAll('.modal-overlay').forEach(m => {
-            m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
-        });
 
         // ─── TOASTS ──────────────────────────────────────────────────
         function showToast(message, type) {
             const container = $('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast ' + (type || '');
-            const icons = { success: '✅', error: '❌', warning: '⚠️' };
+            const icons = { success: '✅', error: '❌' };
             toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
             container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 4000);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
-        // ─── ARTICLE MODAL ───────────────────────────────────────────
-        function copyArticle() {
-            const content = $('articleContent').textContent;
-            navigator.clipboard.writeText(content).then(() => showToast('Copied!', 'success'));
-        }
+        // ─── INIT ──────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load token from localStorage
+            const token = localStorage.getItem('uv_token');
+            if (token) state.token = token;
 
-        function downloadArticle() {
-            const title = $('articleTitle').textContent;
-            const content = $('articleContent').textContent;
-            const blob = new Blob(['# ' + title + '\n\n' + content], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = title.replace(/\s+/g, '_') + '.md'; a.click();
-            URL.revokeObjectURL(url);
-            showToast('Downloaded!', 'success');
-        }
+            fetchNews();
+            fetchCompliance();
+            fetchLens();
 
-        // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-            }
+            // Auto-refresh every 2 minutes
+            setInterval(() => {
+                fetchNews();
+                fetchCompliance();
+            }, 120000);
         });
 
-        console.log('🔱 Unknown Verdict v12.1 loaded');
-        console.log('📊 All features: Chat, Legal, Compliance, Trading, News, Trends, Lens, Upload, Export');
-        console.log('🧠 250 Agents, 10 Verifiers, Judge Shakti');
-        console.log('🌍 20 Languages supported');
+        // ─── KEYBOARD ──────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>
