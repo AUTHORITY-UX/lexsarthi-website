@@ -1,5 +1,5 @@
 # =============================================================================
-# core.py - Core Functions: Agents, LLM, Verifiers, RAG, Lens Agents
+# core.py - Core Functions: Agents, LLM, Verifiers, RAG, Multi-Modal, 20 Languages
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
@@ -11,6 +11,7 @@ import re
 import hashlib
 import random
 import time
+import io
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
@@ -25,6 +26,30 @@ from config import (
     VERIFIERS, OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY,
     DEEPSEEK_API_KEY, OPENROUTER_API_KEY, SERPAPI_KEY, TEMPLATES
 )
+
+# ─── SUPPORTED LANGUAGES ──────────────────────────────────────────────
+SUPPORTED_LANGUAGES = {
+    'en': {'name': 'English', 'code': 'en', 'flag': '🇬🇧'},
+    'hi': {'name': 'Hindi', 'code': 'hi', 'flag': '🇮🇳'},
+    'bn': {'name': 'Bengali', 'code': 'bn', 'flag': '🇧🇩'},
+    'te': {'name': 'Telugu', 'code': 'te', 'flag': '🇮🇳'},
+    'ta': {'name': 'Tamil', 'code': 'ta', 'flag': '🇮🇳'},
+    'mr': {'name': 'Marathi', 'code': 'mr', 'flag': '🇮🇳'},
+    'ur': {'name': 'Urdu', 'code': 'ur', 'flag': '🇵🇰'},
+    'gu': {'name': 'Gujarati', 'code': 'gu', 'flag': '🇮🇳'},
+    'kn': {'name': 'Kannada', 'code': 'kn', 'flag': '🇮🇳'},
+    'ml': {'name': 'Malayalam', 'code': 'ml', 'flag': '🇮🇳'},
+    'or': {'name': 'Odia', 'code': 'or', 'flag': '🇮🇳'},
+    'pa': {'name': 'Punjabi', 'code': 'pa', 'flag': '🇮🇳'},
+    'as': {'name': 'Assamese', 'code': 'as', 'flag': '🇮🇳'},
+    'mai': {'name': 'Maithili', 'code': 'mai', 'flag': '🇮🇳'},
+    'sat': {'name': 'Santali', 'code': 'sat', 'flag': '🇮🇳'},
+    'ks': {'name': 'Kashmiri', 'code': 'ks', 'flag': '🇮🇳'},
+    'ne': {'name': 'Nepali', 'code': 'ne', 'flag': '🇳🇵'},
+    'si': {'name': 'Sinhala', 'code': 'si', 'flag': '🇱🇰'},
+    'my': {'name': 'Burmese', 'code': 'my', 'flag': '🇲🇲'},
+    'th': {'name': 'Thai', 'code': 'th', 'flag': '🇹🇭'}
+}
 
 # ─── EDGE AI AVAILABILITY ──────────────────────────────────────────
 try:
@@ -144,6 +169,10 @@ def get_agent_by_id(agent_id: str) -> Optional[Dict]:
 
 def get_agent_by_domain(domain: str) -> Optional[Dict]:
     return next((a for a in DIVINE_AGENTS if a["domain"].lower() == domain.lower()), None)
+
+def get_language(lang_code: str) -> Dict:
+    """Get language details by code"""
+    return SUPPORTED_LANGUAGES.get(lang_code, SUPPORTED_LANGUAGES['en'])
 
 # ─── LLM CALL ──────────────────────────────────────────────────────
 async def call_llm(system_prompt: str, user_message: str, provider: str = "groq", temperature: float = 0.7, max_tokens: int = 4096) -> str:
@@ -400,7 +429,7 @@ class LensAgentSystem:
         
         for domain in domains:
             self.lens_agents.append({
-                "id": f"lens_{len(self.lens_agents)+1:03d}",
+                "id": "lens_" + str(len(self.lens_agents)+1).zfill(3),
                 "domain": domain,
                 "status": "active",
                 "last_scan": None,
@@ -501,6 +530,299 @@ class LensAgentSystem:
         """Get lens agent by domain name"""
         return next((a for a in self.lens_agents if domain.lower() in a["domain"].lower()), None)
 
+# ─── MULTI-MODAL PROCESSOR ────────────────────────────────────────
+try:
+    import PyPDF2
+    import pdfplumber
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+
+try:
+    from docx import Document
+    from docx.shared import Inches, Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
+try:
+    from PIL import Image
+    import pytesseract
+    IMAGE_AVAILABLE = True
+except ImportError:
+    IMAGE_AVAILABLE = False
+
+try:
+    import speech_recognition as sr
+    from pydub import AudioSegment
+    AUDIO_AVAILABLE = True
+except ImportError:
+    AUDIO_AVAILABLE = False
+
+try:
+    import cv2
+    import moviepy.editor as mp
+    VIDEO_AVAILABLE = True
+except ImportError:
+    VIDEO_AVAILABLE = False
+
+class MultiModalProcessor:
+    """Process text, PDF, DOCX, Images, Audio, Video with 20 languages"""
+
+    def __init__(self):
+        self.supported_formats = {
+            'pdf': ['.pdf'],
+            'docx': ['.docx', '.doc'],
+            'image': ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'],
+            'audio': ['.wav', '.mp3', '.m4a', '.flac', '.ogg'],
+            'video': ['.mp4', '.avi', '.mov', '.mkv', '.webm'],
+            'text': ['.txt', '.md', '.json', '.csv', '.xlsx']
+        }
+        self.processed_files = []
+
+    async def process_file(self, file_bytes: bytes, filename: str, file_type: str = None, lang: str = 'en') -> Dict:
+        """Process any file type and extract text/content"""
+        ext = os.path.splitext(filename)[1].lower()
+        file_id = hashlib.md5(file_bytes).hexdigest()[:8]
+        
+        result = {
+            'file_id': file_id,
+            'filename': filename,
+            'extension': ext,
+            'type': file_type or self._detect_type(ext),
+            'text': '',
+            'metadata': {},
+            'language': lang,
+            'timestamp': datetime.now().isoformat()
+        }
+
+        if ext in ['.pdf']:
+            result.update(await self._process_pdf(file_bytes))
+        elif ext in ['.docx', '.doc']:
+            result.update(await self._process_docx(file_bytes))
+        elif ext in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif']:
+            result.update(await self._process_image(file_bytes, lang))
+        elif ext in ['.wav', '.mp3', '.m4a', '.flac', '.ogg']:
+            result.update(await self._process_audio(file_bytes, lang))
+        elif ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+            result.update(await self._process_video(file_bytes, lang))
+        else:
+            try:
+                result['text'] = file_bytes.decode('utf-8', errors='ignore')
+                result['type'] = 'text'
+            except:
+                result['text'] = 'Binary file - cannot extract text'
+                result['type'] = 'binary'
+
+        self.processed_files.append(result)
+        return result
+
+    def _detect_type(self, ext: str) -> str:
+        for type_name, exts in self.supported_formats.items():
+            if ext in exts:
+                return type_name
+        return 'unknown'
+
+    async def _process_pdf(self, file_bytes: bytes) -> Dict:
+        if not PDF_AVAILABLE:
+            return {'text': 'PDF processing not available', 'metadata': {}}
+        
+        try:
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                text = "\n".join([page.extract_text() or "" for page in pdf.pages])
+                pages = len(pdf.pages)
+            
+            if not text.strip():
+                reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
+                text = "\n".join([page.extract_text() or "" for page in reader.pages])
+                pages = len(reader.pages)
+            
+            return {
+                'text': text,
+                'metadata': {'pages': pages, 'pages_extracted': pages}
+            }
+        except Exception as e:
+            return {'text': f'PDF extraction failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_docx(self, file_bytes: bytes) -> Dict:
+        if not DOCX_AVAILABLE:
+            return {'text': 'DOCX processing not available', 'metadata': {}}
+        
+        try:
+            doc = Document(io.BytesIO(file_bytes))
+            text = "\n".join([p.text for p in doc.paragraphs])
+            
+            tables_text = []
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = [cell.text for cell in row.cells]
+                    tables_text.append(" | ".join(row_text))
+            
+            if tables_text:
+                text += "\n\n--- TABLES ---\n" + "\n".join(tables_text)
+            
+            return {
+                'text': text,
+                'metadata': {'paragraphs': len(doc.paragraphs), 'tables': len(doc.tables)}
+            }
+        except Exception as e:
+            return {'text': f'DOCX extraction failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_image(self, file_bytes: bytes, lang: str = 'en') -> Dict:
+        if not IMAGE_AVAILABLE:
+            return {'text': 'Image processing not available', 'metadata': {}}
+        
+        try:
+            image = Image.open(io.BytesIO(file_bytes))
+            # Use language-specific OCR
+            text = pytesseract.image_to_string(image, lang=lang)
+            
+            return {
+                'text': text,
+                'metadata': {
+                    'width': image.width,
+                    'height': image.height,
+                    'format': image.format,
+                    'mode': image.mode,
+                    'language': lang
+                }
+            }
+        except Exception as e:
+            return {'text': f'Image OCR failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_audio(self, file_bytes: bytes, lang: str = 'en') -> Dict:
+        if not AUDIO_AVAILABLE:
+            return {'text': 'Audio processing not available', 'metadata': {}}
+        
+        try:
+            file_hash = hashlib.md5(file_bytes).hexdigest()[:8]
+            temp_path = "/tmp/audio_" + file_hash + ".wav"
+            with open(temp_path, 'wb') as f:
+                f.write(file_bytes)
+            
+            # Convert if needed
+            if not temp_path.endswith('.wav'):
+                audio = AudioSegment.from_file(temp_path)
+                temp_path_converted = temp_path.replace('.wav', '_converted.wav')
+                audio.export(temp_path_converted, format='wav')
+                temp_path = temp_path_converted
+            
+            # Transcribe with language
+            recognizer = sr.Recognizer()
+            with sr.AudioFile(temp_path) as source:
+                audio_data = recognizer.record(source)
+                text = recognizer.recognize_google(audio_data, language=lang)
+            
+            os.remove(temp_path)
+            
+            return {
+                'text': text,
+                'metadata': {'duration': 'unknown', 'transcribed': True, 'language': lang}
+            }
+        except Exception as e:
+            return {'text': f'Audio transcription failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def _process_video(self, file_bytes: bytes, lang: str = 'en') -> Dict:
+        if not VIDEO_AVAILABLE:
+            return {'text': 'Video processing not available', 'metadata': {}}
+        
+        try:
+            file_hash = hashlib.md5(file_bytes).hexdigest()[:8]
+            temp_path = "/tmp/video_" + file_hash + ".mp4"
+            with open(temp_path, 'wb') as f:
+                f.write(file_bytes)
+            
+            video = mp.VideoFileClip(temp_path)
+            audio_path = temp_path.replace('.mp4', '_audio.wav')
+            video.audio.write_audiofile(audio_path)
+            
+            with open(audio_path, 'rb') as f:
+                audio_bytes = f.read()
+            
+            audio_result = await self._process_audio(audio_bytes, lang)
+            
+            os.remove(temp_path)
+            os.remove(audio_path)
+            
+            return {
+                'text': audio_result.get('text', ''),
+                'metadata': {
+                    'duration': video.duration,
+                    'fps': video.fps,
+                    'size': video.size,
+                    'transcribed': True,
+                    'language': lang
+                }
+            }
+        except Exception as e:
+            return {'text': f'Video processing failed: {str(e)}', 'metadata': {'error': str(e)}}
+
+    async def generate_docx(self, content: str, title: str = "Document") -> bytes:
+        if not DOCX_AVAILABLE:
+            return b''
+        
+        doc = Document()
+        
+        title_para = doc.add_heading(title, 0)
+        title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        date_para = doc.add_paragraph("Generated: " + datetime.now().strftime('%B %d, %Y'))
+        date_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        
+        for line in content.split('\n'):
+            if line.strip():
+                if line.startswith('#'):
+                    doc.add_heading(line.replace('#', '').strip(), 2)
+                elif line.startswith('##'):
+                    doc.add_heading(line.replace('##', '').strip(), 3)
+                else:
+                    doc.add_paragraph(line)
+        
+        doc.add_paragraph()
+        sig_para = doc.add_paragraph()
+        sig_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        sig_run = sig_para.add_run("_________________________\nSignature")
+        sig_run.bold = True
+        
+        doc_buffer = io.BytesIO()
+        doc.save(doc_buffer)
+        doc_buffer.seek(0)
+        return doc_buffer.getvalue()
+
+    async def text_to_audio(self, text: str, lang: str = 'en') -> bytes:
+        try:
+            from gtts import gTTS
+            tts = gTTS(text=text, lang=lang[:2], slow=False)
+            audio_buffer = io.BytesIO()
+            tts.write_to_fp(audio_buffer)
+            audio_buffer.seek(0)
+            return audio_buffer.getvalue()
+        except:
+            return b''
+
+    def get_supported_formats(self) -> Dict:
+        formats = {}
+        for type_name, exts in self.supported_formats.items():
+            available = False
+            if type_name == 'pdf':
+                available = PDF_AVAILABLE
+            elif type_name == 'docx':
+                available = DOCX_AVAILABLE
+            elif type_name == 'image':
+                available = IMAGE_AVAILABLE
+            elif type_name == 'audio':
+                available = AUDIO_AVAILABLE
+            elif type_name == 'video':
+                available = VIDEO_AVAILABLE
+            else:
+                available = True
+            formats[type_name] = {'extensions': exts, 'available': available}
+        return formats
+
+    def get_supported_languages(self) -> Dict:
+        return SUPPORTED_LANGUAGES
+
 # ─── AGENT SWARM ──────────────────────────────────────────────────
 class AgentSwarm:
     def __init__(self):
@@ -527,9 +849,9 @@ class AgentSwarm:
                    "spiritual", "psychological", "philosophical", "scientific", "mathematical"]
         for domain in domains:
             if domain in task.lower():
-                subtasks.append(f"Analyze {domain} aspects of: {task}")
+                subtasks.append("Analyze " + domain + " aspects of: " + task)
         if not subtasks:
-            subtasks.append(f"Provide comprehensive analysis of: {task}")
+            subtasks.append("Provide comprehensive analysis of: " + task)
         return subtasks
     
     async def execute(self, task: str) -> Dict:
@@ -548,21 +870,14 @@ class AgentSwarm:
         return {"status": "completed", "leader": leader["name"], "agent_count": len(self.agents), "subtasks_processed": len(results), "results": results, "final_answer": final_answer, "execution_id": len(self.execution_history)}
     
     async def _execute_subtask(self, agent: Dict, subtask: str) -> Dict:
-        system = f"You are {agent['name']}, a {agent['type']} specialist in {agent['domain']}. Provide expert analysis."
+        system = "You are " + agent['name'] + ", a " + agent['type'] + " specialist in " + agent['domain'] + ". Provide expert analysis."
         result = await call_llm(system, subtask, "groq")
         return {"agent": agent["name"], "domain": agent["domain"], "type": agent["type"], "subtask": subtask[:100], "result": result[:500]}
     
     async def _synthesize(self, results: List[Dict], original_task: str, leader: Dict) -> str:
-        """Synthesize all subtask results into final answer - FIXED"""
-        results_text = "\n".join([f"- {r['agent']} ({r['type']}): {r['result'][:200]}" for r in results])
-        synthesis_prompt = f"""Original task: {original_task}
-
-Sub-results from {len(results)} agents:
-{results_text}
-
-Synthesize a comprehensive final answer integrating all perspectives."""
-        
-        system = f"You are {leader['name']}, the swarm leader. Synthesize the final answer."
+        results_text = "\n".join(["- " + r['agent'] + " (" + r['type'] + "): " + r['result'][:200] for r in results])
+        synthesis_prompt = "Original task: " + original_task + "\n\nSub-results from " + str(len(results)) + " agents:\n" + results_text + "\n\nSynthesize a comprehensive final answer integrating all perspectives."
+        system = "You are " + leader['name'] + ", the swarm leader. Synthesize the final answer."
         return await call_llm(system, synthesis_prompt, "groq")
 
 # ─── SELF-IMPROVING ──────────────────────────────────────────────
@@ -578,7 +893,7 @@ class SelfImprovingSystem:
         self.quality_score = (self.quality_score * len(self.feedback_data) + rating * 10) / (len(self.feedback_data) + 1)
         if database:
             try:
-                await database.execute("INSERT INTO user_feedback (user_id, rating, comment) VALUES ($1, $2, $3)", user_id, rating, f"Auto-collected feedback for query: {query[:100]}")
+                await database.execute("INSERT INTO user_feedback (user_id, rating, comment) VALUES ($1, $2, $3)", user_id, rating, "Auto-collected feedback for query: " + query[:100])
             except:
                 pass
         return {"status": "recorded", "quality_score": round(self.quality_score, 1)}
@@ -588,7 +903,7 @@ class SelfImprovingSystem:
         low_rated = [f for f in self.feedback_data if f["rating"] < 3]
         improvements = []
         for item in low_rated[:10]:
-            improved = await call_llm("You are a legal expert. Improve this response for accuracy, clarity, and completeness. Return only the improved answer.", f"Original query: {item['query']}\n\nOriginal answer: {item['answer']}", "groq")
+            improved = await call_llm("You are a legal expert. Improve this response for accuracy, clarity, and completeness. Return only the improved answer.", "Original query: " + item['query'] + "\n\nOriginal answer: " + item['answer'], "groq")
             if improved and improved != item["answer"]:
                 improvements.append({"query": item["query"], "original": item["answer"][:200], "improved": improved[:200]})
                 if database:
@@ -629,35 +944,31 @@ class AgentDebate:
         return debate_record
     
     async def _get_position(self, agent: Dict, question: str, previous_positions: List) -> str:
-        system = f"You are {agent['name']}, a {agent['type']} specialist in {agent['domain']}. Take a clear position and justify it."
+        system = "You are " + agent['name'] + ", a " + agent['type'] + " specialist in " + agent['domain'] + ". Take a clear position and justify it."
         context = ""
         if previous_positions:
             context = "Previous positions:\n"
             for p in previous_positions[-1]:
-                context += f"- {p['agent']} ({p['type']}): {p['position'][:150]}\n"
+                context += "- " + p['agent'] + " (" + p['type'] + "): " + p['position'][:150] + "\n"
             context += "\n"
-        prompt = f"{context}Question: {question}\n\nYour position (be specific and justify):"
+        prompt = context + "Question: " + question + "\n\nYour position (be specific and justify):"
         return await call_llm(system, prompt, "groq")
     
     async def _find_consensus(self, positions: List) -> tuple:
-        """Find consensus among positions - FIXED"""
         all_positions = []
         for round_positions in positions:
             for p in round_positions:
                 all_positions.append(p["position"])
         
-        positions_text = "\n".join([f"- {p[:200]}" for p in all_positions[:10]])
-        consensus_prompt = f"""These are positions from different experts:
-{positions_text}
-
-What is the consensus? Return a concise summary."""
+        positions_text = "\n".join(["- " + p[:200] for p in all_positions[:10]])
+        consensus_prompt = "These are positions from different experts:\n" + positions_text + "\n\nWhat is the consensus? Return a concise summary."
         
         consensus = await call_llm("You are a consensus finder.", consensus_prompt, "groq")
         confidence = min(0.9, 0.7 + (len(positions) * 0.05))
         return consensus, confidence
     
     async def _synthesize_consensus(self, positions: List, consensus: str, question: str) -> str:
-        synthesis_prompt = f"Question: {question}\nConsensus: {consensus}\n\nSynthesize a final, well-structured response incorporating all perspectives."
+        synthesis_prompt = "Question: " + question + "\nConsensus: " + consensus + "\n\nSynthesize a final, well-structured response incorporating all perspectives."
         return await call_llm("You are a legal synthesis expert.", synthesis_prompt, "groq")
     
     def get_stats(self) -> Dict:
@@ -686,21 +997,21 @@ class LegalKnowledgeGraph:
     
     async def query(self, concept: str, depth: int = 2) -> Dict:
         if concept not in self.nodes:
-            return {"error": f"Concept '{concept}' not found"}
+            return {"error": "Concept '" + concept + "' not found"}
         start_id = self.nodes[concept]
         results = {"concept": concept, "direct_relations": [], "related_concepts": []}
         for edge in self.edges:
             if edge["from"] == start_id:
                 results["direct_relations"].append({"to": self.node_data[edge["to"]]["name"], "relation": edge["relation"], "weight": edge["weight"]})
             elif edge["to"] == start_id:
-                results["direct_relations"].append({"from": self.node_data[edge["from"]]["name"], "relation": f"inverse_of_{edge['relation']}", "weight": edge["weight"]})
+                results["direct_relations"].append({"from": self.node_data[edge["from"]]["name"], "relation": "inverse_of_" + edge['relation'], "weight": edge["weight"]})
         if depth >= 2:
             for edge in self.edges:
                 if edge["from"] == start_id:
                     to_name = self.node_data[edge["to"]]["name"]
                     for edge2 in self.edges:
                         if edge2["from"] == edge["to"]:
-                            results["related_concepts"].append({"source": to_name, "target": self.node_data[edge2["to"]]["name"], "path": f"{concept} → {to_name} → {self.node_data[edge2['to']]['name']}"})
+                            results["related_concepts"].append({"source": to_name, "target": self.node_data[edge2["to"]]["name"], "path": concept + " → " + to_name + " → " + self.node_data[edge2["to"]]['name']})
         return results
     
     async def add_legal_relationships(self):
@@ -727,10 +1038,6 @@ class LegalKnowledgeGraph:
         return {"total_nodes": len(self.nodes), "total_edges": len(self.edges), "categories": len(set(d["category"] for d in self.node_data.values()))}
 
 # ─── DOCUMENT GENERATOR ──────────────────────────────────────────
-from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-import io
-
 class SmartDocumentGenerator:
     def __init__(self):
         self.template_cache = {}
@@ -739,32 +1046,10 @@ class SmartDocumentGenerator:
     async def generate(self, template_id: str, data: Dict[str, Any]) -> Dict:
         template = TEMPLATES.get(template_id)
         if not template:
-            return {"error": f"Template '{template_id}' not found"}
+            return {"error": "Template '" + template_id + "' not found"}
         prompt = template["prompt"].format(**data)
         content = await call_llm("You are a legal document drafter.", prompt, "groq")
-        doc = Document()
-        title = doc.add_heading(template["name"], 0)
-        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        date_para = doc.add_paragraph(f"Date: {datetime.now().strftime('%B %d, %Y')}")
-        date_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        for line in content.split('\n'):
-            if line.strip():
-                if line.startswith('#'):
-                    doc.add_heading(line.replace('#', '').strip(), 2)
-                elif line.startswith('##'):
-                    doc.add_heading(line.replace('##', '').strip(), 3)
-                else:
-                    doc.add_paragraph(line)
-        doc.add_paragraph()
-        signature_para = doc.add_paragraph()
-        signature_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        signature_run = signature_para.add_run("_________________________\nSignature")
-        signature_run.bold = True
-        doc_buffer = io.BytesIO()
-        doc.save(doc_buffer)
-        doc_buffer.seek(0)
-        self.generated_count += 1
-        return {"status": "success", "template": template_id, "name": template["name"], "document": doc_buffer.getvalue(), "content": content, "generated_at": datetime.now().isoformat()}
+        return {"status": "success", "template": template_id, "name": template["name"], "content": content, "generated_at": datetime.now().isoformat()}
     
     async def generate_batch(self, template_id: str, data_list: List[Dict]) -> Dict:
         results = []
@@ -807,6 +1092,8 @@ __all__ = [
     'route_agent',
     'get_agent_by_id',
     'get_agent_by_domain',
+    'get_language',
+    'SUPPORTED_LANGUAGES',
     'call_llm',
     'jury_verification',
     'fetch_relevant_chunks',
@@ -821,6 +1108,7 @@ __all__ = [
     'logger',
     'EdgeAIManager',
     'LensAgentSystem',
+    'MultiModalProcessor',
     'AgentSwarm',
     'SelfImprovingSystem',
     'AgentDebate',
@@ -830,329 +1118,3 @@ __all__ = [
 ]
 
 LLAMA_ATTRIBUTION = "Built with Llama 3.1 · Licensed under Llama 3.1 Community License"
-
-# =============================================================================
-# MULTI-MODAL FILE PROCESSING - Add to core.py
-# =============================================================================
-
-import io
-import os
-import json
-import asyncio
-import hashlib
-from typing import Dict, List, Optional, Any
-from datetime import datetime
-
-# ─── PDF PROCESSING ──────────────────────────────────────────────────
-try:
-    import PyPDF2
-    import pdfplumber
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-
-# ─── DOCX PROCESSING ──────────────────────────────────────────────────
-try:
-    from docx import Document
-    from docx.shared import Inches, Pt, RGBColor
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    DOCX_AVAILABLE = True
-except ImportError:
-    DOCX_AVAILABLE = False
-
-# ─── IMAGE PROCESSING ──────────────────────────────────────────────────
-try:
-    from PIL import Image
-    import pytesseract
-    IMAGE_AVAILABLE = True
-except ImportError:
-    IMAGE_AVAILABLE = False
-
-# ─── AUDIO PROCESSING ──────────────────────────────────────────────────
-try:
-    import speech_recognition as sr
-    from pydub import AudioSegment
-    AUDIO_AVAILABLE = True
-except ImportError:
-    AUDIO_AVAILABLE = False
-
-# ─── VIDEO PROCESSING ──────────────────────────────────────────────────
-try:
-    import cv2
-    import moviepy.editor as mp
-    VIDEO_AVAILABLE = True
-except ImportError:
-    VIDEO_AVAILABLE = False
-
-# ─── MULTI-MODAL PROCESSOR ────────────────────────────────────────────
-
-class MultiModalProcessor:
-    """Process text, PDF, DOCX, Images, Audio, Video"""
-
-    def __init__(self):
-        self.supported_formats = {
-            'pdf': ['.pdf'],
-            'docx': ['.docx', '.doc'],
-            'image': ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'],
-            'audio': ['.wav', '.mp3', '.m4a', '.flac', '.ogg'],
-            'video': ['.mp4', '.avi', '.mov', '.mkv', '.webm'],
-            'text': ['.txt', '.md', '.json', '.csv', '.xlsx']
-        }
-        self.processed_files = []
-
-    async def process_file(self, file_bytes: bytes, filename: str, file_type: str = None) -> Dict:
-        """Process any file type and extract text/content"""
-        ext = os.path.splitext(filename)[1].lower()
-        file_id = hashlib.md5(file_bytes).hexdigest()[:8]
-        
-        result = {
-            'file_id': file_id,
-            'filename': filename,
-            'extension': ext,
-            'type': file_type or self._detect_type(ext),
-            'text': '',
-            'metadata': {},
-            'timestamp': datetime.now().isoformat()
-        }
-
-        if ext in ['.pdf']:
-            result.update(await self._process_pdf(file_bytes))
-        elif ext in ['.docx', '.doc']:
-            result.update(await self._process_docx(file_bytes))
-        elif ext in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif']:
-            result.update(await self._process_image(file_bytes))
-        elif ext in ['.wav', '.mp3', '.m4a', '.flac', '.ogg']:
-            result.update(await self._process_audio(file_bytes))
-        elif ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-            result.update(await self._process_video(file_bytes))
-        else:
-            # Try as text
-            try:
-                result['text'] = file_bytes.decode('utf-8', errors='ignore')
-                result['type'] = 'text'
-            except:
-                result['text'] = 'Binary file - cannot extract text'
-                result['type'] = 'binary'
-
-        self.processed_files.append(result)
-        return result
-
-    def _detect_type(self, ext: str) -> str:
-        for type_name, exts in self.supported_formats.items():
-            if ext in exts:
-                return type_name
-        return 'unknown'
-
-    async def _process_pdf(self, file_bytes: bytes) -> Dict:
-        """Extract text from PDF"""
-        if not PDF_AVAILABLE:
-            return {'text': 'PDF processing not available', 'metadata': {}}
-        
-        try:
-            # Try pdfplumber first (better)
-            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-                text = "\n".join([page.extract_text() or "" for page in pdf.pages])
-                pages = len(pdf.pages)
-            
-            if not text.strip():
-                # Fallback to PyPDF2
-                reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
-                text = "\n".join([page.extract_text() or "" for page in reader.pages])
-                pages = len(reader.pages)
-            
-            return {
-                'text': text,
-                'metadata': {'pages': pages, 'pages_extracted': pages}
-            }
-        except Exception as e:
-            return {'text': f'PDF extraction failed: {str(e)}', 'metadata': {'error': str(e)}}
-
-    async def _process_docx(self, file_bytes: bytes) -> Dict:
-        """Extract text from DOCX"""
-        if not DOCX_AVAILABLE:
-            return {'text': 'DOCX processing not available', 'metadata': {}}
-        
-        try:
-            doc = Document(io.BytesIO(file_bytes))
-            text = "\n".join([p.text for p in doc.paragraphs])
-            
-            # Extract tables
-            tables_text = []
-            for table in doc.tables:
-                for row in table.rows:
-                    row_text = [cell.text for cell in row.cells]
-                    tables_text.append(" | ".join(row_text))
-            
-            if tables_text:
-                text += "\n\n--- TABLES ---\n" + "\n".join(tables_text)
-            
-            return {
-                'text': text,
-                'metadata': {'paragraphs': len(doc.paragraphs), 'tables': len(doc.tables)}
-            }
-        except Exception as e:
-            return {'text': f'DOCX extraction failed: {str(e)}', 'metadata': {'error': str(e)}}
-
-    async def _process_image(self, file_bytes: bytes) -> Dict:
-        """Extract text from image using OCR"""
-        if not IMAGE_AVAILABLE:
-            return {'text': 'Image processing not available', 'metadata': {}}
-        
-        try:
-            image = Image.open(io.BytesIO(file_bytes))
-            text = pytesseract.image_to_string(image)
-            
-            return {
-                'text': text,
-                'metadata': {
-                    'width': image.width,
-                    'height': image.height,
-                    'format': image.format,
-                    'mode': image.mode
-                }
-            }
-        except Exception as e:
-            return {'text': f'Image OCR failed: {str(e)}', 'metadata': {'error': str(e)}}
-
-    async def _process_audio(self, file_bytes: bytes) -> Dict:
-        """Transcribe audio to text"""
-        if not AUDIO_AVAILABLE:
-            return {'text': 'Audio processing not available', 'metadata': {}}
-        
-        try:
-            # Save to temp file
-            temp_path = f"/tmp/audio_{hashlib.md5(file_bytes).hexdigest()[:8]}.wav"
-            with open(temp_path, 'wb') as f:
-                f.write(file_bytes)
-            
-            # Convert if needed
-            if not temp_path.endswith('.wav'):
-                audio = AudioSegment.from_file(temp_path)
-                temp_path = temp_path.replace('.wav', '_converted.wav')
-                audio.export(temp_path, format='wav')
-            
-            # Transcribe
-            recognizer = sr.Recognizer()
-            with sr.AudioFile(temp_path) as source:
-                audio_data = recognizer.record(source)
-                text = recognizer.recognize_google(audio_data)
-            
-            os.remove(temp_path)
-            
-            return {
-                'text': text,
-                'metadata': {'duration': 'unknown', 'transcribed': True}
-            }
-        except Exception as e:
-            return {'text': f'Audio transcription failed: {str(e)}', 'metadata': {'error': str(e)}}
-
-    async def _process_video(self, file_bytes: bytes) -> Dict:
-        """Extract audio from video and transcribe"""
-        if not VIDEO_AVAILABLE:
-            return {'text': 'Video processing not available', 'metadata': {}}
-        
-        try:
-            # Save to temp file
-            temp_path = f"/tmp/video_{hashlib.md5(file_bytes).hexdigest()[:8]}.mp4"
-            with open(temp_path, 'wb') as f:
-                f.write(file_bytes)
-            
-            # Extract audio
-            video = mp.VideoFileClip(temp_path)
-            audio_path = temp_path.replace('.mp4', '_audio.wav')
-            video.audio.write_audiofile(audio_path)
-            
-            # Transcribe audio
-            with open(audio_path, 'rb') as f:
-                audio_bytes = f.read()
-            
-            audio_result = await self._process_audio(audio_bytes)
-            
-            # Cleanup
-            os.remove(temp_path)
-            os.remove(audio_path)
-            
-            return {
-                'text': audio_result.get('text', ''),
-                'metadata': {
-                    'duration': video.duration,
-                    'fps': video.fps,
-                    'size': video.size,
-                    'transcribed': True
-                }
-            }
-        except Exception as e:
-            return {'text': f'Video processing failed: {str(e)}', 'metadata': {'error': str(e)}}
-
-    async def generate_docx(self, content: str, title: str = "Document") -> bytes:
-        """Generate DOCX from text content"""
-        if not DOCX_AVAILABLE:
-            return b''
-        
-        doc = Document()
-        
-        # Title
-        title_para = doc.add_heading(title, 0)
-        title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        # Date
-        date_para = doc.add_paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}")
-        date_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        
-        # Content
-        for line in content.split('\n'):
-            if line.strip():
-                if line.startswith('#'):
-                    doc.add_heading(line.replace('#', '').strip(), 2)
-                elif line.startswith('##'):
-                    doc.add_heading(line.replace('##', '').strip(), 3)
-                else:
-                    doc.add_paragraph(line)
-        
-        # Signature
-        doc.add_paragraph()
-        sig_para = doc.add_paragraph()
-        sig_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        sig_run = sig_para.add_run("_________________________\nSignature")
-        sig_run.bold = True
-        
-        # Save to bytes
-        doc_buffer = io.BytesIO()
-        doc.save(doc_buffer)
-        doc_buffer.seek(0)
-        return doc_buffer.getvalue()
-
-    async def text_to_audio(self, text: str) -> bytes:
-        """Convert text to audio (TTS)"""
-        try:
-            from gtts import gTTS
-            tts = gTTS(text=text, lang='en', slow=False)
-            audio_buffer = io.BytesIO()
-            tts.write_to_fp(audio_buffer)
-            audio_buffer.seek(0)
-            return audio_buffer.getvalue()
-        except:
-            return b''
-
-    def get_supported_formats(self) -> Dict:
-        """Get list of supported file formats"""
-        formats = {}
-        for type_name, exts in self.supported_formats.items():
-            available = False
-            if type_name == 'pdf':
-                available = PDF_AVAILABLE
-            elif type_name == 'docx':
-                available = DOCX_AVAILABLE
-            elif type_name == 'image':
-                available = IMAGE_AVAILABLE
-            elif type_name == 'audio':
-                available = AUDIO_AVAILABLE
-            elif type_name == 'video':
-                available = VIDEO_AVAILABLE
-            else:
-                available = True
-            formats[type_name] = {'extensions': exts, 'available': available}
-        return formats
-
-# ─── GLOBAL INSTANCE ──────────────────────────────────────────────────
-multi_modal_processor = MultiModalProcessor()
