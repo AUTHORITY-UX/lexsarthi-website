@@ -1,6 +1,7 @@
 # =============================================================================
 # config.py - Configuration & Environment Variables
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
 
 import os
@@ -12,8 +13,18 @@ LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # ─── ENVIRONMENT ────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL postgresql://neondb_owner:npg_uWF70INEzRlA@ep-muddy-haze-atfwpnmd-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
+DATABASE_URL = os.getenv("DATABASE_URL")
 REDIS_URL = os.getenv("REDIS_URL", None)
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+
+if not REDIS_URL and REDIS_HOST:
+    REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+    if REDIS_PASSWORD:
+        REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_MINUTES = 60 * 24 * 7
@@ -54,16 +65,23 @@ a jury of 10 verifiers, and a final judge. You have access to a knowledge base a
 Always strive for accuracy, cite sources, and admit uncertainty. 
 Default jurisdiction: India. Tone: professional, wise, neutral."""
 
-# ─── DOMAINS & AGENTS ──────────────────────────────────────────────
+# ─── DOMAINS ──────────────────────────────────────────────────────
 DOMAINS_FULL = [
+    # Legal
     "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
     "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
-    "Audit", "Incorporation", "Compliance", "Mathematics", "Statistics", "Physics", "Chemistry",
-    "Biology", "Medicine", "Psychology", "Philosophy", "Logic", "Reasoning", "Economics",
-    "Finance", "History", "Geopolitics", "Astronomy", "Vedanta", "Yoga", "Ayurveda", "Sanskrit",
-    "Mythology", "Ethics", "AI Ethics", "Cryptography", "Blockchain", "Climate Science",
-    "Environmental Law", "Human Rights", "International Law", "Maritime Law", "Space Law",
-    "Data Privacy", "E-commerce", "Real Estate", "Banking", "Insurance"
+    "Audit", "Incorporation", "Compliance", "Environmental Law", "Human Rights", 
+    "International Law", "Maritime Law", "Space Law", "Data Privacy", "E-commerce", 
+    "Real Estate", "Banking", "Insurance",
+    # Spiritual & Philosophical
+    "Vedanta", "Yoga", "Ayurveda", "Sanskrit", "Mythology", "Ethics", "Philosophy", "Logic",
+    "Reasoning", "Psychology", "Cognitive Science", "Neuroscience",
+    # Mathematical & Scientific
+    "Mathematics", "Statistics", "Physics", "Chemistry", "Biology", "Medicine",
+    "Astronomy", "Geology", "Climate Science", "Cryptography", "Blockchain",
+    "Quantum Mechanics", "Relativity", "Thermodynamics", "Electromagnetism",
+    "Genetics", "Evolution", "Ecology", "Oceanography", "Meteorology",
+    "Computer Science", "AI Ethics", "Machine Learning", "Neural Networks"
 ]
 
 DIVINE_NAMES_POOL = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman",
@@ -74,11 +92,26 @@ DIVINE_NAMES_POOL = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","
     "Ayyappa","Shani","Mangal","Budh","Guru","Shukra","Rahu","Ketu"]
 
 sub_specialties = {
+    # Legal
     "Constitutional Law": ["Fundamental Rights", "Federalism", "Judicial Review", "Amendment", "Emergency"],
     "Contract Law": ["Formation", "Performance", "Breach", "Remedies", "Specific Relief"],
     "Criminal Law": ["IPC", "CrPC", "Evidence", "White Collar", "Sentencing"],
     "Corporate Law": ["M&A", "Board Governance", "Shareholder Rights", "Insolvency", "SEBI"],
     "Tax Law": ["Direct Tax", "Indirect Tax", "International Tax", "Transfer Pricing", "Tax Litigation"],
+    # Spiritual
+    "Vedanta": ["Advaita", "Dvaita", "Upanishads", "Bhagavad Gita", "Meditation"],
+    "Yoga": ["Asanas", "Pranayama", "Dhyana", "Karma Yoga", "Bhakti Yoga"],
+    "Ayurveda": ["Doshas", "Herbal Medicine", "Panchakarma", "Dietetics", "Rasayana"],
+    "Psychology": ["Cognitive", "Behavioral", "Developmental", "Clinical", "Neuropsychology"],
+    # Mathematical & Scientific
+    "Mathematics": ["Algebra", "Calculus", "Geometry", "Number Theory", "Topology"],
+    "Physics": ["Quantum", "Relativity", "Thermodynamics", "Electromagnetism", "Optics"],
+    "Chemistry": ["Organic", "Inorganic", "Physical", "Biochemistry", "Analytical"],
+    "Biology": ["Genetics", "Evolution", "Cell Biology", "Ecology", "Microbiology"],
+    "Medicine": ["Anatomy", "Physiology", "Pathology", "Pharmacology", "Surgery"],
+    "Cryptography": ["Symmetric", "Asymmetric", "Hash Functions", "Blockchain", "Zero-Knowledge"],
+    "Machine Learning": ["Supervised", "Unsupervised", "Reinforcement", "Deep Learning", "Transformers"],
+    "Quantum Mechanics": ["Wave Functions", "Entanglement", "Superposition", "Measurement", "Quantum Computing"],
 }
 
 # ─── VERIFIERS ──────────────────────────────────────────────────────
