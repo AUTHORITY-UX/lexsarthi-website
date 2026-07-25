@@ -3,7 +3,83 @@
 # Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # =============================================================================
+# =============================================================================
+# core.py - Core Functions: Agents, LLM, Verifiers, RAG, All AGI Phases
+# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# =============================================================================
 
+import os
+import json
+import asyncio
+import re
+import hashlib
+import random
+import time
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+
+import httpx
+from sentence_transformers import SentenceTransformer
+import google.generativeai as genai
+from groq import Groq
+import openai
+
+from config import (
+    SYSTEM_BASE, DOMAINS_FULL, DIVINE_NAMES_POOL, sub_specialties,
+    VERIFIERS, OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY,
+    DEEPSEEK_API_KEY, OPENROUTER_API_KEY, SERPAPI_KEY, TEMPLATES
+)
+
+# ─── EDGE AI AVAILABILITY ──────────────────────────────────────────
+# ✅ ADD THIS - Edge AI availability flag
+try:
+    from edge_impulse_full import get_edge_ai_service, EdgeAIService
+    EDGE_AI_AVAILABLE = True
+except ImportError:
+    EDGE_AI_AVAILABLE = False
+    get_edge_ai_service = None
+    EdgeAIService = None
+
+# ─── PROVIDER CLIENTS ──────────────────────────────────────────────
+openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+gemini_model = None
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+
+# ─── EMBEDDING MODEL ──────────────────────────────────────────────
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# ─── GLOBALS ──────────────────────────────────────────────────────
+pg_pool = None
+redis_pool = None
+database = None
+logger = None
+
+# ─── SETTER FUNCTIONS ─────────────────────────────────────────────
+def set_database(db):
+    global database
+    database = db
+    if logger:
+        logger.info("✅ Database set in core")
+
+def set_pg_pool(pool):
+    global pg_pool
+    pg_pool = pool
+    if logger:
+        logger.info("✅ PostgreSQL pool set in core")
+
+def set_redis_pool(pool):
+    global redis_pool
+    redis_pool = pool
+    if logger:
+        logger.info("✅ Redis pool set in core")
+
+def set_logger(log):
+    global logger
+    logger = log
 import os
 import json
 import asyncio
