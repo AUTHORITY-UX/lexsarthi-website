@@ -264,7 +264,6 @@
             .modal { padding: 24px; }
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="bg-mesh"></div>
@@ -299,11 +298,11 @@
         </section>
 
         <section class="stats-bar" id="statsBar">
-            <div class="stat-item card"><div class="stat-number" data-target="250">0</div><div class="stat-label">AI Personas</div></div>
-            <div class="stat-item card"><div class="stat-number" data-target="10">0</div><div class="stat-label">Verifiers</div></div>
-            <div class="stat-item card"><div class="stat-number" data-target="1047">0</div><div class="stat-label">Knowledge Chunks</div></div>
-            <div class="stat-item card"><div class="stat-number" data-target="42" id="newsCount">0</div><div class="stat-label">News Articles</div></div>
-            <div class="stat-item card"><div class="stat-number" data-target="18" id="blogCount">0</div><div class="stat-label">Blog Articles</div></div>
+            <div class="stat-item card"><div class="stat-number" id="statAgents">250</div><div class="stat-label">AI Personas</div></div>
+            <div class="stat-item card"><div class="stat-number" id="statVerifiers">10</div><div class="stat-label">Verifiers</div></div>
+            <div class="stat-item card"><div class="stat-number" id="statChunks">1,047</div><div class="stat-label">Knowledge Chunks</div></div>
+            <div class="stat-item card"><div class="stat-number" id="statNews">0</div><div class="stat-label">News Articles</div></div>
+            <div class="stat-item card"><div class="stat-number" id="statBlog">0</div><div class="stat-label">Blog Articles</div></div>
         </section>
 
         <section class="main-grid" id="chatSection">
@@ -328,35 +327,35 @@
             </div>
 
             <div class="services-grid" id="servicesGrid">
-                <div class="card service-card" onclick="activateService('legal')">
+                <div class="card service-card" onclick="quickQuery('legal intelligence')">
                     <div class="service-icon">⚖️</div>
                     <div class="service-info"><h4>Legal Intelligence</h4><p>250 specialist personas for every domain</p><span class="service-tag">250 Personas</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('business')">
+                <div class="card service-card" onclick="quickQuery('business services')">
                     <div class="service-icon">🏢</div>
                     <div class="service-info"><h4>Business Services</h4><p>Commercial & corporate advisory</p><span class="service-tag">Commercial</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('compliance')">
+                <div class="card service-card" onclick="quickQuery('AI compliance and governance')">
                     <div class="service-icon">🛡️</div>
                     <div class="service-info"><h4>AI Compliance</h4><p>Regulatory governance frameworks</p><span class="service-tag">Regulatory</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('notices')">
+                <div class="card service-card" onclick="quickQuery('legal notices')">
                     <div class="service-icon">📄</div>
                     <div class="service-info"><h4>Legal Notices</h4><p>Automated documentation generation</p><span class="service-tag">Documentation</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('breach')">
+                <div class="card service-card" onclick="quickQuery('breach response')">
                     <div class="service-icon">🚨</div>
                     <div class="service-info"><h4>Breach Response</h4><p>Incident response & forensics</p><span class="service-tag">Security</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('content')">
+                <div class="card service-card" onclick="quickQuery('AI content generation')">
                     <div class="service-icon">✍️</div>
                     <div class="service-info"><h4>AI Content Gen</h4><p>Marketing & legal content creation</p><span class="service-tag">Marketing</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('edge')">
+                <div class="card service-card" onclick="quickQuery('edge AI intelligence')">
                     <div class="service-icon">🧠</div>
                     <div class="service-info"><h4>Edge AI Intel</h4><p>Hardware-optimized inference</p><span class="service-tag">Hardware</span></div>
                 </div>
-                <div class="card service-card" onclick="activateService('diagnostics')">
+                <div class="card service-card" onclick="quickQuery('diagnostics')">
                     <div class="service-icon">🔄</div>
                     <div class="service-info"><h4>Self-Healing</h4><p>Autonomous system diagnostics</p><span class="service-tag">Reliability</span></div>
                 </div>
@@ -382,7 +381,7 @@
                     <ul class="payment-features">
                         <li>Unlimited queries</li><li>Advanced personas</li><li>Priority support</li><li>Export capabilities</li><li>Compliance basics</li>
                     </ul>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('pro', 99)">Upgrade to Pro</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('pro', 9900)">Upgrade to Pro</button>
                 </div>
                 <div class="card payment-card">
                     <h3>Enterprise</h3>
@@ -390,7 +389,7 @@
                     <ul class="payment-features">
                         <li>Everything in Pro</li><li>Custom integrations</li><li>Dedicated support</li><li>SLA guarantee</li><li>On-premise option</li>
                     </ul>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('enterprise', 999)">Upgrade to Enterprise</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('enterprise', 99900)">Upgrade to Enterprise</button>
                 </div>
                 <div class="card payment-card">
                     <h3>Lifetime</h3>
@@ -398,7 +397,7 @@
                     <ul class="payment-features">
                         <li>Perpetual access</li><li>All future updates</li><li>VIP support</li><li>Custom AI training</li><li>White-label rights</li>
                     </ul>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('lifetime', 9999)">Get Lifetime</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="initiatePayment('lifetime', 999900)">Get Lifetime</button>
                 </div>
             </div>
         </section>
@@ -406,34 +405,34 @@
         <section>
             <div class="section-header">
                 <h2 class="section-title"><span>🛡️</span> Compliance Dashboard</h2>
-                <button class="btn btn-ghost" onclick="refreshCompliance()"><span>🔄</span> Refresh</button>
+                <button class="btn btn-ghost" onclick="fetchCompliance()"><span>🔄</span> Refresh</button>
             </div>
             <div class="compliance-grid">
                 <div class="card compliance-score">
-                    <div class="score-circle"><div class="score-value gradient-text" id="overallScore">92</div></div>
+                    <div class="score-circle"><div class="score-value gradient-text" id="overallScore">0</div></div>
                     <h3>Overall Score</h3>
-                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 8px;">Compliant</p>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 8px;" id="overallStatus">Loading...</p>
                 </div>
                 <div class="framework-grid" id="frameworkGrid">
                     <div class="card framework-card" onclick="showFramework('dpdpa')">
-                        <div class="framework-header"><span class="framework-jurisdiction">🇮🇳 India</span><span class="framework-score">94%</span></div>
+                        <div class="framework-header"><span class="framework-jurisdiction">🇮🇳 India</span><span class="framework-score" id="score_dpdpa">--%</span></div>
                         <h4>DPDPA</h4><p class="text-sm text-muted">Digital Personal Data Protection Act</p>
-                        <div class="progress-bar"><div class="progress-fill" style="width: 94%"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_dpdpa" style="width: 0%"></div></div>
                     </div>
                     <div class="card framework-card" onclick="showFramework('gdpr')">
-                        <div class="framework-header"><span class="framework-jurisdiction">🇪🇺 EU</span><span class="framework-score">91%</span></div>
+                        <div class="framework-header"><span class="framework-jurisdiction">🇪🇺 EU</span><span class="framework-score" id="score_gdpr">--%</span></div>
                         <h4>GDPR</h4><p class="text-sm text-muted">General Data Protection Regulation</p>
-                        <div class="progress-bar"><div class="progress-fill" style="width: 91%"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_gdpr" style="width: 0%"></div></div>
                     </div>
                     <div class="card framework-card" onclick="showFramework('ccpa')">
-                        <div class="framework-header"><span class="framework-jurisdiction">🇺🇸 US</span><span class="framework-score">89%</span></div>
+                        <div class="framework-header"><span class="framework-jurisdiction">🇺🇸 US</span><span class="framework-score" id="score_ccpa">--%</span></div>
                         <h4>CCPA</h4><p class="text-sm text-muted">California Consumer Privacy Act</p>
-                        <div class="progress-bar"><div class="progress-fill" style="width: 89%"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_ccpa" style="width: 0%"></div></div>
                     </div>
-                    <div class="card framework-card" onclick="showFramework('ai-gov')">
-                        <div class="framework-header"><span class="framework-jurisdiction">🌍 Global</span><span class="framework-score">95%</span></div>
+                    <div class="card framework-card" onclick="showFramework('ai_gov')">
+                        <div class="framework-header"><span class="framework-jurisdiction">🌍 Global</span><span class="framework-score" id="score_ai_gov">--%</span></div>
                         <h4>AI Governance</h4><p class="text-sm text-muted">ISO/IEC 42001 Framework</p>
-                        <div class="progress-bar"><div class="progress-fill" style="width: 95%"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_ai_gov" style="width: 0%"></div></div>
                     </div>
                 </div>
             </div>
@@ -443,26 +442,14 @@
             <div class="section-header">
                 <h2 class="section-title"><span>🔍</span> Lens Agents</h2>
                 <div class="flex gap-2">
-                    <button class="btn btn-ghost" onclick="refreshLens()"><span>🔄</span> Refresh</button>
+                    <button class="btn btn-ghost" onclick="fetchLensAgents()"><span>🔄</span> Refresh</button>
                     <button class="btn btn-primary" onclick="scanAllDomains()"><span>🔍</span> Scan All</button>
                 </div>
             </div>
             <div class="lens-grid" id="lensGrid">
-                <div class="card lens-card">
-                    <div class="lens-header"><div><div class="lens-domain">Legal Domain</div><div class="text-sm text-muted">Contract Analysis</div></div><div class="lens-status"></div></div>
-                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">12</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">96</div><div class="lens-metric-label">Gov Score</div></div></div>
-                </div>
-                <div class="card lens-card">
-                    <div class="lens-header"><div><div class="lens-domain">IP Rights</div><div class="text-sm text-muted">Trademark Monitor</div></div><div class="lens-status warning"></div></div>
-                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">3</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">88</div><div class="lens-metric-label">Gov Score</div></div></div>
-                </div>
-                <div class="card lens-card">
-                    <div class="lens-header"><div><div class="lens-domain">Data Privacy</div><div class="text-sm text-muted">DPDPA Scanner</div></div><div class="lens-status"></div></div>
-                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">0</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">100</div><div class="lens-metric-label">Gov Score</div></div></div>
-                </div>
-                <div class="card lens-card">
-                    <div class="lens-header"><div><div class="lens-domain">Cybersecurity</div><div class="text-sm text-muted">Breach Detection</div></div><div class="lens-status danger"></div></div>
-                    <div class="lens-metrics"><div class="lens-metric"><div class="lens-metric-value">7</div><div class="lens-metric-label">Findings</div></div><div class="lens-metric"><div class="lens-metric-value">82</div><div class="lens-metric-label">Gov Score</div></div></div>
+                <div class="loading-spinner" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-dim);">
+                    <div class="spinner"></div>
+                    <p>Loading lens agents...</p>
                 </div>
             </div>
         </section>
@@ -470,44 +457,12 @@
         <section>
             <div class="section-header">
                 <h2 class="section-title"><span>📰</span> AI Legal News</h2>
-                <button class="btn btn-ghost" onclick="refreshNews()"><span>🔄</span> Refresh</button>
+                <button class="btn btn-ghost" onclick="fetchNews()"><span>🔄</span> Refresh</button>
             </div>
             <div class="content-grid" id="newsGrid">
-                <div class="card content-card">
-                    <div class="content-image">📰</div>
-                    <div class="content-body">
-                        <div class="content-meta"><span>Reuters</span><span>•</span><span>Jul 24, 2026</span></div>
-                        <h4 class="content-title">EU AI Act Enforcement Begins Next Quarter</h4>
-                        <p class="content-excerpt">European regulators announce the first wave of compliance audits for high-risk AI systems under the newly enacted AI Act framework...</p>
-                        <div class="content-actions">
-                            <button class="btn btn-primary text-sm" onclick="generateArticle(0)">✍️ Generate Article</button>
-                            <button class="btn btn-outline text-sm" onclick="openOriginal(0)">↗️ Original</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card content-card">
-                    <div class="content-image">⚖️</div>
-                    <div class="content-body">
-                        <div class="content-meta"><span>LegalTech News</span><span>•</span><span>Jul 23, 2026</span></div>
-                        <h4 class="content-title">Indian Courts Adopt AI Summarization Tools</h4>
-                        <p class="content-excerpt">Supreme Court of India pilots LLM-based case summarization to reduce backlog, raising questions about algorithmic transparency...</p>
-                        <div class="content-actions">
-                            <button class="btn btn-primary text-sm" onclick="generateArticle(1)">✍️ Generate Article</button>
-                            <button class="btn btn-outline text-sm" onclick="openOriginal(1)">↗️ Original</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card content-card">
-                    <div class="content-image">🔒</div>
-                    <div class="content-body">
-                        <div class="content-meta"><span>TechCrunch</span><span>•</span><span>Jul 22, 2026</span></div>
-                        <h4 class="content-title">Landmark Ruling on Algorithmic Accountability</h4>
-                        <p class="content-excerpt">Federal court rules that companies must explain automated decision-making processes, setting precedent for AI liability cases...</p>
-                        <div class="content-actions">
-                            <button class="btn btn-primary text-sm" onclick="generateArticle(2)">✍️ Generate Article</button>
-                            <button class="btn btn-outline text-sm" onclick="openOriginal(2)">↗️ Original</button>
-                        </div>
-                    </div>
+                <div class="loading-spinner" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-dim);">
+                    <div class="spinner"></div>
+                    <p>Loading news...</p>
                 </div>
             </div>
         </section>
@@ -517,27 +472,9 @@
                 <h2 class="section-title"><span>📝</span> Generated Articles</h2>
             </div>
             <div class="content-grid" id="blogGrid">
-                <div class="card content-card">
-                    <div class="content-image">📝</div>
-                    <div class="content-body">
-                        <div class="content-meta"><span>Jul 20, 2026</span></div>
-                        <h4 class="content-title">Understanding DPDPA Compliance for Startups</h4>
-                        <p class="content-excerpt">A comprehensive guide to navigating India's Digital Personal Data Protection Act for early-stage technology companies...</p>
-                        <div class="content-actions">
-                            <button class="btn btn-primary text-sm" onclick="readArticle(0)">📖 Read Full</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card content-card">
-                    <div class="content-image">📊</div>
-                    <div class="content-body">
-                        <div class="content-meta"><span>Jul 18, 2026</span></div>
-                        <h4 class="content-title">AI Contract Review: Best Practices 2026</h4>
-                        <p class="content-excerpt">How legal teams are leveraging large language models to reduce contract review time by 70% while maintaining accuracy...</p>
-                        <div class="content-actions">
-                            <button class="btn btn-primary text-sm" onclick="readArticle(1)">📖 Read Full</button>
-                        </div>
-                    </div>
+                <div class="loading-spinner" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-dim);">
+                    <div class="spinner"></div>
+                    <p>Loading articles...</p>
                 </div>
             </div>
         </section>
@@ -549,6 +486,7 @@
         <div class="footer-watermark">🔱 TRIDENT</div>
     </footer>
 
+    <!-- Modals -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('loginModal')">×</button>
@@ -584,185 +522,573 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
+        // ─── STATE ──────────────────────────────────────────────────
         const state = {
             user: JSON.parse(localStorage.getItem('uv_user')) || null,
             token: localStorage.getItem('uv_token') || null,
-            isStreaming: false
+            isStreaming: false,
+            baseUrl: window.location.origin
         };
 
+        // ─── DOM REFS ──────────────────────────────────────────────
+        const $ = id => document.getElementById(id);
+        const chatMessages = $('chatMessages');
+        const chatInput = $('chatInput');
+        const newsGrid = $('newsGrid');
+        const blogGrid = $('blogGrid');
+        const lensGrid = $('lensGrid');
+
+        // ─── INIT ──────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
-            animateCounters();
-            loadData();
-            setInterval(loadData, 300000);
+            fetchNews();
+            fetchBlogPosts();
+            fetchCompliance();
+            fetchLensAgents();
+            setInterval(() => {
+                fetchNews();
+                fetchBlogPosts();
+                fetchCompliance();
+            }, 300000);
         });
+
+        // ─── AUTH ──────────────────────────────────────────────────
+        function getToken() { return state.token || localStorage.getItem('uv_token'); }
+        function setToken(t) { state.token = t; localStorage.setItem('uv_token', t); }
+        function clearToken() { state.token = null; localStorage.removeItem('uv_token'); localStorage.removeItem('uv_user'); }
 
         function checkAuth() {
             if (state.user) {
-                document.getElementById('authBtn').classList.add('hidden');
-                document.getElementById('userProfile').classList.remove('hidden');
-                document.getElementById('userName').textContent = state.user.username;
+                $('authBtn').classList.add('hidden');
+                $('userProfile').classList.remove('hidden');
+                $('userName').textContent = state.user.username || state.user.email || 'User';
                 updateTier(state.user.tier || 'Free');
             }
         }
 
+        function updateTier(tier) {
+            const badge = $('tierBadge');
+            const chatBadge = $('chatTier');
+            const tierLower = tier.toLowerCase();
+            badge.textContent = tier;
+            chatBadge.textContent = tier;
+            badge.className = 'tier-badge ' + (tierLower === 'free' ? '' : tierLower);
+        }
+
         function login() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            if (user === 'counsel' && pass === 'Password123!') {
-                state.user = { username: 'counsel', tier: 'Pro', id: 'demo-001' };
-                state.token = 'demo-jwt-token-' + Date.now();
+            const user = $('loginUser').value.trim();
+            const pass = $('loginPass').value.trim();
+            
+            fetch(state.baseUrl + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Invalid credentials');
+                return res.json();
+            })
+            .then(data => {
+                state.user = data.user || { username: user, tier: 'Pro', id: 'demo-001' };
+                setToken(data.access_token);
                 localStorage.setItem('uv_user', JSON.stringify(state.user));
-                localStorage.setItem('uv_token', state.token);
                 checkAuth();
                 closeModal('loginModal');
-                showToast('Welcome back, Counsel!', 'success');
-            } else {
-                showToast('Invalid credentials. Use demo account.', 'error');
-            }
+                showToast('Welcome back, ' + (state.user.username || 'User') + '!', 'success');
+            })
+            .catch(err => {
+                showToast('Login failed: ' + err.message, 'error');
+            });
         }
 
         function logout() {
-            state.user = null; state.token = null;
-            localStorage.removeItem('uv_user');
-            localStorage.removeItem('uv_token');
-            document.getElementById('authBtn').classList.remove('hidden');
-            document.getElementById('userProfile').classList.add('hidden');
+            state.user = null;
+            clearToken();
+            $('authBtn').classList.remove('hidden');
+            $('userProfile').classList.add('hidden');
             updateTier('Free');
             showToast('Logged out successfully', 'success');
         }
 
-        function updateTier(tier) {
-            const badge = document.getElementById('tierBadge');
-            const chatBadge = document.getElementById('chatTier');
-            badge.textContent = tier;
-            chatBadge.textContent = tier;
-            badge.className = 'tier-badge ' + tier.toLowerCase();
-        }
-
+        // ─── CHAT / QUERY ──────────────────────────────────────────
         function scrollToChat() {
-            document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
-            document.getElementById('chatInput').focus();
+            $('chatSection').scrollIntoView({ behavior: 'smooth' });
+            chatInput.focus();
         }
 
         function handleChatKey(e) {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
         }
 
+        function quickQuery(service) {
+            chatInput.value = `Tell me about ${service} services`;
+            sendMessage();
+        }
+
         async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
+            const text = chatInput.value.trim();
             if (!text || state.isStreaming) return;
-            if (!state.user) { showToast('Please login to use the AI console', 'warning'); openModal('loginModal'); return; }
+            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
+
             addMessage(text, 'user');
-            input.value = ''; input.style.height = 'auto';
+            chatInput.value = '';
             const typingId = 'typing-' + Date.now();
             addTypingIndicator(typingId);
             state.isStreaming = true;
-            try { await simulateStreamingResponse(typingId); }
-            catch (err) { removeTypingIndicator(typingId); addMessage('Error: Unable to process request.', 'system'); showToast('Query failed', 'error'); }
-            finally { state.isStreaming = false; }
+
+            try {
+                const token = getToken();
+                const formData = new FormData();
+                formData.append('query', text);
+                formData.append('model', 'llama-3.3-70b-versatile');
+                formData.append('search_web', 'off');
+
+                const res = await fetch(state.baseUrl + '/ask', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+
+                if (res.status === 401) {
+                    showToast('Session expired. Please login again.', 'warning');
+                    logout();
+                    openModal('loginModal');
+                    return;
+                }
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Query failed');
+                }
+
+                removeTypingIndicator(typingId);
+                await handleStreamResponse(res);
+
+            } catch (err) {
+                removeTypingIndicator(typingId);
+                addMessage('❌ Error: ' + err.message, 'system');
+                showToast('Query failed: ' + err.message, 'error');
+            } finally {
+                state.isStreaming = false;
+            }
+        }
+
+        async function handleStreamResponse(res) {
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let answer = '';
+            let buffer = '';
+            let msgDiv = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        if (data === '[DONE]') continue;
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.token) {
+                                if (!msgDiv) {
+                                    msgDiv = document.createElement('div');
+                                    msgDiv.className = 'message ai';
+                                    msgDiv.innerHTML = '<div id="stream-text"></div><div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Streaming...</span></div>';
+                                    chatMessages.appendChild(msgDiv);
+                                }
+                                const textEl = msgDiv.querySelector('#stream-text');
+                                if (textEl) {
+                                    answer += parsed.token;
+                                    textEl.textContent = answer;
+                                }
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+                            if (parsed.verification) {
+                                const v = parsed.verification;
+                                addMessage('⚖️ **Verification Complete**\nConfidence: ' + (v.final_confidence || 'MEDIUM') + '\nVerifiers: ' + (v.jury_verifiers ? v.jury_verifiers.join(', ') : '10'), 'system');
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
+
+            if (msgDiv) {
+                const meta = msgDiv.querySelector('.message-meta');
+                if (meta) meta.innerHTML = '<span>Judge Shakti</span><span>•</span><span>Just now</span>';
+            }
+
+            if (!answer) {
+                addMessage('⚠️ No response received. Please try again.', 'system');
+            }
         }
 
         function addMessage(text, type) {
-            const container = document.getElementById('chatMessages');
-            const msg = document.createElement('div');
-            msg.className = 'message ' + type;
-            let meta = '';
-            if (type === 'ai') meta = '<div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Just now</span></div>';
-            else if (type === 'user') meta = '<div class="message-meta"><span>You</span><span>•</span><span>Just now</span></div>';
-            msg.innerHTML = '<div>' + escapeHtml(text) + '</div>' + meta;
-            container.appendChild(msg);
-            container.scrollTop = container.scrollHeight;
+            const div = document.createElement('div');
+            div.className = 'message ' + type;
+            const escaped = type === 'system' ? text : text.replace(/\n/g, '<br>');
+            div.innerHTML = escaped + '<div class="message-meta"><span>' + (type === 'user' ? 'You' : type === 'system' ? 'System' : 'Judge Shakti') + '</span><span>•</span><span>Just now</span></div>';
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function addTypingIndicator(id) {
-            const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = 'message ai'; div.id = id;
             div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function removeTypingIndicator(id) { const el = document.getElementById(id); if (el) el.remove(); }
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
 
-        async function simulateStreamingResponse(typingId) {
-            const responses = [
-                "Based on the relevant statutes and precedents, I can provide the following analysis...",
-                "Under Section 420 of the Indian Penal Code, this would constitute a cognizable offense...",
-                "The Supreme Court's ruling in XYZ v. ABC (2024) established that...",
-                "From a compliance perspective, you must ensure DPDPA Section 12 obligations are met..."
-            ];
-            const response = responses[Math.floor(Math.random() * responses.length)];
-            removeTypingIndicator(typingId);
-            const container = document.getElementById('chatMessages');
-            const msg = document.createElement('div');
-            msg.className = 'message ai';
-            msg.innerHTML = '<div id="stream-text"></div><div class="message-meta"><span>Judge Shakti</span><span>•</span><span>Confidence: 96%</span><span>•</span><span>Verifiers: 8/10</span></div>';
-            container.appendChild(msg);
-            const textEl = msg.querySelector('#stream-text');
-            const words = response.split(' ');
-            for (let i = 0; i < words.length; i++) {
-                textEl.textContent += (i > 0 ? ' ' : '') + words[i];
-                container.scrollTop = container.scrollHeight;
-                await sleep(50 + Math.random() * 50);
+        // ─── FETCH NEWS ──────────────────────────────────────────────
+        async function fetchNews() {
+            try {
+                newsGrid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);"><div class="spinner"></div><p>Loading news...</p></div>';
+                const res = await fetch(state.baseUrl + '/api/news?limit=12');
+                const data = await res.json();
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    renderNews(data.articles);
+                    $('statNews').textContent = data.count || data.articles.length;
+                } else {
+                    newsGrid.innerHTML = '<div class="error-box" style="grid-column:1/-1;color:#dc3545;background:#f8d7da;padding:20px;border-radius:10px;text-align:center;">⚠️ No news available</div>';
+                }
+            } catch(err) {
+                newsGrid.innerHTML = '<div class="error-box" style="grid-column:1/-1;color:#dc3545;background:#f8d7da;padding:20px;border-radius:10px;text-align:center;">❌ Failed to load news</div>';
             }
-            await sleep(300);
-            addMessage('✓ Verified by 8/10 verifiers • Confidence: 96% • Sources: 4', 'system');
         }
 
-        function activateService(service) {
-            const names = { legal: 'Legal Intelligence', business: 'Business Services', compliance: 'AI Compliance', notices: 'Legal Notices', breach: 'Breach Response', content: 'AI Content Generation', edge: 'Edge AI Intelligence', diagnostics: 'Self-Healing Diagnostics' };
-            showToast('Activated: ' + names[service], 'success');
-            scrollToChat();
+        function renderNews(articles) {
+            newsGrid.innerHTML = articles.slice(0, 6).map(a => `
+                <div class="card content-card">
+                    <div class="content-image">📰</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>${a.source || 'Unknown'}</span><span>•</span><span>${a.published || 'Today'}</span></div>
+                        <h4 class="content-title">${a.title}</h4>
+                        <p class="content-excerpt">${(a.summary || '').substring(0, 150)}...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="generateArticle('${a.id}')">✍️ Generate</button>
+                            <a href="${a.link || '#'}" target="_blank" class="btn btn-outline text-sm" style="text-decoration:none;">↗️ Read</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function initiatePayment(plan, amount) {
-            if (!state.user) { showToast('Please login to upgrade', 'warning'); openModal('loginModal'); return; }
-            const options = {
-                key: 'rzp_test_XXXXXXXXXXXXXXXX', amount: amount * 100, currency: 'INR',
-                name: 'Unknown Verdict AGI', description: plan + ' Plan Subscription',
-                handler: function(response) { verifyPayment(response, plan); },
-                prefill: { name: state.user?.username || '', email: 'counsel@advocacy.law' },
-                theme: { color: '#6c5ce7' }
+        // ─── GENERATE ARTICLE ────────────────────────────────────────
+        async function generateArticle(newsId) {
+            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
+            showToast('Generating article...', 'success');
+            try {
+                const token = getToken();
+                const formData = new FormData();
+                formData.append('news_id', newsId);
+                const res = await fetch(state.baseUrl + '/api/news/generate-article', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    $('articleTitle').textContent = data.title || 'Generated Article';
+                    $('articleContent').innerHTML = (data.content || '').replace(/\n/g, '<br>');
+                    openModal('articleModal');
+                    fetchBlogPosts();
+                    showToast('Article generated!', 'success');
+                } else {
+                    showToast('Generation failed', 'error');
+                }
+            } catch(err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        // ─── FETCH BLOG ──────────────────────────────────────────────
+        async function fetchBlogPosts() {
+            try {
+                blogGrid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);"><div class="spinner"></div><p>Loading articles...</p></div>';
+                const res = await fetch(state.baseUrl + '/api/blog/posts?limit=10');
+                const data = await res.json();
+                if (data.status === 'ok' && data.posts && data.posts.length > 0) {
+                    renderBlog(data.posts);
+                    $('statBlog').textContent = data.total || data.posts.length;
+                } else {
+                    blogGrid.innerHTML = '<div class="info-box" style="grid-column:1/-1;color:#0c5460;background:#d1ecf1;padding:20px;border-radius:10px;text-align:center;">📝 No articles generated yet</div>';
+                }
+            } catch(err) {
+                blogGrid.innerHTML = '<div class="error-box" style="grid-column:1/-1;color:#dc3545;background:#f8d7da;padding:20px;border-radius:10px;text-align:center;">❌ Failed to load articles</div>';
+            }
+        }
+
+        function renderBlog(posts) {
+            blogGrid.innerHTML = posts.slice(0, 6).map(p => `
+                <div class="card content-card">
+                    <div class="content-image">📝</div>
+                    <div class="content-body">
+                        <div class="content-meta"><span>${new Date(p.created_at).toLocaleDateString()}</span></div>
+                        <h4 class="content-title">${p.title}</h4>
+                        <p class="content-excerpt">${(p.content || '').substring(0, 150)}...</p>
+                        <div class="content-actions">
+                            <button class="btn btn-primary text-sm" onclick="viewBlogPost(${p.id})">📖 Read Full</button>
+                            ${p.source_url && p.source_url !== '#' ? `<a href="${p.source_url}" target="_blank" class="btn btn-outline text-sm" style="text-decoration:none;">🔗 Source</a>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function viewBlogPost(postId) {
+            try {
+                const res = await fetch(state.baseUrl + '/api/blog/posts?limit=20');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    const post = data.posts.find(p => p.id === postId);
+                    if (post) {
+                        $('articleTitle').textContent = post.title || 'Article';
+                        $('articleContent').innerHTML = (post.content || '').replace(/\n/g, '<br>');
+                        openModal('articleModal');
+                    }
+                }
+            } catch(err) {
+                showToast('Failed to load article', 'error');
+            }
+        }
+
+        // ─── FETCH COMPLIANCE ─────────────────────────────────────────
+        async function fetchCompliance() {
+            try {
+                const res = await fetch(state.baseUrl + '/api/compliance/snapshot');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    $('overallScore').textContent = data.overall_compliance || 0;
+                    $('overallStatus').textContent = data.overall_status || 'Loading...';
+                    
+                    Object.entries(data.frameworks || {}).forEach(([key, fw]) => {
+                        const score = fw.compliance_score || 0;
+                        const el = $('score_' + key);
+                        const prog = $('progress_' + key);
+                        if (el) el.textContent = score + '%';
+                        if (prog) prog.style.width = score + '%';
+                    });
+                }
+            } catch(err) {
+                console.error('Compliance fetch error:', err);
+            }
+        }
+
+        function showFramework(frameworkId) {
+            const names = {
+                dpdpa: 'DPDPA (India) - Digital Personal Data Protection Act 2023',
+                gdpr: 'GDPR (EU) - General Data Protection Regulation',
+                ccpa: 'CCPA (US) - California Consumer Privacy Act',
+                ai_gov: 'AI Governance - ISO/IEC 42001 Framework'
             };
-            const rzp = new Razorpay(options);
-            rzp.open();
-        }
-
-        function verifyPayment(response, plan) {
-            showToast('Payment successful! Upgrading to ' + plan + '...', 'success');
-            if (state.user) { state.user.tier = plan.charAt(0).toUpperCase() + plan.slice(1); localStorage.setItem('uv_user', JSON.stringify(state.user)); updateTier(state.user.tier); }
-        }
-
-        function refreshCompliance() { showToast('Compliance data refreshed', 'success'); }
-        function showFramework(id) {
-            const data = { dpdpa: { name: 'DPDPA (India)', score: '94%', reqs: ['Consent Management', 'Data Principal Rights', 'Grievance Redressal', 'Breach Notification'] }, gdpr: { name: 'GDPR (EU)', score: '91%', reqs: ['Lawful Basis', 'Data Minimization', 'Right to Erasure', 'Cross-border Transfer'] }, ccpa: { name: 'CCPA (US)', score: '89%', reqs: ['Consumer Rights', 'Opt-out Mechanism', 'Data Disclosure', 'Service Provider Contracts'] }, 'ai-gov': { name: 'AI Governance', score: '95%', reqs: ['Risk Assessment', 'Transparency', 'Human Oversight', 'Documentation'] } };
-            const fw = data[id];
-            document.getElementById('complianceTitle').textContent = fw.name;
-            document.getElementById('complianceContent').innerHTML = '<div style="margin-bottom: 16px;"><span style="font-size: 2rem; font-weight: 900; color: var(--success);">' + fw.score + '</span><span style="color: var(--text-dim); margin-left: 8px;">Compliance Score</span></div><h4 style="margin-bottom: 12px;">Key Requirements</h4>' + fw.reqs.map(r => '<div style="padding: 12px; background: var(--bg-glass); border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;"><span style="color: var(--success);">✓</span> ' + r + '</div>').join('') + '<div style="margin-top: 20px;"><h4 style="margin-bottom: 8px;">Recommendations</h4><p style="color: var(--text-muted); font-size: 0.9rem;">Continue monitoring regulatory updates. Schedule quarterly audits to maintain compliance posture.</p></div>';
+            $('complianceTitle').textContent = names[frameworkId] || frameworkId.toUpperCase();
+            $('complianceContent').innerHTML = `
+                <div style="padding: 16px; background: var(--bg-glass); border-radius: var(--radius-sm); margin-bottom: 16px;">
+                    <span style="font-size: 2rem; font-weight: 900; color: var(--success);" id="modalScore">--%</span>
+                    <span style="color: var(--text-dim); margin-left: 8px;">Compliance Score</span>
+                </div>
+                <h4 style="margin-bottom: 12px;">Key Requirements</h4>
+                <div id="modalRequirements"></div>
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 8px;">💡 Recommendations</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Loading recommendations...</p>
+                </div>
+            `;
             openModal('complianceModal');
+            
+            // Fetch framework details
+            fetch(state.baseUrl + '/api/compliance/framework/' + frameworkId)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.framework) {
+                        const scoreEl = $('modalScore');
+                        if (scoreEl) scoreEl.textContent = (data.compliance_score || 0) + '%';
+                        const reqs = data.details || [];
+                        const reqContainer = $('modalRequirements');
+                        if (reqContainer) {
+                            reqContainer.innerHTML = reqs.map(r => `
+                                <div style="padding: 12px; background: var(--bg-glass); border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: ${r.compliant ? 'var(--success)' : 'var(--danger)'};">${r.compliant ? '✅' : '❌'}</span>
+                                    <span>${r.requirement}</span>
+                                    <span style="margin-left: auto; color: ${r.compliant ? 'var(--success)' : 'var(--danger)'};">${r.score}%</span>
+                                </div>
+                            `).join('');
+                        }
+                        const recContainer = $('complianceContent').querySelector('.recommendations');
+                        if (recContainer) {
+                            recContainer.innerHTML = (data.recommendations || ['✅ All requirements met']).map(r => `<li style="color: var(--text-muted);">${r}</li>`).join('');
+                        }
+                    }
+                })
+                .catch(() => {});
         }
 
-        function refreshLens() { showToast('Lens agents refreshed', 'success'); }
-        function scanAllDomains() { showToast('Scanning all domains...', 'success'); setTimeout(() => showToast('Scan complete. 3 findings detected.', 'warning'), 2000); }
-
-        function refreshNews() { showToast('News feed updated', 'success'); }
-        function generateArticle(idx) { showToast('Generating article from news...', 'success'); setTimeout(() => showToast('Article generated successfully!', 'success'), 1500); }
-        function openOriginal(idx) { window.open('https://news.google.com', '_blank'); }
-
-        function readArticle(idx) {
-            const articles = [
-                { title: 'Understanding DPDPA Compliance for Startups', content: '<p>India's Digital Personal Data Protection Act (DPDPA) 2023 represents a paradigm shift in how startups handle personal data. This comprehensive guide explores the key obligations under Section 12-18, including consent mechanisms, data principal rights, and breach notification requirements.</p><p>For early-stage companies, compliance begins with a data audit. Map all personal data flows, identify processing purposes, and establish lawful bases. The Data Protection Board has signaled strict enforcement starting Q3 2026.</p><p>Key action items: appoint a Data Protection Officer, implement privacy-by-design principles, and maintain processing records. Non-compliance penalties can reach ₹250 crore.</p>' },
-                { title: 'AI Contract Review: Best Practices 2026', content: '<p>Legal teams worldwide are adopting LLM-powered contract analysis tools, achieving 70% reduction in review time while maintaining 98% accuracy rates. This article examines implementation strategies for mid-size law firms.</p><p>Critical success factors include: establishing golden clause libraries, configuring risk scoring matrices, and maintaining human-in-the-loop validation for high-value agreements.</p><p>The technology excels at identifying missing clauses, inconsistent terminology, and regulatory non-compliance. However, nuanced negotiation strategy remains the domain of senior counsel.</p>' }
-            ];
-            const art = articles[idx];
-            document.getElementById('articleTitle').textContent = art.title;
-            document.getElementById('articleContent').innerHTML = art.content;
-            openModal('articleModal');
+        // ─── FETCH LENS AGENTS ──────────────────────────────────────
+        async function fetchLensAgents() {
+            try {
+                lensGrid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);"><div class="spinner"></div><p>Loading lens agents...</p></div>';
+                const res = await fetch(state.baseUrl + '/api/lens/agents');
+                const data = await res.json();
+                if (data.status === 'ok' && data.agents && data.agents.length > 0) {
+                    renderLensAgents(data.agents);
+                } else {
+                    lensGrid.innerHTML = '<div class="info-box" style="grid-column:1/-1;color:#0c5460;background:#d1ecf1;padding:20px;border-radius:10px;text-align:center;">🕷️ No lens agents initialized. Click "Scan All" to start.</div>';
+                }
+            } catch(err) {
+                lensGrid.innerHTML = '<div class="error-box" style="grid-column:1/-1;color:#dc3545;background:#f8d7da;padding:20px;border-radius:10px;text-align:center;">❌ Failed to load lens agents</div>';
+            }
         }
 
+        function renderLensAgents(agents) {
+            lensGrid.innerHTML = agents.slice(0, 8).map(a => {
+                const statusColor = a.status === 'active' ? 'var(--success)' : a.status === 'warning' ? 'var(--warning)' : 'var(--danger)';
+                const statusClass = a.status === 'active' ? '' : a.status === 'warning' ? 'warning' : 'danger';
+                const findings = a.findings_count || 0;
+                const govScore = Math.round((a.governance_score || 0) * 100);
+                return `
+                    <div class="card lens-card">
+                        <div class="lens-header">
+                            <div>
+                                <div class="lens-domain">${a.domain || 'Unknown'}</div>
+                                <div class="text-sm text-muted">${a.category || 'General'}</div>
+                            </div>
+                            <div class="lens-status ${statusClass}"></div>
+                        </div>
+                        <div class="lens-metrics">
+                            <div class="lens-metric"><div class="lens-metric-value">${findings}</div><div class="lens-metric-label">Findings</div></div>
+                            <div class="lens-metric"><div class="lens-metric-value">${govScore}</div><div class="lens-metric-label">Gov Score</div></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function scanAllDomains() {
+            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
+            const token = getToken();
+            const btn = event?.target || document.querySelector('#lensSection .btn-primary');
+            if (btn) { btn.textContent = '⏳ Scanning...'; btn.disabled = true; }
+            
+            try {
+                const res = await fetch(state.baseUrl + '/api/lens/scan-all', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    showToast('Scan complete!', 'success');
+                    fetchLensAgents();
+                } else {
+                    showToast('Scan failed', 'error');
+                }
+            } catch(err) {
+                showToast('Error: ' + err.message, 'error');
+            } finally {
+                if (btn) { btn.textContent = '🔍 Scan All'; btn.disabled = false; }
+            }
+        }
+
+        // ─── PAYMENT ─────────────────────────────────────────────────
+        async function initiatePayment(plan, amount) {
+            if (!state.user) { showToast('Please login first', 'warning'); openModal('loginModal'); return; }
+            const token = getToken();
+            
+            try {
+                const formData = new FormData();
+                formData.append('tier', plan);
+                const res = await fetch(state.baseUrl + '/create-order', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const options = {
+                        key: data.razorpay_key || 'rzp_test_XXXXXXXXXXXXXXXX',
+                        amount: data.amount || amount,
+                        currency: 'INR',
+                        name: 'Unknown Verdict AGI',
+                        description: plan + ' Plan Subscription',
+                        order_id: data.order_id,
+                        handler: function(response) {
+                            verifyPayment(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature);
+                        },
+                        prefill: {
+                            name: state.user?.username || 'User',
+                            email: state.user?.email || 'user@example.com'
+                        },
+                        theme: { color: '#6c5ce7' }
+                    };
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    showToast('Payment error: ' + (data.detail || 'Could not create order'), 'error');
+                }
+            } catch(err) {
+                showToast('Payment error: ' + err.message, 'error');
+            }
+        }
+
+        async function verifyPayment(paymentId, orderId, signature) {
+            const token = getToken();
+            const formData = new FormData();
+            formData.append('razorpay_payment_id', paymentId);
+            formData.append('razorpay_order_id', orderId);
+            formData.append('razorpay_signature', signature);
+            
+            try {
+                const res = await fetch(state.baseUrl + '/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('Payment successful! Upgraded to ' + (data.tier || 'Premium'), 'success');
+                    state.user.tier = data.tier || 'Pro';
+                    localStorage.setItem('uv_user', JSON.stringify(state.user));
+                    updateTier(state.user.tier);
+                } else {
+                    showToast('Payment verification failed', 'error');
+                }
+            } catch(err) {
+                showToast('Verification error: ' + err.message, 'error');
+            }
+        }
+
+        // ─── MODALS ──────────────────────────────────────────────────
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        // ─── TOASTS ──────────────────────────────────────────────────
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (type || '');
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const icon = icons[type] || 'ℹ️';
+            toast.innerHTML = '<span>' + icon + '</span> ' + message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ─── ARTICLE MODAL ───────────────────────────────────────────
         function copyArticle() {
             const content = document.getElementById('articleContent').innerText;
             navigator.clipboard.writeText(content).then(() => showToast('Copied to clipboard', 'success'));
@@ -779,65 +1105,23 @@
             showToast('Download started', 'success');
         }
 
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function showToast(message, type) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            toast.innerHTML = '<span>' + (type === 'success' ? '✓' : type === 'error' ? '✗' : '⚠') + '</span> ' + escapeHtml(message);
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 4000);
-        }
-
-        function animateCounters() {
-            const counters = document.querySelectorAll('.stat-number');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const target = parseInt(entry.target.dataset.target);
-                        if (target) animateValue(entry.target, 0, target, 2000);
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.5 });
-            counters.forEach(c => observer.observe(c));
-        }
-
-        function animateValue(obj, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function loadData() {
-            fetchHealth();
-        }
-
-        async function fetchHealth() {
-            try {
-                const dot = document.getElementById('statusDot');
-                dot.classList.remove('offline');
-                dot.style.background = 'var(--success)';
-            } catch (e) { document.getElementById('statusDot').classList.add('offline'); }
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
-        });
+        // ─── SPINNER CSS ─────────────────────────────────────────────
+        const style = document.createElement('style');
+        style.textContent = `
+            .spinner {
+                width: 40px; height: 40px;
+                border: 4px solid var(--border);
+                border-top-color: var(--primary);
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin: 0 auto 12px;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .loading-spinner { text-align: center; padding: 40px; color: var(--text-dim); }
+            .error-box { color: #dc3545; background: #f8d7da; padding: 20px; border-radius: 10px; text-align: center; grid-column: 1 / -1; }
+            .info-box { color: #0c5460; background: #d1ecf1; padding: 20px; border-radius: 10px; text-align: center; grid-column: 1 / -1; }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
