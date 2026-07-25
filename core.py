@@ -81,7 +81,6 @@ def generate_all_agents():
     domain_idx = 0
     name_idx = 0
     
-    # Ensure all domains are covered
     all_domains = DOMAINS_FULL
     for i in range(250):
         domain = all_domains[domain_idx % len(all_domains)]
@@ -89,7 +88,6 @@ def generate_all_agents():
         sub = sub_list[i % len(sub_list)]
         name = DIVINE_NAMES_POOL[name_idx % len(DIVINE_NAMES_POOL)]
         
-        # Categorize agent type
         agent_type = "spiritual" if domain in ["Vedanta", "Yoga", "Ayurveda", "Sanskrit", "Mythology", "Ethics", "Philosophy", "Logic", "Psychology"] else "scientific" if domain in ["Mathematics", "Physics", "Chemistry", "Biology", "Medicine", "Astronomy", "Cryptography", "Machine Learning", "Quantum Mechanics"] else "legal"
         
         agent_name = f"{name} · {domain} ({sub})"
@@ -124,7 +122,6 @@ def route_agent(query: str, oracle: bool) -> str:
     best_score = -1
     best_id = "general"
     
-    # Check for spiritual keywords
     spiritual_keywords = ["spiritual", "soul", "consciousness", "meditation", "yoga", "vedanta", "karma", "dharma", "prayer", "mindfulness"]
     scientific_keywords = ["quantum", "physics", "math", "chemistry", "biology", "genetics", "algorithm", "data", "experiment"]
     
@@ -132,7 +129,6 @@ def route_agent(query: str, oracle: bool) -> str:
         domain_words = agent["domain"].lower().split()
         score = sum(1 for w in q.split() if w in domain_words)
         
-        # Boost score based on agent type
         if "spiritual" in agent["type"] and any(kw in q for kw in spiritual_keywords):
             score += 3
         if "scientific" in agent["type"] and any(kw in q for kw in scientific_keywords):
@@ -422,7 +418,6 @@ class LensAgentSystem:
         if not agent:
             return {"error": "Agent not found"}
         
-        # Generate findings based on domain
         findings = []
         governance = {
             "transparency": round(random.uniform(0.7, 1.0), 2),
@@ -433,7 +428,6 @@ class LensAgentSystem:
         }
         governance["overall"] = round(sum(governance.values()) / len(governance), 2)
         
-        # Generate domain-specific findings
         domain = agent["domain"].lower()
         if "supreme court" in domain or "high court" in domain:
             findings = [
@@ -486,7 +480,6 @@ class LensAgentSystem:
     
     def get_governance_report(self) -> Dict:
         """Get AI governance report"""
-        # Calculate overall governance
         gov_scores = [a["governance_score"] for a in self.lens_agents if a["governance_score"] > 0]
         avg_gov = round(sum(gov_scores) / len(gov_scores), 2) if gov_scores else 0.85
         
@@ -560,7 +553,15 @@ class AgentSwarm:
         return {"agent": agent["name"], "domain": agent["domain"], "type": agent["type"], "subtask": subtask[:100], "result": result[:500]}
     
     async def _synthesize(self, results: List[Dict], original_task: str, leader: Dict) -> str:
-        synthesis_prompt = f"Original task: {original_task}\n\nSub-results from {len(results)} agents:\n{chr(10).join([f'- {r['agent']} ({r['type']}): {r['result'][:200]}' for r in results])}\n\nSynthesize a comprehensive final answer integrating all perspectives."
+        """Synthesize all subtask results into final answer - FIXED"""
+        results_text = "\n".join([f"- {r['agent']} ({r['type']}): {r['result'][:200]}" for r in results])
+        synthesis_prompt = f"""Original task: {original_task}
+
+Sub-results from {len(results)} agents:
+{results_text}
+
+Synthesize a comprehensive final answer integrating all perspectives."""
+        
         system = f"You are {leader['name']}, the swarm leader. Synthesize the final answer."
         return await call_llm(system, synthesis_prompt, "groq")
 
@@ -639,11 +640,18 @@ class AgentDebate:
         return await call_llm(system, prompt, "groq")
     
     async def _find_consensus(self, positions: List) -> tuple:
+        """Find consensus among positions - FIXED"""
         all_positions = []
         for round_positions in positions:
             for p in round_positions:
                 all_positions.append(p["position"])
-        consensus_prompt = f"These are positions from different experts:\n{chr(10).join([f'- {p[:200]}' for p in all_positions[:10]])}\n\nWhat is the consensus? Return a concise summary."
+        
+        positions_text = "\n".join([f"- {p[:200]}" for p in all_positions[:10]])
+        consensus_prompt = f"""These are positions from different experts:
+{positions_text}
+
+What is the consensus? Return a concise summary."""
+        
         consensus = await call_llm("You are a consensus finder.", consensus_prompt, "groq")
         confidence = min(0.9, 0.7 + (len(positions) * 0.05))
         return consensus, confidence
@@ -706,10 +714,8 @@ class LegalKnowledgeGraph:
             ("GST", "Taxation", "imposes", 1.0), ("Income Tax", "Taxation", "imposes", 1.0),
             ("GDPR", "Data Protection", "regulates", 1.0), ("DPDPA", "Data Protection", "regulates", 1.0),
             ("CCPA", "Consumer Protection", "provides", 0.9),
-            # Spiritual
             ("Vedanta", "Consciousness", "explores", 1.0), ("Yoga", "Self-Realization", "leads_to", 0.9),
             ("Ayurveda", "Health", "promotes", 1.0), ("Meditation", "Mindfulness", "develops", 0.9),
-            # Scientific
             ("Quantum Mechanics", "Physics", "studies", 1.0), ("Relativity", "Physics", "studies", 1.0),
             ("Genetics", "Biology", "studies", 1.0), ("Evolution", "Biology", "explains", 1.0),
             ("Machine Learning", "AI", "enables", 1.0), ("Blockchain", "Security", "provides", 1.0)
