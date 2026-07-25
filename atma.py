@@ -307,4 +307,4 @@ Return only the corrected answer.
                 """, query, domain, persona, provider, initial_answer, 
                     json.dumps(verifier_results), final_answer, confidence, json.dumps(sources))
         except Exception as e:
-            logger.error(f"Failed to log deliberation: {e}")
+            logger.error(f"Failed to log deliberation: {e}") 
