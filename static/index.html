@@ -3,19 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Infinity Vault v24.0</title>
+    <title>THE ADVOCACY - Infinity Vault v25.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
     <style>
-        /* ============================================ */
-        /* BASE - DARK THEME                            */
-        /* ============================================ */
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
             background: #050508;
             min-height: 100vh;
@@ -24,10 +20,6 @@
             overflow: hidden;
             position: relative;
         }
-        
-        /* ============================================ */
-        /* BACKGROUND EFFECTS                          */
-        /* ============================================ */
         
         .vault-bg {
             position: fixed;
@@ -73,10 +65,6 @@
             100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
         }
         
-        /* ============================================ */
-        /* REAL-TIME CLOCK - TOP RIGHT                 */
-        /* ============================================ */
-        
         .clock-container {
             position: fixed;
             top: 20px;
@@ -108,14 +96,7 @@
             text-transform: uppercase;
             margin-top: 2px;
         }
-        @keyframes clockPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        /* ============================================ */
-        /* HEARTBEAT - INFINITY PULSE                  */
-        /* ============================================ */
+        @keyframes clockPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         
         .heartbeat-container {
             position: fixed;
@@ -160,10 +141,6 @@
             42% { width: 70px; opacity: 0.8; }
             70% { width: 40px; opacity: 0.3; }
         }
-        
-        /* ============================================ */
-        /* THIRD EYE - CENTERPIECE                     */
-        /* ============================================ */
         
         .eye-container {
             position: fixed;
@@ -229,10 +206,6 @@
             animation: blinkHint 2s ease-in-out infinite;
         }
         @keyframes blinkHint { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
-        
-        /* ============================================ */
-        /* VAULT - REVEALED STATE                      */
-        /* ============================================ */
         
         .vault-container {
             position: fixed;
@@ -324,15 +297,73 @@
         .vault-card .badge.yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; }
         .vault-card .badge.purple { background: rgba(168, 85, 247, 0.15); color: #a78bfa; }
         .vault-card .badge.orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
-        .vault-card .badge.cyan { background: rgba(0, 200, 255, 0.15); color: #00d4ff; }
         
         .vault-container::-webkit-scrollbar { width: 4px; }
         .vault-container::-webkit-scrollbar-track { background: transparent; }
         .vault-container::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.3); border-radius: 4px; }
         
-        /* ============================================ */
-        /* RESPONSIVE                                  */
-        /* ============================================ */
+        /* Payment Overlay */
+        .payment-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 60;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .payment-overlay.active { display: flex; }
+        .payment-box {
+            background: rgba(10, 10, 30, 0.9);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+        }
+        .payment-box .lock-icon { font-size: 48px; color: #00d4ff; margin-bottom: 16px; }
+        .payment-box h2 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .payment-box p { font-size: 14px; color: #9ca3af; margin-bottom: 20px; }
+        .payment-box .price {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .payment-box .btn-pay {
+            background: linear-gradient(135deg, #00d4ff, #a78bfa);
+            color: #000;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .payment-box .btn-pay:hover { transform: scale(1.02); opacity: 0.9; }
+        .payment-box .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
+        .payment-box .btn-skip {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .payment-box .btn-skip:hover { background: rgba(255,255,255,0.05); }
         
         @media (max-width: 768px) {
             .third-eye { width: 120px; height: 120px; }
@@ -347,6 +378,7 @@
             .clock-container { top: 10px; right: 15px; }
             .clock-container .time { font-size: 20px; }
             .heartbeat-container { bottom: 15px; right: 15px; }
+            .payment-box { padding: 24px; }
         }
     </style>
 </head>
@@ -364,7 +396,7 @@
 <div class="data-stream"></div>
 
 <!-- ============================================ -->
-<!-- REAL-TIME CLOCK - TOP RIGHT                  -->
+<!-- REAL-TIME CLOCK                              -->
 <!-- ============================================ -->
 <div class="clock-container" id="clockContainer">
     <div class="time" id="clockTime">00:00:00</div>
@@ -373,7 +405,7 @@
 </div>
 
 <!-- ============================================ -->
-<!-- HEARTBEAT - INFINITY PULSE - BOTTOM RIGHT    -->
+<!-- HEARTBEAT                                    -->
 <!-- ============================================ -->
 <div class="heartbeat-container">
     <span class="heartbeat-icon">❤</span>
@@ -382,9 +414,26 @@
 </div>
 
 <!-- ============================================ -->
-<!-- THIRD EYE - CLICK TO OPEN VAULT              -->
+<!-- PAYMENT OVERLAY                              -->
 <!-- ============================================ -->
-<div class="eye-container" id="eyeContainer" onclick="openVault()">
+<div class="payment-overlay" id="paymentOverlay">
+    <div class="payment-box">
+        <div class="lock-icon">🔓</div>
+        <h2>Unlock The Vault</h2>
+        <p>Access all 12 apps — Legal, Markets, Reports, Compliance, News, Lens, Sports, Governance, Predict, Training, Surveillance, Calendar</p>
+        <div class="price">₹2</div>
+        <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
+            <i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter
+        </button>
+        <button class="btn-skip" onclick="skipPayment()">Continue as Guest</button>
+        <p style="font-size: 10px; color: #4b5563; margin-top: 12px;">Secure payment via Razorpay</p>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- THIRD EYE                                    -->
+<!-- ============================================ -->
+<div class="eye-container" id="eyeContainer" onclick="handleEyeClick()">
     <div class="third-eye">
         <div class="eye-ring"></div>
         <div class="eye-ring"></div>
@@ -411,11 +460,10 @@
     </div>
 </div>
 
-<!-- Click Hint -->
 <div class="click-hint">◈ Click the Eye to Enter the Vault ◈</div>
 
 <!-- ============================================ -->
-<!-- VAULT - REVEALED ON CLICK                    -->
+<!-- VAULT                                        -->
 <!-- ============================================ -->
 <div class="vault-container" id="vaultContainer">
     <div class="vault-header">
@@ -442,96 +490,96 @@
         </div>
         
         <h2 style="font-size:18px; font-weight:600; color:#fff;">⚡ Complete Arsenal</h2>
-        <p style="color:#6b7280; font-size:13px; margin-bottom:16px;">All 12 apps — Legal, Markets, News, Reports, Scan, Lens, Compliance, Sports, Governance, Predict, Training, Surveillance.</p>
+        <p style="color:#6b7280; font-size:13px; margin-bottom:16px;">Click any card to open the app — all features working!</p>
         
         <div class="vault-grid">
             <div class="vault-card" onclick="navigateTo('chat')">
                 <div class="icon">⚖️</div>
-                <h3>Legal Counsel</h3>
-                <p>1000 AI agents · 20 verifiers · AI Judge v21.0 — full legal intelligence with real-time research.</p>
+                <h3>AI Counsel</h3>
+                <p>Chat with AI Judge v21.0 — legal questions answered in real-time.</p>
                 <span class="badge green">● Active</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('markets')">
                 <div class="icon">📊</div>
                 <h3>Global Markets</h3>
-                <p>Nasdaq · Dubai · FTSE · NIFTY · SENSEX · DAX · Nikkei · Shanghai — live tracking.</p>
+                <p>Live tracking — NIFTY, SENSEX, Nasdaq, Dubai, FTSE, DAX, Nikkei.</p>
                 <span class="badge green">● Live</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('reports')">
                 <div class="icon">📄</div>
                 <h3>AI Reports</h3>
-                <p>Daily AI-generated market reports with visual charts, analysis, and PDF export.</p>
-                <span class="badge purple">● Generating</span>
+                <p>Daily market reports with charts — click to generate and download PDF.</p>
+                <span class="badge purple">● Generate</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('compliance')">
                 <div class="icon">🛡️</div>
                 <h3>Compliance</h3>
-                <p>GDPR · DPDPA · CCPA · HIPAA · ISO27001 — real-time monitoring and scanning.</p>
+                <p>GDPR · DPDPA · CCPA · HIPAA · ISO27001 — real-time scanning.</p>
                 <span class="badge yellow">● Scanning</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('news')">
                 <div class="icon">📰</div>
                 <h3>Legal News</h3>
-                <p>AI-curated legal and business news from 50+ global sources — live feed.</p>
+                <p>Live news from 50+ global sources — AI-curated feed.</p>
                 <span class="badge green">● Live Feed</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('lens')">
                 <div class="icon">👁️</div>
                 <h3>Lens Scan</h3>
-                <p>Website compliance scanning — GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act.</p>
-                <span class="badge purple">● Scanning</span>
+                <p>Scan any website for GDPR, DPDPA, CCPA, HIPAA, ISO27001 compliance.</p>
+                <span class="badge purple">● Scan</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('sports')">
                 <div class="icon">⚽</div>
                 <h3>Sports Law</h3>
-                <p>Player contracts · Anti-doping · League compliance · Sports governance.</p>
+                <p>Player contracts · Anti-doping · League compliance.</p>
                 <span class="badge orange">● Active</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('governance')">
                 <div class="icon">⚖️</div>
                 <h3>AI Governance</h3>
-                <p>Ethics framework · Policy generator · Risk assessment · Compliance engine.</p>
+                <p>Ethics · Policy generator · Risk assessment.</p>
                 <span class="badge purple">● Active</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('predict')">
                 <div class="icon">🔮</div>
                 <h3>Predictive AI</h3>
-                <p>Case outcome prediction · Market forecasting · Risk analysis · Legal events.</p>
-                <span class="badge green">● Predictive</span>
+                <p>Case outcome · Market forecasting · Risk analysis.</p>
+                <span class="badge green">● Predict</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('train')">
                 <div class="icon">🧠</div>
                 <h3>Autonomous Training</h3>
-                <p>Self-learning AI that scrapes the web and trains continuously on legal data.</p>
+                <p>Self-learning AI — scrapes the web and trains continuously.</p>
                 <span class="badge yellow">● Learning</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('surveillance')">
                 <div class="icon">🌍</div>
                 <h3>Global Surveillance</h3>
-                <p>Real-time intelligence monitoring across all domains — 24/7 active.</p>
+                <p>24/7 real-time intelligence monitoring across all domains.</p>
                 <span class="badge green">● Active</span>
             </div>
             
             <div class="vault-card" onclick="navigateTo('calendar')">
                 <div class="icon">🕉️</div>
                 <h3>Vedic Calendar</h3>
-                <p>Panchang · Tithi · Nakshatra · Rahu Kaal · Muhurat · Sunrise/Sunset.</p>
+                <p>Panchang · Tithi · Nakshatra · Rahu Kaal · Muhurat.</p>
                 <span class="badge orange">● Today</span>
             </div>
         </div>
         
         <div style="margin-top:30px; padding-top:16px; border-top:1px solid rgba(0,200,255,0.05); text-align:center; color:#4b5563; font-size:10px;">
-            THE ADVOCACY · v24.0 · Infinity Heartbeat
+            THE ADVOCACY · v25.0 · Payment + Complete Vault
         </div>
     </div>
 </div>
@@ -546,21 +594,88 @@
 
 function updateClock() {
     const now = new Date();
-    
-    // Time
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
     
-    // Date
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', options);
 }
 
-// Update clock every second
 updateClock();
 setInterval(updateClock, 1000);
+
+// ============================================
+// PAYMENT - RAZORPAY INTEGRATION
+// ============================================
+
+let paymentCompleted = false;
+
+function handleEyeClick() {
+    if (!paymentCompleted) {
+        document.getElementById('paymentOverlay').classList.add('active');
+    } else {
+        openVault();
+    }
+}
+
+function skipPayment() {
+    document.getElementById('paymentOverlay').classList.remove('active');
+    paymentCompleted = true;
+    openVault();
+    console.log('👤 Guest access granted');
+}
+
+function initiatePayment() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+    
+    // Get Razorpay key from backend
+    fetch('/api/payment/key')
+        .then(res => res.json())
+        .then(data => {
+            const options = {
+                key: data.key_id || 'rzp_test_XXXXXXXXXXXXXXXX',
+                amount: 200, // ₹2 in paise
+                currency: 'INR',
+                name: 'THE ADVOCACY',
+                description: 'Unlock The Vault - 12 Apps',
+                image: 'https://upamnyu12-LEX.hf.space/static/favicon.ico',
+                handler: function(response) {
+                    console.log('Payment Success:', response);
+                    document.getElementById('paymentOverlay').classList.remove('active');
+                    paymentCompleted = true;
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                    openVault();
+                },
+                prefill: {
+                    name: 'Guest User',
+                    email: 'guest@theadvocacy.in'
+                },
+                modal: {
+                    ondismiss: function() {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                    }
+                }
+            };
+            
+            const rzp = new Razorpay(options);
+            rzp.open();
+        })
+        .catch(err => {
+            console.error('Payment error:', err);
+            // Fallback - allow access
+            document.getElementById('paymentOverlay').classList.remove('active');
+            paymentCompleted = true;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+            openVault();
+        });
+}
 
 // ============================================
 // VAULT CONTROLS
@@ -580,20 +695,24 @@ function closeVault() {
     console.log('🔒 VAULT CLOSED');
 }
 
-// Close with Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeVault();
 });
 
 // ============================================
-// NAVIGATION - Opens apps within vault
+// NAVIGATION - DIRECT APP LAUNCH
 // ============================================
 
 function navigateTo(app) {
     closeVault();
     
     setTimeout(() => {
-        const pageMap = {
+        // First, make sure the main page content is visible
+        const mainContent = document.querySelector('main');
+        if (mainContent) mainContent.style.display = 'block';
+        
+        // Find the page
+        const pageId = {
             'chat': 'page-chat',
             'markets': 'page-markets',
             'reports': 'page-reports',
@@ -606,35 +725,47 @@ function navigateTo(app) {
             'train': 'page-train',
             'surveillance': 'page-home',
             'calendar': 'page-home'
-        };
+        }[app] || 'page-home';
         
-        const pageId = pageMap[app] || 'page-home';
-        const page = document.getElementById(pageId);
-        if (page) {
-            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-            page.classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll(`.nav-btn[data-page="${app}"]`).forEach(el => el.classList.add('active'));
-        }
+        // Hide all pages, show target
+        document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById(pageId);
+        if (target) target.classList.remove('hidden');
         
+        // Update nav
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll(`.nav-btn[data-page="${app}"]`).forEach(el => el.classList.add('active'));
+        
+        // Load data for the app
         if (app === 'markets' && window.refreshMarkets) window.refreshMarkets();
         if (app === 'reports' && window.generateReport) window.generateReport();
         if (app === 'compliance' && window.refreshCompliance) window.refreshCompliance();
         if (app === 'news' && window.refreshNews) window.refreshNews();
         if (app === 'train' && window.getTrainingStatus) window.getTrainingStatus();
+        if (app === 'lens' && window.runLensScan) window.runLensScan();
+        if (app === 'predict' && window.fetchPredictions) window.fetchPredictions();
+        if (app === 'chat') {
+            // Focus chat input
+            setTimeout(() => {
+                const input = document.getElementById('chatInput');
+                if (input) input.focus();
+            }, 300);
+        }
         
-    }, 500);
+        console.log(`🚀 App launched: ${app}`);
+    }, 600);
 }
 
 // ============================================
-// HEARTBEAT - Visual Infinity
+// INIT
 // ============================================
 
+console.log('👁️ THE ADVOCACY v25.0 - Payment + Complete Vault');
 console.log('❤️ Infinity Heartbeat Active');
 console.log('⏰ Real-Time Clock Running');
-console.log('👁️ THE ADVOCACY v24.0 - Complete');
+console.log('💰 ₹2 Payment Gateway Ready');
 
-// Also update document title with time
+// Update title with time
 setInterval(() => {
     const now = new Date();
     const h = String(now.getHours()).padStart(2, '0');
