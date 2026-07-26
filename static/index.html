@@ -150,7 +150,7 @@
 <body>
 
 <!-- ============================================ -->
-<!-- NAVIGATION - ALL 6 APPS -->
+<!-- NAVIGATION - ALL 7 APPS -->
 <!-- ============================================ -->
 <nav class="glass-nav">
     <div class="container mx-auto px-4 py-2">
@@ -159,10 +159,10 @@
                 <span class="text-xl font-bold text-blue-400">⚖️</span>
                 <div>
                     <h1 class="text-base font-bold text-white tracking-tight">THE ADVOCACY</h1>
-                    <span class="text-[8px] text-gray-500 tracking-wider">6 APPS INTEGRATED</span>
+                    <span class="text-[8px] text-gray-500 tracking-wider">7 APPS INTEGRATED</span>
                 </div>
                 <span class="badge badge-live">● Live</span>
-                <span class="badge bg-blue-500/20 text-blue-400 text-[8px]">v15.0</span>
+                <span class="badge bg-blue-500/20 text-blue-400 text-[8px]">v16.0</span>
             </div>
 
             <div class="hidden lg:flex items-center space-x-1 overflow-x-auto scrollbar-hide">
@@ -175,6 +175,7 @@
                 <button onclick="navigateTo('news')" class="nav-btn" data-page="news"><i class="fas fa-newspaper mr-1"></i>News</button>
                 <button onclick="navigateTo('sports')" class="nav-btn" data-page="sports"><i class="fas fa-futbol mr-1"></i>Sports</button>
                 <button onclick="navigateTo('governance')" class="nav-btn" data-page="governance"><i class="fas fa-balance-scale mr-1"></i>Governance</button>
+                <button onclick="navigateTo('predict')" class="nav-btn" data-page="predict"><i class="fas fa-robot mr-1"></i>Predict</button>
                 <button onclick="navigateTo('tasks')" class="nav-btn" data-page="tasks"><i class="fas fa-tasks mr-1"></i>Tasks</button>
             </div>
 
@@ -194,6 +195,7 @@
             <button onclick="navigateTo('news')" class="nav-btn w-full text-left" data-page="news">📰 News</button>
             <button onclick="navigateTo('sports')" class="nav-btn w-full text-left" data-page="sports">⚽ Sports</button>
             <button onclick="navigateTo('governance')" class="nav-btn w-full text-left" data-page="governance">⚖️ Governance</button>
+            <button onclick="navigateTo('predict')" class="nav-btn w-full text-left" data-page="predict">🔮 Predict</button>
             <button onclick="navigateTo('tasks')" class="nav-btn w-full text-left" data-page="tasks">📋 Tasks</button>
         </div>
     </div>
@@ -205,53 +207,52 @@
 <main class="container mx-auto px-4 pt-20 pb-12 relative z-10">
 
     <!-- ========================================== -->
-    <!-- HOME PAGE - ALL 6 APPS SHOWCASE -->
+    <!-- HOME PAGE - ALL 7 APPS SHOWCASE -->
     <!-- ========================================== -->
     <div id="page-home" class="page-content">
         <div class="text-center mb-8">
             <h2 class="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">6 Apps · 1 Platform</span>
+                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">7 Apps · 1 Platform</span>
             </h2>
-            <p class="text-gray-400 text-sm mt-1">Legal · Compliance · Trading · News · Sports · Governance</p>
+            <p class="text-gray-400 text-sm mt-1">Legal · Compliance · Trading · News · Sports · Governance · Predictive AI</p>
         </div>
 
-        <!-- 6 Apps Showcase -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-            <div class="role-card p-4 text-center" onclick="navigateTo('chat')">
-                <div class="text-2xl text-blue-400 mb-1">⚖️</div>
-                <div class="text-xs font-bold text-white">Legal</div>
-                <div class="text-[8px] text-gray-500">AI Counsel</div>
+        <!-- 7 Apps Showcase -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 mb-8">
+            <div class="role-card p-3 text-center" onclick="navigateTo('chat')">
+                <div class="text-xl text-blue-400 mb-1">⚖️</div>
+                <div class="text-[10px] font-bold text-white">Legal</div>
                 <span class="app-tag">App 1</span>
             </div>
-            <div class="role-card p-4 text-center" onclick="navigateTo('compliance')">
-                <div class="text-2xl text-green-400 mb-1">🛡️</div>
-                <div class="text-xs font-bold text-white">Compliance</div>
-                <div class="text-[8px] text-gray-500">GDPR/DPDPA</div>
+            <div class="role-card p-3 text-center" onclick="navigateTo('compliance')">
+                <div class="text-xl text-green-400 mb-1">🛡️</div>
+                <div class="text-[10px] font-bold text-white">Compliance</div>
                 <span class="app-tag">App 2</span>
             </div>
-            <div class="role-card p-4 text-center" onclick="navigateTo('markets')">
-                <div class="text-2xl text-yellow-400 mb-1">📊</div>
-                <div class="text-xs font-bold text-white">Trading</div>
-                <div class="text-[8px] text-gray-500">Markets/Crypto</div>
+            <div class="role-card p-3 text-center" onclick="navigateTo('markets')">
+                <div class="text-xl text-yellow-400 mb-1">📊</div>
+                <div class="text-[10px] font-bold text-white">Trading</div>
                 <span class="app-tag">App 3</span>
             </div>
-            <div class="role-card p-4 text-center" onclick="navigateTo('news')">
-                <div class="text-2xl text-purple-400 mb-1">📰</div>
-                <div class="text-xs font-bold text-white">News</div>
-                <div class="text-[8px] text-gray-500">Legal/Business</div>
+            <div class="role-card p-3 text-center" onclick="navigateTo('news')">
+                <div class="text-xl text-purple-400 mb-1">📰</div>
+                <div class="text-[10px] font-bold text-white">News</div>
                 <span class="app-tag">App 4</span>
             </div>
-            <div class="role-card p-4 text-center" onclick="navigateTo('sports')">
-                <div class="text-2xl text-orange-400 mb-1">⚽</div>
-                <div class="text-xs font-bold text-white">Sports</div>
-                <div class="text-[8px] text-gray-500">Sports Law</div>
+            <div class="role-card p-3 text-center" onclick="navigateTo('sports')">
+                <div class="text-xl text-orange-400 mb-1">⚽</div>
+                <div class="text-[10px] font-bold text-white">Sports</div>
                 <span class="app-tag">App 5</span>
             </div>
-            <div class="role-card p-4 text-center" onclick="navigateTo('governance')">
-                <div class="text-2xl text-pink-400 mb-1">⚖️</div>
-                <div class="text-xs font-bold text-white">Governance</div>
-                <div class="text-[8px] text-gray-500">AI Ethics</div>
+            <div class="role-card p-3 text-center" onclick="navigateTo('governance')">
+                <div class="text-xl text-pink-400 mb-1">⚖️</div>
+                <div class="text-[10px] font-bold text-white">Governance</div>
                 <span class="app-tag">App 6</span>
+            </div>
+            <div class="role-card p-3 text-center" onclick="navigateTo('predict')">
+                <div class="text-xl text-cyan-400 mb-1">🔮</div>
+                <div class="text-[10px] font-bold text-white">Predict</div>
+                <span class="app-tag">App 7</span>
             </div>
         </div>
 
@@ -262,7 +263,7 @@
                 <div class="text-xs text-gray-500 mt-1">AI Intelligence</div>
             </div>
             <div class="role-card p-3 text-center">
-                <div class="stat-number">6</div>
+                <div class="stat-number">7</div>
                 <div class="text-xs text-gray-500 mt-1">Integrated Apps</div>
             </div>
             <div class="role-card p-3 text-center">
@@ -280,7 +281,7 @@
             <button onclick="navigateTo('chat')" class="card p-3 text-center text-white font-semibold bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/20 text-sm"><i class="fas fa-gavel text-blue-400 text-lg block mb-1"></i>AI Counsel</button>
             <button onclick="navigateTo('compliance')" class="card p-3 text-center text-white font-semibold bg-green-600/20 hover:bg-green-600/30 border-green-500/20 text-sm"><i class="fas fa-shield-alt text-green-400 text-lg block mb-1"></i>Compliance</button>
             <button onclick="navigateTo('markets')" class="card p-3 text-center text-white font-semibold bg-yellow-600/20 hover:bg-yellow-600/30 border-yellow-500/20 text-sm"><i class="fas fa-chart-line text-yellow-400 text-lg block mb-1"></i>Markets</button>
-            <button onclick="navigateTo('lens')" class="card p-3 text-center text-white font-semibold bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/20 text-sm"><i class="fas fa-eye text-purple-400 text-lg block mb-1"></i>Lens Scan</button>
+            <button onclick="navigateTo('predict')" class="card p-3 text-center text-white font-semibold bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/20 text-sm"><i class="fas fa-robot text-purple-400 text-lg block mb-1"></i>Predict</button>
         </div>
     </div>
 
@@ -530,7 +531,74 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- APP 9: TASKS -->
+    <!-- APP 9: PREDICTIVE AI -->
+    <!-- ========================================== -->
+    <div id="page-predict" class="page-content hidden">
+        <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h2 class="text-lg font-bold text-white">🔮 Predictive AI</h2>
+                    <p class="text-xs text-gray-400">Live web scraping + AI predictions</p>
+                </div>
+                <span class="badge bg-purple-500/20 text-purple-400">v16.0</span>
+            </div>
+
+            <!-- Prediction Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                    <h3 class="text-xs font-bold text-blue-400"><i class="fas fa-chart-line mr-1"></i>Market Prediction</h3>
+                    <div id="marketPrediction" class="text-sm text-gray-300 mt-1">
+                        <span class="text-gray-500 text-xs">Loading...</span>
+                    </div>
+                </div>
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                    <h3 class="text-xs font-bold text-purple-400"><i class="fas fa-gavel mr-1"></i>Case Prediction</h3>
+                    <div id="casePrediction" class="text-sm text-gray-300 mt-1">
+                        <span class="text-gray-500 text-xs">Loading...</span>
+                    </div>
+                </div>
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                    <h3 class="text-xs font-bold text-red-400"><i class="fas fa-shield-alt mr-1"></i>Regulatory Risk</h3>
+                    <div id="regulatoryPrediction" class="text-sm text-gray-300 mt-1">
+                        <span class="text-gray-500 text-xs">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refresh Button -->
+            <button onclick="fetchPredictions()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-sm transition w-full">
+                <i class="fas fa-sync mr-1"></i>Refresh Predictions
+            </button>
+
+            <!-- Live Data Display -->
+            <div id="liveDataDisplay" class="mt-3">
+                <div class="text-center text-gray-500 py-4 text-xs" id="predictEmptyState">
+                    <i class="fas fa-robot text-3xl text-gray-700 mb-2"></i>
+                    <p>Click refresh to get live predictions</p>
+                    <p class="text-gray-600 mt-1">Scraping: Legal News, Markets, Regulatory Updates</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                <button onclick="quickPredict('case')" class="text-[10px] bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition text-center">
+                    <i class="fas fa-gavel text-blue-400 block mb-0.5"></i>Case Outcome
+                </button>
+                <button onclick="quickPredict('market')" class="text-[10px] bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition text-center">
+                    <i class="fas fa-chart-line text-green-400 block mb-0.5"></i>Market Trend
+                </button>
+                <button onclick="quickPredict('regulatory')" class="text-[10px] bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition text-center">
+                    <i class="fas fa-shield-alt text-red-400 block mb-0.5"></i>Compliance Risk
+                </button>
+                <button onclick="quickPredict('all')" class="text-[10px] bg-purple-600/20 hover:bg-purple-600/30 px-2 py-1.5 rounded transition text-center text-purple-400">
+                    <i class="fas fa-robot block mb-0.5"></i>All Predictions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- APP 10: TASKS -->
     <!-- ========================================== -->
     <div id="page-tasks" class="page-content hidden">
         <div class="card p-4">
@@ -592,8 +660,8 @@
 <!-- ============================================ -->
 <footer class="footer-border py-4 mt-6 relative z-10">
     <div class="container mx-auto px-4 text-center">
-        <p class="text-[10px] text-gray-600">© 2026 THE ADVOCACY – 6 Apps · 1 Platform</p>
-        <p class="text-[8px] text-gray-700 mt-1">Legal · Compliance · Trading · News · Sports · Governance</p>
+        <p class="text-[10px] text-gray-600">© 2026 THE ADVOCACY – 7 Apps · 1 Platform</p>
+        <p class="text-[8px] text-gray-700 mt-1">Legal · Compliance · Trading · News · Sports · Governance · Predictive AI</p>
     </div>
 </footer>
 
@@ -611,7 +679,7 @@ let mediaRecorder = null;
 let audioChunks = [];
 let uploadedFiles = { docs: [], videos: [], images: [] };
 
-console.log('🚀 THE ADVOCACY - 6 Apps Integrated');
+console.log('🚀 THE ADVOCACY - 7 Apps Integrated');
 
 // ============================================
 // NAVIGATION
@@ -637,6 +705,7 @@ function loadPageData(page) {
         case 'markets': fetchMarketData(); break;
         case 'news': fetchNewsData(); break;
         case 'sports': fetchSportsData(); break;
+        case 'predict': fetchPredictions(); break;
         default: break;
     }
 }
@@ -962,7 +1031,6 @@ async function fetchMarketData() {
                 </div>
             `).join('');
         }
-        // Update mini ticker
         const nifty = data.find(d => d.symbol === 'NIFTY');
         const sensex = data.find(d => d.symbol === 'SENSEX');
         const btc = data.find(d => d.symbol === 'BTC');
@@ -1088,6 +1156,88 @@ function quickScan(url) {
 }
 
 // ============================================
+// PREDICTIVE AI FUNCTIONS
+// ============================================
+
+async function fetchPredictions() {
+    const display = document.getElementById('liveDataDisplay');
+    const emptyState = document.getElementById('predictEmptyState');
+    if (emptyState) emptyState.remove();
+    
+    display.innerHTML = `
+        <div class="text-center text-gray-400 py-4 text-xs">
+            <i class="fas fa-spinner fa-spin text-2xl text-purple-400"></i>
+            <p class="mt-1">Scraping live web data...</p>
+            <p class="text-gray-600 mt-0.5">Sources: Supreme Court, Legal News, Markets, GDPR, DPDPA</p>
+        </div>
+    `;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/predict/all`);
+        if (!res.ok) throw new Error('Prediction API error');
+        const data = await res.json();
+        console.log('🔮 Predictions:', data);
+        
+        if (data.predictions) {
+            // Market Prediction
+            const market = data.predictions.market || {};
+            document.getElementById('marketPrediction').innerHTML = `
+                <div class="text-green-400 font-semibold text-sm">${market.prediction || 'Analyzing...'}</div>
+                <div class="text-[10px] text-gray-400">Probability: ${Math.round((market.probability || 0.5) * 100)}%</div>
+                <div class="text-[10px] text-gray-500">Target: ${market.target_price ? '₹' + Math.round(market.target_price) : 'N/A'}</div>
+            `;
+            
+            // Regulatory Prediction
+            const regulatory = data.predictions.regulatory || {};
+            const overallRisk = regulatory.overall_risk || 0;
+            const riskLevel = overallRisk > 0.7 ? '🔴 High' : overallRisk > 0.4 ? '🟡 Medium' : '🟢 Low';
+            document.getElementById('regulatoryPrediction').innerHTML = `
+                <div class="font-semibold text-sm ${overallRisk > 0.7 ? 'text-red-400' : overallRisk > 0.4 ? 'text-yellow-400' : 'text-green-400'}">${riskLevel}</div>
+                <div class="text-[10px] text-gray-400">Risk Score: ${Math.round(overallRisk * 100)}%</div>
+                <div class="text-[10px] text-gray-500">${regulatory.recommendations ? regulatory.recommendations[0] || '' : ''}</div>
+            `;
+            
+            // Case Prediction
+            const casePred = data.predictions.case_analysis || data.predictions.legal_event || {};
+            const prob = casePred.probability || 0.5;
+            document.getElementById('casePrediction').innerHTML = `
+                <div class="font-semibold text-sm ${prob > 0.6 ? 'text-green-400' : 'text-yellow-400'}">${casePred.prediction || 'Analyzing...'}</div>
+                <div class="text-[10px] text-gray-400">Probability: ${Math.round(prob * 100)}%</div>
+                <div class="text-[10px] text-gray-500">${casePred.expected_timeline || ''}</div>
+            `;
+        }
+        
+        display.innerHTML = `
+            <div class="bg-black/30 rounded-xl p-3 border border-white/5">
+                <h4 class="text-xs font-bold text-purple-400 mb-1">📡 Live Data Sources</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-1">
+                    <div class="bg-gray-800/30 p-1.5 rounded text-[10px] text-gray-400">⚖️ Supreme Court</div>
+                    <div class="bg-gray-800/30 p-1.5 rounded text-[10px] text-gray-400">📰 Legal News</div>
+                    <div class="bg-gray-800/30 p-1.5 rounded text-[10px] text-gray-400">📊 Markets</div>
+                    <div class="bg-gray-800/30 p-1.5 rounded text-[10px] text-gray-400">🛡️ GDPR/DPDPA</div>
+                </div>
+                <div class="text-[8px] text-gray-600 mt-1">Last updated: ${new Date().toLocaleTimeString()}</div>
+            </div>
+        `;
+        
+    } catch(e) {
+        console.error('Prediction error:', e);
+        display.innerHTML = `
+            <div class="bg-red-900/20 border border-red-500/20 rounded-xl p-3 text-center">
+                <p class="text-red-400 text-xs">❌ ${e.message}</p>
+                <button onclick="fetchPredictions()" class="text-xs text-blue-400 mt-1">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// Quick prediction buttons
+function quickPredict(type) {
+    fetchPredictions();
+    document.querySelector('#page-predict .card').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================================
 // TASK FUNCTIONS
 // ============================================
 function addTask() {
@@ -1140,10 +1290,15 @@ function handleLogout() {
 }
 
 // ============================================
+// AUTO REFRESH PREDICTIONS
+// ============================================
+setInterval(fetchPredictions, 60000);
+
+// ============================================
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ THE ADVOCACY - 6 Apps Integrated');
+    console.log('✅ THE ADVOCACY - 7 Apps Integrated');
     setMode('text');
     navigateTo('home');
     setInterval(fetchMarketData, 30000);
@@ -1167,6 +1322,8 @@ window.runLensScan = runLensScan;
 window.quickScan = quickScan;
 window.refreshCompliance = refreshCompliance;
 window.refreshNews = refreshNews;
+window.fetchPredictions = fetchPredictions;
+window.quickPredict = quickPredict;
 window.addTask = addTask;
 window.handleLogout = handleLogout;
 window.toggleMobileMenu = toggleMobileMenu;
