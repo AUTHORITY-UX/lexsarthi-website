@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Complete Vault v23.0</title>
+    <title>THE ADVOCACY - Infinity Vault v24.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
+        /* ============================================ */
+        /* BASE - DARK THEME                            */
+        /* ============================================ */
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
             background: #050508;
             min-height: 100vh;
@@ -19,6 +24,10 @@
             overflow: hidden;
             position: relative;
         }
+        
+        /* ============================================ */
+        /* BACKGROUND EFFECTS                          */
+        /* ============================================ */
         
         .vault-bg {
             position: fixed;
@@ -63,6 +72,98 @@
             90% { opacity: 1; }
             100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
         }
+        
+        /* ============================================ */
+        /* REAL-TIME CLOCK - TOP RIGHT                 */
+        /* ============================================ */
+        
+        .clock-container {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            z-index: 50;
+            text-align: right;
+            pointer-events: none;
+        }
+        .clock-container .time {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00d4ff;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+            animation: clockPulse 2s ease-in-out infinite;
+            letter-spacing: 2px;
+        }
+        .clock-container .date {
+            font-size: 11px;
+            color: rgba(0, 200, 255, 0.5);
+            letter-spacing: 2px;
+            margin-top: 2px;
+            font-weight: 300;
+        }
+        .clock-container .timezone {
+            font-size: 9px;
+            color: rgba(0, 200, 255, 0.3);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        @keyframes clockPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* ============================================ */
+        /* HEARTBEAT - INFINITY PULSE                  */
+        /* ============================================ */
+        
+        .heartbeat-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .heartbeat-icon {
+            font-size: 20px;
+            color: #00d4ff;
+            animation: heartbeat 1.2s ease-in-out infinite;
+        }
+        .heartbeat-text {
+            font-size: 10px;
+            color: rgba(0, 200, 255, 0.4);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+        .heartbeat-line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(0, 200, 255, 0.1), rgba(0, 200, 255, 0.4), rgba(0, 200, 255, 0.1));
+            border-radius: 2px;
+            animation: heartbeatLine 1.2s ease-in-out infinite;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            14% { transform: scale(1.3); opacity: 1; }
+            28% { transform: scale(1); opacity: 0.6; }
+            42% { transform: scale(1.2); opacity: 0.9; }
+            70% { transform: scale(1); opacity: 0.6; }
+        }
+        @keyframes heartbeatLine {
+            0%, 100% { width: 40px; opacity: 0.3; }
+            14% { width: 80px; opacity: 1; }
+            28% { width: 40px; opacity: 0.3; }
+            42% { width: 70px; opacity: 0.8; }
+            70% { width: 40px; opacity: 0.3; }
+        }
+        
+        /* ============================================ */
+        /* THIRD EYE - CENTERPIECE                     */
+        /* ============================================ */
         
         .eye-container {
             position: fixed;
@@ -121,13 +222,17 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: rgba(0, 200, 255, 0.4);
-            font-size: 11px;
+            color: rgba(0, 200, 255, 0.3);
+            font-size: 10px;
             letter-spacing: 4px;
             text-transform: uppercase;
             animation: blinkHint 2s ease-in-out infinite;
         }
-        @keyframes blinkHint { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes blinkHint { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+        
+        /* ============================================ */
+        /* VAULT - REVEALED STATE                      */
+        /* ============================================ */
         
         .vault-container {
             position: fixed;
@@ -214,17 +319,20 @@
             font-size: 9px;
             font-weight: 600;
             margin-top: 8px;
-            background: rgba(0, 200, 255, 0.1);
-            color: #00d4ff;
         }
         .vault-card .badge.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
         .vault-card .badge.yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; }
         .vault-card .badge.purple { background: rgba(168, 85, 247, 0.15); color: #a78bfa; }
         .vault-card .badge.orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+        .vault-card .badge.cyan { background: rgba(0, 200, 255, 0.15); color: #00d4ff; }
         
         .vault-container::-webkit-scrollbar { width: 4px; }
         .vault-container::-webkit-scrollbar-track { background: transparent; }
         .vault-container::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.3); border-radius: 4px; }
+        
+        /* ============================================ */
+        /* RESPONSIVE                                  */
+        /* ============================================ */
         
         @media (max-width: 768px) {
             .third-eye { width: 120px; height: 120px; }
@@ -235,12 +343,18 @@
             .vault-content { padding: 12px 15px; }
             .vault-grid { grid-template-columns: 1fr; }
             .vault-stats { grid-template-columns: repeat(2, 1fr); }
-            .click-hint { font-size: 9px; bottom: 15px; }
+            .click-hint { font-size: 8px; bottom: 15px; }
+            .clock-container { top: 10px; right: 15px; }
+            .clock-container .time { font-size: 20px; }
+            .heartbeat-container { bottom: 15px; right: 15px; }
         }
     </style>
 </head>
 <body>
 
+<!-- ============================================ -->
+<!-- BACKGROUND                                   -->
+<!-- ============================================ -->
 <div class="vault-bg"></div>
 <div id="grid-overlay"></div>
 <div class="data-stream"></div>
@@ -249,6 +363,27 @@
 <div class="data-stream"></div>
 <div class="data-stream"></div>
 
+<!-- ============================================ -->
+<!-- REAL-TIME CLOCK - TOP RIGHT                  -->
+<!-- ============================================ -->
+<div class="clock-container" id="clockContainer">
+    <div class="time" id="clockTime">00:00:00</div>
+    <div class="date" id="clockDate">LOADING...</div>
+    <div class="timezone">IST · UTC +5:30</div>
+</div>
+
+<!-- ============================================ -->
+<!-- HEARTBEAT - INFINITY PULSE - BOTTOM RIGHT    -->
+<!-- ============================================ -->
+<div class="heartbeat-container">
+    <span class="heartbeat-icon">❤</span>
+    <span class="heartbeat-text">Infinity</span>
+    <span class="heartbeat-line"></span>
+</div>
+
+<!-- ============================================ -->
+<!-- THIRD EYE - CLICK TO OPEN VAULT              -->
+<!-- ============================================ -->
 <div class="eye-container" id="eyeContainer" onclick="openVault()">
     <div class="third-eye">
         <div class="eye-ring"></div>
@@ -276,8 +411,12 @@
     </div>
 </div>
 
+<!-- Click Hint -->
 <div class="click-hint">◈ Click the Eye to Enter the Vault ◈</div>
 
+<!-- ============================================ -->
+<!-- VAULT - REVEALED ON CLICK                    -->
+<!-- ============================================ -->
 <div class="vault-container" id="vaultContainer">
     <div class="vault-header">
         <div class="logo">
@@ -306,7 +445,6 @@
         <p style="color:#6b7280; font-size:13px; margin-bottom:16px;">All 12 apps — Legal, Markets, News, Reports, Scan, Lens, Compliance, Sports, Governance, Predict, Training, Surveillance.</p>
         
         <div class="vault-grid">
-            <!-- App 1: Legal Counsel -->
             <div class="vault-card" onclick="navigateTo('chat')">
                 <div class="icon">⚖️</div>
                 <h3>Legal Counsel</h3>
@@ -314,7 +452,6 @@
                 <span class="badge green">● Active</span>
             </div>
             
-            <!-- App 2: Global Markets -->
             <div class="vault-card" onclick="navigateTo('markets')">
                 <div class="icon">📊</div>
                 <h3>Global Markets</h3>
@@ -322,7 +459,6 @@
                 <span class="badge green">● Live</span>
             </div>
             
-            <!-- App 3: AI Reports -->
             <div class="vault-card" onclick="navigateTo('reports')">
                 <div class="icon">📄</div>
                 <h3>AI Reports</h3>
@@ -330,7 +466,6 @@
                 <span class="badge purple">● Generating</span>
             </div>
             
-            <!-- App 4: Compliance -->
             <div class="vault-card" onclick="navigateTo('compliance')">
                 <div class="icon">🛡️</div>
                 <h3>Compliance</h3>
@@ -338,7 +473,6 @@
                 <span class="badge yellow">● Scanning</span>
             </div>
             
-            <!-- App 5: Legal News -->
             <div class="vault-card" onclick="navigateTo('news')">
                 <div class="icon">📰</div>
                 <h3>Legal News</h3>
@@ -346,7 +480,6 @@
                 <span class="badge green">● Live Feed</span>
             </div>
             
-            <!-- App 6: Lens Scan -->
             <div class="vault-card" onclick="navigateTo('lens')">
                 <div class="icon">👁️</div>
                 <h3>Lens Scan</h3>
@@ -354,7 +487,6 @@
                 <span class="badge purple">● Scanning</span>
             </div>
             
-            <!-- App 7: Sports Law -->
             <div class="vault-card" onclick="navigateTo('sports')">
                 <div class="icon">⚽</div>
                 <h3>Sports Law</h3>
@@ -362,7 +494,6 @@
                 <span class="badge orange">● Active</span>
             </div>
             
-            <!-- App 8: Governance -->
             <div class="vault-card" onclick="navigateTo('governance')">
                 <div class="icon">⚖️</div>
                 <h3>AI Governance</h3>
@@ -370,7 +501,6 @@
                 <span class="badge purple">● Active</span>
             </div>
             
-            <!-- App 9: Predictive AI -->
             <div class="vault-card" onclick="navigateTo('predict')">
                 <div class="icon">🔮</div>
                 <h3>Predictive AI</h3>
@@ -378,7 +508,6 @@
                 <span class="badge green">● Predictive</span>
             </div>
             
-            <!-- App 10: Training -->
             <div class="vault-card" onclick="navigateTo('train')">
                 <div class="icon">🧠</div>
                 <h3>Autonomous Training</h3>
@@ -386,7 +515,6 @@
                 <span class="badge yellow">● Learning</span>
             </div>
             
-            <!-- App 11: Surveillance -->
             <div class="vault-card" onclick="navigateTo('surveillance')">
                 <div class="icon">🌍</div>
                 <h3>Global Surveillance</h3>
@@ -394,7 +522,6 @@
                 <span class="badge green">● Active</span>
             </div>
             
-            <!-- App 12: Vedic Calendar -->
             <div class="vault-card" onclick="navigateTo('calendar')">
                 <div class="icon">🕉️</div>
                 <h3>Vedic Calendar</h3>
@@ -404,12 +531,37 @@
         </div>
         
         <div style="margin-top:30px; padding-top:16px; border-top:1px solid rgba(0,200,255,0.05); text-align:center; color:#4b5563; font-size:10px;">
-            THE ADVOCACY · v23.0 · The Complete Vault
+            THE ADVOCACY · v24.0 · Infinity Heartbeat
         </div>
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- JAVASCRIPT                                   -->
+<!-- ============================================ -->
 <script>
+// ============================================
+// REAL-TIME CLOCK
+// ============================================
+
+function updateClock() {
+    const now = new Date();
+    
+    // Time
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
+    
+    // Date
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', options);
+}
+
+// Update clock every second
+updateClock();
+setInterval(updateClock, 1000);
+
 // ============================================
 // VAULT CONTROLS
 // ============================================
@@ -438,12 +590,9 @@ document.addEventListener('keydown', function(e) {
 // ============================================
 
 function navigateTo(app) {
-    // Close vault first
     closeVault();
     
-    // Navigate after short delay
     setTimeout(() => {
-        // Map app names to page IDs
         const pageMap = {
             'chat': 'page-chat',
             'markets': 'page-markets',
@@ -462,27 +611,37 @@ function navigateTo(app) {
         const pageId = pageMap[app] || 'page-home';
         const page = document.getElementById(pageId);
         if (page) {
-            // Hide all pages
             document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-            // Show target
             page.classList.remove('hidden');
-            // Update nav
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.querySelectorAll(`.nav-btn[data-page="${app}"]`).forEach(el => el.classList.add('active'));
         }
         
-        // Load page data
-        if (app === 'markets') { if (window.refreshMarkets) window.refreshMarkets(); }
-        if (app === 'reports') { if (window.generateReport) window.generateReport(); }
-        if (app === 'compliance') { if (window.refreshCompliance) window.refreshCompliance(); }
-        if (app === 'news') { if (window.refreshNews) window.refreshNews(); }
-        if (app === 'train') { if (window.getTrainingStatus) window.getTrainingStatus(); }
+        if (app === 'markets' && window.refreshMarkets) window.refreshMarkets();
+        if (app === 'reports' && window.generateReport) window.generateReport();
+        if (app === 'compliance' && window.refreshCompliance) window.refreshCompliance();
+        if (app === 'news' && window.refreshNews) window.refreshNews();
+        if (app === 'train' && window.getTrainingStatus) window.getTrainingStatus();
         
     }, 500);
 }
 
-console.log('👁️ THE ADVOCACY VAULT v23.0 - Complete');
-console.log('📦 12 Apps Ready');
+// ============================================
+// HEARTBEAT - Visual Infinity
+// ============================================
+
+console.log('❤️ Infinity Heartbeat Active');
+console.log('⏰ Real-Time Clock Running');
+console.log('👁️ THE ADVOCACY v24.0 - Complete');
+
+// Also update document title with time
+setInterval(() => {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    document.title = `◈ ${h}:${m} · THE ADVOCACY`;
+}, 30000);
 </script>
+
 </body>
 </html>
