@@ -3,25 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - AI Business Intelligence v21.0</title>
+    <title>THE ADVOCACY - Global Surveillance AI v21.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
+        /* ============================================ */
+        /* CYBER SURVEILLANCE THEME - PALANTIR STYLE      */
+        /* ============================================ */
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
             background: #0a0a0f;
             background-image: 
-                radial-gradient(ellipse at 20% 50%, rgba(10, 40, 80, 0.3) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(60, 10, 80, 0.2) 0%, transparent 50%);
+                radial-gradient(ellipse at 20% 50%, rgba(0, 150, 255, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(100, 0, 200, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 200, 255, 0.03) 0%, transparent 40%);
             min-height: 100vh;
             font-family: 'Inter', -apple-system, sans-serif;
             color: #ffffff;
             overflow-x: hidden;
+            position: relative;
         }
-        .stars {
+        
+        /* ============================================ */
+        /* WORLD MAP BACKGROUND                         */
+        /* ============================================ */
+        #globe-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.15;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400"><path d="M400,50 C600,50 750,150 750,250 C750,350 600,450 400,450 C200,450 50,350 50,250 C50,150 200,50 400,50Z" fill="none" stroke="rgba(0,150,255,0.3)" stroke-width="1"/><circle cx="200" cy="200" r="2" fill="rgba(0,150,255,0.5)"/><circle cx="300" cy="250" r="1.5" fill="rgba(0,150,255,0.5)"/><circle cx="500" cy="220" r="2" fill="rgba(0,150,255,0.5)"/><circle cx="550" cy="300" r="1.5" fill="rgba(0,150,255,0.5)"/><circle cx="350" cy="320" r="2" fill="rgba(0,150,255,0.5)"/><circle cx="650" cy="180" r="1.5" fill="rgba(0,150,255,0.5)"/><line x1="200" y1="200" x2="300" y2="250" stroke="rgba(0,150,255,0.2)" stroke-width="0.5"/><line x1="300" y1="250" x2="500" y2="220" stroke="rgba(0,150,255,0.2)" stroke-width="0.5"/><line x1="500" y1="220" x2="550" y2="300" stroke="rgba(0,150,255,0.2)" stroke-width="0.5"/><line x1="550" y1="300" x2="350" y2="320" stroke="rgba(0,150,255,0.2)" stroke-width="0.5"/></svg>');
+            background-size: cover;
+            background-position: center;
+            animation: globePulse 20s infinite alternate;
+        }
+        @keyframes globePulse {
+            0% { opacity: 0.1; transform: scale(1); }
+            100% { opacity: 0.2; transform: scale(1.02); }
+        }
+        
+        /* ============================================ */
+        /* GRID LINES (CYBER)                           */
+        /* ============================================ */
+        #grid-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -30,25 +63,84 @@
             pointer-events: none;
             z-index: 0;
             background-image: 
-                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
-                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
-                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-                radial-gradient(2px 2px at 160px 120px, #ddd, transparent);
-            background-size: 800px 200px;
-            animation: twinkle 4s ease-in-out infinite alternate;
+                linear-gradient(rgba(0,150,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,150,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
-        @keyframes twinkle { 0% { opacity: 0.5; } 100% { opacity: 1; } }
         
+        /* ============================================ */
+        /* DATA STREAMS (PARTICLES)                     */
+        /* ============================================ */
+        .data-stream {
+            position: fixed;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(0,200,255,0.3), transparent);
+            animation: dataFlow 5s infinite linear;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        .data-stream:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .data-stream:nth-child(2) { left: 30%; animation-delay: 1.5s; height: 80px; }
+        .data-stream:nth-child(3) { left: 60%; animation-delay: 3s; height: 120px; }
+        .data-stream:nth-child(4) { left: 80%; animation-delay: 4.5s; height: 60px; }
+        .data-stream:nth-child(5) { left: 50%; animation-delay: 2s; height: 90px; }
+        @keyframes dataFlow {
+            0% { transform: translateY(-100px); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
+        }
+        
+        /* ============================================ */
+        /* THIRD EYE - CYBER STYLE                     */
+        /* ============================================ */
+        .third-eye {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+        }
+        .third-eye svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 30px rgba(0, 200, 255, 0.4));
+            animation: eyePulse 3s ease-in-out infinite;
+        }
+        @keyframes eyePulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.3)); }
+            50% { filter: drop-shadow(0 0 50px rgba(0, 200, 255, 0.7)); }
+        }
+        .third-eye-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            animation: ringExpand 4s ease-out infinite;
+        }
+        .third-eye-ring:nth-child(2) { width: 70px; height: 70px; animation-delay: 1s; }
+        .third-eye-ring:nth-child(3) { width: 90px; height: 90px; animation-delay: 2s; }
+        @keyframes ringExpand {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+        
+        /* ============================================ */
+        /* GLASS NAVIGATION                            */
+        /* ============================================ */
         .glass-nav {
             background: rgba(10, 10, 20, 0.85);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(0, 200, 255, 0.1);
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 100;
         }
+        
         .nav-btn {
             transition: all 0.3s ease;
             cursor: pointer;
@@ -57,33 +149,64 @@
             font-size: 11px;
             font-weight: 500;
             color: #9ca3af;
+            position: relative;
         }
-        .nav-btn:hover { color: #ffffff; background: rgba(59, 130, 246, 0.1); }
-        .nav-btn.active { color: #60a5fa; background: rgba(59, 130, 246, 0.15); }
+        .nav-btn:hover { color: #ffffff; background: rgba(0, 200, 255, 0.1); }
+        .nav-btn.active { 
+            color: #00d4ff; 
+            background: rgba(0, 200, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.05);
+        }
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 20%;
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+            border-radius: 2px;
+        }
         
         .card {
-            background: rgba(17, 17, 34, 0.7);
+            background: rgba(10, 10, 30, 0.7);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(0, 200, 255, 0.08);
             border-radius: 16px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
         }
-        .card:hover { transform: translateY(-4px); border-color: rgba(59, 130, 246, 0.2); }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 200, 255, 0.03), transparent 70%);
+            pointer-events: none;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 200, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 200, 255, 0.05);
+        }
         
         .stat-number {
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            background: linear-gradient(135deg, #00d4ff, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         
         .badge { font-size: 8px; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
-        .badge-live { background: rgba(34, 197, 94, 0.15); color: #4ade80; animation: pulse-live 2s infinite; }
+        .badge-live { background: rgba(0, 200, 255, 0.15); color: #00d4ff; animation: pulse-live 2s infinite; }
         @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        .footer-border { border-top: 1px solid rgba(255,255,255,0.04); }
+        .footer-border { border-top: 1px solid rgba(0, 200, 255, 0.05); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -93,7 +216,7 @@
         .typing-dots span {
             width: 8px;
             height: 8px;
-            background: #60a5fa;
+            background: #00d4ff;
             border-radius: 50%;
             display: inline-block;
             animation: bounce-dot 1.4s infinite;
@@ -102,62 +225,59 @@
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce-dot { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         
-        .third-eye {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-        }
-        .third-eye svg {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));
-        }
-        .eye-glow { animation: eyePulse 3s ease-in-out infinite; }
-        @keyframes eyePulse {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.2)); }
-            50% { filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.5)); }
-        }
-        
         @media (max-width: 768px) {
             .glass-nav .flex { flex-wrap: wrap; }
             .nav-btn { font-size: 9px; padding: 4px 6px; }
             .stat-number { font-size: 1.5rem; }
+            .third-eye { width: 40px; height: 40px; }
+            .third-eye-ring { display: none; }
         }
     </style>
 </head>
 <body>
 
 <!-- ============================================ -->
-<!-- BACKGROUND -->
+<!-- BACKGROUND EFFECTS                           -->
 <!-- ============================================ -->
-<div class="stars"></div>
+<div id="globe-bg"></div>
+<div id="grid-overlay"></div>
+<div class="data-stream"></div>
+<div class="data-stream"></div>
+<div class="data-stream"></div>
+<div class="data-stream"></div>
+<div class="data-stream"></div>
 
 <!-- ============================================ -->
-<!-- NAVIGATION -->
+<!-- NAVIGATION                                  -->
 <!-- ============================================ -->
 <nav class="glass-nav">
     <div class="container mx-auto px-4 py-2">
         <div class="flex items-center justify-between">
-            <!-- Logo -->
+            <!-- Logo with Third Eye -->
             <div class="flex items-center space-x-2">
                 <div class="third-eye">
-                    <svg viewBox="0 0 100 100" class="eye-glow">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="35" fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="25" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="15" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="8" fill="#60a5fa" stroke="#60a5fa" stroke-width="2"/>
-                        <circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.6)"/>
+                    <div class="third-eye-ring"></div>
+                    <div class="third-eye-ring"></div>
+                    <div class="third-eye-ring"></div>
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="35" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.1)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.15)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="15" fill="rgba(0,200,255,0.15)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="8" fill="#00d4ff" stroke="#00d4ff" stroke-width="2"/>
+                        <circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.8)"/>
+                        <line x1="50" y1="30" x2="50" y2="38" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+                        <line x1="50" y1="62" x2="50" y2="70" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+                        <line x1="30" y1="50" x2="38" y2="50" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+                        <line x1="62" y1="50" x2="70" y2="50" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
                     </svg>
                 </div>
                 <div>
                     <h1 class="text-base font-bold text-white tracking-tight">THE ADVOCACY</h1>
-                    <span class="text-[8px] text-gray-500 tracking-wider">v21.0 · BI</span>
+                    <span class="text-[8px] text-gray-500 tracking-wider">v21.0 · SURVEILLANCE</span>
                 </div>
                 <span class="badge badge-live">● Live</span>
+                <span class="badge bg-blue-500/20 text-blue-400 text-[8px]">1000 Agents</span>
             </div>
 
             <!-- Navigation -->
@@ -191,38 +311,38 @@
 </nav>
 
 <!-- ============================================ -->
-<!-- MAIN CONTENT -->
+<!-- MAIN CONTENT                               -->
 <!-- ============================================ -->
 <main class="container mx-auto px-4 pt-20 pb-12 relative z-10">
 
     <!-- ========================================== -->
-    <!-- HOME PAGE -->
+    <!-- HOME PAGE                                 -->
     <!-- ========================================== -->
     <div id="page-home" class="page-content">
         <div class="text-center mb-8">
             <h2 class="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">AI Business Intelligence Platform</span>
+                <span class="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">Global Intelligence Platform</span>
             </h2>
-            <p class="text-gray-400 text-sm mt-1">1000 Agents · Global Markets · Daily AI Reports · PDF Export</p>
+            <p class="text-gray-400 text-sm mt-1">1000 Agents · Global Surveillance · AI Reports · PDF Export</p>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <div class="card p-3 text-center"><div class="stat-number">1000</div><div class="text-xs text-gray-500">AI Agents</div></div>
             <div class="card p-3 text-center"><div class="stat-number">10</div><div class="text-xs text-gray-500">Global Markets</div></div>
             <div class="card p-3 text-center"><div class="stat-number">24/7</div><div class="text-xs text-gray-500">AI Reports</div></div>
-            <div class="card p-3 text-center"><div class="stat-number">PDF</div><div class="text-xs text-gray-500">Export Ready</div></div>
+            <div class="card p-3 text-center"><div class="stat-number">∞</div><div class="text-xs text-gray-500">Surveillance</div></div>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button onclick="navigateTo('markets')" class="card p-3 text-center text-white font-semibold bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/20 text-sm"><i class="fas fa-chart-line text-blue-400 text-lg block mb-1"></i>Markets</button>
+            <button onclick="navigateTo('markets')" class="card p-3 text-center text-white font-semibold bg-cyan-600/20 hover:bg-cyan-600/30 border-cyan-500/20 text-sm"><i class="fas fa-chart-line text-cyan-400 text-lg block mb-1"></i>Markets</button>
             <button onclick="navigateTo('reports')" class="card p-3 text-center text-white font-semibold bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/20 text-sm"><i class="fas fa-file-alt text-purple-400 text-lg block mb-1"></i>Reports</button>
-            <button onclick="navigateTo('chat')" class="card p-3 text-center text-white font-semibold bg-green-600/20 hover:bg-green-600/30 border-green-500/20 text-sm"><i class="fas fa-gavel text-green-400 text-lg block mb-1"></i>Counsel</button>
+            <button onclick="navigateTo('chat')" class="card p-3 text-center text-white font-semibold bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/20 text-sm"><i class="fas fa-gavel text-blue-400 text-lg block mb-1"></i>Counsel</button>
             <button onclick="navigateTo('train')" class="card p-3 text-center text-white font-semibold bg-orange-600/20 hover:bg-orange-600/30 border-orange-500/20 text-sm"><i class="fas fa-brain text-orange-400 text-lg block mb-1"></i>Train</button>
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- CHAT PAGE -->
+    <!-- CHAT PAGE                                 -->
     <!-- ========================================== -->
     <div id="page-chat" class="page-content hidden">
         <div class="card p-4">
@@ -245,8 +365,8 @@
             </div>
 
             <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
+                <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
+                <button onclick="sendMessage()" class="bg-cyan-600 hover:bg-cyan-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
             </div>
 
             <div class="flex flex-wrap gap-2 mt-3">
@@ -259,20 +379,20 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- MARKETS PAGE -->
+    <!-- MARKETS PAGE                              -->
     <!-- ========================================== -->
     <div id="page-markets" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
-                <div><h2 class="text-lg font-bold text-white">📊 Global Markets</h2><p class="text-xs text-gray-400">Real-time data · Live updates</p></div>
-                <button onclick="refreshMarkets()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
+                <div><h2 class="text-lg font-bold text-white">📊 Global Markets</h2><p class="text-xs text-gray-400">Real-time surveillance · Live updates</p></div>
+                <button onclick="refreshMarkets()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg hover:bg-cyan-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
             </div>
             <div id="marketData" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- REPORTS PAGE -->
+    <!-- REPORTS PAGE                              -->
     <!-- ========================================== -->
     <div id="page-reports" class="page-content hidden">
         <div class="card p-4">
@@ -284,7 +404,6 @@
                 </div>
             </div>
             
-            <!-- Report Content -->
             <div id="reportContent" class="bg-black/30 rounded-xl p-4 max-h-[500px] overflow-y-auto scrollbar-hide">
                 <div class="text-center text-gray-500 py-12">
                     <i class="fas fa-file-alt text-4xl text-gray-700 mb-4"></i>
@@ -295,7 +414,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- COMPLIANCE PAGE -->
+    <!-- COMPLIANCE PAGE                           -->
     <!-- ========================================== -->
     <div id="page-compliance" class="page-content hidden">
         <div class="card p-4">
@@ -312,7 +431,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- NEWS PAGE -->
+    <!-- NEWS PAGE                                 -->
     <!-- ========================================== -->
     <div id="page-news" class="page-content hidden">
         <div class="card p-4">
@@ -325,7 +444,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- TRAIN PAGE -->
+    <!-- TRAIN PAGE                                -->
     <!-- ========================================== -->
     <div id="page-train" class="page-content hidden">
         <div class="card p-4">
@@ -352,24 +471,34 @@
 </main>
 
 <!-- ============================================ -->
-<!-- FOOTER -->
+<!-- FOOTER                                     -->
 <!-- ============================================ -->
 <footer class="footer-border py-4 mt-6 relative z-10">
     <div class="container mx-auto px-4 text-center">
-        <p class="text-[10px] text-gray-600">© 2026 THE ADVOCACY – v21.0 AI Business Intelligence</p>
-        <p class="text-[8px] text-gray-700">1000 Agents · Global Markets · AI Reports · PDF Export</p>
+        <div class="flex items-center justify-center space-x-2 mb-1">
+            <div class="third-eye" style="width:24px;height:24px;">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.15)" stroke-width="1"/>
+                    <circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.1)" stroke-width="1"/>
+                    <circle cx="50" cy="50" r="10" fill="rgba(0,200,255,0.15)"/>
+                    <circle cx="50" cy="50" r="5" fill="#00d4ff"/>
+                </svg>
+            </div>
+            <span class="text-[10px] text-gray-600">THE ADVOCACY – v21.0 Global Intelligence</span>
+        </div>
+        <p class="text-[8px] text-gray-700">1000 Agents · Global Surveillance · AI Reports · PDF Export</p>
     </div>
 </footer>
 
 <!-- ============================================ -->
-<!-- COMPLETE JAVASCRIPT -->
+<!-- COMPLETE JAVASCRIPT                        -->
 <!-- ============================================ -->
 <script>
 // ============================================
 // CONFIG
 // ============================================
 const API_BASE = window.location.origin;
-console.log('🚀 THE ADVOCACY v21.0 - AI Business Intelligence');
+console.log('🚀 THE ADVOCACY v21.0 - Global Surveillance AI');
 
 // ============================================
 // NAVIGATION
@@ -410,7 +539,7 @@ async function sendMessage() {
     const emptyState = document.getElementById('emptyState');
     if (emptyState) emptyState.remove();
     
-    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-blue-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(message)}</div></div>`;
+    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-cyan-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(message)}</div></div>`;
     input.value = '';
     div.scrollTop = div.scrollHeight;
     
@@ -430,8 +559,8 @@ async function sendMessage() {
         
         div.innerHTML += `
             <div class="chat-message flex justify-start mb-3">
-                <div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-white/5">
-                    <div class="text-xs text-purple-400 mb-1">⚖️ ${data.agent_used || 'AI Judge v21.0'}</div>
+                <div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-cyan-500/10">
+                    <div class="text-xs text-cyan-400 mb-1">⚖️ ${data.agent_used || 'AI Judge v21.0'}</div>
                     <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your query.')}</div>
                     <div class="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-500">
                         ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents</span>` : ''}
@@ -470,7 +599,7 @@ async function refreshMarkets() {
         const div = document.getElementById('marketData');
         if (div && data.data) {
             div.innerHTML = Object.entries(data.data).map(([key, val]) => `
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center">
+                <div class="bg-black/30 p-3 rounded-xl border border-cyan-500/10 flex justify-between items-center">
                     <div>
                         <div class="font-bold text-white text-sm">${val.name}</div>
                         <div class="text-[10px] text-gray-500">${val.exchange} · ${val.currency}</div>
@@ -501,10 +630,9 @@ async function generateReport() {
         const data = await res.json();
         currentReportData = data.report;
         
-        // Build report HTML
         let html = `
-            <div id="pdfContent" class="bg-white/5 rounded-xl p-6">
-                <div class="border-b border-white/10 pb-4 mb-4">
+            <div id="pdfContent" class="bg-cyan-900/10 rounded-xl p-6 border border-cyan-500/10">
+                <div class="border-b border-cyan-500/10 pb-4 mb-4">
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-xl font-bold text-white">📊 Daily Market Report</h2>
@@ -512,10 +640,10 @@ async function generateReport() {
                         </div>
                         <div class="third-eye" style="width:32px;height:32px;">
                             <svg viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                                <circle cx="50" cy="50" r="25" fill="rgba(59,130,246,0.1)" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
-                                <circle cx="50" cy="50" r="10" fill="rgba(59,130,246,0.2)"/>
-                                <circle cx="50" cy="50" r="5" fill="#60a5fa"/>
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+                                <circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.1)" stroke="rgba(0,200,255,0.15)" stroke-width="1"/>
+                                <circle cx="50" cy="50" r="10" fill="rgba(0,200,255,0.2)"/>
+                                <circle cx="50" cy="50" r="5" fill="#00d4ff"/>
                             </svg>
                         </div>
                     </div>
@@ -553,7 +681,7 @@ async function generateReport() {
                         <div class="text-xs text-gray-400">Score: ${data.report.risk_assessment.score.toFixed(2)}</div>
                     </div>
                     <div class="bg-black/30 rounded-xl p-4">
-                        <h4 class="text-blue-400 text-xs font-bold">🔮 Predictions</h4>
+                        <h4 class="text-cyan-400 text-xs font-bold">🔮 Predictions</h4>
                         <div class="text-sm text-white">Short-term: ${data.report.predictions.short_term}</div>
                         <div class="text-sm text-white">Confidence: ${Math.round(data.report.predictions.confidence * 100)}%</div>
                     </div>
@@ -566,7 +694,7 @@ async function generateReport() {
                     `).join('')}
                 </div>
                 
-                <div class="text-[10px] text-gray-600 mt-4 text-center border-t border-white/5 pt-4">
+                <div class="text-[10px] text-gray-600 mt-4 text-center border-t border-cyan-500/10 pt-4">
                     Generated by THE ADVOCACY AI · ${data.report.generated_at}
                 </div>
             </div>
@@ -574,7 +702,6 @@ async function generateReport() {
         
         div.innerHTML = html;
         
-        // Draw chart after DOM update
         setTimeout(() => {
             if (data.report.visual_data) {
                 drawReportChart(data.report.visual_data);
@@ -599,8 +726,8 @@ function drawReportChart(visualData) {
     const datasets = Object.entries(visualData).slice(0, 5).map(([key, val]) => ({
         label: val.name,
         data: val.data,
-        borderColor: val.color || '#60a5fa',
-        backgroundColor: val.color + '20' || 'rgba(96, 165, 250, 0.1)',
+        borderColor: val.color || '#00d4ff',
+        backgroundColor: val.color + '20' || 'rgba(0, 200, 255, 0.1)',
         fill: true,
         tension: 0.4,
         pointRadius: 0
@@ -756,7 +883,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ THE ADVOCACY v21.0 - AI Business Intelligence Ready');
+    console.log('✅ THE ADVOCACY v21.0 - Global Surveillance AI Ready');
     navigateTo('home');
 });
 
