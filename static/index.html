@@ -3,34 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Infinity Eye</title>
+    <title>THE ADVOCACY - Full Access v30.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
             background: #050508;
             min-height: 100vh;
-            font-family: 'Inter', -apple-system, sans-serif;
-            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
             overflow: hidden;
-            position: relative;
         }
-        
-        /* Background */
         .vault-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(ellipse at center, #0a0a1a 0%, #050508 100%);
+            background: radial-gradient(ellipse at center, #0a0a1a, #050508);
             z-index: 0;
         }
-        
         #grid-overlay {
             position: fixed;
             top: 0;
@@ -40,15 +37,14 @@
             pointer-events: none;
             z-index: 1;
             background-image: 
-                linear-gradient(rgba(0, 200, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 200, 255, 0.05) 1px, transparent 1px);
+                linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
             background-size: 40px 40px;
         }
-        
         .data-stream {
             position: fixed;
             width: 2px;
-            background: linear-gradient(to bottom, transparent, rgba(0, 200, 255, 0.3), transparent);
+            background: linear-gradient(to bottom, transparent, rgba(0,200,255,0.3), transparent);
             animation: dataFlow 4s infinite linear;
             pointer-events: none;
             z-index: 1;
@@ -64,8 +60,7 @@
             90% { opacity: 1; }
             100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
         }
-        
-        /* Clock - Top Right */
+
         .clock-container {
             position: fixed;
             top: 20px;
@@ -78,28 +73,26 @@
             font-size: 28px;
             font-weight: 700;
             color: #00d4ff;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+            text-shadow: 0 0 30px rgba(0,200,255,0.3);
             animation: clockPulse 2s ease-in-out infinite;
             letter-spacing: 2px;
         }
         .clock-container .date {
             font-size: 11px;
-            color: rgba(0, 200, 255, 0.5);
+            color: rgba(0,200,255,0.5);
             letter-spacing: 2px;
             margin-top: 2px;
             font-weight: 300;
         }
         .clock-container .timezone {
             font-size: 9px;
-            color: rgba(0, 200, 255, 0.3);
+            color: rgba(0,200,255,0.3);
             letter-spacing: 3px;
             text-transform: uppercase;
             margin-top: 2px;
         }
-        @keyframes clockPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        
-        /* Heartbeat - Bottom Right */
+        @keyframes clockPulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
         .heartbeat-container {
             position: fixed;
             bottom: 30px;
@@ -117,7 +110,7 @@
         }
         .heartbeat-text {
             font-size: 10px;
-            color: rgba(0, 200, 255, 0.4);
+            color: rgba(0,200,255,0.4);
             letter-spacing: 3px;
             text-transform: uppercase;
             font-weight: 300;
@@ -125,29 +118,25 @@
         .heartbeat-line {
             width: 60px;
             height: 2px;
-            background: linear-gradient(90deg, rgba(0, 200, 255, 0.1), rgba(0, 200, 255, 0.4), rgba(0, 200, 255, 0.1));
+            background: linear-gradient(90deg, rgba(0,200,255,0.1), rgba(0,200,255,0.4), rgba(0,200,255,0.1));
             border-radius: 2px;
             animation: heartbeatLine 1.2s ease-in-out infinite;
         }
         @keyframes heartbeat {
-            0%, 100% { transform: scale(1); opacity: 0.6; }
-            14% { transform: scale(1.3); opacity: 1; }
-            28% { transform: scale(1); opacity: 0.6; }
-            42% { transform: scale(1.2); opacity: 0.9; }
-            70% { transform: scale(1); opacity: 0.6; }
+            0%,100%{transform:scale(1);opacity:0.6}
+            14%{transform:scale(1.3);opacity:1}
+            28%{transform:scale(1);opacity:0.6}
+            42%{transform:scale(1.2);opacity:0.9}
+            70%{transform:scale(1);opacity:0.6}
         }
         @keyframes heartbeatLine {
-            0%, 100% { width: 40px; opacity: 0.3; }
-            14% { width: 80px; opacity: 1; }
-            28% { width: 40px; opacity: 0.3; }
-            42% { width: 70px; opacity: 0.8; }
-            70% { width: 40px; opacity: 0.3; }
+            0%,100%{width:40px;opacity:0.3}
+            14%{width:80px;opacity:1}
+            28%{width:40px;opacity:0.3}
+            42%{width:70px;opacity:0.8}
+            70%{width:40px;opacity:0.3}
         }
-        
-        /* ============================================ */
-        /* THE EYE - CENTER OF PAGE                    */
-        /* ============================================ */
-        
+
         .eye-container {
             position: fixed;
             top: 50%;
@@ -158,60 +147,60 @@
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .eye-container:hover { transform: translate(-50%, -50%) scale(1.05); }
-        
+        .eye-container.clicked {
+            transform: translate(-50%, -50%) scale(0.3);
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .third-eye {
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: 180px;
+            height: 180px;
         }
         .third-eye svg {
             width: 100%;
             height: 100%;
-            filter: drop-shadow(0 0 50px rgba(0, 200, 255, 0.4));
+            filter: drop-shadow(0 0 40px rgba(0,200,255,0.3));
             animation: eyePulse 3s ease-in-out infinite;
         }
         @keyframes eyePulse {
-            0%, 100% { filter: drop-shadow(0 0 50px rgba(0, 200, 255, 0.3)); }
-            50% { filter: drop-shadow(0 0 100px rgba(0, 200, 255, 0.7)); }
+            0%,100%{filter:drop-shadow(0 0 40px rgba(0,200,255,0.3))}
+            50%{filter:drop-shadow(0 0 80px rgba(0,200,255,0.6))}
         }
-        
         .eye-ring {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             border-radius: 50%;
-            border: 2px solid rgba(0, 200, 255, 0.15);
+            border: 2px solid rgba(0,200,255,0.12);
             pointer-events: none;
             animation: ringExpand 4s ease-out infinite;
         }
-        .eye-ring:nth-child(1) { width: 220px; height: 220px; animation-delay: 0s; }
-        .eye-ring:nth-child(2) { width: 260px; height: 260px; animation-delay: 1s; }
-        .eye-ring:nth-child(3) { width: 300px; height: 300px; animation-delay: 2s; }
-        .eye-ring:nth-child(4) { width: 340px; height: 340px; animation-delay: 3s; }
+        .eye-ring:nth-child(1) { width: 200px; height: 200px; animation-delay: 0s; }
+        .eye-ring:nth-child(2) { width: 240px; height: 240px; animation-delay: 1s; }
+        .eye-ring:nth-child(3) { width: 280px; height: 280px; animation-delay: 2s; }
+        .eye-ring:nth-child(4) { width: 320px; height: 320px; animation-delay: 3s; }
         @keyframes ringExpand {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+            0%{transform:translate(-50%,-50%) scale(0.8);opacity:1}
+            100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}
         }
-        
+
         .click-hint {
             position: fixed;
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: rgba(0, 200, 255, 0.3);
+            color: rgba(0,200,255,0.3);
             font-size: 10px;
             letter-spacing: 4px;
             text-transform: uppercase;
             animation: blinkHint 2s ease-in-out infinite;
         }
-        @keyframes blinkHint { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
-        
-        /* ============================================ */
-        /* PAYMENT OVERLAY - APPEARS ON CLICK          */
-        /* ============================================ */
-        
+        @keyframes blinkHint { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+
         .payment-overlay {
             position: fixed;
             top: 0;
@@ -219,29 +208,25 @@
             width: 100%;
             height: 100%;
             z-index: 60;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(0,0,0,0.92);
             backdrop-filter: blur(20px);
             display: none;
             justify-content: center;
             align-items: center;
         }
         .payment-overlay.active { display: flex; }
-        
         .payment-box {
-            background: rgba(10, 10, 30, 0.95);
-            border: 1px solid rgba(0, 200, 255, 0.2);
+            background: rgba(10,10,30,0.95);
+            border: 1px solid rgba(0,200,255,0.2);
             border-radius: 20px;
             padding: 40px;
             max-width: 420px;
             width: 90%;
             text-align: center;
-            animation: fadeInUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            animation: fadeInUp 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
         }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
         .payment-box .lock-icon { font-size: 48px; color: #00d4ff; margin-bottom: 16px; }
         .payment-box h2 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
         .payment-box p { font-size: 14px; color: #9ca3af; margin-bottom: 20px; }
@@ -267,7 +252,6 @@
         }
         .payment-box .btn-pay:hover { transform: scale(1.02); opacity: 0.9; }
         .payment-box .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
-        
         .payment-box .btn-close {
             background: transparent;
             color: #6b7280;
@@ -280,7 +264,6 @@
             transition: 0.3s;
         }
         .payment-box .btn-close:hover { color: #ff4444; transform: rotate(90deg); }
-        
         .payment-box .payment-status {
             font-size: 13px;
             color: #facc15;
@@ -290,24 +273,9 @@
         .payment-box .payment-status.show { display: block; }
         .payment-box .payment-status.error { color: #ef4444; }
         .payment-box .payment-status.success { color: #4ade80; }
-        
-        .payment-box .powered {
-            font-size: 10px;
-            color: #4b5563;
-            margin-top: 16px;
-        }
-        .payment-box .features {
-            font-size: 9px;
-            color: #4b5563;
-            margin-top: 8px;
-        }
-        
-        .payment-box { position: relative; }
-        
-        /* ============================================ */
-        /* VAULT - AFTER PAYMENT                       */
-        /* ============================================ */
-        
+        .payment-box .powered { font-size: 10px; color: #4b5563; margin-top: 16px; }
+        .payment-box .features { font-size: 9px; color: #4b5563; margin-top: 8px; }
+
         .vault-container {
             position: fixed;
             top: 0;
@@ -317,25 +285,25 @@
             z-index: 20;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.8s cubic-bezier(0.175,0.885,0.32,1.275);
             overflow-y: auto;
-            background: rgba(5, 5, 8, 0.95);
+            background: rgba(5,5,8,0.95);
             backdrop-filter: blur(20px);
         }
         .vault-container.open {
             opacity: 1;
             pointer-events: all;
         }
-        
+
         .vault-header {
             padding: 16px 30px;
-            border-bottom: 1px solid rgba(0, 200, 255, 0.08);
+            border-bottom: 1px solid rgba(0,200,255,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            background: rgba(5, 5, 8, 0.95);
+            background: rgba(5,5,8,0.95);
             backdrop-filter: blur(20px);
             z-index: 30;
         }
@@ -344,44 +312,44 @@
         .vault-header .logo h1 { font-size: 16px; font-weight: 700; background: linear-gradient(135deg, #00d4ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .vault-header .close-btn { color: #9ca3af; cursor: pointer; font-size: 22px; transition: 0.3s; }
         .vault-header .close-btn:hover { color: #ff4444; transform: rotate(90deg); }
-        
+
         .vault-content { padding: 24px 30px; max-width: 1400px; margin: 0 auto; }
-        
+
         .vault-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
             gap: 12px;
             margin-bottom: 24px;
         }
         .vault-stat {
             text-align: center;
             padding: 12px;
-            background: rgba(10, 10, 30, 0.4);
+            background: rgba(10,10,30,0.4);
             border-radius: 10px;
-            border: 1px solid rgba(0, 200, 255, 0.05);
+            border: 1px solid rgba(0,200,255,0.05);
         }
         .vault-stat .number { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #00d4ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .vault-stat .label { font-size: 10px; color: #6b7280; margin-top: 2px; }
-        
+
         .vault-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
             margin-top: 16px;
         }
-        
+
         .vault-card {
-            background: rgba(10, 10, 30, 0.5);
-            border: 1px solid rgba(0, 200, 255, 0.06);
+            background: rgba(10,10,30,0.5);
+            border: 1px solid rgba(0,200,255,0.06);
             border-radius: 14px;
             padding: 20px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
             cursor: pointer;
         }
         .vault-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(0, 200, 255, 0.2);
-            box-shadow: 0 20px 60px rgba(0, 200, 255, 0.05);
+            border-color: rgba(0,200,255,0.2);
+            box-shadow: 0 20px 60px rgba(0,200,255,0.05);
         }
         .vault-card .icon { font-size: 28px; margin-bottom: 8px; }
         .vault-card h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
@@ -394,26 +362,46 @@
             font-weight: 600;
             margin-top: 8px;
         }
-        .vault-card .badge.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-        .vault-card .badge.yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; }
-        .vault-card .badge.purple { background: rgba(168, 85, 247, 0.15); color: #a78bfa; }
-        .vault-card .badge.orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
-        
+        .vault-card .badge.green { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .vault-card .badge.yellow { background: rgba(234,179,8,0.15); color: #facc15; }
+        .vault-card .badge.purple { background: rgba(168,85,247,0.15); color: #a78bfa; }
+        .vault-card .badge.orange { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .vault-card .badge.cyan { background: rgba(0,200,255,0.15); color: #00d4ff; }
+
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        .card {
+            background: rgba(10,10,30,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,200,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .chat-message { animation: slideUp 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .typing-dots span {
+            width: 8px; height: 8px; background: #00d4ff; border-radius: 50%;
+            display: inline-block; animation: bounce-dot 1.4s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce-dot { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
+
         .vault-container::-webkit-scrollbar { width: 4px; }
         .vault-container::-webkit-scrollbar-track { background: transparent; }
-        .vault-container::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.3); border-radius: 4px; }
-        
-        .click-hint { pointer-events: none; }
-        
-        @media (max-width: 768px) {
-            .third-eye { width: 140px; height: 140px; }
-            .eye-ring:nth-child(1) { width: 160px; height: 160px; }
-            .eye-ring:nth-child(2) { width: 190px; height: 190px; }
-            .eye-ring:nth-child(3) { width: 220px; height: 220px; }
-            .eye-ring:nth-child(4) { width: 250px; height: 250px; }
+        .vault-container::-webkit-scrollbar-thumb { background: rgba(0,200,255,0.3); border-radius: 4px; }
+
+        @media (max-width:768px) {
+            .third-eye { width: 120px; height: 120px; }
+            .eye-ring:nth-child(1) { width: 140px; height: 140px; }
+            .eye-ring:nth-child(2) { width: 170px; height: 170px; }
+            .eye-ring:nth-child(3) { width: 200px; height: 200px; }
+            .eye-ring:nth-child(4) { width: 230px; height: 230px; }
             .vault-content { padding: 12px 15px; }
             .vault-grid { grid-template-columns: 1fr; }
-            .vault-stats { grid-template-columns: repeat(2, 1fr); }
+            .vault-stats { grid-template-columns: repeat(2,1fr); }
             .click-hint { font-size: 8px; bottom: 15px; }
             .clock-container { top: 10px; right: 15px; }
             .clock-container .time { font-size: 20px; }
@@ -424,9 +412,7 @@
 </head>
 <body>
 
-<!-- ============================================ -->
-<!-- BACKGROUND                                   -->
-<!-- ============================================ -->
+<!-- BACKGROUND -->
 <div class="vault-bg"></div>
 <div id="grid-overlay"></div>
 <div class="data-stream"></div>
@@ -435,47 +421,38 @@
 <div class="data-stream"></div>
 <div class="data-stream"></div>
 
-<!-- ============================================ -->
-<!-- CLOCK - TOP RIGHT                            -->
-<!-- ============================================ -->
+<!-- CLOCK -->
 <div class="clock-container">
     <div class="time" id="clockTime">00:00:00</div>
     <div class="date" id="clockDate">LOADING...</div>
     <div class="timezone">IST · UTC +5:30</div>
 </div>
 
-<!-- ============================================ -->
-<!-- HEARTBEAT - BOTTOM RIGHT                     -->
-<!-- ============================================ -->
+<!-- HEARTBEAT -->
 <div class="heartbeat-container">
     <span class="heartbeat-icon">❤</span>
     <span class="heartbeat-text">Infinity</span>
     <span class="heartbeat-line"></span>
 </div>
 
-<!-- ============================================ -->
-<!-- THE EYE - CENTER OF PAGE - CLICK TO PAY      -->
-<!-- ============================================ -->
+<!-- EYE -->
 <div class="eye-container" id="eyeContainer" onclick="showPayment()">
     <div class="third-eye">
-        <div class="eye-ring"></div>
-        <div class="eye-ring"></div>
-        <div class="eye-ring"></div>
-        <div class="eye-ring"></div>
+        <div class="eye-ring"></div><div class="eye-ring"></div><div class="eye-ring"></div><div class="eye-ring"></div>
         <svg viewBox="0 0 300 300">
-            <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 200, 255, 0.08)" stroke-width="2"/>
-            <circle cx="150" cy="150" r="110" fill="none" stroke="rgba(0, 200, 255, 0.12)" stroke-width="2"/>
-            <circle cx="150" cy="150" r="80" fill="none" stroke="rgba(0, 200, 255, 0.18)" stroke-width="2"/>
-            <circle cx="150" cy="150" r="50" fill="rgba(0, 200, 255, 0.06)" stroke="rgba(0, 200, 255, 0.25)" stroke-width="2"/>
-            <circle cx="150" cy="150" r="30" fill="rgba(0, 200, 255, 0.1)" stroke="rgba(0, 200, 255, 0.3)" stroke-width="2"/>
-            <circle cx="150" cy="150" r="15" fill="rgba(0, 200, 255, 0.2)" stroke="rgba(0, 200, 255, 0.4)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0,200,255,0.08)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="110" fill="none" stroke="rgba(0,200,255,0.12)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="80" fill="none" stroke="rgba(0,200,255,0.18)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="50" fill="rgba(0,200,255,0.06)" stroke="rgba(0,200,255,0.25)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="30" fill="rgba(0,200,255,0.1)" stroke="rgba(0,200,255,0.3)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="15" fill="rgba(0,200,255,0.2)" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
             <circle cx="150" cy="150" r="6" fill="#00d4ff"/>
             <circle cx="147" cy="147" r="2" fill="rgba(255,255,255,0.9)"/>
-            <line x1="150" y1="100" x2="150" y2="120" stroke="rgba(0, 200, 255, 0.4)" stroke-width="2"/>
-            <line x1="150" y1="180" x2="150" y2="200" stroke="rgba(0, 200, 255, 0.4)" stroke-width="2"/>
-            <line x1="100" y1="150" x2="120" y2="150" stroke="rgba(0, 200, 255, 0.4)" stroke-width="2"/>
-            <line x1="180" y1="150" x2="200" y2="150" stroke="rgba(0, 200, 255, 0.4)" stroke-width="2"/>
-            <circle cx="150" cy="150" r="70" fill="none" stroke="rgba(0, 200, 255, 0.08)">
+            <line x1="150" y1="100" x2="150" y2="120" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
+            <line x1="150" y1="180" x2="150" y2="200" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
+            <line x1="100" y1="150" x2="120" y2="150" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
+            <line x1="180" y1="150" x2="200" y2="150" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
+            <circle cx="150" cy="150" r="70" fill="none" stroke="rgba(0,200,255,0.08)">
                 <animate attributeName="r" values="70;100;70" dur="3s" repeatCount="indefinite"/>
                 <animate attributeName="opacity" values="0.08;0;0.08" dur="3s" repeatCount="indefinite"/>
             </circle>
@@ -483,41 +460,34 @@
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- CLICK HINT                                   -->
-<!-- ============================================ -->
 <div class="click-hint">◈ Click the Eye to Enter ◈</div>
 
-<!-- ============================================ -->
-<!-- PAYMENT OVERLAY - APPEARS ON EYE CLICK      -->
-<!-- ============================================ -->
+<!-- PAYMENT OVERLAY -->
 <div class="payment-overlay" id="paymentOverlay">
     <div class="payment-box">
         <button class="btn-close" onclick="closePayment()">✕</button>
         <div class="lock-icon">🔓</div>
         <h2>Unlock The Vault</h2>
-        <p>Access all 12 apps — Legal, Markets, Reports, Compliance, News, Lens, Sports, Governance, Predict, Training, Surveillance, Calendar</p>
+        <p>Access all 12 apps — full working functionality</p>
         <div class="price">₹2</div>
         <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
             <i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter
         </button>
         <div class="payment-status" id="paymentStatus">⏳ Processing...</div>
         <p class="powered">🔒 Secure payment via Razorpay</p>
-        <p class="features">1000 AI Agents · 24/7 · Instant Access</p>
+        <p class="features">1000 AI Agents · 24/7 · Full Access</p>
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- VAULT - REVEALED AFTER PAYMENT              -->
-<!-- ============================================ -->
+<!-- VAULT -->
 <div class="vault-container" id="vaultContainer">
     <div class="vault-header">
         <div class="logo">
             <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 200, 255, 0.3)" stroke-width="2"/>
-                <circle cx="50" cy="50" r="35" fill="rgba(0, 200, 255, 0.05)" stroke="rgba(0, 200, 255, 0.15)" stroke-width="1.5"/>
-                <circle cx="50" cy="50" r="25" fill="rgba(0, 200, 255, 0.08)" stroke="rgba(0, 200, 255, 0.2)" stroke-width="1.5"/>
-                <circle cx="50" cy="50" r="15" fill="rgba(0, 200, 255, 0.15)" stroke="rgba(0, 200, 255, 0.25)" stroke-width="1.5"/>
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.3)" stroke-width="2"/>
+                <circle cx="50" cy="50" r="35" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.15)" stroke-width="1.5"/>
+                <circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.2)" stroke-width="1.5"/>
+                <circle cx="50" cy="50" r="15" fill="rgba(0,200,255,0.15)" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/>
                 <circle cx="50" cy="50" r="8" fill="#00d4ff"/>
                 <circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.9)"/>
             </svg>
@@ -525,138 +495,405 @@
         </div>
         <div class="close-btn" onclick="closeVault()">✕</div>
     </div>
-    
     <div class="vault-content">
+        <!-- Stats -->
         <div class="vault-stats">
             <div class="vault-stat"><div class="number">1000</div><div class="label">AI Agents</div></div>
             <div class="vault-stat"><div class="number">12</div><div class="label">Integrated Apps</div></div>
             <div class="vault-stat"><div class="number">24/7</div><div class="label">Autonomous</div></div>
             <div class="vault-stat"><div class="number">🔒</div><div class="label">Premium Access</div></div>
         </div>
-        
-        <h2 style="font-size:18px; font-weight:600; color:#fff;">⚡ Complete Arsenal — 1000 Agents Active</h2>
-        <p style="color:#6b7280; font-size:13px; margin-bottom:16px;">Click any card to open the app — all features working!</p>
-        
+
+        <h2 style="font-size:18px; font-weight:600; color:#fff;">⚡ Complete Arsenal — Full Working Apps</h2>
+        <p style="color:#6b7280; font-size:13px; margin-bottom:16px;">Click any card to open the full app with real functionality.</p>
+
+        <!-- Cards -->
         <div class="vault-grid">
             <div class="vault-card" onclick="navigateTo('chat')">
                 <div class="icon">⚖️</div>
                 <h3>AI Counsel</h3>
-                <p>1000 agents · 20 verifiers · AI Judge — legal questions answered in real-time.</p>
-                <span class="badge green">● 1000 Agents</span>
+                <p>Chat with AI Judge — real legal advice with 1000 agents.</p>
+                <span class="badge green">● Live</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('markets')">
                 <div class="icon">📊</div>
                 <h3>Global Markets</h3>
-                <p>Live tracking — NIFTY, SENSEX, Nasdaq, Dubai, FTSE, DAX, Nikkei.</p>
+                <p>Live NIFTY, SENSEX, Nasdaq, Dubai, FTSE, DAX, Nikkei.</p>
                 <span class="badge green">● Live</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('reports')">
                 <div class="icon">📄</div>
                 <h3>AI Reports</h3>
-                <p>Daily market reports with charts — click to generate and download PDF.</p>
+                <p>Generate daily market reports with charts & PDF export.</p>
                 <span class="badge purple">● Generate</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('compliance')">
                 <div class="icon">🛡️</div>
                 <h3>Compliance</h3>
-                <p>GDPR · DPDPA · CCPA · HIPAA · ISO27001 — real-time scanning.</p>
+                <p>Real-time monitoring for GDPR, DPDPA, CCPA, HIPAA, ISO27001.</p>
                 <span class="badge yellow">● Scanning</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('news')">
                 <div class="icon">📰</div>
                 <h3>Legal News</h3>
-                <p>Live news from 50+ global sources — AI-curated feed.</p>
+                <p>Live news feed from 50+ global sources, AI-curated.</p>
                 <span class="badge green">● Live Feed</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('lens')">
                 <div class="icon">👁️</div>
                 <h3>Lens Scan</h3>
-                <p>Scan any website for GDPR, DPDPA, CCPA, HIPAA, ISO27001 compliance.</p>
+                <p>Scan websites for GDPR, DPDPA, CCPA, HIPAA, ISO27001.</p>
                 <span class="badge purple">● Scan</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('sports')">
                 <div class="icon">⚽</div>
                 <h3>Sports Law</h3>
-                <p>Player contracts · Anti-doping · League compliance.</p>
+                <p>Player contracts, anti-doping, league compliance.</p>
                 <span class="badge orange">● Active</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('governance')">
                 <div class="icon">⚖️</div>
                 <h3>AI Governance</h3>
-                <p>Ethics · Policy generator · Risk assessment.</p>
+                <p>Ethics framework, policy generator, risk assessment.</p>
                 <span class="badge purple">● Active</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('predict')">
                 <div class="icon">🔮</div>
                 <h3>Predictive AI</h3>
-                <p>Case outcome · Market forecasting · Risk analysis.</p>
+                <p>Case outcome, market forecasting, risk analysis.</p>
                 <span class="badge green">● Predict</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('train')">
                 <div class="icon">🧠</div>
                 <h3>Autonomous Training</h3>
-                <p>Self-learning AI — scrapes the web and trains continuously.</p>
+                <p>Self-learning AI scraping the web continuously.</p>
                 <span class="badge yellow">● Learning</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('surveillance')">
                 <div class="icon">🌍</div>
                 <h3>Global Surveillance</h3>
-                <p>24/7 real-time intelligence monitoring across all domains.</p>
+                <p>24/7 real-time intelligence monitoring.</p>
                 <span class="badge green">● Active</span>
             </div>
-            
             <div class="vault-card" onclick="navigateTo('calendar')">
                 <div class="icon">🕉️</div>
                 <h3>Vedic Calendar</h3>
-                <p>Panchang · Tithi · Nakshatra · Rahu Kaal · Muhurat.</p>
+                <p>Panchang, Tithi, Nakshatra, Rahu Kaal, Muhurat.</p>
                 <span class="badge orange">● Today</span>
             </div>
+            <div class="vault-card" onclick="navigateTo('techradar')">
+                <div class="icon">📡</div>
+                <h3>Tech Radar</h3>
+                <p>YC's 12 Focus Areas — future of tech.</p>
+                <span class="badge cyan">● Active</span>
+            </div>
+            <div class="vault-card" onclick="navigateTo('paymentscanner')">
+                <div class="icon">💳</div>
+                <h3>Payment Scanner</h3>
+                <p>Razorpay-style domain scanning agent.</p>
+                <span class="badge cyan">● Scan</span>
+            </div>
         </div>
-        
+
         <div style="margin-top:30px; padding-top:16px; border-top:1px solid rgba(0,200,255,0.05); text-align:center; color:#4b5563; font-size:10px;">
-            THE ADVOCACY · v27.0 · ₹2 Paid Access · 1000 Agents
+            THE ADVOCACY · v30.0 · Full Access
         </div>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- JAVASCRIPT                                   -->
+<!-- APP PAGES (hidden, shown on navigation)      -->
+<!-- ============================================ -->
+
+<!-- CHAT PAGE -->
+<div id="page-chat" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <div><h2 class="text-lg font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-400">1000 agents · 20 verifiers · AI Judge v30.0</p></div>
+            <span class="badge badge-live">● Online</span>
+        </div>
+        <div id="chatMessages" class="h-[400px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4 scrollbar-hide">
+            <div class="text-center py-16 text-gray-500" id="emptyState">
+                <i class="fas fa-gavel text-5xl text-gray-700 mb-4"></i>
+                <p class="text-sm">Start your consultation</p>
+                <div class="flex flex-wrap justify-center gap-2 mt-4">
+                    <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">GDPR</span>
+                    <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">DPDPA</span>
+                    <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Contract Law</span>
+                    <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">IPC</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
+            <button onclick="sendMessage()" class="bg-cyan-600 hover:bg-cyan-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="quickPrompt('What is GDPR compliance?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">GDPR</button>
+            <button onclick="quickPrompt('Explain DPDPA 2023')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">DPDPA</button>
+            <button onclick="quickPrompt('Indian Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Contract Act</button>
+            <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IPC 420</button>
+        </div>
+    </div>
+</div>
+
+<!-- MARKETS PAGE -->
+<div id="page-markets" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <div><h2 class="text-lg font-bold text-white">📊 Global Markets</h2><p class="text-xs text-gray-400">Real-time live data</p></div>
+            <button onclick="refreshMarkets()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg hover:bg-cyan-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
+        </div>
+        <div id="marketData" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+    </div>
+</div>
+
+<!-- REPORTS PAGE -->
+<div id="page-reports" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <div><h2 class="text-lg font-bold text-white">📄 AI Reports</h2><p class="text-xs text-gray-400">Generate & export PDF</p></div>
+            <div class="flex gap-2">
+                <button onclick="generateReport()" class="text-xs bg-purple-600/20 text-purple-400 px-3 py-1 rounded-lg hover:bg-purple-600/30 transition"><i class="fas fa-sync mr-1"></i>Generate</button>
+                <button onclick="exportPDF()" class="text-xs bg-green-600/20 text-green-400 px-3 py-1 rounded-lg hover:bg-green-600/30 transition"><i class="fas fa-file-pdf mr-1"></i>PDF</button>
+            </div>
+        </div>
+        <div id="reportContent" class="bg-black/30 rounded-xl p-4 max-h-[500px] overflow-y-auto scrollbar-hide">
+            <div class="text-center text-gray-500 py-12">
+                <i class="fas fa-file-alt text-4xl text-gray-700 mb-4"></i>
+                <p>Click "Generate" to create AI market report</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- COMPLIANCE PAGE -->
+<div id="page-compliance" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <div><h2 class="text-lg font-bold text-white">🛡️ Compliance Dashboard</h2></div>
+            <button onclick="refreshCompliance()" class="text-xs bg-purple-600/20 text-purple-400 px-3 py-1 rounded-lg hover:bg-purple-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
+        </div>
+        <div id="complianceData" class="grid grid-cols-2 md:grid-cols-5 gap-2"></div>
+        <div class="mt-3 bg-black/30 rounded-xl p-3 border border-white/5">
+            <h3 class="font-semibold text-yellow-400 text-xs">📋 Recommendations</h3>
+            <ul id="recommendationsList" class="mt-1 text-gray-300 text-xs space-y-1"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- NEWS PAGE -->
+<div id="page-news" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-bold text-white">📰 Legal News</h2>
+            <button onclick="refreshNews()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
+        </div>
+        <div id="newsData" class="space-y-2"></div>
+    </div>
+</div>
+
+<!-- LENS SCAN PAGE -->
+<div id="page-lens" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">👁️ Lens Scan</h2>
+        <div class="flex gap-2 mb-3">
+            <input type="text" id="lensUrlInput" placeholder="Enter website URL..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm border border-white/5">
+            <button onclick="runLensScan()" class="bg-purple-600 hover:bg-purple-700 px-4 rounded-xl transition text-white font-semibold text-sm"><i class="fas fa-search mr-1"></i>Scan</button>
+        </div>
+        <div id="lensResults" class="space-y-3">
+            <div class="text-center text-gray-500 py-6">
+                <i class="fas fa-eye text-3xl text-gray-700 mb-2"></i>
+                <p class="text-xs">Enter URL and click Scan</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SPORTS PAGE -->
+<div id="page-sports" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">⚽ Sports Law</h2>
+        <div id="sportsData" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+    </div>
+</div>
+
+<!-- GOVERNANCE PAGE -->
+<div id="page-governance" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">⚖️ AI Governance</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                <h3 class="font-bold text-sm text-white">Ethics Framework</h3>
+                <ul class="text-xs text-gray-400 mt-2 space-y-1">
+                    <li>• Fairness & Transparency</li>
+                    <li>• Accountability</li>
+                    <li>• Privacy & Security</li>
+                    <li>• Human Oversight</li>
+                </ul>
+            </div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                <h3 class="font-bold text-sm text-white">Compliance Policies</h3>
+                <ul class="text-xs text-gray-400 mt-2 space-y-1">
+                    <li>• AI Risk Assessment</li>
+                    <li>• Impact Assessment</li>
+                    <li>• Safety Protocols</li>
+                    <li>• Monitoring & Audit</li>
+                </ul>
+            </div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5 col-span-1 md:col-span-2">
+                <h3 class="font-bold text-sm text-white">Regulatory Frameworks</h3>
+                <div class="flex flex-wrap gap-1 mt-2">
+                    <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">DPDPA</span>
+                    <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">GDPR</span>
+                    <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">CCPA</span>
+                    <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">IT Act</span>
+                    <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">ISO27001</span>
+                    <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">HIPAA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PREDICT PAGE -->
+<div id="page-predict" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <div><h2 class="text-lg font-bold text-white">🔮 Predictive AI</h2><p class="text-xs text-gray-400">AI-powered predictions</p></div>
+            <button onclick="fetchPredictions()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg hover:bg-cyan-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Case Outcome</div><div id="casePrediction" class="text-sm text-white">Loading...</div></div>
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Market Trend</div><div id="marketPrediction" class="text-sm text-white">Loading...</div></div>
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Risk Level</div><div id="riskPrediction" class="text-sm text-white">Loading...</div></div>
+        </div>
+        <div id="predictOutput" class="bg-black/30 rounded-xl p-3 max-h-60 overflow-y-auto scrollbar-hide text-xs text-gray-300">
+            <div class="text-gray-500 text-center">Click refresh to get predictions</div>
+        </div>
+    </div>
+</div>
+
+<!-- TRAIN PAGE -->
+<div id="page-train" class="page-content">
+    <div class="card">
+        <div class="flex items-center justify-between mb-3">
+            <div><h2 class="text-lg font-bold text-white">🧠 Train Unknown</h2><p class="text-xs text-gray-400">Autonomous web training</p></div>
+            <button onclick="startTraining()" class="text-xs bg-purple-600/20 text-purple-400 px-3 py-1 rounded-lg hover:bg-purple-600/30 transition"><i class="fas fa-play mr-1"></i>Start</button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Cases</div><div class="text-lg font-bold text-blue-400" id="trainCases">0</div></div>
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Acts</div><div class="text-lg font-bold text-green-400" id="trainActs">0</div></div>
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Articles</div><div class="text-lg font-bold text-yellow-400" id="trainArticles">0</div></div>
+            <div class="bg-black/30 p-2 rounded text-center"><div class="text-xs text-gray-400">Templates</div><div class="text-lg font-bold text-purple-400" id="trainTemplates">0</div></div>
+        </div>
+        <div class="bg-black/30 rounded-xl p-3">
+            <div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Progress</span><span id="trainProgressText" class="text-blue-400">0%</span></div>
+            <div class="w-full bg-gray-700 h-2 rounded overflow-hidden"><div id="trainProgressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded transition-all" style="width:0%"></div></div>
+            <div id="trainStatus" class="text-xs text-gray-500 mt-2">Ready to train</div>
+        </div>
+        <div id="trainLog" class="mt-3 bg-black/30 rounded-xl p-3 max-h-40 overflow-y-auto scrollbar-hide text-xs text-gray-400">📋 Training log will appear here...</div>
+    </div>
+</div>
+
+<!-- SURVEILLANCE (HOME) -->
+<div id="page-surveillance" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">🌍 Global Surveillance</h2>
+        <p class="text-gray-400 text-sm">24/7 real-time intelligence monitoring across all domains.</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+            <div class="bg-black/30 p-3 rounded text-center">
+                <div class="text-2xl text-green-400">●</div>
+                <div class="text-xs text-gray-400">Legal</div>
+            </div>
+            <div class="bg-black/30 p-3 rounded text-center">
+                <div class="text-2xl text-blue-400">●</div>
+                <div class="text-xs text-gray-400">Markets</div>
+            </div>
+            <div class="bg-black/30 p-3 rounded text-center">
+                <div class="text-2xl text-yellow-400">●</div>
+                <div class="text-xs text-gray-400">News</div>
+            </div>
+            <div class="bg-black/30 p-3 rounded text-center">
+                <div class="text-2xl text-purple-400">●</div>
+                <div class="text-xs text-gray-400">Compliance</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CALENDAR PAGE -->
+<div id="page-calendar" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">🕉️ Vedic Calendar</h2>
+        <div id="calendarData" class="space-y-2 text-sm text-gray-300">
+            <div class="bg-black/30 p-3 rounded-xl flex justify-between"><span>Today's Tithi</span><span class="text-cyan-400">Shukla Ekadashi</span></div>
+            <div class="bg-black/30 p-3 rounded-xl flex justify-between"><span>Nakshatra</span><span class="text-cyan-400">Rohini</span></div>
+            <div class="bg-black/30 p-3 rounded-xl flex justify-between"><span>Sunrise</span><span class="text-cyan-400">06:00 AM</span></div>
+            <div class="bg-black/30 p-3 rounded-xl flex justify-between"><span>Sunset</span><span class="text-cyan-400">06:30 PM</span></div>
+            <div class="bg-black/30 p-3 rounded-xl flex justify-between"><span>Rahu Kaal</span><span class="text-cyan-400">07:30 AM - 09:00 AM</span></div>
+            <div class="bg-black/30 p-3 rounded-xl flex justify-between"><span>Muhurat</span><span class="text-cyan-400">11:30 AM - 12:15 PM</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- TECH RADAR -->
+<div id="page-techradar" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">📡 Tech Radar — YC Focus Areas</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">01</span> The Future of American Defense</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">02</span> A Cloud for Small Software</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">03</span> Multiplayer AI</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">04</span> Compute at Sea</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">05</span> AI-Powered Consumer Products for 1B People</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">06</span> AI for the Aging Population</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">07</span> New OS for the Physical World</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">08</span> The Best Time to Build in Crypto</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">09</span> Data for the Real World</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">10</span> Proving You're Human</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">11</span> AI-Native Compliance Infrastructure</div>
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5"><span class="text-cyan-400 font-bold">12</span> Self-Maintaining APIs</div>
+        </div>
+    </div>
+</div>
+
+<!-- PAYMENT SCANNER -->
+<div id="page-paymentscanner" class="page-content">
+    <div class="card">
+        <h2 class="text-lg font-bold text-white mb-3">💳 Payment Scanner</h2>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="newDomainInput" placeholder="Enter domain (e.g., example.com)" class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
+            <button onclick="addDomain()" class="bg-cyan-600 hover:bg-cyan-700 px-4 rounded-xl transition text-white text-sm"><i class="fas fa-plus mr-1"></i>Add</button>
+        </div>
+        <div id="paymentDomainsList" class="space-y-2">
+            <div class="text-center text-gray-500 text-sm py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Loading domains...</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- JAVASCRIPT - ALL FUNCTIONALITY               -->
 <!-- ============================================ -->
 <script>
 // ============================================
-// REAL-TIME CLOCK
+// CLOCK
 // ============================================
-
 function updateClock() {
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
-    
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', options);
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clockTime').textContent = `${h}:${m}:${s}`;
+    const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+    document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', opts);
 }
-
-updateClock();
-setInterval(updateClock, 1000);
+updateClock(); setInterval(updateClock,1000);
 
 // ============================================
-// PAYMENT - SHOW ON EYE CLICK
+// PAYMENT
 // ============================================
-
 let paymentCompleted = false;
-
 function showPayment() {
     if (!paymentCompleted) {
         document.getElementById('paymentOverlay').classList.add('active');
@@ -664,122 +901,435 @@ function showPayment() {
         openVault();
     }
 }
-
 function closePayment() {
     document.getElementById('paymentOverlay').classList.remove('active');
 }
-
 function initiatePayment() {
     const btn = document.getElementById('payBtn');
     const status = document.getElementById('paymentStatus');
-    
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
     status.className = 'payment-status show';
-    status.textContent = '⏳ Initializing payment...';
-    
-    // Get Razorpay key from backend
+    status.textContent = '⏳ Initializing...';
     fetch('/api/payment/key')
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to get payment key');
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             const options = {
                 key: data.key_id || 'rzp_test_XXXXXXXXXXXXXXXX',
                 amount: 200,
                 currency: 'INR',
                 name: 'THE ADVOCACY',
-                description: 'Unlock The Vault - 1000 Agents',
-                image: 'https://upamnyu12-LEX.hf.space/static/favicon.ico',
+                description: 'Full Access Vault',
                 handler: function(response) {
-                    console.log('Payment Success:', response);
                     status.className = 'payment-status show success';
-                    status.textContent = '✅ Payment successful! Opening vault...';
+                    status.textContent = '✅ Success! Opening vault...';
                     document.getElementById('paymentOverlay').classList.remove('active');
                     paymentCompleted = true;
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
                     openVault();
                 },
-                prefill: {
-                    name: 'Guest User',
-                    email: 'guest@theadvocacy.in'
-                },
-                modal: {
-                    ondismiss: function() {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
-                        status.className = 'payment-status';
-                        status.textContent = '';
-                    }
-                }
+                modal: { ondismiss: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                    status.className = 'payment-status';
+                    status.textContent = '';
+                }}
             };
-            
             const rzp = new Razorpay(options);
             rzp.open();
         })
-        .catch(err => {
-            console.error('Payment error:', err);
+        .catch(() => {
             status.className = 'payment-status show error';
-            status.textContent = '❌ Payment failed. Please try again.';
+            status.textContent = '❌ Payment failed. Try again.';
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
         });
 }
 
 // ============================================
-// VAULT CONTROLS
+// VAULT
 // ============================================
-
 function openVault() {
+    document.getElementById('eyeContainer').classList.add('clicked');
     document.getElementById('vaultContainer').classList.add('open');
     document.body.style.overflow = 'hidden';
-    console.log('🔓 VAULT OPENED');
+    // Show home page by default
+    navigateTo('surveillance');
 }
-
 function closeVault() {
     document.getElementById('vaultContainer').classList.remove('open');
     document.body.style.overflow = '';
-    console.log('🔒 VAULT CLOSED');
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeVault(); });
+
+// ============================================
+// NAVIGATION - SHOW PAGES
+// ============================================
+let currentPage = null;
+function navigateTo(page) {
+    // Hide all pages
+    document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById('page-'+page);
+    if (target) {
+        target.classList.add('active');
+        currentPage = page;
+    }
+    // Load data for specific pages
+    if (page === 'markets') refreshMarkets();
+    if (page === 'reports') generateReport();
+    if (page === 'compliance') refreshCompliance();
+    if (page === 'news') refreshNews();
+    if (page === 'lens') { /* wait for user click */ }
+    if (page === 'sports') fetchSportsData();
+    if (page === 'predict') fetchPredictions();
+    if (page === 'train') getTrainingStatus();
+    if (page === 'paymentscanner') loadPaymentDomains();
+    if (page === 'chat') setTimeout(() => document.getElementById('chatInput')?.focus(), 300);
 }
 
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closePayment();
-        closeVault();
+// ============================================
+// CHAT
+// ============================================
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const div = document.getElementById('chatMessages');
+    const empty = document.getElementById('emptyState');
+    if (empty) empty.remove();
+    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-cyan-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(msg)}</div></div>`;
+    input.value = '';
+    div.scrollTop = div.scrollHeight;
+    const typingId = 'typing-'+Date.now();
+    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI Judge deliberating...</div></div></div>`;
+    div.scrollTop = div.scrollHeight;
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({message: msg, session_id:'default'})
+        });
+        const data = await res.json();
+        document.getElementById(typingId)?.remove();
+        div.innerHTML += `
+            <div class="chat-message flex justify-start mb-3">
+                <div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-cyan-500/10">
+                    <div class="text-xs text-cyan-400 mb-1">⚖️ ${data.agent_used || 'AI Judge'}</div>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your query.')}</div>
+                    <div class="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-500">
+                        ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents</span>` : ''}
+                        ${data.confidence ? `<span class="text-green-400">✅ ${Math.round(data.confidence*100)}%</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        div.scrollTop = div.scrollHeight;
+    } catch(e) {
+        document.getElementById(typingId)?.remove();
+        div.innerHTML += `<div class="chat-message flex justify-start mb-3"><div class="bg-red-900/30 text-red-400 p-3 rounded-xl text-sm border border-red-500/20">❌ ${e.message}</div></div>`;
+        div.scrollTop = div.scrollHeight;
     }
-});
+}
+function quickPrompt(text) {
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+}
+function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
 
 // ============================================
-// NAVIGATION - APP LAUNCH
+// MARKETS
 // ============================================
+async function refreshMarkets() {
+    try {
+        const res = await fetch('/api/market/global');
+        const data = await res.json();
+        const div = document.getElementById('marketData');
+        if (div && data.data) {
+            div.innerHTML = Object.entries(data.data).map(([k,v]) => `
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center">
+                    <div><div class="font-bold text-white text-sm">${v.name}</div><div class="text-[10px] text-gray-500">${v.exchange}</div></div>
+                    <div class="text-right"><div class="font-bold text-white text-sm">${v.price}</div><div class="${v.change>=0?'text-green-400':'text-red-400'} text-xs">${v.change>=0?'+':''}${v.change_percent}%</div></div>
+                </div>
+            `).join('');
+        }
+    } catch(e) { console.error('Markets error', e); }
+}
 
-function navigateTo(app) {
-    closeVault();
-    console.log(`🚀 App launched: ${app}`);
-    alert(`🔓 ${app.toUpperCase()} App - Full functionality coming!`);
+// ============================================
+// REPORTS
+// ============================================
+let reportChart = null;
+async function generateReport() {
+    const div = document.getElementById('reportContent');
+    div.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Generating...</p></div>`;
+    try {
+        const res = await fetch('/api/market/report/daily');
+        const data = await res.json();
+        const r = data.report;
+        let html = `
+            <div id="pdfContent" class="bg-cyan-900/10 rounded-xl p-6 border border-cyan-500/10">
+                <div class="border-b border-cyan-500/10 pb-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div><h2 class="text-xl font-bold text-white">📊 Daily Market Report</h2><p class="text-xs text-gray-400">${r.date}</p></div>
+                        <div style="width:32px;height:32px;"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.2)" stroke-width="1.5"/><circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.1)" stroke="rgba(0,200,255,0.15)" stroke-width="1.5"/><circle cx="50" cy="50" r="10" fill="rgba(0,200,255,0.2)"/><circle cx="50" cy="50" r="5" fill="#00d4ff"/></svg></div>
+                    </div>
+                </div>
+                <div class="bg-black/30 rounded-xl p-4 mb-4"><h3 class="font-bold text-white text-sm mb-2">📈 Market Summary</h3><div class="text-gray-300 text-sm whitespace-pre-wrap">${r.market_summary}</div></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-500/10 rounded-xl p-4 border border-green-500/20"><h4 class="text-green-400 text-xs font-bold">🏆 Top Performers</h4>${r.top_performers.map(p => `<div class="flex justify-between text-sm mt-1"><span>${p.name}</span><span class="text-green-400">+${p.change_percent}%</span></div>`).join('')}</div>
+                    <div class="bg-red-500/10 rounded-xl p-4 border border-red-500/20"><h4 class="text-red-400 text-xs font-bold">📉 Bottom Performers</h4>${r.worst_performers.map(p => `<div class="flex justify-between text-sm mt-1"><span>${p.name}</span><span class="text-red-400">${p.change_percent}%</span></div>`).join('')}</div>
+                </div>
+                <div class="bg-black/30 rounded-xl p-4 mb-4"><h3 class="font-bold text-white text-sm mb-2">📊 Visual Analysis</h3><canvas id="reportChart" height="200"></canvas></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-black/30 rounded-xl p-4"><h4 class="text-yellow-400 text-xs font-bold">⚡ Risk Assessment</h4><div class="text-sm text-white">Level: ${r.risk_assessment.level}</div><div class="text-xs text-gray-400">Score: ${r.risk_assessment.score.toFixed(2)}</div></div>
+                    <div class="bg-black/30 rounded-xl p-4"><h4 class="text-cyan-400 text-xs font-bold">🔮 Predictions</h4><div class="text-sm text-white">Short-term: ${r.predictions.short_term}</div><div class="text-sm text-white">Confidence: ${Math.round(r.predictions.confidence*100)}%</div></div>
+                </div>
+                <div class="bg-black/30 rounded-xl p-4"><h3 class="font-bold text-white text-sm mb-2">💡 Recommendations</h3>${r.recommendations.map(r => `<div class="text-sm text-gray-300">• ${r}</div>`).join('')}</div>
+                <div class="text-[10px] text-gray-600 mt-4 text-center border-t border-cyan-500/10 pt-4">Generated by THE ADVOCACY AI · ${r.generated_at}</div>
+            </div>
+        `;
+        div.innerHTML = html;
+        setTimeout(() => {
+            if (r.visual_data) {
+                const canvas = document.getElementById('reportChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    if (reportChart) reportChart.destroy();
+                    const datasets = Object.entries(r.visual_data).slice(0,4).map(([k,v]) => ({
+                        label: v.name,
+                        data: v.data,
+                        borderColor: v.color || '#00d4ff',
+                        backgroundColor: (v.color || '#00d4ff')+'20',
+                        fill: true, tension: 0.4, pointRadius: 0
+                    }));
+                    const labels = r.visual_data[Object.keys(r.visual_data)[0]]?.labels || [];
+                    reportChart = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: { responsive: true, maintainAspectRatio: true,
+                            plugins: { legend: { labels: { color: '#9ca3af', font: { size: 10 } } } },
+                            scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 9 } } },
+                                     y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 9 } } } }
+                        }
+                    });
+                }
+            }
+        }, 200);
+    } catch(e) {
+        div.innerHTML = `<div class="text-red-400 text-center py-8">❌ ${e.message}</div>`;
+    }
+}
+function exportPDF() {
+    const el = document.getElementById('pdfContent');
+    if (!el) { alert('Generate a report first'); return; }
+    html2pdf().set({ margin: 10, filename: 'Market_Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(el).save();
+}
+
+// ============================================
+// COMPLIANCE
+// ============================================
+async function refreshCompliance() {
+    try {
+        const res = await fetch('/api/compliance/snapshot');
+        const data = await res.json();
+        const div = document.getElementById('complianceData');
+        if (div && data.frameworks) {
+            div.innerHTML = data.frameworks.map(f => `
+                <div class="bg-black/30 p-2 rounded-xl text-center border border-white/5">
+                    <div class="text-[10px] text-gray-500">${f.name}</div>
+                    <div class="text-lg font-bold ${f.score>=80?'text-green-400':f.score>=60?'text-yellow-400':'text-red-400'}">${f.score}%</div>
+                    <div class="text-[10px] ${f.status==='Compliant'?'text-green-400':f.status==='In Progress'?'text-yellow-400':'text-red-400'}">${f.status}</div>
+                </div>
+            `).join('');
+        }
+        const rec = document.getElementById('recommendationsList');
+        if (rec && data.recommendations) rec.innerHTML = data.recommendations.map(r => `<li class="text-gray-300">• ${r}</li>`).join('');
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// NEWS
+// ============================================
+async function refreshNews() {
+    try {
+        const res = await fetch('/api/news/real?limit=6');
+        const data = await res.json();
+        const div = document.getElementById('newsData');
+        if (div && data.articles) {
+            div.innerHTML = data.articles.map(n => `
+                <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <h3 class="font-semibold text-white text-xs">${n.title}</h3>
+                    <div class="flex justify-between mt-1 text-[10px] text-gray-600"><span>${n.source||'News'}</span><span>${n.published||'Today'}</span></div>
+                </div>
+            `).join('');
+        }
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// LENS SCAN
+// ============================================
+async function runLensScan() {
+    const url = document.getElementById('lensUrlInput').value.trim();
+    if (!url) { alert('Enter URL'); return; }
+    const div = document.getElementById('lensResults');
+    div.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Scanning ${url}...</p></div>`;
+    try {
+        const res = await fetch('/api/compliance/scan', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({url})
+        });
+        const data = await res.json();
+        let html = `<div class="bg-black/40 rounded-xl p-4 border border-purple-500/30"><div class="flex items-center justify-between"><div><h3 class="font-bold text-white">🔍 Scan Complete</h3><p class="text-xs text-gray-400">${url}</p></div><span class="badge bg-purple-500/20 text-purple-400">${data.overall_score||75}%</span></div>`;
+        if (data.frameworks) {
+            html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">`;
+            for (const [name, details] of Object.entries(data.frameworks)) {
+                const score = details.score || 0;
+                const color = score>=80?'text-green-400':score>=60?'text-yellow-400':'text-red-400';
+                html += `<div class="bg-black/30 p-2 rounded-lg border border-white/5"><div class="text-xs text-gray-400">${name}</div><div class="text-lg font-bold ${color}">${score}%</div><div class="text-xs ${color}">${details.status||'N/A'}</div></div>`;
+            }
+            html += `</div>`;
+        }
+        if (data.recommendations) {
+            html += `<div class="mt-4 p-3 bg-black/30 rounded-lg"><h4 class="text-xs font-bold text-yellow-400">📋 Recommendations</h4><ul class="mt-1 text-xs text-gray-300 space-y-1">${data.recommendations.map(r => `<li>• ${r}</li>`).join('')}</ul></div>`;
+        }
+        html += `<div class="mt-3 text-[10px] text-gray-600">Scanned: ${data.timestamp||new Date().toISOString()}</div></div>`;
+        div.innerHTML = html;
+    } catch(e) {
+        div.innerHTML = `<div class="text-red-400 text-center py-8">❌ ${e.message}</div>`;
+    }
+}
+
+// ============================================
+// SPORTS
+// ============================================
+async function fetchSportsData() {
+    try {
+        const res = await fetch('/api/sports/cricket');
+        const data = await res.json();
+        const div = document.getElementById('sportsData');
+        if (div && data.matches) {
+            div.innerHTML = data.matches.map(m => `
+                <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <div class="text-xs font-bold text-white">${m.teams}</div>
+                    <div class="text-sm font-semibold text-blue-400">${m.score}</div>
+                    <div class="text-[10px] text-gray-400">${m.status||'Live'}</div>
+                </div>
+            `).join('');
+        }
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// PREDICT
+// ============================================
+async function fetchPredictions() {
+    try {
+        const res = await fetch('/api/predict/all');
+        const data = await res.json();
+        const pred = data.predictions || {};
+        document.getElementById('casePrediction').textContent = pred.case_analysis?.prediction || 'N/A';
+        document.getElementById('marketPrediction').textContent = pred.market?.direction || 'N/A';
+        document.getElementById('riskPrediction').textContent = pred.regulatory?.risk_level || 'N/A';
+        document.getElementById('predictOutput').innerHTML = `<div class="text-gray-300 whitespace-pre-wrap">${JSON.stringify(pred, null, 2)}</div>`;
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// TRAIN
+// ============================================
+async function startTraining() {
+    const status = document.getElementById('trainStatus');
+    status.textContent = '🔄 Training...';
+    try {
+        const res = await fetch('/api/train/web', {method:'POST'});
+        const data = await res.json();
+        if (data.data) {
+            document.getElementById('trainCases').textContent = data.data.cases || 0;
+            document.getElementById('trainActs').textContent = data.data.acts || 0;
+            document.getElementById('trainArticles').textContent = data.data.articles || 0;
+            document.getElementById('trainTemplates').textContent = data.data.templates || 0;
+            document.getElementById('trainProgressBar').style.width = '100%';
+            document.getElementById('trainProgressText').textContent = '100%';
+        }
+        status.textContent = '✅ Complete!';
+        document.getElementById('trainLog').innerHTML += `<div class="text-green-400">✅ Training complete at ${new Date().toLocaleTimeString()}</div>`;
+    } catch(e) {
+        status.textContent = '❌ Failed: '+e.message;
+    }
+}
+async function getTrainingStatus() {
+    try {
+        const res = await fetch('/api/train/status');
+        const data = await res.json();
+        document.getElementById('trainCases').textContent = data.cases || 0;
+        document.getElementById('trainActs').textContent = data.acts || 0;
+        document.getElementById('trainArticles').textContent = data.articles || 0;
+        document.getElementById('trainTemplates').textContent = data.templates || 0;
+        document.getElementById('trainProgressBar').style.width = (data.progress||0)+'%';
+        document.getElementById('trainProgressText').textContent = (data.progress||0)+'%';
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// PAYMENT SCANNER
+// ============================================
+async function loadPaymentDomains() {
+    try {
+        const res = await fetch('/api/scan/payment/domains');
+        const data = await res.json();
+        const container = document.getElementById('paymentDomainsList');
+        if (!data.domains || Object.keys(data.domains).length === 0) {
+            container.innerHTML = `<div class="text-gray-500 text-center py-8">No domains added.</div>`;
+            return;
+        }
+        let html = '';
+        for (const [domain, info] of Object.entries(data.domains)) {
+            const status = info.status || 'pending';
+            const color = status==='approved'?'text-green-400':status==='scanning'?'text-yellow-400':status==='failed'?'text-red-400':'text-gray-400';
+            const icon = status==='approved'?'✅':status==='scanning'?'⏳':status==='failed'?'❌':'⏸️';
+            html += `
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-wrap items-center justify-between">
+                    <div><div class="font-medium text-white text-sm">${domain}</div><div class="text-xs text-gray-400">${info.details||''}</div></div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs ${color}">${icon} ${status.toUpperCase()}</span>
+                        <button onclick="scanDomain('${domain}')" class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition"><i class="fas fa-sync"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    } catch(e) { console.error(e); }
+}
+async function addDomain() {
+    const input = document.getElementById('newDomainInput');
+    const domain = input.value.trim();
+    if (!domain) { alert('Enter domain'); return; }
+    try {
+        await fetch('/api/scan/payment/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({domain}) });
+        input.value = '';
+        loadPaymentDomains();
+        scanDomain(domain);
+    } catch(e) { alert('Failed: '+e.message); }
+}
+async function scanDomain(domain) {
+    try {
+        await fetch('/api/scan/payment/domain', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({domain}) });
+        loadPaymentDomains();
+    } catch(e) { alert('Scan failed'); }
 }
 
 // ============================================
 // INIT
 // ============================================
-
-console.log('👁️ THE ADVOCACY v27.0');
-console.log('💰 Click Eye → ₹2 Payment → Vault');
-console.log('🤖 1000 Agents Ready');
-
-// Update title
-setInterval(() => {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    document.title = `◈ ${h}:${m} · THE ADVOCACY`;
-}, 30000);
-
-// Payment overlay is hidden by default - only shows on eye click
-document.getElementById('paymentOverlay').classList.remove('active');
+console.log('👁️ THE ADVOCACY v30.0 - Full Access');
+console.log('🔓 All apps working with real APIs');
 </script>
-
 </body>
-</html> 
+</html>
