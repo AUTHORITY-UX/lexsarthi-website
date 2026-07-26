@@ -1,5 +1,5 @@
 # ============================================
-# UNKNOWN VERDICT v17.0 - COMPLETE DEPENDENCIES
+# UNKNOWN VERDICT v17.0 - FINAL DEPENDENCIES
 # ============================================
 
 # ─── CORE FRAMEWORKS ──────────────────────────────────────────────
@@ -37,7 +37,6 @@ scikit-learn>=1.3.0
 torch>=2.0.0
 transformers>=4.30.0
 accelerate>=0.20.0
-tensorflow>=2.13.0
 scipy>=1.11.0
 pandas>=2.0.0
 
@@ -123,7 +122,6 @@ docx2txt>=0.8
 odfpy>=1.4.1
 python-magic>=0.4.27
 chardet>=5.2.0
-cchardet>=2.1.7
 langdetect>=1.0.9
 textblob>=0.17.1
 spacy>=3.7.0
