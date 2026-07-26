@@ -1326,6 +1326,140 @@ async function scanDomain(domain) {
 }
 
 // ============================================
+// PAYMENT - LIVE KEYS VERSION
+// ============================================
+
+let paymentCompleted = false;
+
+function showPayment() {
+    if (!paymentCompleted) {
+        document.getElementById('paymentOverlay').classList.add('active');
+    } else {
+        openVault();
+    }
+}
+
+function closePayment() {
+    document.getElementById('paymentOverlay').classList.remove('active');
+}
+
+async function initiatePayment() {
+    const btn = document.getElementById('payBtn');
+    const status = document.getElementById('paymentStatus');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+    status.className = 'payment-status show';
+    status.textContent = '⏳ Initializing payment...';
+    
+    try {
+        // 1. Get payment key
+        const keyRes = await fetch('/api/payment/key');
+        const keyData = await keyRes.json();
+        
+        if (keyData.status === 'error') {
+            status.className = 'payment-status show error';
+            status.textContent = '❌ Payment gateway not configured';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+            return;
+        }
+        
+        // 2. Create order
+        status.textContent = '⏳ Creating order...';
+        const orderRes = await fetch('/api/payment/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: 200 })  // ₹2
+        });
+        const orderData = await orderRes.json();
+        
+        // 3. If mock mode, auto-accept
+        if (orderData.mock) {
+            status.className = 'payment-status show success';
+            status.textContent = '✅ Payment accepted (test mode)!';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+            document.getElementById('paymentOverlay').classList.remove('active');
+            paymentCompleted = true;
+            openVault();
+            return;
+        }
+        
+        // 4. Open Razorpay checkout
+        const options = {
+            key: keyData.key_id,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            name: 'THE ADVOCACY',
+            description: '🔓 Unlock The Vault - Full Access',
+            order_id: orderData.order_id,
+            image: 'https://upamnyu12-LEX.hf.space/static/favicon.ico',
+            prefill: {
+                name: 'Guest User',
+                email: 'guest@theadvocacy.in'
+            },
+            theme: {
+                color: '#00d4ff'
+            },
+            modal: {
+                ondismiss: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                    status.className = 'payment-status';
+                    status.textContent = '';
+                }
+            },
+            handler: function(response) {
+                // Verify payment
+                status.textContent = '⏳ Verifying payment...';
+                fetch('/api/payment/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.verified) {
+                        status.className = 'payment-status show success';
+                        status.textContent = '✅ Payment successful! Opening vault...';
+                        document.getElementById('paymentOverlay').classList.remove('active');
+                        paymentCompleted = true;
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                        openVault();
+                    } else {
+                        status.className = 'payment-status show error';
+                        status.textContent = '❌ ' + (data.message || 'Verification failed');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                    }
+                })
+                .catch(err => {
+                    status.className = 'payment-status show error';
+                    status.textContent = '❌ Verification error: ' + err.message;
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+                });
+            }
+        };
+        
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+    } catch(e) {
+        console.error('Payment error:', e);
+        status.className = 'payment-status show error';
+        status.textContent = '❌ Payment failed: ' + e.message;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
+    }
+}
+// ============================================
 // INIT
 // ============================================
 console.log('👁️ THE ADVOCACY v30.0 - Full Access');
