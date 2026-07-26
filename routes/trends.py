@@ -1,48 +1,125 @@
-# routes/trends.py
-import aiohttp
-from fastapi import APIRouter
-from datetime import datetime
+# ============================================
+# ROUTES/TRENDS.PY - Complete Trends Module
+# ============================================
 
-router = APIRouter(prefix="/api/trends", tags=["Trends"])
+from fastapi import APIRouter, HTTPException
+from typing import Optional, List, Dict
+import logging
+from datetime import datetime
+import random
+
+router = APIRouter()
+logger = logging.getLogger("unknown_verdict")
+
+class TrendsData:
+    """AI and market trends data"""
+    
+    def get_trends(self) -> Dict:
+        """Get AI industry trends"""
+        return {
+            "trends": [
+                {
+                    "title": "Global AI Market",
+                    "value": "$150B",
+                    "growth": "45%",
+                    "description": "2024 Global AI Market Size",
+                    "year": 2024,
+                    "category": "Market"
+                },
+                {
+                    "title": "AI Investment",
+                    "value": "$25B",
+                    "growth": "30%",
+                    "description": "2024 AI Venture Capital Investment",
+                    "year": 2024,
+                    "category": "Investment"
+                },
+                {
+                    "title": "AI Jobs",
+                    "value": "1.2M",
+                    "growth": "60%",
+                    "description": "AI Jobs Worldwide",
+                    "year": 2024,
+                    "category": "Employment"
+                },
+                {
+                    "title": "Legal Tech Adoption",
+                    "value": "25%",
+                    "growth": "100%",
+                    "description": "Law firms using AI",
+                    "year": 2024,
+                    "category": "Legal"
+                },
+                {
+                    "title": "AI Compliance",
+                    "value": "15%",
+                    "growth": "80%",
+                    "description": "Companies with AI governance",
+                    "year": 2024,
+                    "category": "Compliance"
+                }
+            ],
+            "market_forecast": {
+                "2024": "$150B",
+                "2025": "$200B",
+                "2026": "$260B",
+                "2027": "$340B",
+                "2028": "$450B"
+            },
+            "top_companies": [
+                {"name": "OpenAI", "category": "AI Models", "valuation": "$80B"},
+                {"name": "Anthropic", "category": "AI Safety", "valuation": "$40B"},
+                {"name": "Cohere", "category": "Enterprise AI", "valuation": "$20B"},
+                {"name": "Mistral AI", "category": "Open Source", "valuation": "$15B"}
+            ],
+            "timestamp": datetime.now().isoformat()
+        }
+
+trends_data = TrendsData()
+
+# ============================================
+# API ENDPOINTS
+# ============================================
 
 @router.get("/ai")
 async def get_ai_trends():
-    """Get AI trends with live data"""
-    trends = {
-        "top_models": [
-            {"name": "Llama 3.3", "score": 9.5, "company": "Meta"},
-            {"name": "GPT-4o", "score": 9.3, "company": "OpenAI"},
-            {"name": "Claude 3.5", "score": 9.1, "company": "Anthropic"},
-            {"name": "Gemini 2.0", "score": 8.8, "company": "Google"},
-            {"name": "DeepSeek", "score": 8.5, "company": "DeepSeek"}
-        ],
-        "market_size": {
-            "global": 1.8e12,  # $1.8 Trillion
-            "growth_rate": 37.3,
-            "forecast_2030": 15.7e12
-        },
-        "adoption": {
-            "enterprise": 72,
-            "startup": 85,
-            "government": 45
-        },
-        "investment": {
-            "2024": 150e9,
-            "2025": 210e9,
-            "2026": 280e9
-        },
-        "jobs": {
-            "created": 1200000,
-            "displaced": 850000,
-            "net": 350000
-        },
-        "countries": [
-            {"name": "USA", "score": 95, "investment": 120e9},
-            {"name": "China", "score": 88, "investment": 80e9},
-            {"name": "UK", "score": 82, "investment": 25e9},
-            {"name": "India", "score": 78, "investment": 15e9},
-            {"name": "Germany", "score": 80, "investment": 18e9}
-        ],
-        "timestamp": datetime.now().isoformat()
-    }
-    return {"status": "ok", "trends": trends}
+    """Get AI industry trends"""
+    try:
+        return trends_data.get_trends()
+    except Exception as e:
+        logger.error(f"Trends error: {e}")
+        return {"error": str(e)}
+
+@router.get("/legal")
+async def get_legal_trends():
+    """Get legal industry trends"""
+    try:
+        return {
+            "trends": [
+                {"name": "AI in Law", "growth": "85%"},
+                {"name": "Legal Tech", "growth": "70%"},
+                {"name": "Compliance Automation", "growth": "60%"},
+                {"name": "Contract Analytics", "growth": "55%"}
+            ],
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Legal trends error: {e}")
+        return {"error": str(e)}
+
+@router.get("/market")
+async def get_market_trends():
+    """Get market trends"""
+    try:
+        return {
+            "trends": [
+                {"sector": "Technology", "growth": "25%"},
+                {"sector": "Healthcare", "growth": "20%"},
+                {"sector": "Finance", "growth": "15%"},
+                {"sector": "Legal", "growth": "12%"}
+            ],
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Market trends error: {e}")
+        return {"error": str(e)}
