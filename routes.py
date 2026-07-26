@@ -364,6 +364,39 @@ async def get_report_history(limit: int = 7):
     except Exception as e:
         return {"error": str(e)}
 # ============================================
+# UPDATE ROUTES.PY - ENHANCED REPORT ENDPOINTS
+# ============================================
+
+@router.get("/api/market/report/daily")
+async def get_daily_report():
+    """Get AI-generated daily market report with charts"""
+    try:
+        from market_intelligence import generate_market_report
+        report = await generate_market_report()
+        return {
+            "status": "success",
+            "report": report,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Report generation error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/market/report/latest")
+async def get_latest_report():
+    """Get latest saved report"""
+    try:
+        from market_intelligence import get_market_intelligence
+        intelligence = get_market_intelligence()
+        report = intelligence["reporter"].get_latest_report()
+        return {
+            "status": "success",
+            "report": report,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+# ============================================
 # EXPORTS
 # ============================================
 
