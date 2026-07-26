@@ -451,3 +451,61 @@ async def get_knowledge_base():
         "total": trainer.get_total_items(),
         "timestamp": datetime.now().isoformat()
     }
+
+# ============================================
+# ROUTES.PY - Update Training Endpoints
+# ============================================
+
+# Add these endpoints to existing routes.py
+
+@router.post("/api/train/web")
+async def train_on_web():
+    """Train Unknown Verdict on knowledge base"""
+    try:
+        from web_scraper import train_unknown_on_web
+        result = await train_unknown_on_web()
+        return {
+            "status": "success",
+            "message": "Training complete",
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Training error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/train/status")
+async def get_training_status():
+    """Get training status"""
+    try:
+        from web_scraper import get_trainer
+        trainer = get_trainer()
+        return {
+            "status": "complete" if trainer.progress >= 100 else "training",
+            "progress": trainer.progress,
+            "total_items": trainer.get_total_items(),
+            "cases": len(trainer.knowledge_base["cases"]),
+            "acts": len(trainer.knowledge_base["acts"]),
+            "articles": len(trainer.knowledge_base["articles"]),
+            "templates": len(trainer.knowledge_base["templates"]),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/api/train/knowledge")
+async def get_knowledge_base():
+    """Get trained knowledge base"""
+    try:
+        from web_scraper import get_trainer
+        trainer = get_trainer()
+        return {
+            "cases": trainer.knowledge_base["cases"][:50],
+            "acts": trainer.knowledge_base["acts"][:20],
+            "articles": trainer.knowledge_base["articles"][:20],
+            "templates": trainer.knowledge_base["templates"][:20],
+            "total": trainer.get_total_items(),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}   
