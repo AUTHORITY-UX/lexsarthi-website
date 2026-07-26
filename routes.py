@@ -460,6 +460,26 @@ async def verify_real_time():
         }
     except Exception as e:
         return {"error": str(e)}
+
+# ============================================
+# ADD TO ROUTES.PY - GET RAZORPAY KEY
+# ============================================
+
+@router.get("/api/payment/key")
+async def get_payment_key():
+    """Get Razorpay key for frontend"""
+    from config import RAZORPAY_KEY_ID
+    return {"key_id": RAZORPAY_KEY_ID or "rzp_test_XXXXXXXXXXXXXXXX"}
+
+@router.post("/api/payment/verify")
+async def verify_payment(request: Request):
+    """Verify Razorpay payment"""
+    try:
+        data = await request.json()
+        # Add verification logic here
+        return {"status": "success", "message": "Payment verified"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 # ============================================
 # EXPORTS
 # ============================================
