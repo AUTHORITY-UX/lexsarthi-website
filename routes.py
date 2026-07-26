@@ -402,3 +402,52 @@ async def summarize_document(request: Request):
     except Exception as e:
         logger.error(f"Document summary error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
+
+# ============================================
+# ADD TO ROUTES.PY - WEB TRAINING ENDPOINTS
+# ============================================
+
+from web_scraper import get_trainer, train_unknown_on_web
+
+@router.post("/api/train/web")
+async def train_on_web():
+    """Train Unknown Verdict on real web data"""
+    try:
+        result = await train_unknown_on_web()
+        return {
+            "status": "success",
+            "message": "Training complete",
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Training error: {e}")
+        return {"error": str(e)}
+
+@router.get("/api/train/status")
+async def get_training_status():
+    """Get training status"""
+    trainer = get_trainer()
+    return {
+        "status": "training" if trainer.progress < 100 else "complete",
+        "progress": trainer.progress,
+        "total_items": trainer.get_total_items(),
+        "cases": len(trainer.knowledge_base["cases"]),
+        "acts": len(trainer.knowledge_base["acts"]),
+        "articles": len(trainer.knowledge_base["articles"]),
+        "templates": len(trainer.knowledge_base["templates"]),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/api/train/knowledge")
+async def get_knowledge_base():
+    """Get trained knowledge base"""
+    trainer = get_trainer()
+    return {
+        "cases": trainer.knowledge_base["cases"][:50],
+        "acts": trainer.knowledge_base["acts"][:20],
+        "articles": trainer.knowledge_base["articles"][:20],
+        "templates": trainer.knowledge_base["templates"][:20],
+        "total": trainer.get_total_items(),
+        "timestamp": datetime.now().isoformat()
+    }
