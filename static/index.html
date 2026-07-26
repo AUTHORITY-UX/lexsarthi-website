@@ -104,7 +104,7 @@
             transform: translate(-50%, -50%);
             z-index: 4;
             pointer-events: none;
-            opacity: 0.1;
+            opacity: 0.12;
         }
         .third-eye-center svg {
             width: 500px;
@@ -112,8 +112,8 @@
             animation: eyePulse 3s ease-in-out infinite;
         }
         @keyframes eyePulse {
-            0%, 100% { opacity: 0.08; transform: scale(1); }
-            50% { opacity: 0.18; transform: scale(1.02); }
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.2; transform: scale(1.02); }
         }
         
         /* ============================================ */
@@ -261,7 +261,6 @@
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce-dot { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         
-        /* Main content must be above background */
         main { position: relative; z-index: 10; }
         
         @media (max-width: 768px) {
@@ -277,13 +276,12 @@
 <body>
 
 <!-- ============================================ -->
-<!-- BACKGROUND EFFECTS - ALL VISIBLE NOW         -->
+<!-- BACKGROUND EFFECTS - ALL VISIBLE             -->
 <!-- ============================================ -->
 
 <!-- 1. World Map - Rotating Globe -->
 <div class="world-map-container">
     <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
-        <!-- Globe outline -->
         <ellipse cx="400" cy="250" rx="350" ry="200" fill="none" stroke="rgba(0, 200, 255, 0.08)" stroke-width="1"/>
         <ellipse cx="400" cy="250" rx="280" ry="160" fill="none" stroke="rgba(0, 200, 255, 0.05)" stroke-width="1"/>
         <ellipse cx="400" cy="250" rx="200" ry="110" fill="none" stroke="rgba(0, 200, 255, 0.03)" stroke-width="1"/>
@@ -358,29 +356,18 @@
 <!-- 4. Third Eye Center - Pulsing -->
 <div class="third-eye-center">
     <svg viewBox="0 0 300 300">
-        <!-- Outer rings -->
         <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 200, 255, 0.05)" stroke-width="1"/>
         <circle cx="150" cy="150" r="110" fill="none" stroke="rgba(0, 200, 255, 0.08)" stroke-width="1"/>
         <circle cx="150" cy="150" r="80" fill="none" stroke="rgba(0, 200, 255, 0.1)" stroke-width="1"/>
-        
-        <!-- Inner eye -->
         <circle cx="150" cy="150" r="50" fill="rgba(0, 200, 255, 0.05)" stroke="rgba(0, 200, 255, 0.15)" stroke-width="1"/>
         <circle cx="150" cy="150" r="30" fill="rgba(0, 200, 255, 0.08)" stroke="rgba(0, 200, 255, 0.2)" stroke-width="1"/>
         <circle cx="150" cy="150" r="15" fill="rgba(0, 200, 255, 0.15)" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
         <circle cx="150" cy="150" r="6" fill="#00d4ff"/>
         <circle cx="147" cy="147" r="2" fill="rgba(255,255,255,0.9)"/>
-        
-        <!-- Iris lines -->
         <line x1="150" y1="100" x2="150" y2="120" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
         <line x1="150" y1="180" x2="150" y2="200" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
         <line x1="100" y1="150" x2="120" y2="150" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
         <line x1="180" y1="150" x2="200" y2="150" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
-        <line x1="115" y1="115" x2="130" y2="130" stroke="rgba(0, 200, 255, 0.2)" stroke-width="0.5"/>
-        <line x1="185" y1="115" x2="170" y2="130" stroke="rgba(0, 200, 255, 0.2)" stroke-width="0.5"/>
-        <line x1="115" y1="185" x2="130" y2="170" stroke="rgba(0, 200, 255, 0.2)" stroke-width="0.5"/>
-        <line x1="185" y1="185" x2="170" y2="170" stroke="rgba(0, 200, 255, 0.2)" stroke-width="0.5"/>
-        
-        <!-- Outer glow -->
         <circle cx="150" cy="150" r="70" fill="none" stroke="rgba(0, 200, 255, 0.05)">
             <animate attributeName="r" values="70;90;70" dur="3s" repeatCount="indefinite"/>
             <animate attributeName="opacity" values="0.05;0;0.05" dur="3s" repeatCount="indefinite"/>
@@ -401,7 +388,6 @@
 <nav class="glass-nav">
     <div class="container mx-auto px-4 py-2">
         <div class="flex items-center justify-between">
-            <!-- Logo with Third Eye -->
             <div class="flex items-center space-x-2">
                 <div class="third-eye-header">
                     <svg viewBox="0 0 100 100">
@@ -411,10 +397,6 @@
                         <circle cx="50" cy="50" r="15" fill="rgba(0, 200, 255, 0.15)" stroke="rgba(0, 200, 255, 0.2)" stroke-width="1"/>
                         <circle cx="50" cy="50" r="8" fill="#00d4ff" stroke="#00d4ff" stroke-width="2"/>
                         <circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.9)"/>
-                        <line x1="50" y1="30" x2="50" y2="38" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
-                        <line x1="50" y1="62" x2="50" y2="70" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
-                        <line x1="30" y1="50" x2="38" y2="50" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
-                        <line x1="62" y1="50" x2="70" y2="50" stroke="rgba(0, 200, 255, 0.3)" stroke-width="1"/>
                     </svg>
                 </div>
                 <div>
@@ -425,7 +407,6 @@
                 <span class="badge bg-blue-500/20 text-blue-400 text-[8px]">1000 Agents</span>
             </div>
 
-            <!-- Navigation -->
             <div class="hidden lg:flex items-center space-x-1 overflow-x-auto scrollbar-hide">
                 <button onclick="navigateTo('home')" class="nav-btn active" data-page="home"><i class="fas fa-home mr-1"></i>Home</button>
                 <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat"><i class="fas fa-gavel mr-1"></i>Counsel</button>
@@ -436,7 +417,6 @@
                 <button onclick="navigateTo('train')" class="nav-btn" data-page="train"><i class="fas fa-brain mr-1"></i>Train</button>
             </div>
 
-            <!-- Right -->
             <div class="flex items-center space-x-2">
                 <span id="userStatus" class="text-xs text-gray-400"><i class="fas fa-user-circle mr-1"></i>Guest</span>
                 <button onclick="handleLogout()" class="text-xs bg-red-500/10 text-red-400 px-2 py-1 rounded-lg hover:bg-red-500/20 transition"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
@@ -460,9 +440,6 @@
 <!-- ============================================ -->
 <main class="container mx-auto px-4 pt-20 pb-12 relative z-10">
 
-    <!-- ========================================== -->
-    <!-- HOME PAGE                                 -->
-    <!-- ========================================== -->
     <div id="page-home" class="page-content">
         <div class="text-center mb-8">
             <h2 class="text-2xl md:text-3xl font-bold text-white tracking-tight">
@@ -472,26 +449,10 @@
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div class="card p-3 text-center">
-                <div class="stat-number">1000</div>
-                <div class="text-xs text-gray-500">AI Agents</div>
-                <div class="text-[8px] text-green-400">● Active</div>
-            </div>
-            <div class="card p-3 text-center">
-                <div class="stat-number">10</div>
-                <div class="text-xs text-gray-500">Global Markets</div>
-                <div class="text-[8px] text-blue-400">● Tracking</div>
-            </div>
-            <div class="card p-3 text-center">
-                <div class="stat-number">24/7</div>
-                <div class="text-xs text-gray-500">AI Reports</div>
-                <div class="text-[8px] text-purple-400">● Generating</div>
-            </div>
-            <div class="card p-3 text-center">
-                <div class="stat-number">∞</div>
-                <div class="text-xs text-gray-500">Surveillance</div>
-                <div class="text-[8px] text-cyan-400">● Active</div>
-            </div>
+            <div class="card p-3 text-center"><div class="stat-number">1000</div><div class="text-xs text-gray-500">AI Agents</div><div class="text-[8px] text-green-400">● Active</div></div>
+            <div class="card p-3 text-center"><div class="stat-number">10</div><div class="text-xs text-gray-500">Global Markets</div><div class="text-[8px] text-blue-400">● Tracking</div></div>
+            <div class="card p-3 text-center"><div class="stat-number">24/7</div><div class="text-xs text-gray-500">AI Reports</div><div class="text-[8px] text-purple-400">● Generating</div></div>
+            <div class="card p-3 text-center"><div class="stat-number">∞</div><div class="text-xs text-gray-500">Surveillance</div><div class="text-[8px] text-cyan-400">● Active</div></div>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -502,9 +463,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- CHAT PAGE                                 -->
-    <!-- ========================================== -->
     <div id="page-chat" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
@@ -539,9 +497,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MARKETS PAGE                              -->
-    <!-- ========================================== -->
     <div id="page-markets" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
@@ -552,9 +507,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- REPORTS PAGE                              -->
-    <!-- ========================================== -->
     <div id="page-reports" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
@@ -574,9 +526,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- COMPLIANCE PAGE                           -->
-    <!-- ========================================== -->
     <div id="page-compliance" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
@@ -591,9 +540,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- NEWS PAGE                                 -->
-    <!-- ========================================== -->
     <div id="page-news" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
@@ -604,9 +550,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- TRAIN PAGE                                -->
-    <!-- ========================================== -->
     <div id="page-train" class="page-content hidden">
         <div class="card p-4">
             <div class="flex items-center justify-between mb-3">
