@@ -36,6 +36,11 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", None)
 
+# ============================================
+# CONFIG.PY - ADD THESE LINES
+# ============================================
+
+import os
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
