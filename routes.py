@@ -302,7 +302,67 @@ async def get_training_status():
         "templates": 50,
         "timestamp": datetime.now().isoformat()
     }
+# ============================================
+# ADD TO ROUTES.PY - MARKET INTELLIGENCE ENDPOINTS
+# ============================================
 
+@router.get("/api/market/global")
+async def get_global_markets():
+    """Get real-time global market data"""
+    try:
+        from market_intelligence import get_market_data
+        data = await get_market_data()
+        return {
+            "status": "success",
+            "data": data,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/api/market/report/daily")
+async def get_daily_report():
+    """Get AI-generated daily market report"""
+    try:
+        from market_intelligence import generate_market_report
+        report = await generate_market_report()
+        return {
+            "status": "success",
+            "report": report,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/api/market/report/latest")
+async def get_latest_report():
+    """Get latest saved report"""
+    try:
+        from market_intelligence import get_market_intelligence
+        intelligence = get_market_intelligence()
+        report = intelligence["reporter"].get_latest_report()
+        return {
+            "status": "success",
+            "report": report,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/api/market/report/history")
+async def get_report_history(limit: int = 7):
+    """Get report history"""
+    try:
+        from market_intelligence import get_market_intelligence
+        intelligence = get_market_intelligence()
+        history = intelligence["reporter"].get_report_history(limit)
+        return {
+            "status": "success",
+            "history": history,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
 # ============================================
 # EXPORTS
 # ============================================
