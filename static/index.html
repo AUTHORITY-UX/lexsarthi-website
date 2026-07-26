@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Unknown Verdict Vault</title>
+    <title>THE ADVOCACY - Complete Vault v23.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* ============================================ */
-        /* VAULT THEME - CINEMATIC EXPERIENCE           */
-        /* ============================================ */
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
             background: #050508;
             min-height: 100vh;
@@ -24,10 +19,6 @@
             overflow: hidden;
             position: relative;
         }
-        
-        /* ============================================ */
-        /* BACKGROUND EFFECTS                          */
-        /* ============================================ */
         
         .vault-bg {
             position: fixed;
@@ -39,7 +30,6 @@
             z-index: 0;
         }
         
-        /* Grid Overlay */
         #grid-overlay {
             position: fixed;
             top: 0;
@@ -54,11 +44,10 @@
             background-size: 40px 40px;
         }
         
-        /* Data Streams */
         .data-stream {
             position: fixed;
             width: 2px;
-            background: linear-gradient(to bottom, transparent, rgba(0, 200, 255, 0.4), transparent);
+            background: linear-gradient(to bottom, transparent, rgba(0, 200, 255, 0.3), transparent);
             animation: dataFlow 4s infinite linear;
             pointer-events: none;
             z-index: 1;
@@ -75,10 +64,6 @@
             100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
         }
         
-        /* ============================================ */
-        /* THIRD EYE - CENTERPIECE                     */
-        /* ============================================ */
-        
         .eye-container {
             position: fixed;
             top: 50%;
@@ -88,9 +73,7 @@
             cursor: pointer;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .eye-container:hover {
-            transform: translate(-50%, -50%) scale(1.05);
-        }
+        .eye-container:hover { transform: translate(-50%, -50%) scale(1.05); }
         .eye-container.clicked {
             transform: translate(-50%, -50%) scale(0.3);
             opacity: 0;
@@ -99,8 +82,8 @@
         
         .third-eye {
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: 180px;
+            height: 180px;
         }
         .third-eye svg {
             width: 100%;
@@ -113,48 +96,38 @@
             50% { filter: drop-shadow(0 0 80px rgba(0, 200, 255, 0.6)); }
         }
         
-        /* Eye Rings */
         .eye-ring {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             border-radius: 50%;
-            border: 2px solid rgba(0, 200, 255, 0.15);
+            border: 2px solid rgba(0, 200, 255, 0.12);
             pointer-events: none;
             animation: ringExpand 4s ease-out infinite;
         }
-        .eye-ring:nth-child(1) { width: 220px; height: 220px; animation-delay: 0s; }
-        .eye-ring:nth-child(2) { width: 260px; height: 260px; animation-delay: 1s; }
-        .eye-ring:nth-child(3) { width: 300px; height: 300px; animation-delay: 2s; }
-        .eye-ring:nth-child(4) { width: 340px; height: 340px; animation-delay: 3s; }
+        .eye-ring:nth-child(1) { width: 200px; height: 200px; animation-delay: 0s; }
+        .eye-ring:nth-child(2) { width: 240px; height: 240px; animation-delay: 1s; }
+        .eye-ring:nth-child(3) { width: 280px; height: 280px; animation-delay: 2s; }
+        .eye-ring:nth-child(4) { width: 320px; height: 320px; animation-delay: 3s; }
         @keyframes ringExpand {
             0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
         }
         
-        /* Click Hint */
         .click-hint {
             position: fixed;
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: rgba(0, 200, 255, 0.5);
-            font-size: 12px;
+            color: rgba(0, 200, 255, 0.4);
+            font-size: 11px;
             letter-spacing: 4px;
             text-transform: uppercase;
             animation: blinkHint 2s ease-in-out infinite;
-            font-weight: 300;
         }
-        @keyframes blinkHint {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        /* ============================================ */
-        /* VAULT - REVEALED STATE                      */
-        /* ============================================ */
+        @keyframes blinkHint { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
         
         .vault-container {
             position: fixed;
@@ -165,7 +138,7 @@
             z-index: 20;
             opacity: 0;
             pointer-events: none;
-            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             overflow-y: auto;
             background: rgba(5, 5, 8, 0.95);
             backdrop-filter: blur(20px);
@@ -175,10 +148,9 @@
             pointer-events: all;
         }
         
-        /* Vault Header */
         .vault-header {
-            padding: 20px 30px;
-            border-bottom: 1px solid rgba(0, 200, 255, 0.1);
+            padding: 16px 30px;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -188,138 +160,87 @@
             backdrop-filter: blur(20px);
             z-index: 30;
         }
-        .vault-header .logo {
-            display: flex;
-            align-items: center;
+        .vault-header .logo { display: flex; align-items: center; gap: 12px; }
+        .vault-header .logo svg { width: 28px; height: 28px; }
+        .vault-header .logo h1 { font-size: 16px; font-weight: 700; background: linear-gradient(135deg, #00d4ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .vault-header .close-btn { color: #9ca3af; cursor: pointer; font-size: 22px; transition: 0.3s; }
+        .vault-header .close-btn:hover { color: #ff4444; transform: rotate(90deg); }
+        
+        .vault-content { padding: 24px 30px; max-width: 1400px; margin: 0 auto; }
+        
+        .vault-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 12px;
+            margin-bottom: 24px;
         }
-        .vault-header .logo svg {
-            width: 32px;
-            height: 32px;
+        .vault-stat {
+            text-align: center;
+            padding: 12px;
+            background: rgba(10, 10, 30, 0.4);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 200, 255, 0.05);
         }
-        .vault-header .logo h1 {
-            font-size: 18px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00d4ff, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .vault-header .close-btn {
-            color: #9ca3af;
-            cursor: pointer;
-            font-size: 24px;
-            transition: 0.3s;
-        }
-        .vault-header .close-btn:hover {
-            color: #ff4444;
-            transform: rotate(90deg);
-        }
+        .vault-stat .number { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #00d4ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .vault-stat .label { font-size: 10px; color: #6b7280; margin-top: 2px; }
         
-        /* Vault Content */
-        .vault-content {
-            padding: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* Vault Grid */
         .vault-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
         }
         
         .vault-card {
-            background: rgba(10, 10, 30, 0.6);
-            border: 1px solid rgba(0, 200, 255, 0.08);
-            border-radius: 16px;
-            padding: 24px;
+            background: rgba(10, 10, 30, 0.5);
+            border: 1px solid rgba(0, 200, 255, 0.06);
+            border-radius: 14px;
+            padding: 20px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: default;
+            cursor: pointer;
         }
         .vault-card:hover {
             transform: translateY(-4px);
             border-color: rgba(0, 200, 255, 0.2);
             box-shadow: 0 20px 60px rgba(0, 200, 255, 0.05);
         }
-        .vault-card .icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-        .vault-card h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 6px;
-        }
-        .vault-card p {
-            font-size: 13px;
-            color: #9ca3af;
-            line-height: 1.6;
-        }
+        .vault-card .icon { font-size: 28px; margin-bottom: 8px; }
+        .vault-card h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+        .vault-card p { font-size: 12px; color: #9ca3af; line-height: 1.5; }
         .vault-card .badge {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
-            margin-top: 10px;
+            margin-top: 8px;
             background: rgba(0, 200, 255, 0.1);
             color: #00d4ff;
         }
+        .vault-card .badge.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+        .vault-card .badge.yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; }
+        .vault-card .badge.purple { background: rgba(168, 85, 247, 0.15); color: #a78bfa; }
+        .vault-card .badge.orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
         
-        /* Vault Stats */
-        .vault-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .vault-stat {
-            text-align: center;
-            padding: 15px;
-            background: rgba(10, 10, 30, 0.4);
-            border-radius: 12px;
-            border: 1px solid rgba(0, 200, 255, 0.05);
-        }
-        .vault-stat .number {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00d4ff, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .vault-stat .label {
-            font-size: 11px;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        
-        /* Hide scrollbar */
         .vault-container::-webkit-scrollbar { width: 4px; }
         .vault-container::-webkit-scrollbar-track { background: transparent; }
         .vault-container::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.3); border-radius: 4px; }
         
-        /* Responsive */
         @media (max-width: 768px) {
-            .third-eye { width: 140px; height: 140px; }
-            .eye-ring:nth-child(1) { width: 160px; height: 160px; }
-            .eye-ring:nth-child(2) { width: 190px; height: 190px; }
-            .eye-ring:nth-child(3) { width: 220px; height: 220px; }
-            .eye-ring:nth-child(4) { width: 250px; height: 250px; }
-            .vault-content { padding: 15px; }
+            .third-eye { width: 120px; height: 120px; }
+            .eye-ring:nth-child(1) { width: 140px; height: 140px; }
+            .eye-ring:nth-child(2) { width: 170px; height: 170px; }
+            .eye-ring:nth-child(3) { width: 200px; height: 200px; }
+            .eye-ring:nth-child(4) { width: 230px; height: 230px; }
+            .vault-content { padding: 12px 15px; }
             .vault-grid { grid-template-columns: 1fr; }
             .vault-stats { grid-template-columns: repeat(2, 1fr); }
-            .click-hint { font-size: 10px; bottom: 20px; }
+            .click-hint { font-size: 9px; bottom: 15px; }
         }
     </style>
 </head>
 <body>
 
-<!-- ============================================ -->
-<!-- BACKGROUND                                   -->
-<!-- ============================================ -->
 <div class="vault-bg"></div>
 <div id="grid-overlay"></div>
 <div class="data-stream"></div>
@@ -328,9 +249,6 @@
 <div class="data-stream"></div>
 <div class="data-stream"></div>
 
-<!-- ============================================ -->
-<!-- THIRD EYE - CLICK TO OPEN VAULT              -->
-<!-- ============================================ -->
 <div class="eye-container" id="eyeContainer" onclick="openVault()">
     <div class="third-eye">
         <div class="eye-ring"></div>
@@ -358,15 +276,9 @@
     </div>
 </div>
 
-<!-- Click Hint -->
 <div class="click-hint">◈ Click the Eye to Enter the Vault ◈</div>
 
-<!-- ============================================ -->
-<!-- VAULT - REVEALED ON CLICK                    -->
-<!-- ============================================ -->
 <div class="vault-container" id="vaultContainer">
-    
-    <!-- Vault Header -->
     <div class="vault-header">
         <div class="logo">
             <svg viewBox="0 0 100 100">
@@ -382,135 +294,195 @@
         <div class="close-btn" onclick="closeVault()">✕</div>
     </div>
     
-    <!-- Vault Content -->
     <div class="vault-content">
-        
-        <!-- Stats -->
         <div class="vault-stats">
-            <div class="vault-stat">
-                <div class="number">∞</div>
-                <div class="label">AI Intelligence</div>
-            </div>
-            <div class="vault-stat">
-                <div class="number">7</div>
-                <div class="label">Integrated Apps</div>
-            </div>
-            <div class="vault-stat">
-                <div class="number">24/7</div>
-                <div class="label">Autonomous</div>
-            </div>
-            <div class="vault-stat">
-                <div class="number">🔒</div>
-                <div class="label">Secure Vault</div>
-            </div>
+            <div class="vault-stat"><div class="number">∞</div><div class="label">AI Intelligence</div></div>
+            <div class="vault-stat"><div class="number">12</div><div class="label">Integrated Apps</div></div>
+            <div class="vault-stat"><div class="number">24/7</div><div class="label">Autonomous</div></div>
+            <div class="vault-stat"><div class="number">🔒</div><div class="label">Secure Vault</div></div>
         </div>
         
-        <!-- Apps Grid -->
-        <h2 style="font-size:20px; font-weight:600; margin-bottom:10px; color:#fff;">⚡ The Arsenal</h2>
-        <p style="color:#6b7280; font-size:14px; margin-bottom:20px;">Complete legal & business intelligence suite — all in one vault.</p>
+        <h2 style="font-size:18px; font-weight:600; color:#fff;">⚡ Complete Arsenal</h2>
+        <p style="color:#6b7280; font-size:13px; margin-bottom:16px;">All 12 apps — Legal, Markets, News, Reports, Scan, Lens, Compliance, Sports, Governance, Predict, Training, Surveillance.</p>
         
         <div class="vault-grid">
-            <div class="vault-card">
+            <!-- App 1: Legal Counsel -->
+            <div class="vault-card" onclick="navigateTo('chat')">
                 <div class="icon">⚖️</div>
                 <h3>Legal Counsel</h3>
-                <p>1000 AI agents · 20 verifiers · AI Judge v21.0 — full legal intelligence.</p>
-                <span class="badge">● Active</span>
+                <p>1000 AI agents · 20 verifiers · AI Judge v21.0 — full legal intelligence with real-time research.</p>
+                <span class="badge green">● Active</span>
             </div>
-            <div class="vault-card">
+            
+            <!-- App 2: Global Markets -->
+            <div class="vault-card" onclick="navigateTo('markets')">
                 <div class="icon">📊</div>
                 <h3>Global Markets</h3>
-                <p>Nasdaq · Dubai · FTSE · NIFTY · SENSEX · DAX · Nikkei · Shanghai.</p>
-                <span class="badge">● Live</span>
+                <p>Nasdaq · Dubai · FTSE · NIFTY · SENSEX · DAX · Nikkei · Shanghai — live tracking.</p>
+                <span class="badge green">● Live</span>
             </div>
-            <div class="vault-card">
+            
+            <!-- App 3: AI Reports -->
+            <div class="vault-card" onclick="navigateTo('reports')">
                 <div class="icon">📄</div>
                 <h3>AI Reports</h3>
-                <p>Daily AI-generated market reports with visual charts and PDF export.</p>
-                <span class="badge">● Generating</span>
+                <p>Daily AI-generated market reports with visual charts, analysis, and PDF export.</p>
+                <span class="badge purple">● Generating</span>
             </div>
-            <div class="vault-card">
+            
+            <!-- App 4: Compliance -->
+            <div class="vault-card" onclick="navigateTo('compliance')">
                 <div class="icon">🛡️</div>
                 <h3>Compliance</h3>
-                <p>GDPR · DPDPA · CCPA · HIPAA · ISO27001 — real-time monitoring.</p>
-                <span class="badge">● Scanning</span>
+                <p>GDPR · DPDPA · CCPA · HIPAA · ISO27001 — real-time monitoring and scanning.</p>
+                <span class="badge yellow">● Scanning</span>
             </div>
-            <div class="vault-card">
+            
+            <!-- App 5: Legal News -->
+            <div class="vault-card" onclick="navigateTo('news')">
                 <div class="icon">📰</div>
                 <h3>Legal News</h3>
-                <p>AI-curated legal and business news from 50+ global sources.</p>
-                <span class="badge">● Live Feed</span>
+                <p>AI-curated legal and business news from 50+ global sources — live feed.</p>
+                <span class="badge green">● Live Feed</span>
             </div>
-            <div class="vault-card">
-                <div class="icon">🧠</div>
-                <h3>Autonomous Training</h3>
-                <p>Self-learning AI that scrapes the web and trains continuously.</p>
-                <span class="badge">● Learning</span>
+            
+            <!-- App 6: Lens Scan -->
+            <div class="vault-card" onclick="navigateTo('lens')">
+                <div class="icon">👁️</div>
+                <h3>Lens Scan</h3>
+                <p>Website compliance scanning — GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act.</p>
+                <span class="badge purple">● Scanning</span>
             </div>
-            <div class="vault-card">
+            
+            <!-- App 7: Sports Law -->
+            <div class="vault-card" onclick="navigateTo('sports')">
+                <div class="icon">⚽</div>
+                <h3>Sports Law</h3>
+                <p>Player contracts · Anti-doping · League compliance · Sports governance.</p>
+                <span class="badge orange">● Active</span>
+            </div>
+            
+            <!-- App 8: Governance -->
+            <div class="vault-card" onclick="navigateTo('governance')">
+                <div class="icon">⚖️</div>
+                <h3>AI Governance</h3>
+                <p>Ethics framework · Policy generator · Risk assessment · Compliance engine.</p>
+                <span class="badge purple">● Active</span>
+            </div>
+            
+            <!-- App 9: Predictive AI -->
+            <div class="vault-card" onclick="navigateTo('predict')">
                 <div class="icon">🔮</div>
                 <h3>Predictive AI</h3>
-                <p>Case outcome prediction · Market forecasting · Risk analysis.</p>
-                <span class="badge">● Predictive</span>
+                <p>Case outcome prediction · Market forecasting · Risk analysis · Legal events.</p>
+                <span class="badge green">● Predictive</span>
             </div>
-            <div class="vault-card">
+            
+            <!-- App 10: Training -->
+            <div class="vault-card" onclick="navigateTo('train')">
+                <div class="icon">🧠</div>
+                <h3>Autonomous Training</h3>
+                <p>Self-learning AI that scrapes the web and trains continuously on legal data.</p>
+                <span class="badge yellow">● Learning</span>
+            </div>
+            
+            <!-- App 11: Surveillance -->
+            <div class="vault-card" onclick="navigateTo('surveillance')">
                 <div class="icon">🌍</div>
                 <h3>Global Surveillance</h3>
-                <p>Real-time intelligence monitoring across all domains.</p>
-                <span class="badge">● Active</span>
+                <p>Real-time intelligence monitoring across all domains — 24/7 active.</p>
+                <span class="badge green">● Active</span>
+            </div>
+            
+            <!-- App 12: Vedic Calendar -->
+            <div class="vault-card" onclick="navigateTo('calendar')">
+                <div class="icon">🕉️</div>
+                <h3>Vedic Calendar</h3>
+                <p>Panchang · Tithi · Nakshatra · Rahu Kaal · Muhurat · Sunrise/Sunset.</p>
+                <span class="badge orange">● Today</span>
             </div>
         </div>
         
-        <!-- Footer in Vault -->
-        <div style="margin-top:40px; padding-top:20px; border-top:1px solid rgba(0,200,255,0.05); text-align:center; color:#4b5563; font-size:11px;">
-            THE ADVOCACY · v22.0 · The Vault
+        <div style="margin-top:30px; padding-top:16px; border-top:1px solid rgba(0,200,255,0.05); text-align:center; color:#4b5563; font-size:10px;">
+            THE ADVOCACY · v23.0 · The Complete Vault
         </div>
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- JAVASCRIPT                                  -->
-<!-- ============================================ -->
 <script>
 // ============================================
 // VAULT CONTROLS
 // ============================================
 
 function openVault() {
-    const eye = document.getElementById('eyeContainer');
-    const vault = document.getElementById('vaultContainer');
-    
-    eye.classList.add('clicked');
-    vault.classList.add('open');
+    document.getElementById('eyeContainer').classList.add('clicked');
+    document.getElementById('vaultContainer').classList.add('open');
     document.body.style.overflow = 'hidden';
-    
-    // Play sound effect vibe (visual only)
     console.log('🔓 VAULT OPENED');
 }
 
 function closeVault() {
-    const eye = document.getElementById('eyeContainer');
-    const vault = document.getElementById('vaultContainer');
-    
-    eye.classList.remove('clicked');
-    vault.classList.remove('open');
+    document.getElementById('eyeContainer').classList.remove('clicked');
+    document.getElementById('vaultContainer').classList.remove('open');
     document.body.style.overflow = '';
-    
     console.log('🔒 VAULT CLOSED');
 }
 
-// Close vault with Escape key
+// Close with Escape
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeVault();
-    }
+    if (e.key === 'Escape') closeVault();
 });
 
 // ============================================
-// INIT
+// NAVIGATION - Opens apps within vault
 // ============================================
-console.log('👁️ THE ADVOCACY VAULT v22.0');
-console.log('🔮 Click the Third Eye to enter the Vault');
-</script>
 
+function navigateTo(app) {
+    // Close vault first
+    closeVault();
+    
+    // Navigate after short delay
+    setTimeout(() => {
+        // Map app names to page IDs
+        const pageMap = {
+            'chat': 'page-chat',
+            'markets': 'page-markets',
+            'reports': 'page-reports',
+            'compliance': 'page-compliance',
+            'news': 'page-news',
+            'lens': 'page-lens',
+            'sports': 'page-sports',
+            'governance': 'page-governance',
+            'predict': 'page-predict',
+            'train': 'page-train',
+            'surveillance': 'page-home',
+            'calendar': 'page-home'
+        };
+        
+        const pageId = pageMap[app] || 'page-home';
+        const page = document.getElementById(pageId);
+        if (page) {
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+            // Show target
+            page.classList.remove('hidden');
+            // Update nav
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll(`.nav-btn[data-page="${app}"]`).forEach(el => el.classList.add('active'));
+        }
+        
+        // Load page data
+        if (app === 'markets') { if (window.refreshMarkets) window.refreshMarkets(); }
+        if (app === 'reports') { if (window.generateReport) window.generateReport(); }
+        if (app === 'compliance') { if (window.refreshCompliance) window.refreshCompliance(); }
+        if (app === 'news') { if (window.refreshNews) window.refreshNews(); }
+        if (app === 'train') { if (window.getTrainingStatus) window.getTrainingStatus(); }
+        
+    }, 500);
+}
+
+console.log('👁️ THE ADVOCACY VAULT v23.0 - Complete');
+console.log('📦 12 Apps Ready');
+</script>
 </body>
 </html>
