@@ -1,6 +1,5 @@
 # ============================================
-# MARKET_INTELLIGENCE.PY - v21.0
-# Global Markets + AI Reports
+# MARKET_INTELLIGENCE.PY - ENHANCED REPORTS
 # ============================================
 
 import aiohttp
@@ -12,7 +11,11 @@ from typing import Dict, List, Any
 import logging
 import yfinance as yf
 import pandas as pd
-from bs4 import BeautifulSoup
+import base64
+from io import BytesIO
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 
 logger = logging.getLogger("unknown_verdict")
 
@@ -44,14 +47,6 @@ GLOBAL_INDEXES = {
         "currency": "USD",
         "exchange": "NYSE",
         "color": "#ffd93d"
-    },
-    "dubai": {
-        "symbol": "DFMGI",
-        "name": "Dubai Financial Market",
-        "country": "UAE",
-        "currency": "AED",
-        "exchange": "DFM",
-        "color": "#6bcb77"
     },
     "ftse": {
         "symbol": "^FTSE",
@@ -117,14 +112,12 @@ class MarketDataFetcher:
     async def fetch_all_markets(self) -> Dict:
         """Fetch all global indexes"""
         try:
-            # Try real data first
             data = await self._fetch_from_yfinance()
             if data:
                 return data
         except Exception as e:
             logger.warning(f"YFinance error: {e}")
         
-        # Fallback to mock data
         return self._generate_mock_data()
     
     async def _fetch_from_yfinance(self) -> Dict:
@@ -165,13 +158,12 @@ class MarketDataFetcher:
             return {}
     
     def _generate_mock_data(self) -> Dict:
-        """Generate realistic mock data (fallback)"""
+        """Generate realistic mock data"""
         data = {}
         base_prices = {
             "nasdaq": 18500,
             "sp500": 5500,
             "dow": 40000,
-            "dubai": 4500,
             "ftse": 8000,
             "nifty": 24500,
             "sensex": 81500,
@@ -207,20 +199,22 @@ class MarketDataFetcher:
 
 
 # ============================================
-# AI MARKET REPORT GENERATOR
+# AI MARKET REPORT GENERATOR - ENHANCED
 # ============================================
 
 class AIMarketReport:
-    """Generate AI-powered daily market reports"""
+    """Generate AI-powered daily market reports with visualizations"""
     
     def __init__(self):
         self.report_history = []
         self.last_report = None
     
     async def generate_daily_report(self, market_data: Dict) -> Dict:
-        """Generate daily market report with AI analysis"""
+        """Generate daily market report with AI analysis and charts"""
         
-        # Create report structure
+        # Generate base64 chart images
+        chart_images = await self._generate_charts(market_data)
+        
         report = {
             "date": datetime.now().strftime("%Y-%m-%d"),
             "time": "12:00 AM UTC",
@@ -231,9 +225,9 @@ class AIMarketReport:
             "sector_analysis": self._generate_sector_analysis(),
             "risk_assessment": self._generate_risk_assessment(market_data),
             "predictions": self._generate_predictions(market_data),
-            "visualizations": self._generate_visualizations(market_data),
-            "recommendations": self._generate_recommendations(market_data),
-            "visual_data": self._generate_visual_data(market_data)
+            "visual_data": self._generate_visual_data(market_data),
+            "chart_images": chart_images,  # Base64 encoded charts
+            "recommendations": self._generate_recommendations(market_data)
         }
         
         self.report_history.append(report)
@@ -241,10 +235,88 @@ class AIMarketReport:
         
         return report
     
+    async def _generate_charts(self, data: Dict) -> Dict:
+        """Generate chart images as base64"""
+        charts = {}
+        
+        try:
+            # 1. Performance Chart
+            names = []
+            changes = []
+            colors = []
+            
+            for key, val in data.items():
+                if val.get("change_percent") is not None:
+                    names.append(val["name"][:15])
+                    changes.append(val["change_percent"])
+                    colors.append(val.get("color", "#00d4ff"))
+            
+            if names and changes:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                bars = ax.barh(names, changes, color=colors)
+                
+                # Add value labels
+                for i, (bar, change) in enumerate(zip(bars, changes)):
+                    ax.text(change + (0.5 if change >= 0 else -0.5), i, 
+                           f"{change:+.2f}%", va='center', color='white', fontsize=10)
+                
+                ax.axvline(x=0, color='white', linestyle='-', linewidth=0.5, alpha=0.3)
+                ax.set_xlabel('Change (%)', color='white', fontsize=10)
+                ax.set_title('Global Market Performance', color='white', fontsize=14, fontweight='bold')
+                ax.set_facecolor('#0a0a0f')
+                fig.patch.set_facecolor('#0a0a0f')
+                ax.tick_params(colors='white', labelsize=9)
+                
+                # Save to base64
+                buf = BytesIO()
+                plt.tight_layout()
+                plt.savefig(buf, format='png', dpi=150, facecolor='#0a0a0f')
+                buf.seek(0)
+                charts["performance"] = base64.b64encode(buf.read()).decode('utf-8')
+                plt.close(fig)
+            
+            # 2. Market Trend Chart (30 days simulation)
+            if data:
+                fig, ax = plt.subplots(figsize=(10, 5))
+                
+                for key, val in list(data.items())[:5]:
+                    if val.get("price"):
+                        # Generate 30 days of mock data
+                        base_price = val["price"]
+                        prices = []
+                        for i in range(30):
+                            change = random.uniform(-0.02, 0.02) * base_price
+                            prices.append(base_price + change)
+                            base_price += change
+                        
+                        ax.plot(range(30), prices, label=val["name"][:12], 
+                               color=val.get("color", "#00d4ff"), linewidth=2)
+                
+                ax.set_xlabel('Days', color='white', fontsize=10)
+                ax.set_ylabel('Price', color='white', fontsize=10)
+                ax.set_title('30-Day Market Trend', color='white', fontsize=14, fontweight='bold')
+                ax.set_facecolor('#0a0a0f')
+                fig.patch.set_facecolor('#0a0a0f')
+                ax.tick_params(colors='white', labelsize=9)
+                ax.legend(loc='upper left', facecolor='#0a0a0f', edgecolor='white', labelcolor='white')
+                
+                buf = BytesIO()
+                plt.tight_layout()
+                plt.savefig(buf, format='png', dpi=150, facecolor='#0a0a0f')
+                buf.seek(0)
+                charts["trend"] = base64.b64encode(buf.read()).decode('utf-8')
+                plt.close(fig)
+            
+        except Exception as e:
+            logger.error(f"Chart generation error: {e}")
+            charts["error"] = str(e)
+        
+        return charts
+    
     def _generate_summary(self, data: Dict) -> str:
         """Generate AI market summary"""
-        total_change = sum([d["change_percent"] for d in data.values() if d.get("change_percent")])
-        avg_change = total_change / len(data)
+        total_change = sum([d.get("change_percent", 0) for d in data.values() if d.get("change_percent") is not None])
+        avg_change = total_change / len(data) if data else 0
         
         if avg_change > 0.5:
             trend = "bullish"
@@ -256,8 +328,14 @@ class AIMarketReport:
             trend = "consolidation"
             sentiment = "neutral"
         
-        top_gainer = max(data.values(), key=lambda x: x.get("change_percent", 0))
-        top_loser = min(data.values(), key=lambda x: x.get("change_percent", 0))
+        # Find top and bottom performers
+        valid_data = {k: v for k, v in data.items() if v.get("change_percent") is not None}
+        if valid_data:
+            top_gainer = max(valid_data.values(), key=lambda x: x.get("change_percent", 0))
+            top_loser = min(valid_data.values(), key=lambda x: x.get("change_percent", 0))
+        else:
+            top_gainer = {"name": "N/A", "change_percent": 0}
+            top_loser = {"name": "N/A", "change_percent": 0}
         
         summary = f"""
 📊 **Daily Market Summary** - {datetime.now().strftime('%B %d, %Y')}
@@ -266,9 +344,9 @@ class AIMarketReport:
 The global markets are showing a {trend} trend today. 
 Major indexes are trading {sentiment} with an average change of {avg_change:.2f}%.
 
-🏆 **Top Performer:** {top_gainer['name']} ({top_gainer['currency']}) +{top_gainer['change_percent']:.2f}%
+🏆 **Top Performer:** {top_gainer.get('name', 'N/A')} +{top_gainer.get('change_percent', 0):.2f}%
 
-📉 **Bottom Performer:** {top_loser['name']} ({top_loser['currency']}) {top_loser['change_percent']:.2f}%
+📉 **Bottom Performer:** {top_loser.get('name', 'N/A')} {top_loser.get('change_percent', 0):.2f}%
 
 💡 **Key Insights:**
 • Technology sector leading the gains
@@ -284,81 +362,53 @@ Major indexes are trading {sentiment} with an average change of {avg_change:.2f}
         return summary
     
     def _get_top_performers(self, data: Dict) -> List[Dict]:
-        """Get top 3 performers"""
-        sorted_data = sorted(data.values(), key=lambda x: x.get("change_percent", 0), reverse=True)
+        valid_data = {k: v for k, v in data.items() if v.get("change_percent") is not None}
+        sorted_data = sorted(valid_data.values(), key=lambda x: x.get("change_percent", 0), reverse=True)
         return sorted_data[:3]
     
     def _get_worst_performers(self, data: Dict) -> List[Dict]:
-        """Get bottom 3 performers"""
-        sorted_data = sorted(data.values(), key=lambda x: x.get("change_percent", 0))
+        valid_data = {k: v for k, v in data.items() if v.get("change_percent") is not None}
+        sorted_data = sorted(valid_data.values(), key=lambda x: x.get("change_percent", 0))
         return sorted_data[:3]
     
     def _generate_sector_analysis(self) -> Dict:
-        """Generate sector analysis"""
-        sectors = [
-            {"name": "Technology", "performance": random.uniform(-2, 3), "sentiment": "Positive"},
-            {"name": "Financials", "performance": random.uniform(-1.5, 2), "sentiment": "Neutral"},
-            {"name": "Healthcare", "performance": random.uniform(-1, 2.5), "sentiment": "Positive"},
-            {"name": "Energy", "performance": random.uniform(-3, 1.5), "sentiment": "Negative"},
-            {"name": "Real Estate", "performance": random.uniform(-2, 2), "sentiment": "Neutral"},
-            {"name": "Consumer", "performance": random.uniform(-1, 2), "sentiment": "Positive"}
-        ]
-        return {"sectors": sectors, "timestamp": datetime.now().isoformat()}
+        return {
+            "sectors": [
+                {"name": "Technology", "performance": random.uniform(-2, 3), "sentiment": "Positive"},
+                {"name": "Financials", "performance": random.uniform(-1.5, 2), "sentiment": "Neutral"},
+                {"name": "Healthcare", "performance": random.uniform(-1, 2.5), "sentiment": "Positive"},
+                {"name": "Energy", "performance": random.uniform(-3, 1.5), "sentiment": "Negative"},
+                {"name": "Real Estate", "performance": random.uniform(-2, 2), "sentiment": "Neutral"}
+            ]
+        }
     
     def _generate_risk_assessment(self, data: Dict) -> Dict:
-        """Generate risk assessment"""
-        volatilities = [abs(d.get("change_percent", 0)) for d in data.values()]
-        avg_volatility = sum(volatilities) / len(volatilities)
+        volatilities = [abs(d.get("change_percent", 0)) for d in data.values() if d.get("change_percent") is not None]
+        avg_volatility = sum(volatilities) / len(volatilities) if volatilities else 0
         
         risk_level = "Low" if avg_volatility < 0.5 else "Medium" if avg_volatility < 1 else "High"
         
         return {
             "level": risk_level,
             "score": avg_volatility,
-            "factors": [
-                "Global economic indicators",
-                "Central bank policies",
-                "Geopolitical tensions",
-                "Earnings season"
-            ],
-            "recommendations": [
-                "Diversify portfolio",
-                "Consider hedging strategies",
-                "Monitor key support levels"
-            ]
+            "factors": ["Global economic indicators", "Central bank policies", "Geopolitical tensions"],
+            "recommendations": ["Diversify portfolio", "Consider hedging strategies", "Monitor key support levels"]
         }
     
     def _generate_predictions(self, data: Dict) -> Dict:
-        """Generate AI predictions"""
         return {
             "short_term": random.choice(["Bullish", "Bearish", "Neutral"]),
             "mid_term": random.choice(["Bullish", "Bearish", "Neutral"]),
             "long_term": "Bullish",
-            "key_levels": {
-                "resistance": round(random.uniform(100, 200), 2),
-                "support": round(random.uniform(50, 150), 2)
-            },
+            "key_levels": {"resistance": round(random.uniform(100, 200), 2), "support": round(random.uniform(50, 150), 2)},
             "confidence": random.uniform(0.65, 0.95)
         }
     
-    def _generate_visualizations(self, data: Dict) -> Dict:
-        """Generate chart data for visualizations"""
-        return {
-            "chart_type": "line",
-            "data_points": [
-                {"label": key, "value": value["price"], "color": value["color"]}
-                for key, value in data.items()
-            ],
-            "timestamp": datetime.now().isoformat()
-        }
-    
     def _generate_visual_data(self, data: Dict) -> Dict:
-        """Generate mock chart data for frontend"""
-        # Generate 30 days of mock data for each index
         visual_data = {}
         for key, config in GLOBAL_INDEXES.items():
             if key in data:
-                base_price = data[key]["price"]
+                base_price = data[key].get("price", 10000)
                 prices = []
                 for i in range(30):
                     change = random.uniform(-0.03, 0.03) * base_price
@@ -373,16 +423,17 @@ Major indexes are trading {sentiment} with an average change of {avg_change:.2f}
         return visual_data
     
     def _generate_recommendations(self, data: Dict) -> List[str]:
-        """Generate trading recommendations"""
         recommendations = []
+        valid_data = {k: v for k, v in data.items() if v.get("change_percent") is not None}
         
-        top_gainer = max(data.values(), key=lambda x: x.get("change_percent", 0))
-        if top_gainer.get("change_percent", 0) > 1:
-            recommendations.append(f"Consider taking profits on {top_gainer['name']}")
-        
-        top_loser = min(data.values(), key=lambda x: x.get("change_percent", 0))
-        if top_loser.get("change_percent", 0) < -1:
-            recommendations.append(f"Consider buying the dip on {top_loser['name']}")
+        if valid_data:
+            top_gainer = max(valid_data.values(), key=lambda x: x.get("change_percent", 0))
+            top_loser = min(valid_data.values(), key=lambda x: x.get("change_percent", 0))
+            
+            if top_gainer.get("change_percent", 0) > 1:
+                recommendations.append(f"Consider taking profits on {top_gainer.get('name', 'N/A')}")
+            if top_loser.get("change_percent", 0) < -1:
+                recommendations.append(f"Consider buying the dip on {top_loser.get('name', 'N/A')}")
         
         recommendations.extend([
             "Maintain diversified portfolio",
@@ -390,25 +441,22 @@ Major indexes are trading {sentiment} with an average change of {avg_change:.2f}
             "Set stop-losses to protect gains"
         ])
         
-        return recommendations
+        return recommendations[:5]
     
     def get_latest_report(self) -> Dict:
-        """Get latest generated report"""
         return self.last_report or {"message": "No report generated yet"}
     
     def get_report_history(self, limit: int = 7) -> List[Dict]:
-        """Get report history"""
         return self.report_history[-limit:]
 
 
 # ============================================
-# REPORT STORAGE
+# EXPORTS
 # ============================================
 
 _report_instance = None
 
 def get_market_intelligence() -> Dict:
-    """Get market intelligence instance"""
     global _report_instance
     if _report_instance is None:
         _report_instance = {
@@ -418,17 +466,14 @@ def get_market_intelligence() -> Dict:
     return _report_instance
 
 async def generate_market_report() -> Dict:
-    """Generate full market report"""
     intelligence = get_market_intelligence()
     market_data = await intelligence["fetcher"].fetch_all_markets()
     report = await intelligence["reporter"].generate_daily_report(market_data)
     return report
 
 async def get_market_data() -> Dict:
-    """Get real-time market data"""
     intelligence = get_market_intelligence()
     return await intelligence["fetcher"].fetch_all_markets()
-
 
 __all__ = [
     'GLOBAL_INDEXES',
