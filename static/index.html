@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Legal & Business AI</title>
+    <title>THE ADVOCACY - AI Counsel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
             background: #0a0a0f;
             background-image: 
                 radial-gradient(ellipse at 20% 50%, rgba(10, 40, 80, 0.3) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(60, 10, 80, 0.2) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(0, 100, 200, 0.1) 0%, transparent 40%);
+                radial-gradient(ellipse at 80% 20%, rgba(60, 10, 80, 0.2) 0%, transparent 50%);
             min-height: 100vh;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             color: #ffffff;
             overflow-x: hidden;
         }
-
         .glass-nav {
             background: rgba(10, 10, 20, 0.85);
             backdrop-filter: blur(20px);
@@ -31,7 +28,6 @@
             right: 0;
             z-index: 100;
         }
-        
         .nav-btn {
             transition: all 0.3s ease;
             cursor: pointer;
@@ -43,7 +39,6 @@
         }
         .nav-btn:hover { color: #ffffff; background: rgba(59, 130, 246, 0.1); }
         .nav-btn.active { color: #60a5fa; background: rgba(59, 130, 246, 0.15); }
-        
         .card {
             background: rgba(17, 17, 34, 0.7);
             backdrop-filter: blur(10px);
@@ -54,23 +49,9 @@
         .card:hover {
             transform: translateY(-4px);
             border-color: rgba(59, 130, 246, 0.2);
-            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.08);
         }
-        
-        .role-card {
-            background: rgba(17, 17, 34, 0.5);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 14px;
-            transition: all 0.3s ease;
-        }
-        .role-card:hover {
-            border-color: rgba(59, 130, 246, 0.15);
-            transform: translateY(-2px);
-        }
-        
         .chat-message { animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        
         .typing-dots span {
             width: 8px;
             height: 8px;
@@ -82,49 +63,73 @@
         .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce-dot { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .badge { font-size: 9px; padding: 2px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
         .badge-live { background: rgba(34, 197, 94, 0.15); color: #4ade80; animation: pulse-live 2s infinite; }
         @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
         .footer-border { border-top: 1px solid rgba(255,255,255,0.04); }
         
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .role-icon {
-            width: 48px;
-            height: 48px;
+        /* Mode selector */
+        .mode-btn {
+            padding: 10px 16px;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.03);
+            color: #9ca3af;
         }
+        .mode-btn:hover { background: rgba(59, 130, 246, 0.1); color: #fff; }
+        .mode-btn.active {
+            border-color: #60a5fa;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+        .mode-btn i { font-size: 18px; display: block; margin-bottom: 4px; }
         
-        /* Task animation */
-        .task-complete {
-            animation: taskPulse 0.6s ease;
+        /* Upload area */
+        .upload-zone {
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        @keyframes taskPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); background: rgba(34, 197, 94, 0.1); }
-            100% { transform: scale(1); }
-        }
+        .upload-zone:hover { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
+        .upload-zone.dragover { border-color: #60a5fa; background: rgba(59, 130, 246, 0.1); }
+        
+        /* Message types */
+        .msg-text { border-left: 3px solid #60a5fa; }
+        .msg-doc { border-left: 3px solid #f59e0b; }
+        .msg-audio { border-left: 3px solid #10b981; }
+        .msg-video { border-left: 3px solid #ef4444; }
+        .msg-image { border-left: 3px solid #8b5cf6; }
         
         @media (max-width: 768px) {
             .glass-nav .flex { flex-wrap: wrap; }
             .nav-btn { font-size: 11px; padding: 6px 10px; }
+            .mode-btn { padding: 8px 12px; font-size: 11px; }
+            .mode-btn i { font-size: 14px; }
         }
+        
+        /* File preview */
+        .file-preview {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .file-preview .file-icon { font-size: 24px; }
+        .file-preview .file-info { flex: 1; }
+        .file-preview .file-info .name { font-size: 13px; font-weight: 500; }
+        .file-preview .file-info .size { font-size: 11px; color: #9ca3af; }
     </style>
 </head>
 <body>
@@ -139,21 +144,19 @@
                 <span class="text-2xl font-bold text-blue-400">⚖️</span>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-tight">THE ADVOCACY</h1>
-                    <span class="text-[10px] text-gray-500 tracking-wider">LEGAL & BUSINESS AI</span>
+                    <span class="text-[10px] text-gray-500 tracking-wider">AI COUNSEL</span>
                 </div>
                 <span class="badge badge-live">● Live</span>
             </div>
 
             <div class="hidden lg:flex items-center space-x-1 overflow-x-auto scrollbar-hide">
-                <button onclick="navigateTo('home')" class="nav-btn active" data-page="home"><i class="fas fa-home mr-1"></i>Home</button>
-                <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat"><i class="fas fa-gavel mr-1"></i>Counsel</button>
+                <button onclick="navigateTo('home')" class="nav-btn" data-page="home"><i class="fas fa-home mr-1"></i>Home</button>
+                <button onclick="navigateTo('chat')" class="nav-btn active" data-page="chat"><i class="fas fa-gavel mr-1"></i>Counsel</button>
                 <button onclick="navigateTo('services')" class="nav-btn" data-page="services"><i class="fas fa-briefcase mr-1"></i>Services</button>
                 <button onclick="navigateTo('compliance')" class="nav-btn" data-page="compliance"><i class="fas fa-shield-alt mr-1"></i>Compliance</button>
                 <button onclick="navigateTo('lens')" class="nav-btn" data-page="lens"><i class="fas fa-eye mr-1"></i>Lens</button>
                 <button onclick="navigateTo('markets')" class="nav-btn" data-page="markets"><i class="fas fa-chart-line mr-1"></i>Markets</button>
                 <button onclick="navigateTo('news')" class="nav-btn" data-page="news"><i class="fas fa-newspaper mr-1"></i>News</button>
-                <button onclick="navigateTo('trends')" class="nav-btn" data-page="trends"><i class="fas fa-rocket mr-1"></i>Trends</button>
-                <button onclick="navigateTo('tasks')" class="nav-btn" data-page="tasks"><i class="fas fa-tasks mr-1"></i>Tasks</button>
             </div>
 
             <div class="flex items-center space-x-3">
@@ -162,7 +165,6 @@
                 <button onclick="toggleMobileMenu()" class="lg:hidden text-gray-400 hover:text-white"><i class="fas fa-bars text-xl"></i></button>
             </div>
         </div>
-        
         <div id="mobileMenu" class="hidden lg:hidden mt-3 pt-3 border-t border-white/5 space-y-1">
             <button onclick="navigateTo('home')" class="nav-btn w-full text-left" data-page="home">🏠 Home</button>
             <button onclick="navigateTo('chat')" class="nav-btn w-full text-left" data-page="chat">⚖️ Counsel</button>
@@ -171,105 +173,152 @@
             <button onclick="navigateTo('lens')" class="nav-btn w-full text-left" data-page="lens">👁️ Lens</button>
             <button onclick="navigateTo('markets')" class="nav-btn w-full text-left" data-page="markets">📊 Markets</button>
             <button onclick="navigateTo('news')" class="nav-btn w-full text-left" data-page="news">📰 News</button>
-            <button onclick="navigateTo('trends')" class="nav-btn w-full text-left" data-page="trends">🚀 Trends</button>
-            <button onclick="navigateTo('tasks')" class="nav-btn w-full text-left" data-page="tasks">📋 Tasks</button>
         </div>
     </div>
 </nav>
 
 <!-- ============================================ -->
-<!-- MAIN CONTENT -->
+<!-- AI COUNSEL PAGE -->
 <!-- ============================================ -->
 <main class="container mx-auto px-4 pt-24 pb-12 relative z-10">
 
-    <!-- ===== HOME PAGE ===== -->
-    <div id="page-home" class="page-content">
-        <div class="text-center mb-10">
-            <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Legal & Business AI Intelligence</span>
-            </h2>
-            <p class="text-gray-400 text-sm mt-2">Full-service legal and business automation platform</p>
-        </div>
-
-        <!-- Stats - Clean, no backend numbers -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="role-card p-5 text-center">
-                <div class="stat-number" id="agentCount">∞</div>
-                <div class="text-xs text-gray-500 mt-1">AI Agents</div>
-                <div class="text-[10px] text-gray-600">Multi-role intelligence</div>
-            </div>
-            <div class="role-card p-5 text-center">
-                <div class="stat-number" id="docCount">∞</div>
-                <div class="text-xs text-gray-500 mt-1">Legal Domains</div>
-                <div class="text-[10px] text-gray-600">Full spectrum coverage</div>
-            </div>
-            <div class="role-card p-5 text-center">
-                <div class="stat-number" id="verifierCount">∞</div>
-                <div class="text-xs text-gray-500 mt-1">Quality Verifiers</div>
-                <div class="text-[10px] text-gray-600">Multi-layer validation</div>
-            </div>
-            <div class="role-card p-5 text-center">
-                <div class="stat-number" id="languageCount">∞</div>
-                <div class="text-xs text-gray-500 mt-1">Languages</div>
-                <div class="text-[10px] text-gray-600">Global reach</div>
-            </div>
-        </div>
-
-        <!-- Business Roles - What Unknown Actually Does -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="card p-5 text-center">
-                <div class="role-icon bg-blue-500/20 text-blue-400 mx-auto mb-3">⚖️</div>
-                <h3 class="font-bold text-white text-sm">Legal Counsel</h3>
-                <p class="text-gray-400 text-xs mt-1">Contract review, compliance, litigation support, legal research</p>
-            </div>
-            <div class="card p-5 text-center">
-                <div class="role-icon bg-green-500/20 text-green-400 mx-auto mb-3">👔</div>
-                <h3 class="font-bold text-white text-sm">CEO Advisory</h3>
-                <p class="text-gray-400 text-xs mt-1">Strategic planning, risk assessment, governance, policy development</p>
-            </div>
-            <div class="card p-5 text-center">
-                <div class="role-icon bg-purple-500/20 text-purple-400 mx-auto mb-3">📊</div>
-                <h3 class="font-bold text-white text-sm">COO Operations</h3>
-                <p class="text-gray-400 text-xs mt-1">Process optimization, compliance ops, workflow automation</p>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button onclick="navigateTo('chat')" class="card p-4 text-center text-white font-semibold bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/20"><i class="fas fa-gavel text-blue-400 text-xl block mb-1"></i>AI Counsel</button>
-            <button onclick="navigateTo('lens')" class="card p-4 text-center text-white font-semibold bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/20"><i class="fas fa-eye text-purple-400 text-xl block mb-1"></i>Lens Scan</button>
-            <button onclick="navigateTo('compliance')" class="card p-4 text-center text-white font-semibold bg-green-600/20 hover:bg-green-600/30 border-green-500/20"><i class="fas fa-shield-alt text-green-400 text-xl block mb-1"></i>Compliance</button>
-            <button onclick="navigateTo('tasks')" class="card p-4 text-center text-white font-semibold bg-orange-600/20 hover:bg-orange-600/30 border-orange-500/20"><i class="fas fa-tasks text-orange-400 text-xl block mb-1"></i>Business Tasks</button>
-        </div>
-    </div>
-
-    <!-- ===== CHAT PAGE ===== -->
-    <div id="page-chat" class="page-content hidden">
+    <div id="page-chat" class="page-content">
         <div class="card p-6">
+            <!-- Header -->
             <div class="flex items-center justify-between mb-4">
-                <div><h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-500">Legal & Business AI Assistant</p></div>
-                <span class="badge badge-live">● Online</span>
+                <div>
+                    <h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2>
+                    <p class="text-xs text-gray-500">Multi-modal legal & business intelligence</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-live">● Online</span>
+                    <span class="badge bg-blue-500/20 text-blue-400 text-[8px]">v15.0</span>
+                </div>
             </div>
 
-            <div id="chatMessages" class="h-[450px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4 scrollbar-hide">
-                <div class="text-center py-16 text-gray-500">
+            <!-- Mode Selector - ALL INPUT MODES -->
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+                <button onclick="setMode('text')" class="mode-btn active" data-mode="text">
+                    <i class="fas fa-font"></i>
+                    <span class="hidden md:inline">Text</span>
+                </button>
+                <button onclick="setMode('document')" class="mode-btn" data-mode="document">
+                    <i class="fas fa-file-pdf"></i>
+                    <span class="hidden md:inline">Document</span>
+                </button>
+                <button onclick="setMode('audio')" class="mode-btn" data-mode="audio">
+                    <i class="fas fa-microphone"></i>
+                    <span class="hidden md:inline">Audio</span>
+                </button>
+                <button onclick="setMode('video')" class="mode-btn" data-mode="video">
+                    <i class="fas fa-video"></i>
+                    <span class="hidden md:inline">Video</span>
+                </button>
+                <button onclick="setMode('image')" class="mode-btn" data-mode="image">
+                    <i class="fas fa-image"></i>
+                    <span class="hidden md:inline">Image</span>
+                </button>
+                <button onclick="setMode('scan')" class="mode-btn" data-mode="scan">
+                    <i class="fas fa-qrcode"></i>
+                    <span class="hidden md:inline">Scan</span>
+                </button>
+            </div>
+
+            <!-- Chat Messages Area -->
+            <div id="chatMessages" class="h-[400px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4 scrollbar-hide">
+                <div class="text-center py-16 text-gray-500" id="emptyState">
                     <i class="fas fa-gavel text-5xl text-gray-700 mb-4"></i>
-                    <p class="text-sm">Begin your consultation</p>
-                    <p class="text-xs text-gray-600 mt-1">Legal, business, compliance, and strategic advisory</p>
+                    <p class="text-sm">Start your consultation</p>
+                    <p class="text-xs text-gray-600 mt-1">Choose input mode and ask anything legal or business</p>
                     <div class="flex flex-wrap justify-center gap-2 mt-4">
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Contract Review</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Compliance</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Legal Drafting</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Strategy</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">📝 Text</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">📄 Docs</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">🎙️ Audio</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">🎬 Video</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">🖼️ Image</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask any legal or business question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
+            <!-- Input Area - Dynamic based on mode -->
+            <div id="inputArea">
+                <!-- TEXT MODE -->
+                <div id="mode-text" class="mode-input flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Ask any legal or business question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                    <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
+                </div>
+
+                <!-- DOCUMENT MODE -->
+                <div id="mode-document" class="mode-input hidden">
+                    <div class="upload-zone" id="docUploadZone" onclick="document.getElementById('docInput').click()">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-600 mb-2"></i>
+                        <p class="text-sm text-gray-400">Drop PDF, DOCX, or TXT here</p>
+                        <p class="text-xs text-gray-600">or click to browse</p>
+                        <input type="file" id="docInput" accept=".pdf,.docx,.doc,.txt" class="hidden" multiple>
+                    </div>
+                    <div id="docFileList" class="mt-2 space-y-1"></div>
+                    <div class="flex gap-2 mt-2">
+                        <input type="text" id="docQuery" placeholder="Ask about this document..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                        <button onclick="processDocuments()" class="bg-orange-600 hover:bg-orange-700 px-4 rounded-xl transition text-white text-sm"><i class="fas fa-file-alt mr-1"></i>Process</button>
+                    </div>
+                </div>
+
+                <!-- AUDIO MODE -->
+                <div id="mode-audio" class="mode-input hidden">
+                    <div class="flex gap-2 items-center">
+                        <button onclick="toggleRecording()" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl transition text-white" id="recordBtn">
+                            <i class="fas fa-microphone mr-2"></i>Record
+                        </button>
+                        <span id="recordingStatus" class="text-xs text-gray-400">Click to start recording</span>
+                        <div class="flex-1 flex gap-2">
+                            <input type="text" id="audioQuery" placeholder="Describe what you're recording..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                            <button onclick="processAudio()" class="bg-green-600 hover:bg-green-700 px-4 rounded-xl transition text-white text-sm"><i class="fas fa-waveform mr-1"></i>Process</button>
+                        </div>
+                    </div>
+                    <div id="audioStatus" class="mt-2 text-xs text-gray-500"></div>
+                </div>
+
+                <!-- VIDEO MODE -->
+                <div id="mode-video" class="mode-input hidden">
+                    <div class="upload-zone" id="videoUploadZone" onclick="document.getElementById('videoInput').click()">
+                        <i class="fas fa-video text-3xl text-gray-600 mb-2"></i>
+                        <p class="text-sm text-gray-400">Drop MP4, AVI, or MOV here</p>
+                        <p class="text-xs text-gray-600">or click to browse</p>
+                        <input type="file" id="videoInput" accept=".mp4,.avi,.mov,.webm" class="hidden">
+                    </div>
+                    <div id="videoFileList" class="mt-2"></div>
+                    <div class="flex gap-2 mt-2">
+                        <input type="text" id="videoQuery" placeholder="Ask about this video..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                        <button onclick="processVideo()" class="bg-purple-600 hover:bg-purple-700 px-4 rounded-xl transition text-white text-sm"><i class="fas fa-play mr-1"></i>Analyze</button>
+                    </div>
+                </div>
+
+                <!-- IMAGE MODE -->
+                <div id="mode-image" class="mode-input hidden">
+                    <div class="upload-zone" id="imageUploadZone" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-image text-3xl text-gray-600 mb-2"></i>
+                        <p class="text-sm text-gray-400">Drop JPG, PNG, or GIF here</p>
+                        <p class="text-xs text-gray-600">or click to browse</p>
+                        <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.gif,.webp" class="hidden" multiple>
+                    </div>
+                    <div id="imageFileList" class="mt-2 flex flex-wrap gap-2"></div>
+                    <div class="flex gap-2 mt-2">
+                        <input type="text" id="imageQuery" placeholder="Ask about this image..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                        <button onclick="processImages()" class="bg-pink-600 hover:bg-pink-700 px-4 rounded-xl transition text-white text-sm"><i class="fas fa-eye mr-1"></i>Analyze</button>
+                    </div>
+                </div>
+
+                <!-- SCAN MODE -->
+                <div id="mode-scan" class="mode-input hidden">
+                    <div class="flex gap-2">
+                        <input type="text" id="scanInput" placeholder="Scan QR code or enter URL..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                        <button onclick="processScan()" class="bg-cyan-600 hover:bg-cyan-700 px-6 rounded-xl transition text-white"><i class="fas fa-qrcode mr-2"></i>Scan</button>
+                    </div>
+                    <div id="scanResult" class="mt-2 text-xs text-gray-400"></div>
+                </div>
             </div>
 
+            <!-- Quick Prompts -->
             <div class="flex flex-wrap gap-2 mt-3">
                 <button onclick="quickPrompt('Draft a shareholder agreement')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Shareholder Agreement</button>
                 <button onclick="quickPrompt('Compliance checklist for startup')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Startup Compliance</button>
@@ -281,155 +330,6 @@
         </div>
     </div>
 
-    <!-- ===== SERVICES PAGE ===== -->
-    <div id="page-services" class="page-content hidden">
-        <div class="card p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">💼 Business & Legal Services</h2>
-            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-        </div>
-    </div>
-
-    <!-- ===== COMPLIANCE PAGE ===== -->
-    <div id="page-compliance" class="page-content hidden">
-        <div class="card p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold text-white">🛡️ Compliance Dashboard</h2>
-                <button onclick="refreshCompliance()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
-            </div>
-            <div id="complianceData" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4"></div>
-            <div class="bg-black/30 rounded-xl p-4 border border-white/5">
-                <h3 class="font-semibold text-yellow-400 text-sm">📋 Recommendations</h3>
-                <ul id="recommendationsList" class="mt-2 text-gray-300 text-sm space-y-1">
-                    <li class="text-gray-500">Loading...</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== LENS PAGE ===== -->
-    <div id="page-lens" class="page-content hidden">
-        <div class="card p-6">
-            <h2 class="text-xl font-bold text-white mb-4">👁️ Lens AI Scanning</h2>
-            <p class="text-xs text-gray-400 mb-4">Scan any website for IT laws, DPDPA, GDPR, and other compliance</p>
-            
-            <div class="flex gap-2 mb-4">
-                <input type="text" id="lensUrlInput" placeholder="Enter website URL (e.g., company.com)" class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm border border-white/5">
-                <button onclick="runLensScan()" class="bg-purple-600 hover:bg-purple-700 px-6 rounded-xl transition text-white font-semibold"><i class="fas fa-search mr-2"></i>Scan</button>
-            </div>
-
-            <div id="lensResults" class="space-y-4">
-                <div class="text-center text-gray-500 py-8">
-                    <i class="fas fa-eye text-4xl text-gray-700 mb-4"></i>
-                    <p>Enter a URL and click Scan</p>
-                    <p class="text-xs text-gray-600 mt-2">Checks: GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act</p>
-                </div>
-            </div>
-
-            <div class="mt-4 flex flex-wrap gap-2">
-                <button onclick="quickScan('theadvocacy.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Company Site</button>
-                <button onclick="quickScan('google.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Google</button>
-                <button onclick="quickScan('amazon.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Amazon</button>
-                <button onclick="quickScan('flipkart.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Flipkart</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== MARKETS PAGE ===== -->
-    <div id="page-markets" class="page-content hidden">
-        <div class="card p-6">
-            <h2 class="text-xl font-bold text-white mb-4">📊 Live Markets</h2>
-            <div id="marketData" class="space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- ===== NEWS PAGE ===== -->
-    <div id="page-news" class="page-content hidden">
-        <div class="card p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-white">📰 Legal & Business News</h2>
-                <button onclick="refreshNews()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
-            </div>
-            <div id="newsData" class="space-y-3"></div>
-        </div>
-    </div>
-
-    <!-- ===== TRENDS PAGE ===== -->
-    <div id="page-trends" class="page-content hidden">
-        <div class="card p-6">
-            <h2 class="text-xl font-bold text-white mb-4">🚀 AI & Business Trends</h2>
-            <div id="trendsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
-    </div>
-
-    <!-- ===== TASKS PAGE ===== -->
-    <div id="page-tasks" class="page-content hidden">
-        <div class="card p-6">
-            <h2 class="text-xl font-bold text-white mb-4">📋 Business Tasks</h2>
-            <p class="text-xs text-gray-400 mb-4">AI-powered business, legal, and operational tasks</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="role-card p-4 text-center">
-                    <div class="text-2xl text-blue-400 mb-2">👔</div>
-                    <h3 class="font-bold text-white text-sm">CEO Tasks</h3>
-                    <ul class="text-xs text-gray-400 mt-2 space-y-1 text-left">
-                        <li>• Strategic Planning</li>
-                        <li>• Board Presentations</li>
-                        <li>• Investor Updates</li>
-                        <li>• Policy Development</li>
-                        <li>• Risk Assessment</li>
-                    </ul>
-                </div>
-                <div class="role-card p-4 text-center">
-                    <div class="text-2xl text-green-400 mb-2">📊</div>
-                    <h3 class="font-bold text-white text-sm">COO Tasks</h3>
-                    <ul class="text-xs text-gray-400 mt-2 space-y-1 text-left">
-                        <li>• Process Optimization</li>
-                        <li>• Compliance Ops</li>
-                        <li>• Workflow Automation</li>
-                        <li>• Vendor Management</li>
-                        <li>• Quality Assurance</li>
-                    </ul>
-                </div>
-                <div class="role-card p-4 text-center">
-                    <div class="text-2xl text-purple-400 mb-2">⚖️</div>
-                    <h3 class="font-bold text-white text-sm">Legal Tasks</h3>
-                    <ul class="text-xs text-gray-400 mt-2 space-y-1 text-left">
-                        <li>• Contract Review</li>
-                        <li>• Compliance Checks</li>
-                        <li>• Legal Drafting</li>
-                        <li>• Due Diligence</li>
-                        <li>• Risk Analysis</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="bg-black/30 rounded-xl p-4 border border-white/5">
-                <h3 class="font-bold text-white text-sm mb-2">📝 Active Tasks</h3>
-                <div id="taskList" class="space-y-2">
-                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
-                        <span class="text-sm text-gray-300">Draft Shareholder Agreement</span>
-                        <span class="text-xs text-green-400">● In Progress</span>
-                    </div>
-                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
-                        <span class="text-sm text-gray-300">GDPR Compliance Check</span>
-                        <span class="text-xs text-yellow-400">● Pending</span>
-                    </div>
-                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
-                        <span class="text-sm text-gray-300">Board Meeting Agenda</span>
-                        <span class="text-xs text-blue-400">● Drafting</span>
-                    </div>
-                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
-                        <span class="text-sm text-gray-300">Risk Assessment Report</span>
-                        <span class="text-xs text-purple-400">● Analysis</span>
-                    </div>
-                </div>
-                <button onclick="addTask()" class="mt-3 text-xs bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-600/30 transition w-full">
-                    <i class="fas fa-plus mr-1"></i>Add New Task
-                </button>
-            </div>
-        </div>
-    </div>
-
 </main>
 
 <!-- ============================================ -->
@@ -437,8 +337,8 @@
 <!-- ============================================ -->
 <footer class="footer-border py-6 mt-8 relative z-10">
     <div class="container mx-auto px-4 text-center">
-        <p class="text-xs text-gray-600">© 2026 THE ADVOCACY – Legal & Business AI</p>
-        <p class="text-[10px] text-gray-700 mt-1">AI-powered legal intelligence · Business automation · Compliance management</p>
+        <p class="text-xs text-gray-600">© 2026 THE ADVOCACY – AI Counsel</p>
+        <p class="text-[10px] text-gray-700 mt-1">Multi-modal legal intelligence · Text · Documents · Audio · Video · Images · Scan</p>
     </div>
 </footer>
 
@@ -450,7 +350,13 @@
 // CONFIG
 // ============================================
 const API_BASE = window.location.origin;
-console.log('🚀 THE ADVOCACY - Legal & Business AI');
+let currentMode = 'text';
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let uploadedFiles = { docs: [], videos: [], images: [] };
+
+console.log('🚀 THE ADVOCACY - AI Counsel Multi-Modal');
 
 // ============================================
 // NAVIGATION
@@ -459,12 +365,9 @@ function navigateTo(page) {
     document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById(`page-${page}`);
     if (target) target.classList.remove('hidden');
-    
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     document.querySelectorAll(`.nav-btn[data-page="${page}"]`).forEach(el => el.classList.add('active'));
-    
     document.getElementById('mobileMenu').classList.add('hidden');
-    loadPageData(page);
 }
 
 function toggleMobileMenu() {
@@ -472,306 +375,96 @@ function toggleMobileMenu() {
 }
 
 // ============================================
-// LOAD PAGE DATA
+// MODE SELECTOR
 // ============================================
-function loadPageData(page) {
-    switch(page) {
-        case 'home': fetchMarketData(); break;
-        case 'services': fetchServices(); break;
-        case 'compliance': fetchComplianceData(); break;
-        case 'markets': fetchMarketData(); break;
-        case 'news': fetchNewsData(); break;
-        case 'trends': fetchTrendsData(); break;
-        default: break;
-    }
+function setMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+    document.querySelectorAll('.mode-input').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`mode-${mode}`).classList.remove('hidden');
+    console.log(`📌 Mode switched to: ${mode}`);
 }
 
 // ============================================
-// API FETCH FUNCTIONS
+// TEXT CHAT
 // ============================================
-
-async function fetchMarketData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/trading/indices`);
-        if (!res.ok) throw new Error('Market API error');
-        const data = await res.json();
-        if (Array.isArray(data)) {
-            const nifty = data.find(d => d.symbol === 'NIFTY');
-            const sensex = data.find(d => d.symbol === 'SENSEX');
-            const btc = data.find(d => d.symbol === 'BTC');
-            
-            if (nifty) {
-                document.getElementById('niftyPrice').textContent = nifty.price || '₹24,500.50';
-                const c = document.getElementById('niftyChange');
-                c.textContent = (nifty.change >= 0 ? '+' : '') + nifty.change + '%';
-                c.className = 'text-sm font-semibold ' + (nifty.change >= 0 ? 'text-green-400' : 'text-red-400');
-            }
-            if (sensex) {
-                document.getElementById('sensexPrice').textContent = sensex.price || '₹81,500.25';
-                const c = document.getElementById('sensexChange');
-                c.textContent = (sensex.change >= 0 ? '+' : '') + sensex.change + '%';
-                c.className = 'text-sm font-semibold ' + (sensex.change >= 0 ? 'text-green-400' : 'text-red-400');
-            }
-            if (btc) {
-                document.getElementById('btcPrice').textContent = btc.price || '$65,000.00';
-                const c = document.getElementById('btcChange');
-                c.textContent = (btc.change >= 0 ? '+' : '') + btc.change + '%';
-                c.className = 'text-sm font-semibold ' + (btc.change >= 0 ? 'text-green-400' : 'text-red-400');
-            }
-            
-            const marketDiv = document.getElementById('marketData');
-            if (marketDiv) {
-                marketDiv.innerHTML = data.map(d => `
-                    <div class="bg-black/30 p-4 rounded-xl flex justify-between items-center border border-white/5">
-                        <div><span class="font-bold text-white">${d.symbol}</span><span class="text-gray-500 text-xs ml-2">${d.name || ''}</span></div>
-                        <div class="text-right"><div class="font-bold text-white">${d.price}</div><div class="${d.change >= 0 ? 'text-green-400' : 'text-red-400'} text-sm">${d.change >= 0 ? '+' : ''}${d.change}%</div></div>
-                    </div>
-                `).join('');
-            }
-        }
-    } catch(e) { console.error('Market error:', e); }
-}
-
-async function fetchComplianceData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/compliance/snapshot`);
-        if (!res.ok) throw new Error('Compliance API error');
-        const data = await res.json();
-        
-        const div = document.getElementById('complianceData');
-        if (div && data.frameworks) {
-            div.innerHTML = data.frameworks.map(f => `
-                <div class="bg-black/30 p-4 rounded-xl text-center border border-white/5">
-                    <div class="text-xs text-gray-500">${f.name}</div>
-                    <div class="text-2xl font-bold ${f.score >= 80 ? 'text-green-400' : f.score >= 60 ? 'text-yellow-400' : 'text-red-400'}">${f.score}%</div>
-                    <div class="text-xs ${f.status === 'Compliant' ? 'text-green-400' : f.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400'}">${f.status}</div>
-                </div>
-            `).join('');
-        }
-        
-        const recList = document.getElementById('recommendationsList');
-        if (recList && data.recommendations) {
-            recList.innerHTML = data.recommendations.map(r => `<li class="text-gray-300">• ${r}</li>`).join('');
-        }
-    } catch(e) { console.error('Compliance error:', e); }
-}
-
-function refreshCompliance() {
-    document.getElementById('complianceData').innerHTML = `<div class="col-span-5 text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Scanning...</p></div>`;
-    setTimeout(fetchComplianceData, 1500);
-}
-
-async function fetchServices() {
-    const services = [
-        { icon: 'fa-gavel', name: 'Legal Intelligence', desc: 'Contract review, compliance, litigation support, legal research', color: 'text-blue-400' },
-        { icon: 'fa-building', name: 'Business Services', desc: 'Registration, Shareholder Agreements, SLAs, Employment', color: 'text-green-400' },
-        { icon: 'fa-shield-alt', name: 'AI Compliance', desc: 'DPDPA, GDPR, CCPA, IT Act, Risk Assessment', color: 'text-purple-400' },
-        { icon: 'fa-file-alt', name: 'Legal Notices', desc: 'Impressum, Legal Notices, DMCA, Privacy Policy', color: 'text-orange-400' },
-        { icon: 'fa-exclamation-triangle', name: 'Breach Response', desc: '72-hour detection, Notification, DPA Reporting', color: 'text-red-400' },
-        { icon: 'fa-tasks', name: 'Business Strategy', desc: 'Strategic planning, risk assessment, governance, policy', color: 'text-cyan-400' },
-        { icon: 'fa-heartbeat', name: 'Self-Healing', desc: 'Auto-diagnostics, Auto-resolution, Real-time monitoring', color: 'text-pink-400' },
-        { icon: 'fa-globe', name: 'Global Compliance', desc: 'DPDPA, GDPR, CCPA, IT Act, AI Governance', color: 'text-yellow-400' }
-    ];
-    const div = document.getElementById('servicesGrid');
-    if (div) {
-        div.innerHTML = services.map(s => `
-            <div class="bg-black/30 p-5 rounded-xl border border-white/5 hover:bg-black/40 transition">
-                <i class="fas ${s.icon} text-2xl ${s.color} mb-3"></i>
-                <h3 class="font-bold text-white text-sm">${s.name}</h3>
-                <p class="text-gray-400 text-xs mt-1">${s.desc}</p>
-            </div>
-        `).join('');
-    }
-}
-
-async function fetchNewsData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/news/real?limit=8`);
-        if (!res.ok) { const fallback = await fetch(`${API_BASE}/api/news?limit=6`); if (!fallback.ok) throw new Error('News API error'); const data = await fallback.json(); return renderNews(data.articles || data); }
-        const data = await res.json();
-        renderNews(data.articles || []);
-    } catch(e) { console.error('News error:', e); }
-}
-
-function renderNews(articles) {
-    const div = document.getElementById('newsData');
-    if (div && articles && articles.length) {
-        div.innerHTML = articles.map(n => `
-            <div class="bg-black/30 p-4 rounded-xl border border-white/5 hover:bg-black/40 transition">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1"><h3 class="font-semibold text-white text-sm">${n.title}</h3><p class="text-gray-400 text-xs mt-1">${n.summary || n.description || ''}</p></div>
-                    ${n.link ? `<a href="${n.link}" target="_blank" class="text-blue-400 hover:text-blue-300 ml-2"><i class="fas fa-external-link-alt text-xs"></i></a>` : ''}
-                </div>
-                <div class="flex justify-between mt-2 text-[10px] text-gray-600"><span>${n.source || 'News'}</span><span>${n.published || n.published_at || 'Today'}</span></div>
-            </div>
-        `).join('');
-    } else {
-        div.innerHTML = `<div class="text-center text-gray-500 py-8">No news available</div>`;
-    }
-}
-
-function refreshNews() {
-    document.getElementById('newsData').innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Loading...</p></div>`;
-    setTimeout(fetchNewsData, 500);
-}
-
-async function fetchTrendsData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/trends/ai`);
-        if (!res.ok) throw new Error('Trends API error');
-        const data = await res.json();
-        const div = document.getElementById('trendsData');
-        if (div && data.trends) {
-            div.innerHTML = data.trends.map(t => `
-                <div class="bg-black/30 p-4 rounded-xl border border-white/5">
-                    <div class="text-xs text-gray-500">${t.category || 'Trend'}</div>
-                    <div class="text-lg font-bold text-white mt-1">${t.title}</div>
-                    <div class="text-2xl font-bold text-blue-400">${t.value}</div>
-                    <div class="text-xs text-gray-400 mt-1">${t.description || ''}</div>
-                    ${t.growth ? `<div class="text-xs text-green-400 mt-1">📈 ${t.growth}</div>` : ''}
-                </div>
-            `).join('');
-        }
-    } catch(e) { console.error('Trends error:', e); }
-}
-
-// ============================================
-// LENS SCAN
-// ============================================
-
-async function runLensScan() {
-    const input = document.getElementById('lensUrlInput');
-    const url = input.value.trim();
-    if (!url) { alert('Please enter a website URL'); return; }
-    
-    const resultsDiv = document.getElementById('lensResults');
-    resultsDiv.innerHTML = `
-        <div class="text-center text-gray-400 py-8">
-            <i class="fas fa-spinner fa-spin text-3xl text-purple-400"></i>
-            <p class="mt-2">Scanning ${url} for compliance...</p>
-        </div>
-    `;
-    
-    try {
-        const res = await fetch(`${API_BASE}/api/compliance/scan`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url })
-        });
-        if (!res.ok) throw new Error('Scan API error');
-        const data = await res.json();
-        displayScanResults(data, url);
-    } catch(e) {
-        console.error('Scan error:', e);
-        const mockData = generateMockScan(url);
-        displayScanResults(mockData, url);
-    }
-}
-
-function displayScanResults(data, url) {
-    const div = document.getElementById('lensResults');
-    
-    let html = `
-        <div class="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-            <div class="flex items-center justify-between">
-                <div><h3 class="font-bold text-white">🔍 Scan Complete</h3><p class="text-xs text-gray-400">${url}</p></div>
-                <span class="badge bg-purple-500/20 text-purple-400">${data.overall_score || 75}%</span>
-            </div>
-    `;
-    
-    if (data.frameworks) {
-        html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">`;
-        for (const [name, details] of Object.entries(data.frameworks)) {
-            const score = details.score || 0;
-            const status = details.status || 'Unknown';
-            const color = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-yellow-400' : 'text-red-400';
-            const bgColor = score >= 80 ? 'bg-green-500/10' : score >= 60 ? 'bg-yellow-500/10' : 'bg-red-500/10';
-            html += `
-                <div class="${bgColor} p-3 rounded-lg border border-white/5">
-                    <div class="text-xs text-gray-400">${name}</div>
-                    <div class="text-xl font-bold ${color}">${score}%</div>
-                    <div class="text-xs ${color}">${status}</div>
-                </div>
-            `;
-        }
-        html += `</div>`;
-    }
-    
-    if (data.recommendations && data.recommendations.length) {
-        html += `<div class="mt-4 p-3 bg-black/30 rounded-lg"><h4 class="text-xs font-bold text-yellow-400">📋 Recommendations</h4><ul class="mt-1 text-xs text-gray-300 space-y-1">`;
-        data.recommendations.forEach(r => { html += `<li>• ${r}</li>`; });
-        html += `</ul></div>`;
-    }
-    
-    html += `<div class="mt-3 text-[10px] text-gray-600">Scanned: ${data.timestamp || new Date().toISOString()}</div>`;
-    html += `</div>`;
-    
-    div.innerHTML = html;
-}
-
-function generateMockScan(url) {
-    const frameworks = ['GDPR', 'DPDPA', 'CCPA', 'HIPAA', 'ISO27001', 'IT Act'];
-    const results = {};
-    let total = 0;
-    frameworks.forEach(f => {
-        const score = Math.floor(Math.random() * 40) + 60;
-        total += score;
-        const status = score >= 80 ? 'Compliant' : score >= 60 ? 'Partially Compliant' : 'Needs Attention';
-        results[f] = { score: score, status: status };
-    });
-    return {
-        url: url,
-        frameworks: results,
-        overall_score: Math.round(total / frameworks.length),
-        recommendations: ['Complete DPDPA implementation', 'Update privacy policy', 'Review IT Act compliance'],
-        timestamp: new Date().toISOString()
-    };
-}
-
-function quickScan(url) {
-    document.getElementById('lensUrlInput').value = url;
-    runLensScan();
-}
-
-// ============================================
-// CHAT FUNCTIONS
-// ============================================
-
 async function sendMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
     if (!message) return;
-    
-    const div = document.getElementById('chatMessages');
-    const emptyState = div.querySelector('.text-center');
-    if (emptyState) emptyState.remove();
-    
-    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-blue-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(message)}</div></div>`;
     input.value = '';
-    div.scrollTop = div.scrollHeight;
+    await processTextMessage(message);
+}
+
+function quickPrompt(text) {
+    if (currentMode === 'text') {
+        document.getElementById('chatInput').value = text;
+        sendMessage();
+    } else {
+        // Switch to text mode first
+        setMode('text');
+        setTimeout(() => {
+            document.getElementById('chatInput').value = text;
+            sendMessage();
+        }, 300);
+    }
+}
+
+async function processTextMessage(message, type = 'text', extra = '') {
+    const div = document.getElementById('chatMessages');
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    // User message
+    const iconMap = { 'text': 'fa-font', 'document': 'fa-file-pdf', 'audio': 'fa-microphone', 'video': 'fa-video', 'image': 'fa-image', 'scan': 'fa-qrcode' };
+    const colorMap = { 'text': 'border-blue-500', 'document': 'border-orange-500', 'audio': 'border-green-500', 'video': 'border-red-500', 'image': 'border-purple-500', 'scan': 'border-cyan-500' };
     
+    div.innerHTML += `
+        <div class="chat-message flex justify-end mb-3">
+            <div class="bg-blue-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm ${colorMap[type]} border-l-4">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fas ${iconMap[type]} text-xs opacity-60"></i>
+                    <span class="text-[10px] opacity-60">${type.toUpperCase()}</span>
+                </div>
+                ${message}
+                ${extra ? `<div class="text-[10px] text-blue-300 mt-1">${extra}</div>` : ''}
+            </div>
+        </div>
+    `;
+    div.scrollTop = div.scrollHeight;
+
+    // Typing indicator
     const typingId = 'typing-' + Date.now();
-    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI analyzing...</div></div></div>`;
+    div.innerHTML += `
+        <div id="${typingId}" class="chat-message flex justify-start mb-3">
+            <div class="bg-black/40 text-gray-300 p-4 rounded-xl">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <div class="text-xs text-gray-500 mt-1">⚖️ Analyzing ${type}...</div>
+            </div>
+        </div>
+    `;
     div.scrollTop = div.scrollHeight;
-    
+
     try {
         const res = await fetch(`${API_BASE}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, session_id: localStorage.getItem('sessionId') || 'default' })
+            body: JSON.stringify({ message, session_id: localStorage.getItem('sessionId') || 'default', type })
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         document.getElementById(typingId)?.remove();
-        
+
         div.innerHTML += `
             <div class="chat-message flex justify-start mb-3">
                 <div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-white/5">
                     <div class="text-xs text-purple-400 mb-1">⚖️ ${data.agent || 'AI Counsel'}</div>
-                    <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your query.')}</div>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your request.')}</div>
                     <div class="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-500">
                         ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents</span>` : ''}
                         ${data.confidence ? `<span class="text-green-400">✅ ${Math.round(data.confidence * 100)}% confidence</span>` : ''}
+                        ${data.knowledge_used ? `<span>📚 ${Array.isArray(data.knowledge_used) ? data.knowledge_used.join(', ') : data.knowledge_used}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -779,62 +472,172 @@ async function sendMessage() {
         div.scrollTop = div.scrollHeight;
     } catch(e) {
         document.getElementById(typingId)?.remove();
-        div.innerHTML += `<div class="chat-message flex justify-start mb-3"><div class="bg-red-900/30 text-red-400 p-3 rounded-xl text-sm border border-red-500/20">❌ ${e.message}</div></div>`;
+        div.innerHTML += `
+            <div class="chat-message flex justify-start mb-3">
+                <div class="bg-red-900/30 text-red-400 p-3 rounded-xl text-sm border border-red-500/20">❌ ${e.message}</div>
+            </div>
+        `;
         div.scrollTop = div.scrollHeight;
     }
 }
 
-function quickPrompt(text) {
-    document.getElementById('chatInput').value = text;
-    sendMessage();
+// ============================================
+// DOCUMENT HANDLING
+// ============================================
+document.getElementById('docInput')?.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const list = document.getElementById('docFileList');
+    list.innerHTML = '';
+    uploadedFiles.docs = files;
+    files.forEach(f => {
+        const size = (f.size / 1024).toFixed(1);
+        list.innerHTML += `
+            <div class="file-preview">
+                <i class="fas fa-file-pdf text-orange-400 file-icon"></i>
+                <div class="file-info"><div class="name">${f.name}</div><div class="size">${size} KB</div></div>
+                <span class="text-xs text-green-400">● Ready</span>
+            </div>
+        `;
+    });
+});
+
+async function processDocuments() {
+    const query = document.getElementById('docQuery').value.trim();
+    if (uploadedFiles.docs.length === 0) { alert('Please upload documents first'); return; }
+    const fileNames = uploadedFiles.docs.map(f => f.name).join(', ');
+    await processTextMessage(`📄 Processing documents: ${fileNames}${query ? '\n\nQuestion: ' + query : ''}`, 'document', `${uploadedFiles.docs.length} file(s)`);
+    document.getElementById('docQuery').value = '';
 }
 
+// ============================================
+// AUDIO HANDLING
+// ============================================
+async function toggleRecording() {
+    const btn = document.getElementById('recordBtn');
+    const status = document.getElementById('recordingStatus');
+    
+    if (!isRecording) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                document.getElementById('audioStatus').innerHTML = `
+                    <div class="file-preview">
+                        <i class="fas fa-microphone text-green-400 file-icon"></i>
+                        <div class="file-info"><div class="name">Recording.wav</div><div class="size">${(audioBlob.size / 1024).toFixed(1)} KB</div></div>
+                        <span class="text-xs text-green-400">● Recorded</span>
+                        <audio controls class="h-8 ml-2"><source src="${audioUrl}"></audio>
+                    </div>
+                `;
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            btn.innerHTML = '<i class="fas fa-stop mr-2"></i>Stop';
+            btn.className = 'bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl transition text-white animate-pulse';
+            status.textContent = '🔴 Recording...';
+        } catch(e) {
+            alert('Microphone access denied: ' + e.message);
+        }
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.innerHTML = '<i class="fas fa-microphone mr-2"></i>Record';
+        btn.className = 'bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl transition text-white';
+        status.textContent = '✅ Recording saved';
+    }
+}
+
+async function processAudio() {
+    const query = document.getElementById('audioQuery').value.trim();
+    if (!document.getElementById('audioStatus').innerHTML.includes('Recorded')) {
+        alert('Please record audio first');
+        return;
+    }
+    await processTextMessage(`🎙️ Audio recording${query ? '\n\nDescription: ' + query : ''}`, 'audio', 'Audio processed');
+    document.getElementById('audioQuery').value = '';
+}
+
+// ============================================
+// VIDEO HANDLING
+// ============================================
+document.getElementById('videoInput')?.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const list = document.getElementById('videoFileList');
+    list.innerHTML = '';
+    uploadedFiles.videos = files;
+    files.forEach(f => {
+        const size = (f.size / (1024 * 1024)).toFixed(1);
+        list.innerHTML += `
+            <div class="file-preview">
+                <i class="fas fa-video text-red-400 file-icon"></i>
+                <div class="file-info"><div class="name">${f.name}</div><div class="size">${size} MB</div></div>
+                <span class="text-xs text-green-400">● Ready</span>
+            </div>
+        `;
+    });
+});
+
+async function processVideo() {
+    const query = document.getElementById('videoQuery').value.trim();
+    if (uploadedFiles.videos.length === 0) { alert('Please upload a video first'); return; }
+    await processTextMessage(`🎬 Video analysis: ${uploadedFiles.videos.map(f => f.name).join(', ')}${query ? '\n\nQuestion: ' + query : ''}`, 'video', `${uploadedFiles.videos.length} file(s)`);
+    document.getElementById('videoQuery').value = '';
+}
+
+// ============================================
+// IMAGE HANDLING
+// ============================================
+document.getElementById('imageInput')?.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const list = document.getElementById('imageFileList');
+    list.innerHTML = '';
+    uploadedFiles.images = files;
+    files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            list.innerHTML += `
+                <div class="relative inline-block">
+                    <img src="${ev.target.result}" class="w-20 h-20 object-cover rounded-lg border border-white/10">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-[8px] text-center py-0.5 rounded-b-lg truncate px-1">${f.name}</div>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(f);
+    });
+});
+
+async function processImages() {
+    const query = document.getElementById('imageQuery').value.trim();
+    if (uploadedFiles.images.length === 0) { alert('Please upload images first'); return; }
+    await processTextMessage(`🖼️ Image analysis: ${uploadedFiles.images.map(f => f.name).join(', ')}${query ? '\n\nQuestion: ' + query : ''}`, 'image', `${uploadedFiles.images.length} image(s)`);
+    document.getElementById('imageQuery').value = '';
+}
+
+// ============================================
+// SCAN HANDLING
+// ============================================
+async function processScan() {
+    const input = document.getElementById('scanInput').value.trim();
+    if (!input) { alert('Please enter a URL or QR code'); return; }
+    document.getElementById('scanResult').textContent = '🔍 Scanning...';
+    await processTextMessage(`📱 Scan: ${input}`, 'scan', 'QR/URL scanned');
+    document.getElementById('scanInput').value = '';
+    document.getElementById('scanResult').textContent = '✅ Scan complete';
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 function escapeHtml(text) {
     const d = document.createElement('div');
     d.textContent = text;
     return d.innerHTML;
 }
 
-// ============================================
-// TASK FUNCTIONS
-// ============================================
-function addTask() {
-    const taskList = document.getElementById('taskList');
-    const tasks = [
-        'Review Q3 Financial Reports',
-        'Update Privacy Policy',
-        'Schedule Board Meeting',
-        'Complete Risk Assessment',
-        'Draft Compliance Report',
-        'Review Vendor Contracts',
-        'Prepare Investor Update',
-        'Conduct Employee Review'
-    ];
-    const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
-    const statuses = ['● In Progress', '● Pending', '● Drafting', '● Analysis', '● Review'];
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-    const colors = {'● In Progress': 'text-green-400', '● Pending': 'text-yellow-400', '● Drafting': 'text-blue-400', '● Analysis': 'text-purple-400', '● Review': 'text-orange-400'};
-    
-    const item = document.createElement('div');
-    item.className = 'flex items-center justify-between p-2 bg-gray-800/30 rounded task-complete';
-    item.innerHTML = `
-        <span class="text-sm text-gray-300">${randomTask}</span>
-        <span class="text-xs ${colors[randomStatus] || 'text-gray-400'}">${randomStatus}</span>
-    `;
-    taskList.appendChild(item);
-}
-
-// ============================================
-// KEYBOARD SHORTCUTS
-// ============================================
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.activeElement?.id === 'chatInput') { e.preventDefault(); sendMessage(); }
-    if (e.key === 'Enter' && document.activeElement?.id === 'lensUrlInput') { e.preventDefault(); runLensScan(); }
-});
-
-// ============================================
-// AUTH
-// ============================================
 function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('sessionId');
@@ -843,28 +646,52 @@ function handleLogout() {
 }
 
 // ============================================
+// DRAG AND DROP SUPPORT
+// ============================================
+document.querySelectorAll('.upload-zone').forEach(zone => {
+    zone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    zone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+    zone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        const input = this.querySelector('input[type="file"]');
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change'));
+    });
+});
+
+// ============================================
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ THE ADVOCACY - Legal & Business AI Ready');
-    navigateTo('home');
-    setInterval(fetchMarketData, 30000);
-    setInterval(fetchNewsData, 60000);
+    console.log('✅ AI Counsel Multi-Modal Ready');
+    setMode('text');
 });
 
 // ============================================
 // GLOBAL FUNCTIONS
 // ============================================
 window.navigateTo = navigateTo;
+window.setMode = setMode;
 window.sendMessage = sendMessage;
 window.quickPrompt = quickPrompt;
+window.processDocuments = processDocuments;
+window.toggleRecording = toggleRecording;
+window.processAudio = processAudio;
+window.processVideo = processVideo;
+window.processImages = processImages;
+window.processScan = processScan;
 window.handleLogout = handleLogout;
-window.runLensScan = runLensScan;
-window.quickScan = quickScan;
-window.refreshCompliance = refreshCompliance;
-window.refreshNews = refreshNews;
 window.toggleMobileMenu = toggleMobileMenu;
-window.addTask = addTask;
 </script>
 </body>
 </html>
