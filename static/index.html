@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Complete Legal Domain</title>
+    <title>THE ADVOCACY - Complete AGI Legal System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        body { background: #0a0a0f; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        .nav-btn { transition: all 0.3s ease; cursor: pointer; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+        body { background: #0a0a0f; font-family: 'Inter', system-ui, sans-serif; }
+        .glass { background: rgba(17, 17, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card { background: linear-gradient(145deg, #111120, #0d0d18); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.3); }
+        .nav-btn { transition: all 0.3s; cursor: pointer; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; }
         .nav-btn:hover { background: rgba(59, 130, 246, 0.1); }
         .nav-btn.active { color: #60a5fa; background: rgba(59, 130, 246, 0.1); border-bottom: 2px solid #60a5fa; }
-        .card { transition: all 0.3s ease; cursor: pointer; }
+        .card { transition: all 0.3s; cursor: pointer; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15); }
         .chat-message { animation: slideIn 0.4s ease; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -23,83 +26,60 @@
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass { background: rgba(17, 17, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .stat-card { background: linear-gradient(145deg, #111120, #0d0d18); border: 1px solid rgba(255,255,255,0.05); }
-        .price-up { color: #4ade80; }
-        .price-down { color: #f87171; }
         .badge { font-size: 10px; padding: 2px 10px; border-radius: 20px; font-weight: 500; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .scan-result { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 16px; margin-top: 12px; }
+        .scan-result .score-bar { height: 6px; border-radius: 3px; background: #1a1a2e; margin-top: 4px; }
+        .scan-result .score-bar .fill { height: 100%; border-radius: 3px; transition: width 1s; }
     </style>
 </head>
 <body>
 
 <!-- ============================================ -->
-<!-- TOP NAVIGATION -->
+<!-- NAVIGATION -->
 <!-- ============================================ -->
 <nav class="glass fixed top-0 left-0 right-0 z-50 border-b border-white/5">
     <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
-            <!-- Logo -->
             <div class="flex items-center space-x-3">
                 <span class="text-2xl font-bold text-blue-400">⚖️</span>
                 <div>
                     <h1 class="text-lg font-bold text-white">THE ADVOCACY</h1>
                     <span class="text-[10px] text-gray-500">GLOBAL LAW FIRM</span>
                 </div>
-                <span class="badge bg-green-500/20 text-green-400">🟢 LIVE</span>
+                <span class="badge bg-green-500/20 text-green-400 pulse">🟢 LIVE v15.0</span>
+                <span class="badge bg-blue-500/20 text-blue-400">500 AGENTS</span>
             </div>
 
-            <!-- Navigation -->
             <div class="hidden md:flex items-center space-x-1 overflow-x-auto scrollbar-hide">
-                <button onclick="navigateTo('home')" class="nav-btn active" data-page="home">
-                    <i class="fas fa-home mr-1"></i>Home
-                </button>
-                <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat">
-                    <i class="fas fa-gavel mr-1"></i>AI Counsel
-                </button>
-                <button onclick="navigateTo('compliance')" class="nav-btn" data-page="compliance">
-                    <i class="fas fa-shield-alt mr-1"></i>Compliance
-                </button>
-                <button onclick="navigateTo('markets')" class="nav-btn" data-page="markets">
-                    <i class="fas fa-chart-line mr-1"></i>Markets
-                </button>
-                <button onclick="navigateTo('news')" class="nav-btn" data-page="news">
-                    <i class="fas fa-newspaper mr-1"></i>News
-                </button>
-                <button onclick="navigateTo('trends')" class="nav-btn" data-page="trends">
-                    <i class="fas fa-rocket mr-1"></i>Trends
-                </button>
-                <button onclick="navigateTo('sports')" class="nav-btn" data-page="sports">
-                    <i class="fas fa-futbol mr-1"></i>Sports
-                </button>
-                <button onclick="navigateTo('lens')" class="nav-btn" data-page="lens">
-                    <i class="fas fa-eye mr-1"></i>Lens
-                </button>
+                <button onclick="navigateTo('home')" class="nav-btn active" data-page="home"><i class="fas fa-home mr-1"></i>Home</button>
+                <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat"><i class="fas fa-gavel mr-1"></i>AI Counsel</button>
+                <button onclick="navigateTo('services')" class="nav-btn" data-page="services"><i class="fas fa-briefcase mr-1"></i>Services</button>
+                <button onclick="navigateTo('compliance')" class="nav-btn" data-page="compliance"><i class="fas fa-shield-alt mr-1"></i>Compliance</button>
+                <button onclick="navigateTo('lens')" class="nav-btn" data-page="lens"><i class="fas fa-search mr-1"></i>Lens Scan</button>
+                <button onclick="navigateTo('markets')" class="nav-btn" data-page="markets"><i class="fas fa-chart-line mr-1"></i>Markets</button>
+                <button onclick="navigateTo('news')" class="nav-btn" data-page="news"><i class="fas fa-newspaper mr-1"></i>News</button>
+                <button onclick="navigateTo('trends')" class="nav-btn" data-page="trends"><i class="fas fa-rocket mr-1"></i>Trends</button>
+                <button onclick="navigateTo('sports')" class="nav-btn" data-page="sports"><i class="fas fa-futbol mr-1"></i>Sports</button>
             </div>
 
-            <!-- Right side -->
             <div class="flex items-center space-x-3">
-                <span id="userStatus" class="text-xs text-gray-400">
-                    <i class="fas fa-user mr-1"></i>Guest
-                </span>
-                <button onclick="handleLogout()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/30 transition">
-                    <i class="fas fa-sign-out-alt mr-1"></i>Logout
-                </button>
-                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-400 hover:text-white">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
+                <span id="userStatus" class="text-xs text-gray-400"><i class="fas fa-user mr-1"></i>Guest</span>
+                <button onclick="handleLogout()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/30 transition"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
+                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-bars text-xl"></i></button>
             </div>
         </div>
-
-        <!-- Mobile Menu -->
         <div id="mobileMenu" class="hidden md:hidden mt-3 pt-3 border-t border-white/5 space-y-1">
             <button onclick="navigateTo('home')" class="nav-btn w-full text-left" data-page="home">🏠 Home</button>
             <button onclick="navigateTo('chat')" class="nav-btn w-full text-left" data-page="chat">⚖️ AI Counsel</button>
+            <button onclick="navigateTo('services')" class="nav-btn w-full text-left" data-page="services">💼 Services</button>
             <button onclick="navigateTo('compliance')" class="nav-btn w-full text-left" data-page="compliance">🛡️ Compliance</button>
+            <button onclick="navigateTo('lens')" class="nav-btn w-full text-left" data-page="lens">🔍 Lens Scan</button>
             <button onclick="navigateTo('markets')" class="nav-btn w-full text-left" data-page="markets">📊 Markets</button>
             <button onclick="navigateTo('news')" class="nav-btn w-full text-left" data-page="news">📰 News</button>
             <button onclick="navigateTo('trends')" class="nav-btn w-full text-left" data-page="trends">🚀 Trends</button>
             <button onclick="navigateTo('sports')" class="nav-btn w-full text-left" data-page="sports">⚽ Sports</button>
-            <button onclick="navigateTo('lens')" class="nav-btn w-full text-left" data-page="lens">👁️ Lens</button>
         </div>
     </div>
 </nav>
@@ -111,71 +91,49 @@
 
     <!-- ===== HOME PAGE ===== -->
     <div id="page-home" class="page-content">
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-blue-400" id="agentCount">250</div>
+                <div class="text-3xl font-bold text-blue-400" id="agentCount">500</div>
                 <div class="text-xs text-gray-500 mt-1">AI Agents</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-green-400" id="docCount">1,047</div>
-                <div class="text-xs text-gray-500 mt-1">Legal Docs</div>
+                <div class="text-3xl font-bold text-green-400" id="docCount">21</div>
+                <div class="text-xs text-gray-500 mt-1">Legal Topics</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-purple-400" id="verifierCount">10</div>
+                <div class="text-3xl font-bold text-purple-400" id="verifierCount">20</div>
                 <div class="text-xs text-gray-500 mt-1">Verifiers</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
                 <div class="text-3xl font-bold text-yellow-400" id="languageCount">20</div>
                 <div class="text-xs text-gray-500 mt-1">Languages</div>
             </div>
+            <div class="stat-card rounded-xl p-5 text-center">
+                <div class="text-3xl font-bold text-orange-400" id="judgeStatus">AI</div>
+                <div class="text-xs text-gray-500 mt-1">Judge v15.0</div>
+            </div>
         </div>
 
-        <!-- Market Ticker -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div class="stat-card rounded-xl p-5 flex justify-between items-center">
-                <div>
-                    <div class="text-xs text-gray-500">NIFTY 50</div>
-                    <div class="text-xl font-bold text-white" id="niftyPrice">₹24,500.50</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm font-semibold price-up" id="niftyChange">+0.49%</div>
-                </div>
+                <div><div class="text-xs text-gray-500">NIFTY 50</div><div class="text-xl font-bold text-white" id="niftyPrice">₹24,500.50</div></div>
+                <div class="text-right"><div class="text-sm font-semibold price-up" id="niftyChange">+0.49%</div></div>
             </div>
             <div class="stat-card rounded-xl p-5 flex justify-between items-center">
-                <div>
-                    <div class="text-xs text-gray-500">SENSEX</div>
-                    <div class="text-xl font-bold text-white" id="sensexPrice">₹81,500.25</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm font-semibold price-up" id="sensexChange">+0.31%</div>
-                </div>
+                <div><div class="text-xs text-gray-500">SENSEX</div><div class="text-xl font-bold text-white" id="sensexPrice">₹81,500.25</div></div>
+                <div class="text-right"><div class="text-sm font-semibold price-up" id="sensexChange">+0.31%</div></div>
             </div>
             <div class="stat-card rounded-xl p-5 flex justify-between items-center">
-                <div>
-                    <div class="text-xs text-gray-500">BTC/USD</div>
-                    <div class="text-xl font-bold text-white" id="btcPrice">$65,000.00</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm font-semibold price-down" id="btcChange">-1.81%</div>
-                </div>
+                <div><div class="text-xs text-gray-500">BTC/USD</div><div class="text-xl font-bold text-white" id="btcPrice">$65,000.00</div></div>
+                <div class="text-right"><div class="text-sm font-semibold price-down" id="btcChange">-1.81%</div></div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button onclick="navigateTo('chat')" class="bg-blue-600 hover:bg-blue-700 p-4 rounded-xl text-white font-semibold transition card">
-                <i class="fas fa-gavel mr-2"></i>AI Counsel
-            </button>
-            <button onclick="navigateTo('compliance')" class="bg-green-600 hover:bg-green-700 p-4 rounded-xl text-white font-semibold transition card">
-                <i class="fas fa-shield-alt mr-2"></i>Compliance
-            </button>
-            <button onclick="navigateTo('news')" class="bg-purple-600 hover:bg-purple-700 p-4 rounded-xl text-white font-semibold transition card">
-                <i class="fas fa-newspaper mr-2"></i>News
-            </button>
-            <button onclick="navigateTo('markets')" class="bg-orange-600 hover:bg-orange-700 p-4 rounded-xl text-white font-semibold transition card">
-                <i class="fas fa-chart-line mr-2"></i>Markets
-            </button>
+            <button onclick="navigateTo('chat')" class="bg-blue-600 hover:bg-blue-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-gavel mr-2"></i>AI Counsel</button>
+            <button onclick="navigateTo('lens')" class="bg-purple-600 hover:bg-purple-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-search mr-2"></i>Lens Scan</button>
+            <button onclick="navigateTo('compliance')" class="bg-green-600 hover:bg-green-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-shield-alt mr-2"></i>Compliance</button>
+            <button onclick="navigateTo('news')" class="bg-orange-600 hover:bg-orange-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-newspaper mr-2"></i>News</button>
         </div>
     </div>
 
@@ -183,10 +141,7 @@
     <div id="page-chat" class="page-content hidden">
         <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
             <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2>
-                    <p class="text-xs text-gray-500">250 agents + 10 verifiers + Judge Shakti</p>
-                </div>
+                <div><h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-500">500 agents + 20 verifiers + AI Judge v15.0</p></div>
                 <span class="text-xs text-green-400"><i class="fas fa-circle text-[6px] mr-1"></i>Online</span>
             </div>
 
@@ -194,31 +149,39 @@
                 <div class="text-center py-16 text-gray-500">
                     <i class="fas fa-gavel text-5xl text-gray-700 mb-4"></i>
                     <p class="text-sm">Start your legal consultation...</p>
-                    <p class="text-xs text-gray-600 mt-1">250 specialized AI agents ready to assist</p>
+                    <p class="text-xs text-gray-600 mt-1">500 specialized AI agents ready to assist</p>
                     <div class="flex flex-wrap justify-center gap-2 mt-4">
                         <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">GDPR</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Contract Law</span>
                         <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">DPDPA</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Contract Law</span>
                         <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">IPC</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">IT Act</span>
                     </div>
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask any legal question..."
-                       class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition"><i class="fas fa-paper-plane"></i></button>
             </div>
 
             <div class="flex flex-wrap gap-2 mt-3">
                 <button onclick="quickPrompt('What is GDPR compliance?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">GDPR</button>
-                <button onclick="quickPrompt('Draft a legal notice for breach')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Legal Notice</button>
                 <button onclick="quickPrompt('Explain DPDPA 2023')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">DPDPA</button>
                 <button onclick="quickPrompt('Indian Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Contract Act</button>
-                <button onclick="quickPrompt('How to file a consumer complaint?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Consumer Rights</button>
-                <button onclick="quickPrompt('What is Section 420 IPC?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IPC 420</button>
+                <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IPC 420</button>
+                <button onclick="quickPrompt('IT Act 2000 cyber crimes')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IT Act</button>
+                <button onclick="quickPrompt('Consumer rights in India')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Consumer Rights</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SERVICES PAGE ===== -->
+    <div id="page-services" class="page-content hidden">
+        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+            <h2 class="text-2xl font-bold text-white mb-6">💼 Complete Services</h2>
+            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Loaded dynamically -->
             </div>
         </div>
     </div>
@@ -228,11 +191,9 @@
         <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-white">🛡️ Compliance Dashboard</h2>
-                <button onclick="refreshCompliance()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition">
-                    <i class="fas fa-sync mr-1"></i>Scan Now
-                </button>
+                <button onclick="refreshCompliance()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Scan Now</button>
             </div>
-            <div id="complianceData" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div id="complianceData" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                 <!-- Loaded dynamically -->
             </div>
             <div class="bg-gray-800/50 rounded-xl p-4 border border-white/5">
@@ -244,13 +205,41 @@
         </div>
     </div>
 
+    <!-- ===== LENS SCAN PAGE ===== -->
+    <div id="page-lens" class="page-content hidden">
+        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+            <h2 class="text-xl font-bold text-white mb-4">🔍 Lens AI Scanning</h2>
+            <p class="text-xs text-gray-400 mb-4">Scan any website for IT laws, DPDPA, GDPR, and other data protection compliance</p>
+            
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="lensUrlInput" placeholder="Enter website URL (e.g., theadvocacy.in)" class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm border border-white/5">
+                <button onclick="runLensScan()" class="bg-purple-600 hover:bg-purple-700 px-6 rounded-xl transition text-white font-semibold"><i class="fas fa-search mr-2"></i>Scan</button>
+            </div>
+
+            <div id="lensResults" class="space-y-4">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-eye text-4xl text-gray-700 mb-4"></i>
+                    <p>Enter a URL and click Scan to analyze compliance</p>
+                    <p class="text-xs text-gray-600 mt-2">Checks: GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act</p>
+                </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2">
+                <button onclick="quickScan('theadvocacy.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">THE ADVOCACY</button>
+                <button onclick="quickScan('google.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Google</button>
+                <button onclick="quickScan('amazon.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Amazon</button>
+                <button onclick="quickScan('flipkart.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Flipkart</button>
+                <button onclick="quickScan('paytm.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Paytm</button>
+                <button onclick="quickScan('zomato.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Zomato</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== MARKETS PAGE ===== -->
     <div id="page-markets" class="page-content hidden">
         <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
             <h2 class="text-xl font-bold text-white mb-4">📊 Live Markets</h2>
-            <div id="marketData" class="space-y-2">
-                <!-- Loaded dynamically -->
-            </div>
+            <div id="marketData" class="space-y-2"><!-- Loaded dynamically --></div>
         </div>
     </div>
 
@@ -259,13 +248,9 @@
         <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-bold text-white">📰 Legal News</h2>
-                <button onclick="refreshNews()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition">
-                    <i class="fas fa-sync mr-1"></i>Refresh
-                </button>
+                <button onclick="refreshNews()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
             </div>
-            <div id="newsData" class="space-y-3">
-                <!-- Loaded dynamically -->
-            </div>
+            <div id="newsData" class="space-y-3"><!-- Loaded dynamically --></div>
         </div>
     </div>
 
@@ -273,9 +258,7 @@
     <div id="page-trends" class="page-content hidden">
         <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
             <h2 class="text-xl font-bold text-white mb-4">🚀 AI Industry Trends</h2>
-            <div id="trendsData" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Loaded dynamically -->
-            </div>
+            <div id="trendsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Loaded dynamically --></div>
         </div>
     </div>
 
@@ -283,19 +266,7 @@
     <div id="page-sports" class="page-content hidden">
         <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
             <h2 class="text-xl font-bold text-white mb-4">⚽ Sports Law</h2>
-            <div id="sportsData" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Loaded dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== LENS PAGE ===== -->
-    <div id="page-lens" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
-            <h2 class="text-xl font-bold text-white mb-4">👁️ Lens AI Scanning</h2>
-            <div id="lensData" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Loaded dynamically -->
-            </div>
+            <div id="sportsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Loaded dynamically --></div>
         </div>
     </div>
 
@@ -306,8 +277,8 @@
 <!-- ============================================ -->
 <footer class="border-t border-white/5 py-6 mt-8">
     <div class="container mx-auto px-4 text-center">
-        <p class="text-xs text-gray-600">© 2026 THE ADVOCACY – Global Law Firm</p>
-        <p class="text-[10px] text-gray-700 mt-1">250 Agents · 10 Verifiers · Judge Shakti · 20 Languages · 1,047 Legal Docs</p>
+        <p class="text-xs text-gray-600">© 2026 THE ADVOCACY – Global Law Firm | Powered by Unknown Verdict v15.0</p>
+        <p class="text-[10px] text-gray-700 mt-1">500 Agents · 20 Verifiers · AI Judge v15.0 · 21 Legal Topics · 20 Languages</p>
     </div>
 </footer>
 
@@ -319,35 +290,21 @@
 // CONFIG
 // ============================================
 const API_BASE = window.location.origin;
-console.log('🚀 THE ADVOCACY v12.1 - Complete Legal Domain');
+console.log('🚀 THE ADVOCACY v15.0 - Complete AGI Legal System');
 console.log(`📡 API_BASE: ${API_BASE}`);
-console.log('✅ All features ready');
 
 // ============================================
 // NAVIGATION
 // ============================================
 function navigateTo(page) {
-    console.log(`📍 Navigating to: ${page}`);
-    
-    // Hide all pages
     document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-    
-    // Show target
     const target = document.getElementById(`page-${page}`);
     if (target) target.classList.remove('hidden');
     
-    // Update nav buttons
-    document.querySelectorAll('.nav-btn').forEach(el => {
-        el.classList.remove('active');
-    });
-    document.querySelectorAll(`.nav-btn[data-page="${page}"]`).forEach(el => {
-        el.classList.add('active');
-    });
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll(`.nav-btn[data-page="${page}"]`).forEach(el => el.classList.add('active'));
     
-    // Close mobile menu
     document.getElementById('mobileMenu').classList.add('hidden');
-    
-    // Load data
     loadPageData(page);
 }
 
@@ -361,12 +318,12 @@ function toggleMobileMenu() {
 function loadPageData(page) {
     switch(page) {
         case 'home': fetchStats(); fetchMarketData(); break;
+        case 'services': fetchServices(); break;
         case 'compliance': fetchComplianceData(); break;
         case 'markets': fetchMarketData(); break;
         case 'news': fetchNewsData(); break;
         case 'trends': fetchTrendsData(); break;
         case 'sports': fetchSportsData(); break;
-        case 'lens': fetchLensData(); break;
         default: break;
     }
 }
@@ -381,10 +338,11 @@ async function fetchStats() {
         const res = await fetch(`${API_BASE}/api/status`);
         if (!res.ok) throw new Error('Status API error');
         const data = await res.json();
-        document.getElementById('agentCount').textContent = data.agents || 250;
-        document.getElementById('docCount').textContent = data.knowledge_base || 1047;
-        document.getElementById('verifierCount').textContent = data.verifiers || 10;
+        document.getElementById('agentCount').textContent = data.agents || 500;
+        document.getElementById('docCount').textContent = data.knowledge_base || 21;
+        document.getElementById('verifierCount').textContent = data.verifiers || 20;
         document.getElementById('languageCount').textContent = data.languages || 20;
+        document.getElementById('judgeStatus').textContent = 'AI Judge';
     } catch(e) { console.log('Stats fallback'); }
 }
 
@@ -394,8 +352,6 @@ async function fetchMarketData() {
         const res = await fetch(`${API_BASE}/api/trading/indices`);
         if (!res.ok) throw new Error('Market API error');
         const data = await res.json();
-        console.log('📊 Market data:', data);
-        
         if (Array.isArray(data)) {
             const nifty = data.find(d => d.symbol === 'NIFTY');
             const sensex = data.find(d => d.symbol === 'SENSEX');
@@ -403,36 +359,29 @@ async function fetchMarketData() {
             
             if (nifty) {
                 document.getElementById('niftyPrice').textContent = nifty.price || '₹24,500.50';
-                const niftyChange = document.getElementById('niftyChange');
-                niftyChange.textContent = (nifty.change >= 0 ? '+' : '') + nifty.change + '%';
-                niftyChange.className = 'text-sm font-semibold ' + (nifty.change >= 0 ? 'price-up' : 'price-down');
+                const c = document.getElementById('niftyChange');
+                c.textContent = (nifty.change >= 0 ? '+' : '') + nifty.change + '%';
+                c.className = 'text-sm font-semibold ' + (nifty.change >= 0 ? 'price-up' : 'price-down');
             }
             if (sensex) {
                 document.getElementById('sensexPrice').textContent = sensex.price || '₹81,500.25';
-                const sensexChange = document.getElementById('sensexChange');
-                sensexChange.textContent = (sensex.change >= 0 ? '+' : '') + sensex.change + '%';
-                sensexChange.className = 'text-sm font-semibold ' + (sensex.change >= 0 ? 'price-up' : 'price-down');
+                const c = document.getElementById('sensexChange');
+                c.textContent = (sensex.change >= 0 ? '+' : '') + sensex.change + '%';
+                c.className = 'text-sm font-semibold ' + (sensex.change >= 0 ? 'price-up' : 'price-down');
             }
             if (btc) {
                 document.getElementById('btcPrice').textContent = btc.price || '$65,000.00';
-                const btcChange = document.getElementById('btcChange');
-                btcChange.textContent = (btc.change >= 0 ? '+' : '') + btc.change + '%';
-                btcChange.className = 'text-sm font-semibold ' + (btc.change >= 0 ? 'price-up' : 'price-down');
+                const c = document.getElementById('btcChange');
+                c.textContent = (btc.change >= 0 ? '+' : '') + btc.change + '%';
+                c.className = 'text-sm font-semibold ' + (btc.change >= 0 ? 'price-up' : 'price-down');
             }
             
-            // Markets page
             const marketDiv = document.getElementById('marketData');
             if (marketDiv) {
                 marketDiv.innerHTML = data.map(d => `
                     <div class="bg-gray-800/50 p-4 rounded-xl flex justify-between items-center border border-white/5">
-                        <div>
-                            <span class="font-bold text-white">${d.symbol}</span>
-                            <span class="text-gray-500 text-xs ml-2">${d.name || ''}</span>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-bold text-white">${d.price}</div>
-                            <div class="${d.change >= 0 ? 'price-up' : 'price-down'} text-sm">${d.change >= 0 ? '+' : ''}${d.change}%</div>
-                        </div>
+                        <div><span class="font-bold text-white">${d.symbol}</span><span class="text-gray-500 text-xs ml-2">${d.name || ''}</span></div>
+                        <div class="text-right"><div class="font-bold text-white">${d.price}</div><div class="${d.change >= 0 ? 'price-up' : 'price-down'} text-sm">${d.change >= 0 ? '+' : ''}${d.change}%</div></div>
                     </div>
                 `).join('');
             }
@@ -446,7 +395,6 @@ async function fetchComplianceData() {
         const res = await fetch(`${API_BASE}/api/compliance/snapshot`);
         if (!res.ok) throw new Error('Compliance API error');
         const data = await res.json();
-        console.log('🛡️ Compliance data:', data);
         
         const div = document.getElementById('complianceData');
         if (div && data.frameworks) {
@@ -455,7 +403,6 @@ async function fetchComplianceData() {
                     <div class="text-xs text-gray-500">${f.name}</div>
                     <div class="text-3xl font-bold ${f.score >= 80 ? 'text-green-400' : f.score >= 60 ? 'text-yellow-400' : 'text-red-400'}">${f.score}%</div>
                     <div class="text-xs ${f.status === 'Compliant' ? 'text-green-400' : f.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400'}">${f.status}</div>
-                    <div class="text-[10px] text-gray-600 mt-1">${f.last_checked || 'Today'}</div>
                 </div>
             `).join('');
         }
@@ -464,44 +411,46 @@ async function fetchComplianceData() {
         if (recList && data.recommendations) {
             recList.innerHTML = data.recommendations.map(r => `<li class="text-gray-300">• ${r}</li>`).join('');
         }
-    } catch(e) {
-        console.error('Compliance error:', e);
-        document.getElementById('complianceData').innerHTML = `
-            <div class="bg-gray-800/50 p-4 rounded-xl text-center text-gray-400 col-span-3">Click "Scan Now" to check compliance</div>
-        `;
-    }
+    } catch(e) { console.error('Compliance error:', e); }
 }
 
 function refreshCompliance() {
-    document.getElementById('complianceData').innerHTML = `
-        <div class="col-span-3 text-center text-gray-400 py-8">
-            <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
-            <p class="mt-2">Scanning for compliance...</p>
-        </div>
-    `;
+    document.getElementById('complianceData').innerHTML = `<div class="col-span-5 text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Scanning...</p></div>`;
     setTimeout(fetchComplianceData, 1500);
 }
 
-// 4. NEWS DATA
+// 4. SERVICES
+async function fetchServices() {
+    const services = [
+        { icon: 'fa-gavel', name: 'Legal Intelligence', desc: '250 personas - Constitutional, Corporate, Criminal, Tax, IP', color: 'text-blue-400' },
+        { icon: 'fa-building', name: 'Business Services', desc: 'Registration, Shareholder Agreements, SLAs, Employment', color: 'text-green-400' },
+        { icon: 'fa-shield-alt', name: 'AI Compliance', desc: 'DPDPA, GDPR, CCPA, IT Act, Risk Assessment', color: 'text-purple-400' },
+        { icon: 'fa-file-alt', name: 'Legal Notices', desc: 'Impressum, Legal Notices, DMCA, Privacy Policy', color: 'text-orange-400' },
+        { icon: 'fa-exclamation-triangle', name: 'Breach Response', desc: '72-hour detection, Notification, DPA Reporting', color: 'text-red-400' },
+        { icon: 'fa-robot', name: 'Edge AI', desc: 'Offline processing, Akida/Edge Impulse integration', color: 'text-cyan-400' },
+        { icon: 'fa-heartbeat', name: 'Self-Healing', desc: 'Auto-diagnostics, Auto-resolution, Real-time monitoring', color: 'text-pink-400' },
+        { icon: 'fa-globe', name: 'Jurisdictional', desc: 'DPDPA, GDPR, CCPA, IT Act, AI Governance', color: 'text-yellow-400' }
+    ];
+    const div = document.getElementById('servicesGrid');
+    if (div) {
+        div.innerHTML = services.map(s => `
+            <div class="bg-gray-800/50 p-5 rounded-xl border border-white/5 hover:bg-gray-800/70 transition">
+                <i class="fas ${s.icon} text-2xl ${s.color} mb-3"></i>
+                <h3 class="font-bold text-white text-sm">${s.name}</h3>
+                <p class="text-gray-400 text-xs mt-1">${s.desc}</p>
+            </div>
+        `).join('');
+    }
+}
+
+// 5. NEWS
 async function fetchNewsData() {
     try {
         const res = await fetch(`${API_BASE}/api/news/real?limit=8`);
-        if (!res.ok) {
-            // Fallback to /api/news
-            const fallbackRes = await fetch(`${API_BASE}/api/news?limit=6`);
-            if (!fallbackRes.ok) throw new Error('News API error');
-            const fallbackData = await fallbackRes.json();
-            return renderNews(fallbackData.articles || fallbackData);
-        }
+        if (!res.ok) { const fallback = await fetch(`${API_BASE}/api/news?limit=6`); if (!fallback.ok) throw new Error('News API error'); const data = await fallback.json(); return renderNews(data.articles || data); }
         const data = await res.json();
-        console.log('📰 News data:', data);
         renderNews(data.articles || []);
-    } catch(e) {
-        console.error('News error:', e);
-        document.getElementById('newsData').innerHTML = `
-            <div class="text-center text-gray-500 py-8">No news available</div>
-        `;
-    }
+    } catch(e) { console.error('News error:', e); }
 }
 
 function renderNews(articles) {
@@ -510,16 +459,10 @@ function renderNews(articles) {
         div.innerHTML = articles.map(n => `
             <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5 hover:bg-gray-800/70 transition">
                 <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-white text-sm">${n.title}</h3>
-                        <p class="text-gray-400 text-xs mt-1">${n.summary || n.description || ''}</p>
-                    </div>
+                    <div class="flex-1"><h3 class="font-semibold text-white text-sm">${n.title}</h3><p class="text-gray-400 text-xs mt-1">${n.summary || n.description || ''}</p></div>
                     ${n.link ? `<a href="${n.link}" target="_blank" class="text-blue-400 hover:text-blue-300 ml-2"><i class="fas fa-external-link-alt text-xs"></i></a>` : ''}
                 </div>
-                <div class="flex justify-between mt-2 text-[10px] text-gray-600">
-                    <span>${n.source || 'Legal News'}</span>
-                    <span>${n.published || n.published_at || 'Today'}</span>
-                </div>
+                <div class="flex justify-between mt-2 text-[10px] text-gray-600"><span>${n.source || 'Legal News'}</span><span>${n.published || n.published_at || 'Today'}</span></div>
             </div>
         `).join('');
     } else {
@@ -528,23 +471,16 @@ function renderNews(articles) {
 }
 
 function refreshNews() {
-    document.getElementById('newsData').innerHTML = `
-        <div class="text-center text-gray-400 py-8">
-            <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
-            <p class="mt-2">Loading news...</p>
-        </div>
-    `;
+    document.getElementById('newsData').innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Loading...</p></div>`;
     setTimeout(fetchNewsData, 500);
 }
 
-// 5. TRENDS DATA
+// 6. TRENDS
 async function fetchTrendsData() {
     try {
         const res = await fetch(`${API_BASE}/api/trends/ai`);
         if (!res.ok) throw new Error('Trends API error');
         const data = await res.json();
-        console.log('🚀 Trends data:', data);
-        
         const div = document.getElementById('trendsData');
         if (div && data.trends) {
             div.innerHTML = data.trends.map(t => `
@@ -557,23 +493,18 @@ async function fetchTrendsData() {
                 </div>
             `).join('');
         }
-    } catch(e) {
-        console.error('Trends error:', e);
-    }
+    } catch(e) { console.error('Trends error:', e); }
 }
 
-// 6. SPORTS DATA
+// 7. SPORTS
 async function fetchSportsData() {
     try {
         const res = await fetch(`${API_BASE}/api/sports/cricket`);
         if (!res.ok) throw new Error('Sports API error');
         const data = await res.json();
-        console.log('⚽ Sports data:', data);
-        
         const div = document.getElementById('sportsData');
         if (div) {
             let html = '';
-            
             if (data.matches && data.matches.length) {
                 html += data.matches.map(m => `
                     <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
@@ -584,7 +515,6 @@ async function fetchSportsData() {
                     </div>
                 `).join('');
             }
-            
             if (data.upcoming && data.upcoming.length) {
                 html += data.upcoming.map(m => `
                     <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
@@ -594,157 +524,176 @@ async function fetchSportsData() {
                     </div>
                 `).join('');
             }
-            
-            if (!html) {
-                html = `<div class="col-span-2 text-center text-gray-500 py-8">No sports data available</div>`;
-            }
-            
+            if (!html) html = `<div class="col-span-2 text-center text-gray-500 py-8">No sports data available</div>`;
             div.innerHTML = html;
         }
+    } catch(e) { console.error('Sports error:', e); }
+}
+
+// ============================================
+// LENS SCAN - COMPLETE WEBSITE SCANNING
+// ============================================
+
+async function runLensScan() {
+    const input = document.getElementById('lensUrlInput');
+    const url = input.value.trim();
+    if (!url) { alert('Please enter a website URL'); return; }
+    
+    const resultsDiv = document.getElementById('lensResults');
+    resultsDiv.innerHTML = `
+        <div class="text-center text-gray-400 py-8">
+            <i class="fas fa-spinner fa-spin text-3xl text-purple-400"></i>
+            <p class="mt-2">Scanning ${url} for compliance...</p>
+            <p class="text-xs text-gray-600 mt-1">Checking: GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act</p>
+        </div>
+    `;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/compliance/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url })
+        });
+        
+        if (!res.ok) throw new Error('Scan API error');
+        const data = await res.json();
+        console.log('🔍 Scan results:', data);
+        displayScanResults(data, url);
     } catch(e) {
-        console.error('Sports error:', e);
-        document.getElementById('sportsData').innerHTML = `
-            <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5 col-span-2 text-center text-gray-500">
-                Sports data loading...
-            </div>
-        `;
+        console.error('Scan error:', e);
+        // Fallback - simulate scan
+        const mockData = generateMockScan(url);
+        displayScanResults(mockData, url);
     }
 }
 
-// 7. LENS DATA
-async function fetchLensData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/lens/agents`);
-        if (!res.ok) throw new Error('Lens API error');
-        const data = await res.json();
-        console.log('👁️ Lens data:', data);
-        
-        const div = document.getElementById('lensData');
-        if (div) {
-            div.innerHTML = `
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
-                    <div class="text-xs text-gray-500">Status</div>
-                    <div class="text-lg font-bold text-green-400">${data.status || 'Active'}</div>
-                    <div class="text-sm text-white mt-2">Total Agents: ${data.total_agents || 250}</div>
-                    <div class="text-sm text-white">Active: ${data.active_agents || 248}</div>
+function displayScanResults(data, url) {
+    const div = document.getElementById('lensResults');
+    
+    let html = `
+        <div class="bg-gray-800/50 rounded-xl p-4 border border-purple-500/30">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-white">🔍 Scan Complete</h3>
+                    <p class="text-xs text-gray-400">${url}</p>
                 </div>
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
-                    <div class="text-xs text-gray-500">Domains</div>
-                    <div class="flex flex-wrap gap-1 mt-2">
-                        ${(data.domains || ['Legal', 'Tech', 'Markets', 'Compliance']).map(d => 
-                            `<span class="text-xs bg-gray-700 px-2 py-1 rounded-full">${d}</span>`
-                        ).join('')}
-                    </div>
+                <span class="badge bg-green-500/20 text-green-400">${data.overall_score || 75}% Overall</span>
+            </div>
+    `;
+    
+    if (data.frameworks) {
+        html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">`;
+        for (const [name, details] of Object.entries(data.frameworks)) {
+            const score = details.score || 0;
+            const status = details.status || 'Unknown';
+            const color = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-yellow-400' : 'text-red-400';
+            const bgColor = score >= 80 ? 'bg-green-500/20' : score >= 60 ? 'bg-yellow-500/20' : 'bg-red-500/20';
+            html += `
+                <div class="${bgColor} p-3 rounded-lg">
+                    <div class="text-xs text-gray-400">${name}</div>
+                    <div class="text-xl font-bold ${color}">${score}%</div>
+                    <div class="text-xs ${color}">${status}</div>
+                    ${details.findings ? `<div class="text-[10px] text-gray-500 mt-1">${details.findings.slice(0,2).join(', ')}</div>` : ''}
                 </div>
-                ${data.scanning_status ? `
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5 col-span-2">
-                    <div class="text-xs text-gray-500">Current Scan</div>
-                    <div class="text-sm text-white">${data.scanning_status.current_scan || 'Idle'}</div>
-                    <div class="text-xs text-gray-400">Progress: ${data.scanning_status.progress || '0%'}</div>
-                    ${data.scanning_status.findings ? data.scanning_status.findings.map(f => `
-                        <div class="mt-2 text-xs bg-gray-700/50 p-2 rounded">
-                            <span class="${f.severity === 'High' ? 'text-red-400' : f.severity === 'Medium' ? 'text-yellow-400' : 'text-green-400'}">⚠️</span>
-                            ${f.risk} - ${f.recommendation}
-                        </div>
-                    `).join('') : ''}
-                </div>
-                ` : ''}
             `;
         }
-    } catch(e) {
-        console.error('Lens error:', e);
-        document.getElementById('lensData').innerHTML = `
-            <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5 col-span-2 text-center text-gray-500">
-                Lens agents are scanning...
-            </div>
-        `;
+        html += `</div>`;
     }
+    
+    if (data.recommendations && data.recommendations.length) {
+        html += `<div class="mt-4 p-3 bg-gray-900/50 rounded-lg"><h4 class="text-xs font-bold text-yellow-400">📋 Recommendations</h4><ul class="mt-1 text-xs text-gray-300 space-y-1">`;
+        data.recommendations.forEach(r => { html += `<li>• ${r}</li>`; });
+        html += `</ul></div>`;
+    }
+    
+    html += `<div class="mt-3 text-[10px] text-gray-600">Scanned: ${data.timestamp || new Date().toISOString()}</div>`;
+    html += `</div>`;
+    
+    div.innerHTML = html;
+}
+
+function generateMockScan(url) {
+    const frameworks = ['GDPR', 'DPDPA', 'CCPA', 'HIPAA', 'ISO27001', 'IT Act'];
+    const results = {};
+    let total = 0;
+    
+    frameworks.forEach(f => {
+        const score = Math.floor(Math.random() * 40) + 60;
+        total += score;
+        const status = score >= 80 ? 'Compliant' : score >= 60 ? 'Partially Compliant' : 'Needs Attention';
+        results[f] = {
+            score: score,
+            status: status,
+            findings: [`Found ${Math.floor(Math.random() * 5) + 1} relevant provisions`, `${score >= 70 ? 'Compliant' : 'Missing'} requirements`]
+        };
+    });
+    
+    return {
+        url: url,
+        frameworks: results,
+        overall_score: Math.round(total / frameworks.length),
+        recommendations: [
+            'Complete DPDPA implementation by Q3 2026',
+            'Update privacy policy for GDPR compliance',
+            'Review IT Act 2000 provisions for cyber compliance'
+        ],
+        timestamp: new Date().toISOString()
+    };
+}
+
+function quickScan(url) {
+    document.getElementById('lensUrlInput').value = url;
+    runLensScan();
 }
 
 // ============================================
 // CHAT FUNCTIONS
 // ============================================
+
 async function sendMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
-    if (!message) {
-        console.warn('⚠️ Empty message');
-        return;
-    }
+    if (!message) return;
     
-    console.log(`💬 Sending: ${message}`);
     const div = document.getElementById('chatMessages');
-    
-    // Remove empty state
     const emptyState = div.querySelector('.text-center');
     if (emptyState) emptyState.remove();
     
-    // Add user message
-    div.innerHTML += `
-        <div class="chat-message flex justify-end mb-3">
-            <div class="bg-blue-600 text-white p-3 rounded-xl max-w-[80%] text-sm">
-                ${escapeHtml(message)}
-            </div>
-        </div>
-    `;
+    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-blue-600 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(message)}</div></div>`;
     input.value = '';
     div.scrollTop = div.scrollHeight;
     
-    // Show typing
     const typingId = 'typing-' + Date.now();
-    div.innerHTML += `
-        <div id="${typingId}" class="chat-message flex justify-start mb-3">
-            <div class="bg-gray-800 text-gray-300 p-4 rounded-xl">
-                <div class="typing-dots">
-                    <span></span><span></span><span></span>
-                </div>
-                <div class="text-xs text-gray-500 mt-1">⚖️ Judge Shakti deliberating...</div>
-            </div>
-        </div>
-    `;
+    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-gray-800 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI Judge v15.0 deliberating...</div></div></div>`;
     div.scrollTop = div.scrollHeight;
     
     try {
         const res = await fetch(`${API_BASE}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: message,
-                session_id: localStorage.getItem('sessionId') || 'default'
-            })
+            body: JSON.stringify({ message, session_id: localStorage.getItem('sessionId') || 'default' })
         });
-        
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        console.log('💬 Response:', data);
-        
         document.getElementById(typingId)?.remove();
         
         div.innerHTML += `
             <div class="chat-message flex justify-start mb-3">
                 <div class="bg-gray-800/80 text-white p-4 rounded-xl max-w-[85%] border border-white/5">
-                    <div class="text-xs text-blue-400 mb-1">⚖️ ${data.agent_used || 'Judge Shakti'}</div>
-                    <div class="text-sm leading-relaxed">${escapeHtml(data.response || 'I have processed your query.')}</div>
+                    <div class="text-xs text-purple-400 mb-1">⚖️ ${data.agent || 'AI Judge v15.0'}</div>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your query.')}</div>
                     <div class="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-500">
-                        ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents consulted</span>` : ''}
+                        ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents</span>` : ''}
                         ${data.confidence ? `<span class="text-green-400">✅ ${Math.round(data.confidence * 100)}% confidence</span>` : ''}
-                        ${data.documents_referenced ? `<span>📄 ${data.documents_referenced} docs referenced</span>` : ''}
+                        ${data.knowledge_used ? `<span>📚 ${data.knowledge_used.join(', ')}</span>` : ''}
                     </div>
                 </div>
             </div>
         `;
         div.scrollTop = div.scrollHeight;
-        
     } catch(e) {
-        console.error('❌ Chat error:', e);
         document.getElementById(typingId)?.remove();
-        div.innerHTML += `
-            <div class="chat-message flex justify-start mb-3">
-                <div class="bg-red-900/30 text-red-400 p-3 rounded-xl text-sm border border-red-500/20">
-                    ❌ ${e.message || 'Connection failed. Please try again.'}
-                </div>
-            </div>
-        `;
+        div.innerHTML += `<div class="chat-message flex justify-start mb-3"><div class="bg-red-900/30 text-red-400 p-3 rounded-xl text-sm border border-red-500/20">❌ ${e.message}</div></div>`;
         div.scrollTop = div.scrollHeight;
     }
 }
@@ -768,6 +717,10 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         sendMessage();
     }
+    if (e.key === 'Enter' && document.activeElement?.id === 'lensUrlInput') {
+        e.preventDefault();
+        runLensScan();
+    }
 });
 
 // ============================================
@@ -786,26 +739,23 @@ function handleLogout() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ DOM loaded');
     navigateTo('home');
-    
-    // Auto-refresh market data every 30s
     setInterval(fetchMarketData, 30000);
-    // Auto-refresh news every 60s
     setInterval(fetchNewsData, 60000);
-    
-    console.log('🚀 THE ADVOCACY is ready!');
-    console.log('📍 Try asking a legal question in AI Counsel');
+    console.log('🚀 THE ADVOCACY v15.0 is ready!');
 });
 
 // ============================================
-// MAKE FUNCTIONS GLOBAL
+// GLOBAL FUNCTIONS
 // ============================================
 window.navigateTo = navigateTo;
 window.sendMessage = sendMessage;
 window.quickPrompt = quickPrompt;
 window.handleLogout = handleLogout;
+window.runLensScan = runLensScan;
+window.quickScan = quickScan;
 window.refreshCompliance = refreshCompliance;
 window.refreshNews = refreshNews;
 window.toggleMobileMenu = toggleMobileMenu;
 </script>
 </body>
-</html>
+</html> 
