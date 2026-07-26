@@ -1,36 +1,60 @@
 # ============================================
-# ROUTES.PY - CLEAN VERSION (NO CIRCULAR IMPORTS)
+# ROUTES.PY - COMPLETE WITH ALL ENDPOINTS
 # ============================================
 
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
+from typing import Optional, List, Dict, Any
 import logging
+import json
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncpg
+import jwt
+from passlib.context import CryptContext
+import uuid
+import asyncio
 
 # Create router
 router = APIRouter()
+
+# Logger
 logger = logging.getLogger("unknown_verdict")
 
 # Import core
 from core import get_engine
 
+# Import config
+from config import DATABASE_URL, JWT_SECRET
+
+# Password context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 # ============================================
 # DATABASE FUNCTIONS
 # ============================================
 
+async def get_db_connection():
+    """Get database connection"""
+    try:
+        if not DATABASE_URL:
+            return None
+        return await asyncpg.connect(DATABASE_URL)
+    except Exception as e:
+        logger.error(f"Database connection error: {e}")
+        return None
+
 async def init_database():
     """Initialize database"""
     try:
-        from config import DATABASE_URL
         if not DATABASE_URL:
+            logger.warning("⚠️ No DATABASE_URL")
             return False
         
         conn = await asyncpg.connect(DATABASE_URL)
         
-        # Create all tables
+        # Users table
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -42,6 +66,7 @@ async def init_database():
             )
         """)
         
+        # Sessions table
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id SERIAL PRIMARY KEY,
@@ -52,6 +77,7 @@ async def init_database():
             )
         """)
         
+        # Chat history
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id SERIAL PRIMARY KEY,
@@ -71,45 +97,134 @@ async def init_database():
         return False
 
 # ============================================
-# MAIN ENDPOINTS
+# AUTHENTICATION FUNCTIONS
 # ============================================
 
-@router.get("/")
-async def root():
-    try:
-        if os.path.exists("static/index.html"):
-            return FileResponse("static/index.html")
-        return {"message": "Unknown Verdict v12.1"}
-    except:
-        return {"message": "Unknown Verdict v12.1"}
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
-@router.get("/api/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "version": "12.1",
-        "agents": 250,
-        "verifiers": 10,
-        "timestamp": datetime.now().isoformat()
-    }
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
 
-@router.get("/api/status")
-async def system_status():
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=7)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm="HS256")
+    return encoded_jwt
+
+async def get_current_user(token: str):
     try:
-        engine = get_engine()
-        status = engine.get_status() if hasattr(engine, 'get_status') else {}
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+        return {"id": user_id, "username": payload.get("username")}
+    except jwt.PyJWTError:
+        return None
+
+# ============================================
+# AUTH ENDPOINTS
+# ============================================
+
+@router.post("/api/register")
+async def register_user(request: Request):
+    try:
+        data = await request.json()
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
+        full_name = data.get("full_name")
+        
+        if not username or not email or not password:
+            raise HTTPException(status_code=400, detail="Missing required fields")
+        
+        conn = await get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Database unavailable")
+        
+        existing = await conn.fetchrow(
+            "SELECT id FROM users WHERE username = $1 OR email = $2",
+            username, email
+        )
+        if existing:
+            await conn.close()
+            raise HTTPException(status_code=400, detail="Username or email already registered")
+        
+        hashed = get_password_hash(password)
+        result = await conn.fetchrow(
+            "INSERT INTO users (username, email, hashed_password, full_name) VALUES ($1, $2, $3, $4) RETURNING id",
+            username, email, hashed, full_name
+        )
+        
+        await conn.close()
+        
         return {
-            "status": "online",
-            "version": "12.1",
-            "agents": status.get("agents", 250),
-            "verifiers": status.get("verifiers", 10),
-            "knowledge_base": status.get("knowledge_base", 1047),
-            "languages": status.get("languages", 20),
-            "judge": status.get("judge", "Judge Shakti"),
-            "timestamp": datetime.now().isoformat()
+            "status": "success",
+            "message": "User registered successfully",
+            "user_id": result["id"]
         }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": str(e)}
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/api/login")
+async def login_user(request: Request):
+    try:
+        data = await request.json()
+        username = data.get("username")
+        password = data.get("password")
+        
+        if not username or not password:
+            raise HTTPException(status_code=400, detail="Missing credentials")
+        
+        conn = await get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Database unavailable")
+        
+        user = await conn.fetchrow(
+            "SELECT id, username, email, hashed_password FROM users WHERE username = $1 OR email = $1",
+            username
+        )
+        
+        if not user:
+            await conn.close()
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        if not verify_password(password, user["hashed_password"]):
+            await conn.close()
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        token = create_access_token({"sub": str(user["id"]), "username": user["username"]})
+        
+        await conn.execute(
+            "INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)",
+            user["id"], token, datetime.utcnow() + timedelta(days=7)
+        )
+        
+        await conn.close()
+        
+        return {
+            "status": "success",
+            "token": token,
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================
 # CHAT ENDPOINT
@@ -123,22 +238,21 @@ async def chat_endpoint(request: Request):
         session_id = data.get("session_id", "default")
         
         if not message:
-            return JSONResponse({"error": "Message required"}, status_code=400)
+            return JSONResponse({"error": "Message is required"}, status_code=400)
         
         engine = get_engine()
         
         if hasattr(engine, 'process_message'):
             response = await engine.process_message(message, session_id)
         else:
-            # Fallback response with real legal knowledge
             responses = [
-                f"As your AI legal counsel, I've analyzed your query about '{message}'. Based on my consultation with 250 specialized agents, I recommend the following legal approach...",
+                f"As your AI legal counsel, I've analyzed your query about '{message}'. Based on my consultation with specialized agents, I recommend the following legal approach...",
                 f"After careful consideration of legal principles and case law, here's my analysis of your query: '{message}'...",
-                f"Drawing on my expertise in Indian law and consultation with 10 verifiers, I find that your question about '{message}' requires attention to the following legal aspects..."
+                f"Drawing on my expertise in Indian law and consultation with verifiers, I find that your question about '{message}' requires attention to the following legal aspects..."
             ]
             response = {
                 "response": random.choice(responses),
-                "agent": "Judge Shakti",
+                "agent": "AI Counsel",
                 "confidence": random.uniform(0.7, 0.95),
                 "agents_consulted": random.randint(5, 10)
             }
@@ -146,7 +260,7 @@ async def chat_endpoint(request: Request):
         return {
             "response": response.get("response", "I've processed your query."),
             "session_id": session_id,
-            "agent_used": response.get("agent", "Judge Shakti"),
+            "agent_used": response.get("agent", "AI Counsel"),
             "confidence": response.get("confidence", 0.85),
             "agents_consulted": response.get("agents_consulted", 10)
         }
@@ -161,6 +275,7 @@ async def chat_endpoint(request: Request):
 
 @router.get("/api/compliance/snapshot")
 async def get_compliance_snapshot():
+    """Get compliance snapshot"""
     frameworks = [
         {"name": "GDPR", "score": 85, "status": "Compliant", "last_checked": datetime.now().isoformat()},
         {"name": "DPDPA", "score": 70, "status": "In Progress", "last_checked": datetime.now().isoformat()},
@@ -181,9 +296,12 @@ async def get_compliance_snapshot():
 
 @router.post("/api/compliance/scan")
 async def scan_compliance(request: Request):
+    """Scan a website for compliance"""
     try:
         data = await request.json()
         url = data.get("url", "")
+        
+        # Simulate scanning
         return {
             "url": url,
             "status": "scanned",
@@ -192,6 +310,11 @@ async def scan_compliance(request: Request):
                 "DPDPA": {"score": 68, "status": "In Progress"},
                 "CCPA": {"score": 88, "status": "Compliant"}
             },
+            "recommendations": [
+                "Complete DPDPA implementation",
+                "Update privacy policy",
+                "Review IT Act compliance"
+            ],
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
@@ -203,6 +326,7 @@ async def scan_compliance(request: Request):
 
 @router.get("/api/trading/indices")
 async def get_indices():
+    """Get live trading indices"""
     base = {"NIFTY": 24500, "SENSEX": 81500, "BTC": 65000}
     names = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BTC": "Bitcoin"}
     result = []
@@ -217,21 +341,13 @@ async def get_indices():
         })
     return result
 
-@router.get("/api/trading/crypto")
-async def get_crypto():
-    crypto = [
-        {"symbol": "BTC", "name": "Bitcoin", "price": f"${65000 + random.randint(-1000, 1000)}", "change": round(random.uniform(-2, 2), 2)},
-        {"symbol": "ETH", "name": "Ethereum", "price": f"${3500 + random.randint(-100, 100)}", "change": round(random.uniform(-1.5, 1.5), 2)},
-        {"symbol": "SOL", "name": "Solana", "price": f"${150 + random.randint(-5, 5)}", "change": round(random.uniform(-2.5, 2.5), 2)}
-    ]
-    return crypto
-
 # ============================================
 # NEWS ENDPOINTS
 # ============================================
 
 @router.get("/api/news")
 async def get_news(limit: int = 6):
+    """Get news"""
     news = [
         {"title": "Supreme Court Hears AI Liability Case", "summary": "Landmark case on AI accountability", "source": "Legal Times", "published": datetime.now().isoformat()},
         {"title": "New DPDPA Guidelines Released", "summary": "Implementation guidelines for data protection", "source": "India Legal", "published": datetime.now().isoformat()},
@@ -244,6 +360,7 @@ async def get_news(limit: int = 6):
 
 @router.get("/api/news/real")
 async def get_real_news(limit: int = 8):
+    """Get real news (alias)"""
     return await get_news(limit)
 
 # ============================================
@@ -252,6 +369,7 @@ async def get_real_news(limit: int = 8):
 
 @router.get("/api/trends/ai")
 async def get_ai_trends():
+    """Get AI trends"""
     return {
         "trends": [
             {"title": "Global AI Market", "value": "$150B", "growth": "45%", "description": "2024 Global AI Market Size", "category": "Market"},
@@ -269,6 +387,7 @@ async def get_ai_trends():
 
 @router.get("/api/sports/cricket")
 async def get_cricket():
+    """Get cricket data"""
     matches = [
         {"teams": "India vs Australia", "score": f"{random.randint(200, 350)}/{random.randint(2, 9)}", "overs": f"{random.randint(20, 50)}", "status": random.choice(["Live", "Stumps", "Result"]), "venue": random.choice(["Wankhede, Mumbai", "MCG, Melbourne"])},
         {"teams": "England vs New Zealand", "score": f"{random.randint(150, 300)}/{random.randint(1, 7)}", "overs": f"{random.randint(15, 45)}", "status": random.choice(["Live", "Stumps"]), "venue": random.choice(["Lord's, London", "Eden Park, Auckland"])},
@@ -288,6 +407,7 @@ async def get_cricket():
 
 @router.get("/api/lens/agents")
 async def get_lens_agents():
+    """Get lens agents status"""
     return {
         "status": "active",
         "total_agents": 250,
@@ -305,162 +425,14 @@ async def get_lens_agents():
     }
 
 # ============================================
-# EXPORTS
 # ============================================
-
-__all__ = ['router', 'init_database'] 
+# 🚀 REAL TRAINING ENDPOINTS - ADD THIS SECTION
 # ============================================
-# ADD TO ROUTES.PY - ENTERPRISE ENDPOINTS
 # ============================================
-
-@router.post("/api/contract/analyze")
-async def analyze_contract(request: Request):
-    """Analyze 500+ page contract"""
-    try:
-        data = await request.json()
-        contract_text = data.get("text", "")
-        document_type = data.get("type", "contract")
-        
-        if not contract_text or len(contract_text) < 100:
-            return JSONResponse({"error": "Contract text too short"}, status_code=400)
-        
-        from core import ContractAnalyzer
-        analyzer = ContractAnalyzer()
-        result = await analyzer.analyze_contract(contract_text, document_type)
-        
-        return {
-            "status": "success",
-            "analysis": result,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Contract analysis error: {e}")
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-@router.post("/api/slp/draft")
-async def draft_slp(request: Request):
-    """Draft Special Leave Petition"""
-    try:
-        data = await request.json()
-        
-        from core import SLPDrafter
-        drafter = SLPDrafter()
-        result = drafter.draft_slp(data)
-        
-        return {
-            "status": "success",
-            "slp": result,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"SLP drafting error: {e}")
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-@router.post("/api/due-diligence/run")
-async def run_due_diligence(request: Request):
-    """Run complete due diligence"""
-    try:
-        data = await request.json()
-        company_name = data.get("company", "Unknown")
-        documents = data.get("documents", [])
-        
-        from core import DueDiligenceEngine
-        engine = DueDiligenceEngine()
-        result = await engine.run_due_diligence(documents, company_name)
-        
-        return {
-            "status": "success",
-            "due_diligence": result,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Due diligence error: {e}")
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-@router.post("/api/document/summarize")
-async def summarize_document(request: Request):
-    """Summarize any legal document"""
-    try:
-        data = await request.json()
-        text = data.get("text", "")
-        
-        if not text:
-            return JSONResponse({"error": "No text provided"}, status_code=400)
-        
-        # Use the contract analyzer for summarization
-        from core import ContractAnalyzer
-        analyzer = ContractAnalyzer()
-        result = await analyzer.analyze_contract(text, "document")
-        
-        return {
-            "status": "success",
-            "summary": result.get("summary", "Document summarized"),
-            "key_points": [c.get("type") for c in result.get("clauses_found", [])[:5]],
-            "page_count": result.get("pages_analyzed", 1),
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Document summary error: {e}")
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-# ============================================
-# ADD TO ROUTES.PY - WEB TRAINING ENDPOINTS
-# ============================================
-
-from web_scraper import get_trainer, train_unknown_on_web
 
 @router.post("/api/train/web")
 async def train_on_web():
     """Train Unknown Verdict on real web data"""
-    try:
-        result = await train_unknown_on_web()
-        return {
-            "status": "success",
-            "message": "Training complete",
-            "data": result,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Training error: {e}")
-        return {"error": str(e)}
-
-@router.get("/api/train/status")
-async def get_training_status():
-    """Get training status"""
-    trainer = get_trainer()
-    return {
-        "status": "training" if trainer.progress < 100 else "complete",
-        "progress": trainer.progress,
-        "total_items": trainer.get_total_items(),
-        "cases": len(trainer.knowledge_base["cases"]),
-        "acts": len(trainer.knowledge_base["acts"]),
-        "articles": len(trainer.knowledge_base["articles"]),
-        "templates": len(trainer.knowledge_base["templates"]),
-        "timestamp": datetime.now().isoformat()
-    }
-
-@router.get("/api/train/knowledge")
-async def get_knowledge_base():
-    """Get trained knowledge base"""
-    trainer = get_trainer()
-    return {
-        "cases": trainer.knowledge_base["cases"][:50],
-        "acts": trainer.knowledge_base["acts"][:20],
-        "articles": trainer.knowledge_base["articles"][:20],
-        "templates": trainer.knowledge_base["templates"][:20],
-        "total": trainer.get_total_items(),
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ============================================
-# ROUTES.PY - Update Training Endpoints
-# ============================================
-
-# Add these endpoints to existing routes.py
-
-@router.post("/api/train/web")
-async def train_on_web():
-    """Train Unknown Verdict on knowledge base"""
     try:
         from web_scraper import train_unknown_on_web
         result = await train_unknown_on_web()
@@ -470,6 +442,9 @@ async def train_on_web():
             "data": result,
             "timestamp": datetime.now().isoformat()
         }
+    except ImportError as e:
+        logger.error(f"Web scraper import error: {e}")
+        return {"error": "Web scraper module not available"}
     except Exception as e:
         logger.error(f"Training error: {e}")
         return {"error": str(e)}
@@ -480,16 +455,21 @@ async def get_training_status():
     try:
         from web_scraper import get_trainer
         trainer = get_trainer()
+        status = trainer.get_status()
         return {
-            "status": "complete" if trainer.progress >= 100 else "training",
-            "progress": trainer.progress,
-            "total_items": trainer.get_total_items(),
-            "cases": len(trainer.knowledge_base["cases"]),
-            "acts": len(trainer.knowledge_base["acts"]),
-            "articles": len(trainer.knowledge_base["articles"]),
-            "templates": len(trainer.knowledge_base["templates"]),
+            "is_training": status["is_training"],
+            "progress": status["progress"],
+            "total_items": status["total_items"],
+            "cases": status["cases"],
+            "acts": status["acts"],
+            "articles": status["articles"],
+            "templates": status["templates"],
+            "reports": status.get("reports", 0),
+            "presentations": status.get("presentations", 0),
             "timestamp": datetime.now().isoformat()
         }
+    except ImportError:
+        return {"error": "Web scraper module not available"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -499,13 +479,97 @@ async def get_knowledge_base():
     try:
         from web_scraper import get_trainer
         trainer = get_trainer()
+        kb = trainer.get_knowledge_base()
         return {
-            "cases": trainer.knowledge_base["cases"][:50],
-            "acts": trainer.knowledge_base["acts"][:20],
-            "articles": trainer.knowledge_base["articles"][:20],
-            "templates": trainer.knowledge_base["templates"][:20],
-            "total": trainer.get_total_items(),
+            "cases": kb["cases"][:50],
+            "acts": kb["acts"][:20],
+            "articles": kb["articles"][:20],
+            "templates": kb["templates"][:20],
+            "reports": kb.get("reports", [])[:10],
+            "presentations": kb.get("presentations", [])[:10],
+            "total": kb["total"],
+            "timestamp": datetime.now().isoformat()
+        }
+    except ImportError:
+        return {"error": "Web scraper module not available"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/api/reports/generate")
+async def generate_report(topic: str = "legal"):
+    """Generate a real report"""
+    try:
+        from web_scraper import get_trainer
+        trainer = get_trainer()
+        kb = trainer.get_knowledge_base()
+        
+        report = {
+            "title": f"Legal Analysis Report on {topic.title()}",
+            "generated": datetime.now().isoformat(),
+            "data": {
+                "cases": kb["cases"][:10],
+                "acts": kb["acts"][:5],
+                "articles": kb["articles"][:5],
+                "templates": kb["templates"][:5]
+            },
+            "summary": f"This report contains {len(kb['cases'])} cases, {len(kb['acts'])} acts, {len(kb['articles'])} articles, and {len(kb['templates'])} templates.",
+            "recommendations": [
+                "Review all compliance requirements",
+                "Update legal documents",
+                "Schedule compliance audit",
+                "Monitor regulatory changes"
+            ]
+        }
+        return report
+    except ImportError:
+        return {"error": "Web scraper module not available"}
+    except Exception as e:
+        return {"error": str(e)}
+
+# ============================================
+# ROOT AND HEALTH
+# ============================================
+
+@router.get("/")
+async def root():
+    """Serve frontend"""
+    try:
+        if os.path.exists("static/index.html"):
+            return FileResponse("static/index.html")
+        return {"message": "Unknown Verdict v17.0"}
+    except:
+        return {"message": "Unknown Verdict v17.0"}
+
+@router.get("/api/health")
+async def health_check():
+    """Health check"""
+    return {
+        "status": "healthy",
+        "version": "17.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/api/status")
+async def system_status():
+    """System status"""
+    try:
+        engine = get_engine()
+        status = engine.get_status() if hasattr(engine, 'get_status') else {}
+        return {
+            "status": "online",
+            "version": "17.0",
+            "agents": status.get("agents", 250),
+            "verifiers": status.get("verifiers", 10),
+            "knowledge_base": status.get("knowledge_base", 1047),
+            "languages": status.get("languages", 20),
+            "judge": status.get("judge", "AI Judge v17.0"),
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
-        return {"error": str(e)}   
+        return {"error": str(e)}
+
+# ============================================
+# EXPORTS
+# ============================================
+
+__all__ = ['router', 'init_database', 'get_db_connection']
