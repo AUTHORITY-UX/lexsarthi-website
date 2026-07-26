@@ -726,5 +726,73 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30000);
 });
 </script>
+  <!-- ========================================== -->
+<!-- TRAINING PAGE - ADD TO NAVIGATION -->
+<!-- ========================================== -->
+
+<!-- Add this button to navigation -->
+<button onclick="navigateTo('training')" class="nav-btn" data-page="training">
+    <i class="fas fa-brain mr-1"></i>Train
+</button>
+
+<!-- Add this page -->
+<div id="page-training" class="page-content hidden">
+    <div class="card p-4">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <h2 class="text-lg font-bold text-white">🧠 Train Unknown</h2>
+                <p class="text-xs text-gray-400">Scrape real web data to train the AI</p>
+            </div>
+            <span class="badge bg-purple-500/20 text-purple-400">Live Training</span>
+        </div>
+        
+        <!-- Training Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+            <div class="bg-black/30 p-2 rounded text-center">
+                <div class="text-xs text-gray-400">Cases</div>
+                <div class="text-lg font-bold text-blue-400" id="trainCases">0</div>
+            </div>
+            <div class="bg-black/30 p-2 rounded text-center">
+                <div class="text-xs text-gray-400">Acts</div>
+                <div class="text-lg font-bold text-green-400" id="trainActs">0</div>
+            </div>
+            <div class="bg-black/30 p-2 rounded text-center">
+                <div class="text-xs text-gray-400">Articles</div>
+                <div class="text-lg font-bold text-yellow-400" id="trainArticles">0</div>
+            </div>
+            <div class="bg-black/30 p-2 rounded text-center">
+                <div class="text-xs text-gray-400">Templates</div>
+                <div class="text-lg font-bold text-purple-400" id="trainTemplates">0</div>
+            </div>
+        </div>
+        
+        <!-- Training Controls -->
+        <div class="flex gap-2 mb-3">
+            <button onclick="startTraining()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl text-sm transition flex-1">
+                <i class="fas fa-play mr-1"></i>Start Training
+            </button>
+            <button onclick="refreshTrainingStatus()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-xl text-sm transition">
+                <i class="fas fa-sync mr-1"></i>Refresh
+            </button>
+        </div>
+        
+        <!-- Progress -->
+        <div class="bg-black/30 rounded-xl p-3">
+            <div class="flex justify-between text-xs mb-1">
+                <span class="text-gray-400">Training Progress</span>
+                <span id="trainProgressText" class="text-blue-400">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 h-2 rounded overflow-hidden">
+                <div id="trainProgressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded transition-all duration-500" style="width:0%"></div>
+            </div>
+            <div id="trainStatus" class="text-xs text-gray-500 mt-2">Ready to train. Click "Start Training" to begin.</div>
+        </div>
+        
+        <!-- Training Log -->
+        <div id="trainLog" class="mt-3 bg-black/30 rounded-xl p-3 max-h-40 overflow-y-auto scrollbar-hide text-xs text-gray-400">
+            <div>📋 Training log will appear here...</div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
