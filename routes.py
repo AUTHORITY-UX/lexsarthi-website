@@ -308,4 +308,97 @@ async def get_lens_agents():
 # EXPORTS
 # ============================================
 
-__all__ = ['router', 'init_database']
+__all__ = ['router', 'init_database'] 
+# ============================================
+# ADD TO ROUTES.PY - ENTERPRISE ENDPOINTS
+# ============================================
+
+@router.post("/api/contract/analyze")
+async def analyze_contract(request: Request):
+    """Analyze 500+ page contract"""
+    try:
+        data = await request.json()
+        contract_text = data.get("text", "")
+        document_type = data.get("type", "contract")
+        
+        if not contract_text or len(contract_text) < 100:
+            return JSONResponse({"error": "Contract text too short"}, status_code=400)
+        
+        from core import ContractAnalyzer
+        analyzer = ContractAnalyzer()
+        result = await analyzer.analyze_contract(contract_text, document_type)
+        
+        return {
+            "status": "success",
+            "analysis": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Contract analysis error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@router.post("/api/slp/draft")
+async def draft_slp(request: Request):
+    """Draft Special Leave Petition"""
+    try:
+        data = await request.json()
+        
+        from core import SLPDrafter
+        drafter = SLPDrafter()
+        result = drafter.draft_slp(data)
+        
+        return {
+            "status": "success",
+            "slp": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"SLP drafting error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@router.post("/api/due-diligence/run")
+async def run_due_diligence(request: Request):
+    """Run complete due diligence"""
+    try:
+        data = await request.json()
+        company_name = data.get("company", "Unknown")
+        documents = data.get("documents", [])
+        
+        from core import DueDiligenceEngine
+        engine = DueDiligenceEngine()
+        result = await engine.run_due_diligence(documents, company_name)
+        
+        return {
+            "status": "success",
+            "due_diligence": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Due diligence error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@router.post("/api/document/summarize")
+async def summarize_document(request: Request):
+    """Summarize any legal document"""
+    try:
+        data = await request.json()
+        text = data.get("text", "")
+        
+        if not text:
+            return JSONResponse({"error": "No text provided"}, status_code=400)
+        
+        # Use the contract analyzer for summarization
+        from core import ContractAnalyzer
+        analyzer = ContractAnalyzer()
+        result = await analyzer.analyze_contract(text, "document")
+        
+        return {
+            "status": "success",
+            "summary": result.get("summary", "Document summarized"),
+            "key_points": [c.get("type") for c in result.get("clauses_found", [])[:5]],
+            "page_count": result.get("pages_analyzed", 1),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Document summary error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
