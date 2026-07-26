@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - AI Legal Intelligence</title>
+    <title>THE ADVOCACY - Legal & Business AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ============================================ */
-        /* SPACE/TECH THEME WITH THIRD EYE */
-        /* ============================================ */
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
@@ -24,135 +20,10 @@
             color: #ffffff;
             overflow-x: hidden;
         }
-        
-        /* Stars Background */
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
-                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
-                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-                radial-gradient(2px 2px at 160px 120px, #ddd, transparent),
-                radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.6), transparent),
-                radial-gradient(2px 2px at 300px 80px, #eee, transparent),
-                radial-gradient(1px 1px at 400px 30px, #fff, transparent),
-                radial-gradient(2px 2px at 500px 100px, #ddd, transparent),
-                radial-gradient(1px 1px at 600px 60px, rgba(255,255,255,0.7), transparent),
-                radial-gradient(2px 2px at 700px 140px, #eee, transparent);
-            background-size: 800px 200px;
-            animation: twinkle 4s ease-in-out infinite alternate;
-        }
-        
-        @keyframes twinkle {
-            0% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        /* Shooting Stars */
-        .shooting-star {
-            position: fixed;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            animation: shoot 6s linear infinite;
-            z-index: 0;
-            pointer-events: none;
-        }
-        .shooting-star::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 80px;
-            height: 1px;
-            background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
-            transform: rotate(0deg);
-        }
-        .shooting-star:nth-child(1) { top: 20%; left: 80%; animation-delay: 0s; }
-        .shooting-star:nth-child(2) { top: 40%; left: 90%; animation-delay: 3s; }
-        .shooting-star:nth-child(3) { top: 60%; left: 70%; animation-delay: 6s; }
-        .shooting-star:nth-child(4) { top: 10%; left: 95%; animation-delay: 2s; }
-        
-        @keyframes shoot {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            70% { opacity: 1; }
-            100% { transform: translate(-400px, 200px) scale(0); opacity: 0; }
-        }
-        
-        /* Glow Effects */
-        .glow {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            pointer-events: none;
-            z-index: 0;
-        }
-        .glow-1 {
-            width: 400px;
-            height: 400px;
-            background: rgba(59, 130, 246, 0.08);
-            top: -100px;
-            right: -100px;
-        }
-        .glow-2 {
-            width: 300px;
-            height: 300px;
-            background: rgba(139, 92, 246, 0.06);
-            bottom: -50px;
-            left: -50px;
-        }
-        .glow-3 {
-            width: 200px;
-            height: 200px;
-            background: rgba(236, 72, 153, 0.05);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        /* ============================================ */
-        /* THIRD EYE LOGO */
-        /* ============================================ */
-        .third-eye {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-        }
-        .third-eye svg {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));
-        }
-        .third-eye-pulse {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 2px solid rgba(59, 130, 246, 0.2);
-            animation: pulse-ring 2s ease-out infinite;
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
-        
-        /* ============================================ */
-        /* GLASS NAVIGATION */
-        /* ============================================ */
+
         .glass-nav {
             background: rgba(10, 10, 20, 0.85);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255,255,255,0.05);
             position: fixed;
             top: 0;
@@ -169,49 +40,16 @@
             font-size: 12px;
             font-weight: 500;
             color: #9ca3af;
-            position: relative;
         }
-        .nav-btn:hover {
-            color: #ffffff;
-            background: rgba(59, 130, 246, 0.1);
-        }
-        .nav-btn.active {
-            color: #60a5fa;
-            background: rgba(59, 130, 246, 0.15);
-        }
-        .nav-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 20%;
-            width: 60%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
-            border-radius: 2px;
-        }
+        .nav-btn:hover { color: #ffffff; background: rgba(59, 130, 246, 0.1); }
+        .nav-btn.active { color: #60a5fa; background: rgba(59, 130, 246, 0.15); }
         
-        /* ============================================ */
-        /* CARDS */
-        /* ============================================ */
         .card {
             background: rgba(17, 17, 34, 0.7);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 16px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-        }
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(139, 92, 246, 0.03));
-            pointer-events: none;
         }
         .card:hover {
             transform: translateY(-4px);
@@ -219,28 +57,19 @@
             box-shadow: 0 20px 60px rgba(59, 130, 246, 0.08);
         }
         
-        .stat-card {
+        .role-card {
             background: rgba(17, 17, 34, 0.5);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 14px;
             transition: all 0.3s ease;
         }
-        .stat-card:hover {
+        .role-card:hover {
             border-color: rgba(59, 130, 246, 0.15);
             transform: translateY(-2px);
         }
         
-        /* ============================================ */
-        /* CHAT */
-        /* ============================================ */
-        .chat-message {
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .chat-message { animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         
         .typing-dots span {
             width: 8px;
@@ -252,106 +81,53 @@
         }
         .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce-dot {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
+        @keyframes bounce-dot { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* ============================================ */
-        /* BADGES */
-        /* ============================================ */
-        .badge {
-            font-size: 9px;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-        }
-        .badge-live {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
-            animation: pulse-live 2s infinite;
-        }
-        @keyframes pulse-live {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .badge-agents {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
+        .badge { font-size: 9px; padding: 2px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+        .badge-live { background: rgba(34, 197, 94, 0.15); color: #4ade80; animation: pulse-live 2s infinite; }
+        @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .footer-border { border-top: 1px solid rgba(255,255,255,0.04); }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        /* ============================================ */
-        /* SCROLLBAR */
-        /* ============================================ */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+        .role-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
         
-        /* ============================================ */
-        /* RESPONSIVE */
-        /* ============================================ */
+        /* Task animation */
+        .task-complete {
+            animation: taskPulse 0.6s ease;
+        }
+        @keyframes taskPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: rgba(34, 197, 94, 0.1); }
+            100% { transform: scale(1); }
+        }
+        
         @media (max-width: 768px) {
             .glass-nav .flex { flex-wrap: wrap; }
             .nav-btn { font-size: 11px; padding: 6px 10px; }
         }
-        
-        /* ============================================ */
-        /* FOOTER */
-        /* ============================================ */
-        .footer-border {
-            border-top: 1px solid rgba(255,255,255,0.04);
-        }
-        
-        /* ============================================ */
-        /* LENS SCAN RESULTS */
-        /* ============================================ */
-        .scan-result {
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            padding: 16px;
-        }
-        .score-bar {
-            height: 4px;
-            border-radius: 2px;
-            background: rgba(255,255,255,0.05);
-            margin-top: 4px;
-            overflow: hidden;
-        }
-        .score-bar .fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        /* Third Eye Glow Animation */
-        .eye-glow {
-            animation: eyePulse 3s ease-in-out infinite;
-        }
-        @keyframes eyePulse {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.2)); }
-            50% { filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.5)); }
-        }
     </style>
 </head>
 <body>
-
-<!-- ============================================ -->
-<!-- BACKGROUND EFFECTS -->
-<!-- ============================================ -->
-<div class="stars"></div>
-<div class="shooting-star"></div>
-<div class="shooting-star"></div>
-<div class="shooting-star"></div>
-<div class="shooting-star"></div>
-<div class="glow glow-1"></div>
-<div class="glow glow-2"></div>
-<div class="glow glow-3"></div>
 
 <!-- ============================================ -->
 <!-- NAVIGATION -->
@@ -359,35 +135,16 @@
 <nav class="glass-nav">
     <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
-            <!-- Logo with Third Eye -->
             <div class="flex items-center space-x-3">
-                <div class="third-eye">
-                    <div class="third-eye-pulse"></div>
-                    <svg viewBox="0 0 100 100" class="eye-glow">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="35" fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="25" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="15" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                        <circle cx="50" cy="50" r="8" fill="#60a5fa" stroke="#60a5fa" stroke-width="2"/>
-                        <circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.6)"/>
-                        <!-- Iris lines -->
-                        <line x1="50" y1="30" x2="50" y2="38" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                        <line x1="50" y1="62" x2="50" y2="70" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                        <line x1="30" y1="50" x2="38" y2="50" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                        <line x1="62" y1="50" x2="70" y2="50" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
-                    </svg>
-                </div>
+                <span class="text-2xl font-bold text-blue-400">⚖️</span>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-tight">THE ADVOCACY</h1>
-                    <span class="text-[10px] text-gray-500 tracking-wider">AI LEGAL INTELLIGENCE</span>
+                    <span class="text-[10px] text-gray-500 tracking-wider">LEGAL & BUSINESS AI</span>
                 </div>
                 <span class="badge badge-live">● Live</span>
-                <span class="badge badge-agents">v15.0</span>
-                <span class="badge badge-agents hidden md:inline">500 Agents</span>
             </div>
 
-            <!-- Navigation -->
-            <div class="hidden lg:flex items-center space-x-1">
+            <div class="hidden lg:flex items-center space-x-1 overflow-x-auto scrollbar-hide">
                 <button onclick="navigateTo('home')" class="nav-btn active" data-page="home"><i class="fas fa-home mr-1"></i>Home</button>
                 <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat"><i class="fas fa-gavel mr-1"></i>Counsel</button>
                 <button onclick="navigateTo('services')" class="nav-btn" data-page="services"><i class="fas fa-briefcase mr-1"></i>Services</button>
@@ -396,10 +153,9 @@
                 <button onclick="navigateTo('markets')" class="nav-btn" data-page="markets"><i class="fas fa-chart-line mr-1"></i>Markets</button>
                 <button onclick="navigateTo('news')" class="nav-btn" data-page="news"><i class="fas fa-newspaper mr-1"></i>News</button>
                 <button onclick="navigateTo('trends')" class="nav-btn" data-page="trends"><i class="fas fa-rocket mr-1"></i>Trends</button>
-                <button onclick="navigateTo('sports')" class="nav-btn" data-page="sports"><i class="fas fa-futbol mr-1"></i>Sports</button>
+                <button onclick="navigateTo('tasks')" class="nav-btn" data-page="tasks"><i class="fas fa-tasks mr-1"></i>Tasks</button>
             </div>
 
-            <!-- Right -->
             <div class="flex items-center space-x-3">
                 <span id="userStatus" class="text-xs text-gray-400"><i class="fas fa-user-circle mr-1"></i>Guest</span>
                 <button onclick="handleLogout()" class="text-xs bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
@@ -407,7 +163,6 @@
             </div>
         </div>
         
-        <!-- Mobile Menu -->
         <div id="mobileMenu" class="hidden lg:hidden mt-3 pt-3 border-t border-white/5 space-y-1">
             <button onclick="navigateTo('home')" class="nav-btn w-full text-left" data-page="home">🏠 Home</button>
             <button onclick="navigateTo('chat')" class="nav-btn w-full text-left" data-page="chat">⚖️ Counsel</button>
@@ -417,7 +172,7 @@
             <button onclick="navigateTo('markets')" class="nav-btn w-full text-left" data-page="markets">📊 Markets</button>
             <button onclick="navigateTo('news')" class="nav-btn w-full text-left" data-page="news">📰 News</button>
             <button onclick="navigateTo('trends')" class="nav-btn w-full text-left" data-page="trends">🚀 Trends</button>
-            <button onclick="navigateTo('sports')" class="nav-btn w-full text-left" data-page="sports">⚽ Sports</button>
+            <button onclick="navigateTo('tasks')" class="nav-btn w-full text-left" data-page="tasks">📋 Tasks</button>
         </div>
     </div>
 </nav>
@@ -429,51 +184,53 @@
 
     <!-- ===== HOME PAGE ===== -->
     <div id="page-home" class="page-content">
-        <!-- Hero -->
         <div class="text-center mb-10">
             <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">AI-Powered Legal Intelligence</span>
+                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Legal & Business AI Intelligence</span>
             </h2>
-            <p class="text-gray-400 text-sm mt-2">500 AGI Agents · 20 Verifiers · AI Judge v15.0 · 21 Legal Domains</p>
+            <p class="text-gray-400 text-sm mt-2">Full-service legal and business automation platform</p>
         </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <div class="stat-card p-5 text-center">
-                <div class="text-3xl font-bold text-blue-400" id="agentCount">500</div>
-                <div class="text-xs text-gray-500 mt-1">AGI Agents</div>
+        <!-- Stats - Clean, no backend numbers -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="role-card p-5 text-center">
+                <div class="stat-number" id="agentCount">∞</div>
+                <div class="text-xs text-gray-500 mt-1">AI Agents</div>
+                <div class="text-[10px] text-gray-600">Multi-role intelligence</div>
             </div>
-            <div class="stat-card p-5 text-center">
-                <div class="text-3xl font-bold text-green-400" id="docCount">21</div>
+            <div class="role-card p-5 text-center">
+                <div class="stat-number" id="docCount">∞</div>
                 <div class="text-xs text-gray-500 mt-1">Legal Domains</div>
+                <div class="text-[10px] text-gray-600">Full spectrum coverage</div>
             </div>
-            <div class="stat-card p-5 text-center">
-                <div class="text-3xl font-bold text-purple-400" id="verifierCount">20</div>
-                <div class="text-xs text-gray-500 mt-1">Verifiers</div>
+            <div class="role-card p-5 text-center">
+                <div class="stat-number" id="verifierCount">∞</div>
+                <div class="text-xs text-gray-500 mt-1">Quality Verifiers</div>
+                <div class="text-[10px] text-gray-600">Multi-layer validation</div>
             </div>
-            <div class="stat-card p-5 text-center">
-                <div class="text-3xl font-bold text-yellow-400" id="languageCount">20</div>
+            <div class="role-card p-5 text-center">
+                <div class="stat-number" id="languageCount">∞</div>
                 <div class="text-xs text-gray-500 mt-1">Languages</div>
-            </div>
-            <div class="stat-card p-5 text-center">
-                <div class="text-3xl font-bold text-cyan-400" id="judgeStatus">v15.0</div>
-                <div class="text-xs text-gray-500 mt-1">AI Judge</div>
+                <div class="text-[10px] text-gray-600">Global reach</div>
             </div>
         </div>
 
-        <!-- Market Ticker -->
+        <!-- Business Roles - What Unknown Actually Does -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="card p-5 flex justify-between items-center">
-                <div><div class="text-xs text-gray-500">NIFTY 50</div><div class="text-xl font-bold text-white" id="niftyPrice">₹24,500.50</div></div>
-                <div class="text-right"><div class="text-sm font-semibold price-up" id="niftyChange">+0.49%</div></div>
+            <div class="card p-5 text-center">
+                <div class="role-icon bg-blue-500/20 text-blue-400 mx-auto mb-3">⚖️</div>
+                <h3 class="font-bold text-white text-sm">Legal Counsel</h3>
+                <p class="text-gray-400 text-xs mt-1">Contract review, compliance, litigation support, legal research</p>
             </div>
-            <div class="card p-5 flex justify-between items-center">
-                <div><div class="text-xs text-gray-500">SENSEX</div><div class="text-xl font-bold text-white" id="sensexPrice">₹81,500.25</div></div>
-                <div class="text-right"><div class="text-sm font-semibold price-up" id="sensexChange">+0.31%</div></div>
+            <div class="card p-5 text-center">
+                <div class="role-icon bg-green-500/20 text-green-400 mx-auto mb-3">👔</div>
+                <h3 class="font-bold text-white text-sm">CEO Advisory</h3>
+                <p class="text-gray-400 text-xs mt-1">Strategic planning, risk assessment, governance, policy development</p>
             </div>
-            <div class="card p-5 flex justify-between items-center">
-                <div><div class="text-xs text-gray-500">BTC/USD</div><div class="text-xl font-bold text-white" id="btcPrice">$65,000.00</div></div>
-                <div class="text-right"><div class="text-sm font-semibold price-down" id="btcChange">-1.81%</div></div>
+            <div class="card p-5 text-center">
+                <div class="role-icon bg-purple-500/20 text-purple-400 mx-auto mb-3">📊</div>
+                <h3 class="font-bold text-white text-sm">COO Operations</h3>
+                <p class="text-gray-400 text-xs mt-1">Process optimization, compliance ops, workflow automation</p>
             </div>
         </div>
 
@@ -482,7 +239,7 @@
             <button onclick="navigateTo('chat')" class="card p-4 text-center text-white font-semibold bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/20"><i class="fas fa-gavel text-blue-400 text-xl block mb-1"></i>AI Counsel</button>
             <button onclick="navigateTo('lens')" class="card p-4 text-center text-white font-semibold bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/20"><i class="fas fa-eye text-purple-400 text-xl block mb-1"></i>Lens Scan</button>
             <button onclick="navigateTo('compliance')" class="card p-4 text-center text-white font-semibold bg-green-600/20 hover:bg-green-600/30 border-green-500/20"><i class="fas fa-shield-alt text-green-400 text-xl block mb-1"></i>Compliance</button>
-            <button onclick="navigateTo('news')" class="card p-4 text-center text-white font-semibold bg-orange-600/20 hover:bg-orange-600/30 border-orange-500/20"><i class="fas fa-newspaper text-orange-400 text-xl block mb-1"></i>News</button>
+            <button onclick="navigateTo('tasks')" class="card p-4 text-center text-white font-semibold bg-orange-600/20 hover:bg-orange-600/30 border-orange-500/20"><i class="fas fa-tasks text-orange-400 text-xl block mb-1"></i>Business Tasks</button>
         </div>
     </div>
 
@@ -490,37 +247,36 @@
     <div id="page-chat" class="page-content hidden">
         <div class="card p-6">
             <div class="flex items-center justify-between mb-4">
-                <div><h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-500">500 agents · 20 verifiers · AI Judge v15.0</p></div>
+                <div><h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-500">Legal & Business AI Assistant</p></div>
                 <span class="badge badge-live">● Online</span>
             </div>
 
             <div id="chatMessages" class="h-[450px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4 scrollbar-hide">
                 <div class="text-center py-16 text-gray-500">
                     <i class="fas fa-gavel text-5xl text-gray-700 mb-4"></i>
-                    <p class="text-sm">Begin your legal consultation</p>
-                    <p class="text-xs text-gray-600 mt-1">500 AGI agents ready to assist</p>
+                    <p class="text-sm">Begin your consultation</p>
+                    <p class="text-xs text-gray-600 mt-1">Legal, business, compliance, and strategic advisory</p>
                     <div class="flex flex-wrap justify-center gap-2 mt-4">
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">GDPR</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">DPDPA</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Contract Law</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">IPC</span>
-                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">IT Act</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Contract Review</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Compliance</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Legal Drafting</span>
+                        <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">Strategy</span>
                     </div>
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
+                <input type="text" id="chatInput" placeholder="Ask any legal or business question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
                 <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
             </div>
 
             <div class="flex flex-wrap gap-2 mt-3">
-                <button onclick="quickPrompt('What is GDPR compliance?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">GDPR</button>
-                <button onclick="quickPrompt('Explain DPDPA 2023')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">DPDPA</button>
-                <button onclick="quickPrompt('Indian Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Contract Act</button>
-                <button onclick="quickPrompt('IT Act 2000 cyber crimes')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IT Act</button>
-                <button onclick="quickPrompt('Consumer rights in India')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Consumer Rights</button>
-                <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IPC 420</button>
+                <button onclick="quickPrompt('Draft a shareholder agreement')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Shareholder Agreement</button>
+                <button onclick="quickPrompt('Compliance checklist for startup')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Startup Compliance</button>
+                <button onclick="quickPrompt('Review this contract clause')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Contract Review</button>
+                <button onclick="quickPrompt('Strategic business plan')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Business Strategy</button>
+                <button onclick="quickPrompt('Risk assessment framework')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Risk Assessment</button>
+                <button onclick="quickPrompt('Board resolution format')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Board Resolution</button>
             </div>
         </div>
     </div>
@@ -528,8 +284,8 @@
     <!-- ===== SERVICES PAGE ===== -->
     <div id="page-services" class="page-content hidden">
         <div class="card p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">💼 Complete Services</h2>
-            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
+            <h2 class="text-2xl font-bold text-white mb-6">💼 Business & Legal Services</h2>
+            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
         </div>
     </div>
 
@@ -554,10 +310,10 @@
     <div id="page-lens" class="page-content hidden">
         <div class="card p-6">
             <h2 class="text-xl font-bold text-white mb-4">👁️ Lens AI Scanning</h2>
-            <p class="text-xs text-gray-400 mb-4">Scan any website for IT laws, DPDPA, GDPR, and other data protection compliance</p>
+            <p class="text-xs text-gray-400 mb-4">Scan any website for IT laws, DPDPA, GDPR, and other compliance</p>
             
             <div class="flex gap-2 mb-4">
-                <input type="text" id="lensUrlInput" placeholder="Enter website URL (e.g., theadvocacy.in)" class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm border border-white/5">
+                <input type="text" id="lensUrlInput" placeholder="Enter website URL (e.g., company.com)" class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm border border-white/5">
                 <button onclick="runLensScan()" class="bg-purple-600 hover:bg-purple-700 px-6 rounded-xl transition text-white font-semibold"><i class="fas fa-search mr-2"></i>Scan</button>
             </div>
 
@@ -570,12 +326,10 @@
             </div>
 
             <div class="mt-4 flex flex-wrap gap-2">
-                <button onclick="quickScan('theadvocacy.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">THE ADVOCACY</button>
+                <button onclick="quickScan('theadvocacy.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Company Site</button>
                 <button onclick="quickScan('google.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Google</button>
                 <button onclick="quickScan('amazon.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Amazon</button>
                 <button onclick="quickScan('flipkart.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Flipkart</button>
-                <button onclick="quickScan('paytm.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Paytm</button>
-                <button onclick="quickScan('zomato.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Zomato</button>
             </div>
         </div>
     </div>
@@ -592,7 +346,7 @@
     <div id="page-news" class="page-content hidden">
         <div class="card p-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-white">📰 Legal News</h2>
+                <h2 class="text-xl font-bold text-white">📰 Legal & Business News</h2>
                 <button onclick="refreshNews()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
             </div>
             <div id="newsData" class="space-y-3"></div>
@@ -602,16 +356,77 @@
     <!-- ===== TRENDS PAGE ===== -->
     <div id="page-trends" class="page-content hidden">
         <div class="card p-6">
-            <h2 class="text-xl font-bold text-white mb-4">🚀 AI Industry Trends</h2>
+            <h2 class="text-xl font-bold text-white mb-4">🚀 AI & Business Trends</h2>
             <div id="trendsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
     </div>
 
-    <!-- ===== SPORTS PAGE ===== -->
-    <div id="page-sports" class="page-content hidden">
+    <!-- ===== TASKS PAGE ===== -->
+    <div id="page-tasks" class="page-content hidden">
         <div class="card p-6">
-            <h2 class="text-xl font-bold text-white mb-4">⚽ Sports Law</h2>
-            <div id="sportsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <h2 class="text-xl font-bold text-white mb-4">📋 Business Tasks</h2>
+            <p class="text-xs text-gray-400 mb-4">AI-powered business, legal, and operational tasks</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="role-card p-4 text-center">
+                    <div class="text-2xl text-blue-400 mb-2">👔</div>
+                    <h3 class="font-bold text-white text-sm">CEO Tasks</h3>
+                    <ul class="text-xs text-gray-400 mt-2 space-y-1 text-left">
+                        <li>• Strategic Planning</li>
+                        <li>• Board Presentations</li>
+                        <li>• Investor Updates</li>
+                        <li>• Policy Development</li>
+                        <li>• Risk Assessment</li>
+                    </ul>
+                </div>
+                <div class="role-card p-4 text-center">
+                    <div class="text-2xl text-green-400 mb-2">📊</div>
+                    <h3 class="font-bold text-white text-sm">COO Tasks</h3>
+                    <ul class="text-xs text-gray-400 mt-2 space-y-1 text-left">
+                        <li>• Process Optimization</li>
+                        <li>• Compliance Ops</li>
+                        <li>• Workflow Automation</li>
+                        <li>• Vendor Management</li>
+                        <li>• Quality Assurance</li>
+                    </ul>
+                </div>
+                <div class="role-card p-4 text-center">
+                    <div class="text-2xl text-purple-400 mb-2">⚖️</div>
+                    <h3 class="font-bold text-white text-sm">Legal Tasks</h3>
+                    <ul class="text-xs text-gray-400 mt-2 space-y-1 text-left">
+                        <li>• Contract Review</li>
+                        <li>• Compliance Checks</li>
+                        <li>• Legal Drafting</li>
+                        <li>• Due Diligence</li>
+                        <li>• Risk Analysis</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-black/30 rounded-xl p-4 border border-white/5">
+                <h3 class="font-bold text-white text-sm mb-2">📝 Active Tasks</h3>
+                <div id="taskList" class="space-y-2">
+                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                        <span class="text-sm text-gray-300">Draft Shareholder Agreement</span>
+                        <span class="text-xs text-green-400">● In Progress</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                        <span class="text-sm text-gray-300">GDPR Compliance Check</span>
+                        <span class="text-xs text-yellow-400">● Pending</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                        <span class="text-sm text-gray-300">Board Meeting Agenda</span>
+                        <span class="text-xs text-blue-400">● Drafting</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                        <span class="text-sm text-gray-300">Risk Assessment Report</span>
+                        <span class="text-xs text-purple-400">● Analysis</span>
+                    </div>
+                </div>
+                <button onclick="addTask()" class="mt-3 text-xs bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-600/30 transition w-full">
+                    <i class="fas fa-plus mr-1"></i>Add New Task
+                </button>
+            </div>
         </div>
     </div>
 
@@ -622,19 +437,8 @@
 <!-- ============================================ -->
 <footer class="footer-border py-6 mt-8 relative z-10">
     <div class="container mx-auto px-4 text-center">
-        <div class="flex items-center justify-center space-x-2 mb-2">
-            <div class="third-eye" style="width:24px;height:24px;">
-                <svg viewBox="0 0 100 100" style="width:100%;height:100%;">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
-                    <circle cx="50" cy="50" r="25" fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
-                    <circle cx="50" cy="50" r="10" fill="rgba(59,130,246,0.15)"/>
-                    <circle cx="50" cy="50" r="5" fill="#60a5fa"/>
-                </svg>
-            </div>
-            <span class="text-xs text-gray-600">THE ADVOCACY – Global Law Firm</span>
-        </div>
-        <p class="text-[10px] text-gray-700">Powered by Unknown Verdict v15.0 · 500 AGI Agents · 20 Verifiers · AI Judge</p>
-        <p class="text-[10px] text-gray-700 mt-1">21 Legal Domains · 20 Languages · 70+ API Endpoints</p>
+        <p class="text-xs text-gray-600">© 2026 THE ADVOCACY – Legal & Business AI</p>
+        <p class="text-[10px] text-gray-700 mt-1">AI-powered legal intelligence · Business automation · Compliance management</p>
     </div>
 </footer>
 
@@ -646,8 +450,7 @@
 // CONFIG
 // ============================================
 const API_BASE = window.location.origin;
-console.log('🚀 THE ADVOCACY v15.0 - Space/Tech Theme with Third Eye');
-console.log(`📡 API_BASE: ${API_BASE}`);
+console.log('🚀 THE ADVOCACY - Legal & Business AI');
 
 // ============================================
 // NAVIGATION
@@ -673,13 +476,12 @@ function toggleMobileMenu() {
 // ============================================
 function loadPageData(page) {
     switch(page) {
-        case 'home': fetchStats(); fetchMarketData(); break;
+        case 'home': fetchMarketData(); break;
         case 'services': fetchServices(); break;
         case 'compliance': fetchComplianceData(); break;
         case 'markets': fetchMarketData(); break;
         case 'news': fetchNewsData(); break;
         case 'trends': fetchTrendsData(); break;
-        case 'sports': fetchSportsData(); break;
         default: break;
     }
 }
@@ -687,19 +489,6 @@ function loadPageData(page) {
 // ============================================
 // API FETCH FUNCTIONS
 // ============================================
-
-async function fetchStats() {
-    try {
-        const res = await fetch(`${API_BASE}/api/status`);
-        if (!res.ok) throw new Error('Status API error');
-        const data = await res.json();
-        document.getElementById('agentCount').textContent = data.agents || 500;
-        document.getElementById('docCount').textContent = data.knowledge_base || 21;
-        document.getElementById('verifierCount').textContent = data.verifiers || 20;
-        document.getElementById('languageCount').textContent = data.languages || 20;
-        document.getElementById('judgeStatus').textContent = 'v15.0';
-    } catch(e) { console.log('Stats fallback'); }
-}
 
 async function fetchMarketData() {
     try {
@@ -774,14 +563,14 @@ function refreshCompliance() {
 
 async function fetchServices() {
     const services = [
-        { icon: 'fa-gavel', name: 'Legal Intelligence', desc: '250 personas - Constitutional, Corporate, Criminal, Tax, IP', color: 'text-blue-400' },
+        { icon: 'fa-gavel', name: 'Legal Intelligence', desc: 'Contract review, compliance, litigation support, legal research', color: 'text-blue-400' },
         { icon: 'fa-building', name: 'Business Services', desc: 'Registration, Shareholder Agreements, SLAs, Employment', color: 'text-green-400' },
         { icon: 'fa-shield-alt', name: 'AI Compliance', desc: 'DPDPA, GDPR, CCPA, IT Act, Risk Assessment', color: 'text-purple-400' },
         { icon: 'fa-file-alt', name: 'Legal Notices', desc: 'Impressum, Legal Notices, DMCA, Privacy Policy', color: 'text-orange-400' },
         { icon: 'fa-exclamation-triangle', name: 'Breach Response', desc: '72-hour detection, Notification, DPA Reporting', color: 'text-red-400' },
-        { icon: 'fa-microchip', name: 'Edge AI', desc: 'Offline processing, Akida/Edge Impulse integration', color: 'text-cyan-400' },
+        { icon: 'fa-tasks', name: 'Business Strategy', desc: 'Strategic planning, risk assessment, governance, policy', color: 'text-cyan-400' },
         { icon: 'fa-heartbeat', name: 'Self-Healing', desc: 'Auto-diagnostics, Auto-resolution, Real-time monitoring', color: 'text-pink-400' },
-        { icon: 'fa-globe', name: 'Jurisdictional', desc: 'DPDPA, GDPR, CCPA, IT Act, AI Governance', color: 'text-yellow-400' }
+        { icon: 'fa-globe', name: 'Global Compliance', desc: 'DPDPA, GDPR, CCPA, IT Act, AI Governance', color: 'text-yellow-400' }
     ];
     const div = document.getElementById('servicesGrid');
     if (div) {
@@ -813,7 +602,7 @@ function renderNews(articles) {
                     <div class="flex-1"><h3 class="font-semibold text-white text-sm">${n.title}</h3><p class="text-gray-400 text-xs mt-1">${n.summary || n.description || ''}</p></div>
                     ${n.link ? `<a href="${n.link}" target="_blank" class="text-blue-400 hover:text-blue-300 ml-2"><i class="fas fa-external-link-alt text-xs"></i></a>` : ''}
                 </div>
-                <div class="flex justify-between mt-2 text-[10px] text-gray-600"><span>${n.source || 'Legal News'}</span><span>${n.published || n.published_at || 'Today'}</span></div>
+                <div class="flex justify-between mt-2 text-[10px] text-gray-600"><span>${n.source || 'News'}</span><span>${n.published || n.published_at || 'Today'}</span></div>
             </div>
         `).join('');
     } else {
@@ -844,39 +633,6 @@ async function fetchTrendsData() {
             `).join('');
         }
     } catch(e) { console.error('Trends error:', e); }
-}
-
-async function fetchSportsData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/sports/cricket`);
-        if (!res.ok) throw new Error('Sports API error');
-        const data = await res.json();
-        const div = document.getElementById('sportsData');
-        if (div) {
-            let html = '';
-            if (data.matches && data.matches.length) {
-                html += data.matches.map(m => `
-                    <div class="bg-black/30 p-4 rounded-xl border border-white/5">
-                        <div class="text-sm font-bold text-white">${m.teams}</div>
-                        <div class="text-lg font-semibold text-blue-400">${m.score}</div>
-                        <div class="text-xs text-gray-400">${m.overs || ''} overs • ${m.status || 'Live'}</div>
-                        <div class="text-[10px] text-gray-600 mt-1">${m.venue || ''}</div>
-                    </div>
-                `).join('');
-            }
-            if (data.upcoming && data.upcoming.length) {
-                html += data.upcoming.map(m => `
-                    <div class="bg-black/30 p-4 rounded-xl border border-white/5">
-                        <div class="text-sm font-bold text-white">📅 ${m.teams}</div>
-                        <div class="text-xs text-gray-400">${m.date || ''} • ${m.venue || ''}</div>
-                        <div class="text-[10px] text-blue-400">${m.tournament || 'Upcoming'}</div>
-                    </div>
-                `).join('');
-            }
-            if (!html) html = `<div class="col-span-2 text-center text-gray-500 py-8">No sports data available</div>`;
-            div.innerHTML = html;
-        }
-    } catch(e) { console.error('Sports error:', e); }
 }
 
 // ============================================
@@ -995,7 +751,7 @@ async function sendMessage() {
     div.scrollTop = div.scrollHeight;
     
     const typingId = 'typing-' + Date.now();
-    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI Judge v15.0 deliberating...</div></div></div>`;
+    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI analyzing...</div></div></div>`;
     div.scrollTop = div.scrollHeight;
     
     try {
@@ -1011,12 +767,11 @@ async function sendMessage() {
         div.innerHTML += `
             <div class="chat-message flex justify-start mb-3">
                 <div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-white/5">
-                    <div class="text-xs text-purple-400 mb-1">⚖️ ${data.agent || 'AI Judge v15.0'}</div>
+                    <div class="text-xs text-purple-400 mb-1">⚖️ ${data.agent || 'AI Counsel'}</div>
                     <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your query.')}</div>
                     <div class="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-500">
                         ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents</span>` : ''}
                         ${data.confidence ? `<span class="text-green-400">✅ ${Math.round(data.confidence * 100)}% confidence</span>` : ''}
-                        ${data.knowledge_used ? `<span>📚 ${Array.isArray(data.knowledge_used) ? data.knowledge_used.join(', ') : data.knowledge_used}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -1041,6 +796,35 @@ function escapeHtml(text) {
 }
 
 // ============================================
+// TASK FUNCTIONS
+// ============================================
+function addTask() {
+    const taskList = document.getElementById('taskList');
+    const tasks = [
+        'Review Q3 Financial Reports',
+        'Update Privacy Policy',
+        'Schedule Board Meeting',
+        'Complete Risk Assessment',
+        'Draft Compliance Report',
+        'Review Vendor Contracts',
+        'Prepare Investor Update',
+        'Conduct Employee Review'
+    ];
+    const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
+    const statuses = ['● In Progress', '● Pending', '● Drafting', '● Analysis', '● Review'];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    const colors = {'● In Progress': 'text-green-400', '● Pending': 'text-yellow-400', '● Drafting': 'text-blue-400', '● Analysis': 'text-purple-400', '● Review': 'text-orange-400'};
+    
+    const item = document.createElement('div');
+    item.className = 'flex items-center justify-between p-2 bg-gray-800/30 rounded task-complete';
+    item.innerHTML = `
+        <span class="text-sm text-gray-300">${randomTask}</span>
+        <span class="text-xs ${colors[randomStatus] || 'text-gray-400'}">${randomStatus}</span>
+    `;
+    taskList.appendChild(item);
+}
+
+// ============================================
 // KEYBOARD SHORTCUTS
 // ============================================
 document.addEventListener('keydown', function(e) {
@@ -1062,11 +846,10 @@ function handleLogout() {
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Third Eye Theme Activated');
+    console.log('✅ THE ADVOCACY - Legal & Business AI Ready');
     navigateTo('home');
     setInterval(fetchMarketData, 30000);
     setInterval(fetchNewsData, 60000);
-    console.log('🚀 THE ADVOCACY v15.0 - Space/Tech Theme Ready');
 });
 
 // ============================================
@@ -1081,6 +864,7 @@ window.quickScan = quickScan;
 window.refreshCompliance = refreshCompliance;
 window.refreshNews = refreshNews;
 window.toggleMobileMenu = toggleMobileMenu;
+window.addTask = addTask;
 </script>
-</body> 
+</body>
 </html>
