@@ -3,79 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY - Complete AGI Legal System</title>
+    <title>THE ADVOCACY - AI Legal Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; }
-        body { background: #0a0a0f; font-family: 'Inter', system-ui, sans-serif; }
-        .glass { background: rgba(17, 17, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .stat-card { background: linear-gradient(145deg, #111120, #0d0d18); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
-        .stat-card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.3); }
-        .nav-btn { transition: all 0.3s; cursor: pointer; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; }
-        .nav-btn:hover { background: rgba(59, 130, 246, 0.1); }
-        .nav-btn.active { color: #60a5fa; background: rgba(59, 130, 246, 0.1); border-bottom: 2px solid #60a5fa; }
-        .card { transition: all 0.3s; cursor: pointer; }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15); }
-        .chat-message { animation: slideIn 0.4s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        .typing-dots { display: inline-flex; gap: 4px; }
-        .typing-dots span { width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; animation: bounce 1.4s infinite; }
+        /* ============================================ */
+        /* SPACE/TECH THEME WITH THIRD EYE */
+        /* ============================================ */
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background: #0a0a0f;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(10, 40, 80, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(60, 10, 80, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 100, 200, 0.1) 0%, transparent 40%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        /* Stars Background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(2px 2px at 160px 120px, #ddd, transparent),
+                radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 300px 80px, #eee, transparent),
+                radial-gradient(1px 1px at 400px 30px, #fff, transparent),
+                radial-gradient(2px 2px at 500px 100px, #ddd, transparent),
+                radial-gradient(1px 1px at 600px 60px, rgba(255,255,255,0.7), transparent),
+                radial-gradient(2px 2px at 700px 140px, #eee, transparent);
+            background-size: 800px 200px;
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Shooting Stars */
+        .shooting-star {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: shoot 6s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 1px;
+            background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+            transform: rotate(0deg);
+        }
+        .shooting-star:nth-child(1) { top: 20%; left: 80%; animation-delay: 0s; }
+        .shooting-star:nth-child(2) { top: 40%; left: 90%; animation-delay: 3s; }
+        .shooting-star:nth-child(3) { top: 60%; left: 70%; animation-delay: 6s; }
+        .shooting-star:nth-child(4) { top: 10%; left: 95%; animation-delay: 2s; }
+        
+        @keyframes shoot {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translate(-400px, 200px) scale(0); opacity: 0; }
+        }
+        
+        /* Glow Effects */
+        .glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(59, 130, 246, 0.08);
+            top: -100px;
+            right: -100px;
+        }
+        .glow-2 {
+            width: 300px;
+            height: 300px;
+            background: rgba(139, 92, 246, 0.06);
+            bottom: -50px;
+            left: -50px;
+        }
+        .glow-3 {
+            width: 200px;
+            height: 200px;
+            background: rgba(236, 72, 153, 0.05);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* ============================================ */
+        /* THIRD EYE LOGO */
+        /* ============================================ */
+        .third-eye {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+        .third-eye svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));
+        }
+        .third-eye-pulse {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+        
+        /* ============================================ */
+        /* GLASS NAVIGATION */
+        /* ============================================ */
+        .glass-nav {
+            background: rgba(10, 10, 20, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #9ca3af;
+            position: relative;
+        }
+        .nav-btn:hover {
+            color: #ffffff;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .nav-btn.active {
+            color: #60a5fa;
+            background: rgba(59, 130, 246, 0.15);
+        }
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 20%;
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            border-radius: 2px;
+        }
+        
+        /* ============================================ */
+        /* CARDS */
+        /* ============================================ */
+        .card {
+            background: rgba(17, 17, 34, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(139, 92, 246, 0.03));
+            pointer-events: none;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.08);
+        }
+        
+        .stat-card {
+            background: rgba(17, 17, 34, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            border-color: rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* ============================================ */
+        /* CHAT */
+        /* ============================================ */
+        .chat-message {
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #60a5fa;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce-dot 1.4s infinite;
+        }
         .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        @keyframes bounce-dot {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .badge { font-size: 10px; padding: 2px 10px; border-radius: 20px; font-weight: 500; }
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .scan-result { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 16px; margin-top: 12px; }
-        .scan-result .score-bar { height: 6px; border-radius: 3px; background: #1a1a2e; margin-top: 4px; }
-        .scan-result .score-bar .fill { height: 100%; border-radius: 3px; transition: width 1s; }
+        
+        /* ============================================ */
+        /* BADGES */
+        /* ============================================ */
+        .badge {
+            font-size: 9px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .badge-live {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            animation: pulse-live 2s infinite;
+        }
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .badge-agents {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+        
+        /* ============================================ */
+        /* SCROLLBAR */
+        /* ============================================ */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+        
+        /* ============================================ */
+        /* RESPONSIVE */
+        /* ============================================ */
+        @media (max-width: 768px) {
+            .glass-nav .flex { flex-wrap: wrap; }
+            .nav-btn { font-size: 11px; padding: 6px 10px; }
+        }
+        
+        /* ============================================ */
+        /* FOOTER */
+        /* ============================================ */
+        .footer-border {
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        
+        /* ============================================ */
+        /* LENS SCAN RESULTS */
+        /* ============================================ */
+        .scan-result {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .score-bar {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.05);
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .score-bar .fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* Third Eye Glow Animation */
+        .eye-glow {
+            animation: eyePulse 3s ease-in-out infinite;
+        }
+        @keyframes eyePulse {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.2)); }
+            50% { filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.5)); }
+        }
     </style>
 </head>
 <body>
 
 <!-- ============================================ -->
+<!-- BACKGROUND EFFECTS -->
+<!-- ============================================ -->
+<div class="stars"></div>
+<div class="shooting-star"></div>
+<div class="shooting-star"></div>
+<div class="shooting-star"></div>
+<div class="shooting-star"></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+<div class="glow glow-3"></div>
+
+<!-- ============================================ -->
 <!-- NAVIGATION -->
 <!-- ============================================ -->
-<nav class="glass fixed top-0 left-0 right-0 z-50 border-b border-white/5">
+<nav class="glass-nav">
     <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
+            <!-- Logo with Third Eye -->
             <div class="flex items-center space-x-3">
-                <span class="text-2xl font-bold text-blue-400">⚖️</span>
-                <div>
-                    <h1 class="text-lg font-bold text-white">THE ADVOCACY</h1>
-                    <span class="text-[10px] text-gray-500">GLOBAL LAW FIRM</span>
+                <div class="third-eye">
+                    <div class="third-eye-pulse"></div>
+                    <svg viewBox="0 0 100 100" class="eye-glow">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="35" fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="25" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="15" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+                        <circle cx="50" cy="50" r="8" fill="#60a5fa" stroke="#60a5fa" stroke-width="2"/>
+                        <circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.6)"/>
+                        <!-- Iris lines -->
+                        <line x1="50" y1="30" x2="50" y2="38" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+                        <line x1="50" y1="62" x2="50" y2="70" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+                        <line x1="30" y1="50" x2="38" y2="50" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+                        <line x1="62" y1="50" x2="70" y2="50" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+                    </svg>
                 </div>
-                <span class="badge bg-green-500/20 text-green-400 pulse">🟢 LIVE v15.0</span>
-                <span class="badge bg-blue-500/20 text-blue-400">500 AGENTS</span>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-tight">THE ADVOCACY</h1>
+                    <span class="text-[10px] text-gray-500 tracking-wider">AI LEGAL INTELLIGENCE</span>
+                </div>
+                <span class="badge badge-live">● Live</span>
+                <span class="badge badge-agents">v15.0</span>
+                <span class="badge badge-agents hidden md:inline">500 Agents</span>
             </div>
 
-            <div class="hidden md:flex items-center space-x-1 overflow-x-auto scrollbar-hide">
+            <!-- Navigation -->
+            <div class="hidden lg:flex items-center space-x-1">
                 <button onclick="navigateTo('home')" class="nav-btn active" data-page="home"><i class="fas fa-home mr-1"></i>Home</button>
-                <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat"><i class="fas fa-gavel mr-1"></i>AI Counsel</button>
+                <button onclick="navigateTo('chat')" class="nav-btn" data-page="chat"><i class="fas fa-gavel mr-1"></i>Counsel</button>
                 <button onclick="navigateTo('services')" class="nav-btn" data-page="services"><i class="fas fa-briefcase mr-1"></i>Services</button>
                 <button onclick="navigateTo('compliance')" class="nav-btn" data-page="compliance"><i class="fas fa-shield-alt mr-1"></i>Compliance</button>
-                <button onclick="navigateTo('lens')" class="nav-btn" data-page="lens"><i class="fas fa-search mr-1"></i>Lens Scan</button>
+                <button onclick="navigateTo('lens')" class="nav-btn" data-page="lens"><i class="fas fa-eye mr-1"></i>Lens</button>
                 <button onclick="navigateTo('markets')" class="nav-btn" data-page="markets"><i class="fas fa-chart-line mr-1"></i>Markets</button>
                 <button onclick="navigateTo('news')" class="nav-btn" data-page="news"><i class="fas fa-newspaper mr-1"></i>News</button>
                 <button onclick="navigateTo('trends')" class="nav-btn" data-page="trends"><i class="fas fa-rocket mr-1"></i>Trends</button>
                 <button onclick="navigateTo('sports')" class="nav-btn" data-page="sports"><i class="fas fa-futbol mr-1"></i>Sports</button>
             </div>
 
+            <!-- Right -->
             <div class="flex items-center space-x-3">
-                <span id="userStatus" class="text-xs text-gray-400"><i class="fas fa-user mr-1"></i>Guest</span>
-                <button onclick="handleLogout()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/30 transition"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
-                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-bars text-xl"></i></button>
+                <span id="userStatus" class="text-xs text-gray-400"><i class="fas fa-user-circle mr-1"></i>Guest</span>
+                <button onclick="handleLogout()" class="text-xs bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
+                <button onclick="toggleMobileMenu()" class="lg:hidden text-gray-400 hover:text-white"><i class="fas fa-bars text-xl"></i></button>
             </div>
         </div>
-        <div id="mobileMenu" class="hidden md:hidden mt-3 pt-3 border-t border-white/5 space-y-1">
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden lg:hidden mt-3 pt-3 border-t border-white/5 space-y-1">
             <button onclick="navigateTo('home')" class="nav-btn w-full text-left" data-page="home">🏠 Home</button>
-            <button onclick="navigateTo('chat')" class="nav-btn w-full text-left" data-page="chat">⚖️ AI Counsel</button>
+            <button onclick="navigateTo('chat')" class="nav-btn w-full text-left" data-page="chat">⚖️ Counsel</button>
             <button onclick="navigateTo('services')" class="nav-btn w-full text-left" data-page="services">💼 Services</button>
             <button onclick="navigateTo('compliance')" class="nav-btn w-full text-left" data-page="compliance">🛡️ Compliance</button>
-            <button onclick="navigateTo('lens')" class="nav-btn w-full text-left" data-page="lens">🔍 Lens Scan</button>
+            <button onclick="navigateTo('lens')" class="nav-btn w-full text-left" data-page="lens">👁️ Lens</button>
             <button onclick="navigateTo('markets')" class="nav-btn w-full text-left" data-page="markets">📊 Markets</button>
             <button onclick="navigateTo('news')" class="nav-btn w-full text-left" data-page="news">📰 News</button>
             <button onclick="navigateTo('trends')" class="nav-btn w-full text-left" data-page="trends">🚀 Trends</button>
@@ -87,69 +425,80 @@
 <!-- ============================================ -->
 <!-- MAIN CONTENT -->
 <!-- ============================================ -->
-<main class="container mx-auto px-4 pt-24 pb-12">
+<main class="container mx-auto px-4 pt-24 pb-12 relative z-10">
 
     <!-- ===== HOME PAGE ===== -->
     <div id="page-home" class="page-content">
+        <!-- Hero -->
+        <div class="text-center mb-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">AI-Powered Legal Intelligence</span>
+            </h2>
+            <p class="text-gray-400 text-sm mt-2">500 AGI Agents · 20 Verifiers · AI Judge v15.0 · 21 Legal Domains</p>
+        </div>
+
+        <!-- Stats -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <div class="stat-card rounded-xl p-5 text-center">
+            <div class="stat-card p-5 text-center">
                 <div class="text-3xl font-bold text-blue-400" id="agentCount">500</div>
-                <div class="text-xs text-gray-500 mt-1">AI Agents</div>
+                <div class="text-xs text-gray-500 mt-1">AGI Agents</div>
             </div>
-            <div class="stat-card rounded-xl p-5 text-center">
+            <div class="stat-card p-5 text-center">
                 <div class="text-3xl font-bold text-green-400" id="docCount">21</div>
-                <div class="text-xs text-gray-500 mt-1">Legal Topics</div>
+                <div class="text-xs text-gray-500 mt-1">Legal Domains</div>
             </div>
-            <div class="stat-card rounded-xl p-5 text-center">
+            <div class="stat-card p-5 text-center">
                 <div class="text-3xl font-bold text-purple-400" id="verifierCount">20</div>
                 <div class="text-xs text-gray-500 mt-1">Verifiers</div>
             </div>
-            <div class="stat-card rounded-xl p-5 text-center">
+            <div class="stat-card p-5 text-center">
                 <div class="text-3xl font-bold text-yellow-400" id="languageCount">20</div>
                 <div class="text-xs text-gray-500 mt-1">Languages</div>
             </div>
-            <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-orange-400" id="judgeStatus">AI</div>
-                <div class="text-xs text-gray-500 mt-1">Judge v15.0</div>
+            <div class="stat-card p-5 text-center">
+                <div class="text-3xl font-bold text-cyan-400" id="judgeStatus">v15.0</div>
+                <div class="text-xs text-gray-500 mt-1">AI Judge</div>
             </div>
         </div>
 
+        <!-- Market Ticker -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="stat-card rounded-xl p-5 flex justify-between items-center">
+            <div class="card p-5 flex justify-between items-center">
                 <div><div class="text-xs text-gray-500">NIFTY 50</div><div class="text-xl font-bold text-white" id="niftyPrice">₹24,500.50</div></div>
                 <div class="text-right"><div class="text-sm font-semibold price-up" id="niftyChange">+0.49%</div></div>
             </div>
-            <div class="stat-card rounded-xl p-5 flex justify-between items-center">
+            <div class="card p-5 flex justify-between items-center">
                 <div><div class="text-xs text-gray-500">SENSEX</div><div class="text-xl font-bold text-white" id="sensexPrice">₹81,500.25</div></div>
                 <div class="text-right"><div class="text-sm font-semibold price-up" id="sensexChange">+0.31%</div></div>
             </div>
-            <div class="stat-card rounded-xl p-5 flex justify-between items-center">
+            <div class="card p-5 flex justify-between items-center">
                 <div><div class="text-xs text-gray-500">BTC/USD</div><div class="text-xl font-bold text-white" id="btcPrice">$65,000.00</div></div>
                 <div class="text-right"><div class="text-sm font-semibold price-down" id="btcChange">-1.81%</div></div>
             </div>
         </div>
 
+        <!-- Quick Actions -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button onclick="navigateTo('chat')" class="bg-blue-600 hover:bg-blue-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-gavel mr-2"></i>AI Counsel</button>
-            <button onclick="navigateTo('lens')" class="bg-purple-600 hover:bg-purple-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-search mr-2"></i>Lens Scan</button>
-            <button onclick="navigateTo('compliance')" class="bg-green-600 hover:bg-green-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-shield-alt mr-2"></i>Compliance</button>
-            <button onclick="navigateTo('news')" class="bg-orange-600 hover:bg-orange-700 p-4 rounded-xl text-white font-semibold transition card"><i class="fas fa-newspaper mr-2"></i>News</button>
+            <button onclick="navigateTo('chat')" class="card p-4 text-center text-white font-semibold bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/20"><i class="fas fa-gavel text-blue-400 text-xl block mb-1"></i>AI Counsel</button>
+            <button onclick="navigateTo('lens')" class="card p-4 text-center text-white font-semibold bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/20"><i class="fas fa-eye text-purple-400 text-xl block mb-1"></i>Lens Scan</button>
+            <button onclick="navigateTo('compliance')" class="card p-4 text-center text-white font-semibold bg-green-600/20 hover:bg-green-600/30 border-green-500/20"><i class="fas fa-shield-alt text-green-400 text-xl block mb-1"></i>Compliance</button>
+            <button onclick="navigateTo('news')" class="card p-4 text-center text-white font-semibold bg-orange-600/20 hover:bg-orange-600/30 border-orange-500/20"><i class="fas fa-newspaper text-orange-400 text-xl block mb-1"></i>News</button>
         </div>
     </div>
 
     <!-- ===== CHAT PAGE ===== -->
     <div id="page-chat" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <div class="flex items-center justify-between mb-4">
-                <div><h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-500">500 agents + 20 verifiers + AI Judge v15.0</p></div>
-                <span class="text-xs text-green-400"><i class="fas fa-circle text-[6px] mr-1"></i>Online</span>
+                <div><h2 class="text-xl font-bold text-white">⚖️ AI Counsel</h2><p class="text-xs text-gray-500">500 agents · 20 verifiers · AI Judge v15.0</p></div>
+                <span class="badge badge-live">● Online</span>
             </div>
 
             <div id="chatMessages" class="h-[450px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4 scrollbar-hide">
                 <div class="text-center py-16 text-gray-500">
                     <i class="fas fa-gavel text-5xl text-gray-700 mb-4"></i>
-                    <p class="text-sm">Start your legal consultation...</p>
-                    <p class="text-xs text-gray-600 mt-1">500 specialized AI agents ready to assist</p>
+                    <p class="text-sm">Begin your legal consultation</p>
+                    <p class="text-xs text-gray-600 mt-1">500 AGI agents ready to assist</p>
                     <div class="flex flex-wrap justify-center gap-2 mt-4">
                         <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">GDPR</span>
                         <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">DPDPA</span>
@@ -162,53 +511,49 @@
 
             <div class="flex gap-2">
                 <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm border border-white/5">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition"><i class="fas fa-paper-plane"></i></button>
+                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
             </div>
 
             <div class="flex flex-wrap gap-2 mt-3">
                 <button onclick="quickPrompt('What is GDPR compliance?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">GDPR</button>
                 <button onclick="quickPrompt('Explain DPDPA 2023')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">DPDPA</button>
                 <button onclick="quickPrompt('Indian Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Contract Act</button>
-                <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IPC 420</button>
                 <button onclick="quickPrompt('IT Act 2000 cyber crimes')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IT Act</button>
                 <button onclick="quickPrompt('Consumer rights in India')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">Consumer Rights</button>
+                <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">IPC 420</button>
             </div>
         </div>
     </div>
 
     <!-- ===== SERVICES PAGE ===== -->
     <div id="page-services" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <h2 class="text-2xl font-bold text-white mb-6">💼 Complete Services</h2>
-            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Loaded dynamically -->
-            </div>
+            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
         </div>
     </div>
 
     <!-- ===== COMPLIANCE PAGE ===== -->
     <div id="page-compliance" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-white">🛡️ Compliance Dashboard</h2>
-                <button onclick="refreshCompliance()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Scan Now</button>
+                <button onclick="refreshCompliance()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
             </div>
-            <div id="complianceData" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                <!-- Loaded dynamically -->
-            </div>
-            <div class="bg-gray-800/50 rounded-xl p-4 border border-white/5">
+            <div id="complianceData" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4"></div>
+            <div class="bg-black/30 rounded-xl p-4 border border-white/5">
                 <h3 class="font-semibold text-yellow-400 text-sm">📋 Recommendations</h3>
                 <ul id="recommendationsList" class="mt-2 text-gray-300 text-sm space-y-1">
-                    <li class="text-gray-500">Loading recommendations...</li>
+                    <li class="text-gray-500">Loading...</li>
                 </ul>
             </div>
         </div>
     </div>
 
-    <!-- ===== LENS SCAN PAGE ===== -->
+    <!-- ===== LENS PAGE ===== -->
     <div id="page-lens" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
-            <h2 class="text-xl font-bold text-white mb-4">🔍 Lens AI Scanning</h2>
+        <div class="card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">👁️ Lens AI Scanning</h2>
             <p class="text-xs text-gray-400 mb-4">Scan any website for IT laws, DPDPA, GDPR, and other data protection compliance</p>
             
             <div class="flex gap-2 mb-4">
@@ -219,54 +564,54 @@
             <div id="lensResults" class="space-y-4">
                 <div class="text-center text-gray-500 py-8">
                     <i class="fas fa-eye text-4xl text-gray-700 mb-4"></i>
-                    <p>Enter a URL and click Scan to analyze compliance</p>
+                    <p>Enter a URL and click Scan</p>
                     <p class="text-xs text-gray-600 mt-2">Checks: GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act</p>
                 </div>
             </div>
 
-            <div class="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2">
-                <button onclick="quickScan('theadvocacy.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">THE ADVOCACY</button>
-                <button onclick="quickScan('google.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Google</button>
-                <button onclick="quickScan('amazon.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Amazon</button>
-                <button onclick="quickScan('flipkart.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Flipkart</button>
-                <button onclick="quickScan('paytm.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Paytm</button>
-                <button onclick="quickScan('zomato.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1.5 rounded transition">Zomato</button>
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button onclick="quickScan('theadvocacy.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">THE ADVOCACY</button>
+                <button onclick="quickScan('google.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Google</button>
+                <button onclick="quickScan('amazon.in')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Amazon</button>
+                <button onclick="quickScan('flipkart.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Flipkart</button>
+                <button onclick="quickScan('paytm.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Paytm</button>
+                <button onclick="quickScan('zomato.com')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">Zomato</button>
             </div>
         </div>
     </div>
 
     <!-- ===== MARKETS PAGE ===== -->
     <div id="page-markets" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <h2 class="text-xl font-bold text-white mb-4">📊 Live Markets</h2>
-            <div id="marketData" class="space-y-2"><!-- Loaded dynamically --></div>
+            <div id="marketData" class="space-y-2"></div>
         </div>
     </div>
 
     <!-- ===== NEWS PAGE ===== -->
     <div id="page-news" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-bold text-white">📰 Legal News</h2>
                 <button onclick="refreshNews()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600/30 transition"><i class="fas fa-sync mr-1"></i>Refresh</button>
             </div>
-            <div id="newsData" class="space-y-3"><!-- Loaded dynamically --></div>
+            <div id="newsData" class="space-y-3"></div>
         </div>
     </div>
 
     <!-- ===== TRENDS PAGE ===== -->
     <div id="page-trends" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <h2 class="text-xl font-bold text-white mb-4">🚀 AI Industry Trends</h2>
-            <div id="trendsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Loaded dynamically --></div>
+            <div id="trendsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
     </div>
 
     <!-- ===== SPORTS PAGE ===== -->
     <div id="page-sports" class="page-content hidden">
-        <div class="bg-gray-900/50 rounded-2xl p-6 border border-white/5">
+        <div class="card p-6">
             <h2 class="text-xl font-bold text-white mb-4">⚽ Sports Law</h2>
-            <div id="sportsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Loaded dynamically --></div>
+            <div id="sportsData" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
     </div>
 
@@ -275,10 +620,21 @@
 <!-- ============================================ -->
 <!-- FOOTER -->
 <!-- ============================================ -->
-<footer class="border-t border-white/5 py-6 mt-8">
+<footer class="footer-border py-6 mt-8 relative z-10">
     <div class="container mx-auto px-4 text-center">
-        <p class="text-xs text-gray-600">© 2026 THE ADVOCACY – Global Law Firm | Powered by Unknown Verdict v15.0</p>
-        <p class="text-[10px] text-gray-700 mt-1">500 Agents · 20 Verifiers · AI Judge v15.0 · 21 Legal Topics · 20 Languages</p>
+        <div class="flex items-center justify-center space-x-2 mb-2">
+            <div class="third-eye" style="width:24px;height:24px;">
+                <svg viewBox="0 0 100 100" style="width:100%;height:100%;">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
+                    <circle cx="50" cy="50" r="25" fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.1)" stroke-width="1"/>
+                    <circle cx="50" cy="50" r="10" fill="rgba(59,130,246,0.15)"/>
+                    <circle cx="50" cy="50" r="5" fill="#60a5fa"/>
+                </svg>
+            </div>
+            <span class="text-xs text-gray-600">THE ADVOCACY – Global Law Firm</span>
+        </div>
+        <p class="text-[10px] text-gray-700">Powered by Unknown Verdict v15.0 · 500 AGI Agents · 20 Verifiers · AI Judge</p>
+        <p class="text-[10px] text-gray-700 mt-1">21 Legal Domains · 20 Languages · 70+ API Endpoints</p>
     </div>
 </footer>
 
@@ -290,7 +646,7 @@
 // CONFIG
 // ============================================
 const API_BASE = window.location.origin;
-console.log('🚀 THE ADVOCACY v15.0 - Complete AGI Legal System');
+console.log('🚀 THE ADVOCACY v15.0 - Space/Tech Theme with Third Eye');
 console.log(`📡 API_BASE: ${API_BASE}`);
 
 // ============================================
@@ -332,7 +688,6 @@ function loadPageData(page) {
 // API FETCH FUNCTIONS
 // ============================================
 
-// 1. STATS
 async function fetchStats() {
     try {
         const res = await fetch(`${API_BASE}/api/status`);
@@ -342,11 +697,10 @@ async function fetchStats() {
         document.getElementById('docCount').textContent = data.knowledge_base || 21;
         document.getElementById('verifierCount').textContent = data.verifiers || 20;
         document.getElementById('languageCount').textContent = data.languages || 20;
-        document.getElementById('judgeStatus').textContent = 'AI Judge';
+        document.getElementById('judgeStatus').textContent = 'v15.0';
     } catch(e) { console.log('Stats fallback'); }
 }
 
-// 2. MARKET DATA
 async function fetchMarketData() {
     try {
         const res = await fetch(`${API_BASE}/api/trading/indices`);
@@ -361,27 +715,27 @@ async function fetchMarketData() {
                 document.getElementById('niftyPrice').textContent = nifty.price || '₹24,500.50';
                 const c = document.getElementById('niftyChange');
                 c.textContent = (nifty.change >= 0 ? '+' : '') + nifty.change + '%';
-                c.className = 'text-sm font-semibold ' + (nifty.change >= 0 ? 'price-up' : 'price-down');
+                c.className = 'text-sm font-semibold ' + (nifty.change >= 0 ? 'text-green-400' : 'text-red-400');
             }
             if (sensex) {
                 document.getElementById('sensexPrice').textContent = sensex.price || '₹81,500.25';
                 const c = document.getElementById('sensexChange');
                 c.textContent = (sensex.change >= 0 ? '+' : '') + sensex.change + '%';
-                c.className = 'text-sm font-semibold ' + (sensex.change >= 0 ? 'price-up' : 'price-down');
+                c.className = 'text-sm font-semibold ' + (sensex.change >= 0 ? 'text-green-400' : 'text-red-400');
             }
             if (btc) {
                 document.getElementById('btcPrice').textContent = btc.price || '$65,000.00';
                 const c = document.getElementById('btcChange');
                 c.textContent = (btc.change >= 0 ? '+' : '') + btc.change + '%';
-                c.className = 'text-sm font-semibold ' + (btc.change >= 0 ? 'price-up' : 'price-down');
+                c.className = 'text-sm font-semibold ' + (btc.change >= 0 ? 'text-green-400' : 'text-red-400');
             }
             
             const marketDiv = document.getElementById('marketData');
             if (marketDiv) {
                 marketDiv.innerHTML = data.map(d => `
-                    <div class="bg-gray-800/50 p-4 rounded-xl flex justify-between items-center border border-white/5">
+                    <div class="bg-black/30 p-4 rounded-xl flex justify-between items-center border border-white/5">
                         <div><span class="font-bold text-white">${d.symbol}</span><span class="text-gray-500 text-xs ml-2">${d.name || ''}</span></div>
-                        <div class="text-right"><div class="font-bold text-white">${d.price}</div><div class="${d.change >= 0 ? 'price-up' : 'price-down'} text-sm">${d.change >= 0 ? '+' : ''}${d.change}%</div></div>
+                        <div class="text-right"><div class="font-bold text-white">${d.price}</div><div class="${d.change >= 0 ? 'text-green-400' : 'text-red-400'} text-sm">${d.change >= 0 ? '+' : ''}${d.change}%</div></div>
                     </div>
                 `).join('');
             }
@@ -389,7 +743,6 @@ async function fetchMarketData() {
     } catch(e) { console.error('Market error:', e); }
 }
 
-// 3. COMPLIANCE DATA
 async function fetchComplianceData() {
     try {
         const res = await fetch(`${API_BASE}/api/compliance/snapshot`);
@@ -399,9 +752,9 @@ async function fetchComplianceData() {
         const div = document.getElementById('complianceData');
         if (div && data.frameworks) {
             div.innerHTML = data.frameworks.map(f => `
-                <div class="bg-gray-800/50 p-4 rounded-xl text-center border border-white/5">
+                <div class="bg-black/30 p-4 rounded-xl text-center border border-white/5">
                     <div class="text-xs text-gray-500">${f.name}</div>
-                    <div class="text-3xl font-bold ${f.score >= 80 ? 'text-green-400' : f.score >= 60 ? 'text-yellow-400' : 'text-red-400'}">${f.score}%</div>
+                    <div class="text-2xl font-bold ${f.score >= 80 ? 'text-green-400' : f.score >= 60 ? 'text-yellow-400' : 'text-red-400'}">${f.score}%</div>
                     <div class="text-xs ${f.status === 'Compliant' ? 'text-green-400' : f.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400'}">${f.status}</div>
                 </div>
             `).join('');
@@ -419,7 +772,6 @@ function refreshCompliance() {
     setTimeout(fetchComplianceData, 1500);
 }
 
-// 4. SERVICES
 async function fetchServices() {
     const services = [
         { icon: 'fa-gavel', name: 'Legal Intelligence', desc: '250 personas - Constitutional, Corporate, Criminal, Tax, IP', color: 'text-blue-400' },
@@ -427,14 +779,14 @@ async function fetchServices() {
         { icon: 'fa-shield-alt', name: 'AI Compliance', desc: 'DPDPA, GDPR, CCPA, IT Act, Risk Assessment', color: 'text-purple-400' },
         { icon: 'fa-file-alt', name: 'Legal Notices', desc: 'Impressum, Legal Notices, DMCA, Privacy Policy', color: 'text-orange-400' },
         { icon: 'fa-exclamation-triangle', name: 'Breach Response', desc: '72-hour detection, Notification, DPA Reporting', color: 'text-red-400' },
-        { icon: 'fa-robot', name: 'Edge AI', desc: 'Offline processing, Akida/Edge Impulse integration', color: 'text-cyan-400' },
+        { icon: 'fa-microchip', name: 'Edge AI', desc: 'Offline processing, Akida/Edge Impulse integration', color: 'text-cyan-400' },
         { icon: 'fa-heartbeat', name: 'Self-Healing', desc: 'Auto-diagnostics, Auto-resolution, Real-time monitoring', color: 'text-pink-400' },
         { icon: 'fa-globe', name: 'Jurisdictional', desc: 'DPDPA, GDPR, CCPA, IT Act, AI Governance', color: 'text-yellow-400' }
     ];
     const div = document.getElementById('servicesGrid');
     if (div) {
         div.innerHTML = services.map(s => `
-            <div class="bg-gray-800/50 p-5 rounded-xl border border-white/5 hover:bg-gray-800/70 transition">
+            <div class="bg-black/30 p-5 rounded-xl border border-white/5 hover:bg-black/40 transition">
                 <i class="fas ${s.icon} text-2xl ${s.color} mb-3"></i>
                 <h3 class="font-bold text-white text-sm">${s.name}</h3>
                 <p class="text-gray-400 text-xs mt-1">${s.desc}</p>
@@ -443,7 +795,6 @@ async function fetchServices() {
     }
 }
 
-// 5. NEWS
 async function fetchNewsData() {
     try {
         const res = await fetch(`${API_BASE}/api/news/real?limit=8`);
@@ -457,7 +808,7 @@ function renderNews(articles) {
     const div = document.getElementById('newsData');
     if (div && articles && articles.length) {
         div.innerHTML = articles.map(n => `
-            <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5 hover:bg-gray-800/70 transition">
+            <div class="bg-black/30 p-4 rounded-xl border border-white/5 hover:bg-black/40 transition">
                 <div class="flex items-start justify-between">
                     <div class="flex-1"><h3 class="font-semibold text-white text-sm">${n.title}</h3><p class="text-gray-400 text-xs mt-1">${n.summary || n.description || ''}</p></div>
                     ${n.link ? `<a href="${n.link}" target="_blank" class="text-blue-400 hover:text-blue-300 ml-2"><i class="fas fa-external-link-alt text-xs"></i></a>` : ''}
@@ -475,7 +826,6 @@ function refreshNews() {
     setTimeout(fetchNewsData, 500);
 }
 
-// 6. TRENDS
 async function fetchTrendsData() {
     try {
         const res = await fetch(`${API_BASE}/api/trends/ai`);
@@ -484,7 +834,7 @@ async function fetchTrendsData() {
         const div = document.getElementById('trendsData');
         if (div && data.trends) {
             div.innerHTML = data.trends.map(t => `
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
+                <div class="bg-black/30 p-4 rounded-xl border border-white/5">
                     <div class="text-xs text-gray-500">${t.category || 'Trend'}</div>
                     <div class="text-lg font-bold text-white mt-1">${t.title}</div>
                     <div class="text-2xl font-bold text-blue-400">${t.value}</div>
@@ -496,7 +846,6 @@ async function fetchTrendsData() {
     } catch(e) { console.error('Trends error:', e); }
 }
 
-// 7. SPORTS
 async function fetchSportsData() {
     try {
         const res = await fetch(`${API_BASE}/api/sports/cricket`);
@@ -507,7 +856,7 @@ async function fetchSportsData() {
             let html = '';
             if (data.matches && data.matches.length) {
                 html += data.matches.map(m => `
-                    <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
+                    <div class="bg-black/30 p-4 rounded-xl border border-white/5">
                         <div class="text-sm font-bold text-white">${m.teams}</div>
                         <div class="text-lg font-semibold text-blue-400">${m.score}</div>
                         <div class="text-xs text-gray-400">${m.overs || ''} overs • ${m.status || 'Live'}</div>
@@ -517,7 +866,7 @@ async function fetchSportsData() {
             }
             if (data.upcoming && data.upcoming.length) {
                 html += data.upcoming.map(m => `
-                    <div class="bg-gray-800/50 p-4 rounded-xl border border-white/5">
+                    <div class="bg-black/30 p-4 rounded-xl border border-white/5">
                         <div class="text-sm font-bold text-white">📅 ${m.teams}</div>
                         <div class="text-xs text-gray-400">${m.date || ''} • ${m.venue || ''}</div>
                         <div class="text-[10px] text-blue-400">${m.tournament || 'Upcoming'}</div>
@@ -531,7 +880,7 @@ async function fetchSportsData() {
 }
 
 // ============================================
-// LENS SCAN - COMPLETE WEBSITE SCANNING
+// LENS SCAN
 // ============================================
 
 async function runLensScan() {
@@ -544,7 +893,6 @@ async function runLensScan() {
         <div class="text-center text-gray-400 py-8">
             <i class="fas fa-spinner fa-spin text-3xl text-purple-400"></i>
             <p class="mt-2">Scanning ${url} for compliance...</p>
-            <p class="text-xs text-gray-600 mt-1">Checking: GDPR, DPDPA, CCPA, HIPAA, ISO27001, IT Act</p>
         </div>
     `;
     
@@ -554,14 +902,11 @@ async function runLensScan() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: url })
         });
-        
         if (!res.ok) throw new Error('Scan API error');
         const data = await res.json();
-        console.log('🔍 Scan results:', data);
         displayScanResults(data, url);
     } catch(e) {
         console.error('Scan error:', e);
-        // Fallback - simulate scan
         const mockData = generateMockScan(url);
         displayScanResults(mockData, url);
     }
@@ -571,13 +916,10 @@ function displayScanResults(data, url) {
     const div = document.getElementById('lensResults');
     
     let html = `
-        <div class="bg-gray-800/50 rounded-xl p-4 border border-purple-500/30">
+        <div class="bg-black/40 rounded-xl p-4 border border-purple-500/30">
             <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-white">🔍 Scan Complete</h3>
-                    <p class="text-xs text-gray-400">${url}</p>
-                </div>
-                <span class="badge bg-green-500/20 text-green-400">${data.overall_score || 75}% Overall</span>
+                <div><h3 class="font-bold text-white">🔍 Scan Complete</h3><p class="text-xs text-gray-400">${url}</p></div>
+                <span class="badge bg-purple-500/20 text-purple-400">${data.overall_score || 75}%</span>
             </div>
     `;
     
@@ -587,13 +929,12 @@ function displayScanResults(data, url) {
             const score = details.score || 0;
             const status = details.status || 'Unknown';
             const color = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-yellow-400' : 'text-red-400';
-            const bgColor = score >= 80 ? 'bg-green-500/20' : score >= 60 ? 'bg-yellow-500/20' : 'bg-red-500/20';
+            const bgColor = score >= 80 ? 'bg-green-500/10' : score >= 60 ? 'bg-yellow-500/10' : 'bg-red-500/10';
             html += `
-                <div class="${bgColor} p-3 rounded-lg">
+                <div class="${bgColor} p-3 rounded-lg border border-white/5">
                     <div class="text-xs text-gray-400">${name}</div>
                     <div class="text-xl font-bold ${color}">${score}%</div>
                     <div class="text-xs ${color}">${status}</div>
-                    ${details.findings ? `<div class="text-[10px] text-gray-500 mt-1">${details.findings.slice(0,2).join(', ')}</div>` : ''}
                 </div>
             `;
         }
@@ -601,7 +942,7 @@ function displayScanResults(data, url) {
     }
     
     if (data.recommendations && data.recommendations.length) {
-        html += `<div class="mt-4 p-3 bg-gray-900/50 rounded-lg"><h4 class="text-xs font-bold text-yellow-400">📋 Recommendations</h4><ul class="mt-1 text-xs text-gray-300 space-y-1">`;
+        html += `<div class="mt-4 p-3 bg-black/30 rounded-lg"><h4 class="text-xs font-bold text-yellow-400">📋 Recommendations</h4><ul class="mt-1 text-xs text-gray-300 space-y-1">`;
         data.recommendations.forEach(r => { html += `<li>• ${r}</li>`; });
         html += `</ul></div>`;
     }
@@ -616,27 +957,17 @@ function generateMockScan(url) {
     const frameworks = ['GDPR', 'DPDPA', 'CCPA', 'HIPAA', 'ISO27001', 'IT Act'];
     const results = {};
     let total = 0;
-    
     frameworks.forEach(f => {
         const score = Math.floor(Math.random() * 40) + 60;
         total += score;
         const status = score >= 80 ? 'Compliant' : score >= 60 ? 'Partially Compliant' : 'Needs Attention';
-        results[f] = {
-            score: score,
-            status: status,
-            findings: [`Found ${Math.floor(Math.random() * 5) + 1} relevant provisions`, `${score >= 70 ? 'Compliant' : 'Missing'} requirements`]
-        };
+        results[f] = { score: score, status: status };
     });
-    
     return {
         url: url,
         frameworks: results,
         overall_score: Math.round(total / frameworks.length),
-        recommendations: [
-            'Complete DPDPA implementation by Q3 2026',
-            'Update privacy policy for GDPR compliance',
-            'Review IT Act 2000 provisions for cyber compliance'
-        ],
+        recommendations: ['Complete DPDPA implementation', 'Update privacy policy', 'Review IT Act compliance'],
         timestamp: new Date().toISOString()
     };
 }
@@ -659,12 +990,12 @@ async function sendMessage() {
     const emptyState = div.querySelector('.text-center');
     if (emptyState) emptyState.remove();
     
-    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-blue-600 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(message)}</div></div>`;
+    div.innerHTML += `<div class="chat-message flex justify-end mb-3"><div class="bg-blue-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">${escapeHtml(message)}</div></div>`;
     input.value = '';
     div.scrollTop = div.scrollHeight;
     
     const typingId = 'typing-' + Date.now();
-    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-gray-800 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI Judge v15.0 deliberating...</div></div></div>`;
+    div.innerHTML += `<div id="${typingId}" class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><div class="typing-dots"><span></span><span></span><span></span></div><div class="text-xs text-gray-500 mt-1">⚖️ AI Judge v15.0 deliberating...</div></div></div>`;
     div.scrollTop = div.scrollHeight;
     
     try {
@@ -679,13 +1010,13 @@ async function sendMessage() {
         
         div.innerHTML += `
             <div class="chat-message flex justify-start mb-3">
-                <div class="bg-gray-800/80 text-white p-4 rounded-xl max-w-[85%] border border-white/5">
+                <div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-white/5">
                     <div class="text-xs text-purple-400 mb-1">⚖️ ${data.agent || 'AI Judge v15.0'}</div>
                     <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(data.response || 'I have processed your query.')}</div>
                     <div class="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-500">
                         ${data.agents_consulted ? `<span>🤖 ${data.agents_consulted} agents</span>` : ''}
                         ${data.confidence ? `<span class="text-green-400">✅ ${Math.round(data.confidence * 100)}% confidence</span>` : ''}
-                        ${data.knowledge_used ? `<span>📚 ${data.knowledge_used.join(', ')}</span>` : ''}
+                        ${data.knowledge_used ? `<span>📚 ${Array.isArray(data.knowledge_used) ? data.knowledge_used.join(', ') : data.knowledge_used}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -713,14 +1044,8 @@ function escapeHtml(text) {
 // KEYBOARD SHORTCUTS
 // ============================================
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.activeElement?.id === 'chatInput') {
-        e.preventDefault();
-        sendMessage();
-    }
-    if (e.key === 'Enter' && document.activeElement?.id === 'lensUrlInput') {
-        e.preventDefault();
-        runLensScan();
-    }
+    if (e.key === 'Enter' && document.activeElement?.id === 'chatInput') { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && document.activeElement?.id === 'lensUrlInput') { e.preventDefault(); runLensScan(); }
 });
 
 // ============================================
@@ -729,7 +1054,7 @@ document.addEventListener('keydown', function(e) {
 function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('sessionId');
-    document.getElementById('userStatus').innerHTML = '<i class="fas fa-user mr-1"></i>Guest';
+    document.getElementById('userStatus').innerHTML = '<i class="fas fa-user-circle mr-1"></i>Guest';
     location.reload();
 }
 
@@ -737,11 +1062,11 @@ function handleLogout() {
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ DOM loaded');
+    console.log('✅ Third Eye Theme Activated');
     navigateTo('home');
     setInterval(fetchMarketData, 30000);
     setInterval(fetchNewsData, 60000);
-    console.log('🚀 THE ADVOCACY v15.0 is ready!');
+    console.log('🚀 THE ADVOCACY v15.0 - Space/Tech Theme Ready');
 });
 
 // ============================================
@@ -758,4 +1083,4 @@ window.refreshNews = refreshNews;
 window.toggleMobileMenu = toggleMobileMenu;
 </script>
 </body>
-</html> 
+</html>
