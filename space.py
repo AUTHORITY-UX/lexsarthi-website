@@ -1,6 +1,6 @@
 # space.py - Hugging Face Space Entry Point
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ⚖️ THE ADVOCACY – Global Law Firm
 
 import os
 import sys
@@ -27,6 +27,7 @@ except Exception as e:
 def main():
     """Main entry point for Hugging Face Space"""
     import uvicorn
+    # Hugging Face default port is 7860
     port = int(os.getenv("PORT", 7860))
     
     logger.info("=" * 60)
@@ -40,7 +41,7 @@ def main():
     logger.info("⚖️ THE ADVOCACY – Global Law Firm")
     logger.info("=" * 60)
     
-    # Run the app
+    # Run the app on port 7860
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
