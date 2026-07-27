@@ -76,4 +76,4 @@ async def real_compliance_scan(request: Request):
         result = await scan_website(url)
         return {"status": "success", "url": url, "frameworks": result}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)} 
