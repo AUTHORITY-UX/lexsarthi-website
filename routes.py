@@ -1,14 +1,15 @@
 # routes.py - All API endpoints for Unknown Verdict v40.0
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ⚖️ THE ADVOCACY – Global Law Firm
 
 import asyncio
 import json
 import logging
+import random
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends, Request, File, UploadFile, Form
-from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
+from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from core import get_core, get_verifiers, get_judge, get_agent_status
@@ -40,7 +41,33 @@ class ComplianceRequest(BaseModel):
     categories: Optional[List[str]] = None
     risk_level: Optional[str] = "medium"
 
-# ─── ENDPOINTS ──────────────────────────────────────────────────────
+# ─── ROOT ENDPOINT ──────────────────────────────────────────────────
+
+@router.get("/")
+async def api_root():
+    """API root endpoint"""
+    return {
+        "name": "Unknown Verdict v40.0",
+        "version": "40.0",
+        "status": "online",
+        "firm": "THE ADVOCACY – Global Law Firm",
+        "endpoints": {
+            "chat": "/api/chat",
+            "health": "/api/health",
+            "agents": "/api/agents",
+            "verifiers": "/api/verifiers",
+            "judge": "/api/judge",
+            "stats": "/api/stats",
+            "compliance": "/api/compliance",
+            "market": "/api/market/quote",
+            "news": "/api/news",
+            "info": "/api/info",
+            "docs": "/docs"
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ─── HEALTH CHECK ──────────────────────────────────────────────────
 
 @router.get("/health")
 async def health_check():
@@ -58,8 +85,10 @@ async def health_check():
             "total": len(core.verifiers),
             "active": sum(1 for v in core.verifiers if v.status == "active")
         },
-        "judge": core.judge.get_stats()
+        "judge": core.judge.get_stats() if hasattr(core, 'judge') else {"status": "active"}
     }
+
+# ─── CHAT ENDPOINT ──────────────────────────────────────────────────
 
 @router.post("/chat")
 async def chat(request: ChatRequest):
@@ -67,18 +96,21 @@ async def chat(request: ChatRequest):
     core = get_core()
     
     try:
-        # Analyze the legal case
+        query = request.query
+        jurisdiction = request.jurisdiction or "IN"
+        
+        logger.info(f"📨 Chat request: {query[:50]}... (jurisdiction: {jurisdiction})")
+        
         result = await core.analyze_legal_case(
-            query=request.query,
-            jurisdiction=request.jurisdiction,
-            age_group=request.age_group,
-            case_type=request.case_type,
+            query=query,
+            jurisdiction=jurisdiction,
+            age_group=request.age_group or "adult",
+            case_type=request.case_type or "general",
             user_id=request.user_id
         )
         
-        # Add verifiers and judge info
         result["verifiers"] = [v.to_dict() for v in core.verifiers]
-        result["judge"] = core.judge.get_stats()
+        result["judge"] = core.judge.get_stats() if hasattr(core, 'judge') else {"status": "active"}
         
         return JSONResponse({
             "status": "success",
@@ -90,6 +122,8 @@ async def chat(request: ChatRequest):
         logger.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ─── CHAT STREAM ENDPOINT ──────────────────────────────────────────
+
 @router.post("/chat/stream")
 async def chat_stream(request: ChatRequest):
     """Streaming chat endpoint"""
@@ -97,24 +131,20 @@ async def chat_stream(request: ChatRequest):
     
     async def generate():
         try:
-            # Start with acknowledgment
             yield f"data: {json.dumps({'type': 'start', 'timestamp': datetime.now().isoformat()})}\n\n"
             
-            # Process query
             result = await core.analyze_legal_case(
                 query=request.query,
-                jurisdiction=request.jurisdiction,
-                age_group=request.age_group,
-                case_type=request.case_type,
+                jurisdiction=request.jurisdiction or "IN",
+                age_group=request.age_group or "adult",
+                case_type=request.case_type or "general",
                 user_id=request.user_id
             )
             
-            # Stream chunks of the response
             chunks = [
-                "Legal analysis initiated...",
-                "🔍 Reviewing case details...",
-                "⚖️ Applying legal framework...",
-                "📚 Cross-referencing precedents...",
+                "🔍 Analyzing your legal query...",
+                "⚖️ Reviewing relevant laws...",
+                "📚 Checking precedents...",
                 "✅ Analysis complete"
             ]
             
@@ -122,7 +152,6 @@ async def chat_stream(request: ChatRequest):
                 yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
                 await asyncio.sleep(0.5)
             
-            # Final result
             yield f"data: {json.dumps({'type': 'complete', 'result': result})}\n\n"
             
         except Exception as e:
@@ -133,6 +162,60 @@ async def chat_stream(request: ChatRequest):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache"}
     )
+
+# ─── AGENTS ENDPOINT ──────────────────────────────────────────────────
+
+@router.get("/agents")
+async def get_agents():
+    """Get all agent status"""
+    core = get_core()
+    return JSONResponse({
+        "status": "success",
+        "data": {
+            "total": len(core.agents),
+            "active": sum(1 for a in core.agents if a["status"] == "active"),
+            "agents": core.agents[:20]
+        },
+        "timestamp": datetime.now().isoformat()
+    })
+
+# ─── VERIFIERS ENDPOINT ──────────────────────────────────────────────
+
+@router.get("/verifiers")
+async def get_all_verifiers():
+    """Get all verifiers"""
+    core = get_core()
+    return JSONResponse({
+        "status": "success",
+        "data": [v.to_dict() for v in core.verifiers],
+        "timestamp": datetime.now().isoformat()
+    })
+
+# ─── JUDGE ENDPOINT ──────────────────────────────────────────────────
+
+@router.get("/judge")
+async def get_judge_info():
+    """Get judge information"""
+    core = get_core()
+    return JSONResponse({
+        "status": "success",
+        "data": core.judge.get_stats() if hasattr(core, 'judge') else {"status": "active"},
+        "timestamp": datetime.now().isoformat()
+    })
+
+# ─── STATS ENDPOINT ──────────────────────────────────────────────────
+
+@router.get("/stats")
+async def get_stats():
+    """Get system statistics"""
+    core = get_core()
+    return JSONResponse({
+        "status": "success",
+        "data": core.get_system_stats(),
+        "timestamp": datetime.now().isoformat()
+    })
+
+# ─── COMPLIANCE ENDPOINT ──────────────────────────────────────────────
 
 @router.post("/compliance")
 async def check_compliance(request: ComplianceRequest):
@@ -157,43 +240,7 @@ async def check_compliance(request: ComplianceRequest):
         logger.error(f"Compliance error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/agents")
-async def get_agents():
-    """Get all agent status"""
-    core = get_core()
-    return JSONResponse({
-        "status": "success",
-        "data": get_agent_status(),
-        "timestamp": datetime.now().isoformat()
-    })
-
-@router.get("/verifiers")
-async def get_all_verifiers():
-    """Get all verifiers"""
-    return JSONResponse({
-        "status": "success",
-        "data": get_verifiers(),
-        "timestamp": datetime.now().isoformat()
-    })
-
-@router.get("/judge")
-async def get_judge_info():
-    """Get judge information"""
-    return JSONResponse({
-        "status": "success",
-        "data": get_judge(),
-        "timestamp": datetime.now().isoformat()
-    })
-
-@router.get("/stats")
-async def get_stats():
-    """Get system statistics"""
-    core = get_core()
-    return JSONResponse({
-        "status": "success",
-        "data": core.get_system_stats(),
-        "timestamp": datetime.now().isoformat()
-    })
+# ─── MARKET QUOTE ENDPOINT ──────────────────────────────────────────
 
 @router.post("/market/quote")
 async def get_market_quote(request: MarketRequest):
@@ -211,6 +258,8 @@ async def get_market_quote(request: MarketRequest):
     except Exception as e:
         logger.error(f"Market error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ─── NEWS ENDPOINT ──────────────────────────────────────────────────
 
 @router.get("/news")
 async def get_news(
@@ -234,16 +283,54 @@ async def get_news(
         logger.error(f"News error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/")
-async def root():
-    """Root endpoint"""
+# ─── API INFO ENDPOINT ──────────────────────────────────────────────
+
+@router.get("/info")
+async def get_api_info():
+    """Get comprehensive API information"""
+    core = get_core()
     return {
         "name": "Unknown Verdict v40.0",
         "version": "40.0",
-        "status": "online",
         "firm": "THE ADVOCACY – Global Law Firm",
-        "timestamp": datetime.now().isoformat()
+        "description": "Complete AGI Legal Platform with 250+ Agents",
+        "status": "online",
+        "timestamp": datetime.now().isoformat(),
+        "system": {
+            "agents": {
+                "total": len(core.agents),
+                "active": sum(1 for a in core.agents if a["status"] == "active")
+            },
+            "verifiers": {
+                "total": len(core.verifiers),
+                "active": sum(1 for v in core.verifiers if v.status == "active")
+            },
+            "judge": core.judge.get_stats() if hasattr(core, 'judge') else {"status": "active"}
+        },
+        "endpoints": {
+            "GET /api/": "API root",
+            "GET /api/health": "Health check",
+            "POST /api/chat": "Chat with AI agents",
+            "POST /api/chat/stream": "Streaming chat",
+            "GET /api/agents": "List all agents",
+            "GET /api/verifiers": "List all verifiers",
+            "GET /api/judge": "Judge information",
+            "GET /api/stats": "System statistics",
+            "POST /api/compliance": "Check compliance",
+            "POST /api/market/quote": "Get market quote",
+            "GET /api/news": "Get news",
+            "GET /api/info": "This information"
+        },
+        "docs": {
+            "swagger": "/docs",
+            "redoc": "/redoc",
+            "openapi": "/openapi.json"
+        },
+        "trident": "🔱 PERMANENT ASSET - NEVER REMOVE",
+        "branding": "⚖️ THE ADVOCACY – Global Law Firm"
     }
+
+# ─── DOCS STATUS ENDPOINT ──────────────────────────────────────────
 
 @router.get("/docs/status")
 async def docs_status():
@@ -252,5 +339,37 @@ async def docs_status():
         "status": "available",
         "docs_url": "/docs",
         "redoc_url": "/redoc",
-        "openapi_url": "/openapi.json"
+        "openapi_url": "/openapi.json",
+        "api_base": "/api"
     }
+
+# ─── FALLBACK FOR 404 ──────────────────────────────────────────────
+
+@router.get("/{path:path}")
+async def catch_all(path: str):
+    """Catch all undefined routes with helpful message"""
+    return JSONResponse(
+        status_code=404,
+        content={
+            "status": "error",
+            "detail": f"Endpoint '/api/{path}' not found",
+            "available_endpoints": [
+                "/api/",
+                "/api/health",
+                "/api/chat",
+                "/api/chat/stream",
+                "/api/agents",
+                "/api/verifiers",
+                "/api/judge",
+                "/api/stats",
+                "/api/compliance",
+                "/api/market/quote",
+                "/api/news",
+                "/api/info",
+                "/api/docs/status"
+            ],
+            "docs": "/docs",
+            "redoc": "/redoc",
+            "suggestion": "Visit /docs for interactive API documentation"
+        }
+    )
