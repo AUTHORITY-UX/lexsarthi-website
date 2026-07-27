@@ -626,4 +626,4 @@ Return only the corrected answer.
             "jury_confidences": jury_confidences,
             "agent_type": agent_type,
             "lens_summary": self.get_lens_summary()
-        }
+        } 
