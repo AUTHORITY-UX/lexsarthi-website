@@ -1,6 +1,6 @@
 # ============================================
-# CORE.PY - UNKNOWN VERDICT v20.0
-# COMPLETE AUTONOMOUS AGI PLATFORM
+# CORE.PY - UNKNOWN VERDICT v36.0
+# COMPLETE AGI PLATFORM - ALL 18 APPS
 # ============================================
 
 import logging
@@ -16,17 +16,15 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger("unknown_verdict")
 
 # ============================================
-# COMPLETE KNOWLEDGE BASE - 100+ Legal Topics
+# COMPLETE KNOWLEDGE BASE - 50+ LEGAL TOPICS
 # ============================================
 
-LEGAL_KNOWLEDGE_V20 = {
-    # Constitutional Law
+LEGAL_KNOWLEDGE_V36 = {
+    # ---------- CONSTITUTIONAL ----------
     "constitution_of_india": {
         "title": "Constitution of India, 1950",
         "summary": "Supreme law of India, establishing framework for government and fundamental rights",
-        "parts": 25,
-        "articles": 448,
-        "schedules": 12,
+        "parts": 25, "articles": 448, "schedules": 12,
         "key_articles": {
             "14": "Equality before law",
             "15": "Prohibition of discrimination",
@@ -38,23 +36,11 @@ LEGAL_KNOWLEDGE_V20 = {
             "32": "Right to constitutional remedies",
             "226": "Power of High Courts to issue writs"
         },
-        "doctrines": [
-            "Basic Structure Doctrine",
-            "Doctrine of Severability",
-            "Doctrine of Eclipse",
-            "Doctrine of Waiver",
-            "Doctrine of Legitimate Expectation",
-            "Doctrine of Proportionality"
-        ],
-        "landmark_cases": [
-            "Kesavananda Bharati v. State of Kerala (1973)",
-            "Maneka Gandhi v. Union of India (1978)",
-            "Indira Nehru Gandhi v. Raj Narain (1975)",
-            "Minerva Mills v. Union of India (1980)"
-        ]
+        "doctrines": ["Basic Structure", "Severability", "Eclipse", "Waiver", "Legitimate Expectation", "Proportionality"],
+        "landmark_cases": ["Kesavananda Bharati (1973)", "Maneka Gandhi (1978)", "Minerva Mills (1980)"]
     },
     
-    # Contract Law
+    # ---------- CONTRACT ----------
     "indian_contract_act": {
         "title": "Indian Contract Act, 1872",
         "summary": "Primary law governing contracts in India",
@@ -68,33 +54,19 @@ LEGAL_KNOWLEDGE_V20 = {
             "16": "Undue influence",
             "17": "Fraud",
             "18": "Misrepresentation",
-            "19": "Voidability of agreements",
             "23": "Lawful consideration and object",
-            "24": "Agreements void for unlawful consideration",
-            "25": "Agreement without consideration void",
             "56": "Doctrine of frustration",
-            "65": "Obligation of person who has received advantage",
-            "73": "Compensation for breach of contract",
-            "74": "Compensation for breach where penalty stipulated"
+            "73": "Compensation for breach",
+            "74": "Compensation where penalty stipulated"
         },
-        "essentials": [
-            "Offer and acceptance",
-            "Lawful consideration",
-            "Capacity to contract",
-            "Free consent",
-            "Lawful object",
-            "Intention to create legal relations",
-            "Certainty of terms",
-            "Possibility of performance"
-        ]
+        "essentials": ["Offer and acceptance", "Lawful consideration", "Capacity", "Free consent", "Lawful object", "Intention to create legal relations", "Certainty of terms"]
     },
     
-    # Criminal Law
+    # ---------- CRIMINAL ----------
     "indian_penal_code": {
         "title": "Indian Penal Code, 1860",
         "summary": "Criminal code of India defining offenses and punishments",
-        "sections": 511,
-        "chapters": 23,
+        "sections": 511, "chapters": 23,
         "key_sections": {
             "34": "Acts done by several persons",
             "120A": "Definition of criminal conspiracy",
@@ -102,278 +74,436 @@ LEGAL_KNOWLEDGE_V20 = {
             "141": "Unlawful assembly",
             "300": "Murder",
             "302": "Punishment for murder",
-            "304": "Punishment for culpable homicide",
-            "304A": "Causing death by negligence",
+            "304": "Culpable homicide",
             "320": "Grievous hurt",
-            "323": "Punishment for voluntarily causing hurt",
             "375": "Rape",
             "376": "Punishment for rape",
             "378": "Theft",
-            "379": "Punishment for theft",
             "383": "Extortion",
             "390": "Robbery",
-            "391": "Dacoity",
             "405": "Criminal breach of trust",
             "415": "Cheating",
-            "420": "Cheating and dishonestly inducing delivery of property",
+            "420": "Cheating and dishonestly inducing delivery",
             "441": "Criminal trespass",
             "497": "Adultery",
-            "498A": "Cruelty against married women",
-            "509": "Word, gesture or act intended to insult modesty"
+            "498A": "Cruelty against married women"
         }
     },
     
-    # Data Protection
+    # ---------- DATA PROTECTION ----------
     "dpdpa_2023": {
         "title": "Digital Personal Data Protection Act, 2023",
         "summary": "Comprehensive data protection law of India",
         "sections": 40,
-        "key_provisions": [
-            "Consent-based processing - explicit consent required",
-            "Purpose limitation - data used only for specified purposes",
-            "Data principal rights - right to access, correct, erase",
-            "Data fiduciary obligations - duties of data processors",
-            "Significant data fiduciaries - additional obligations",
-            "Cross-border data transfer - restrictions on international transfers",
-            "Data Protection Board - enforcement authority"
-        ],
-        "rights": [
-            "Right to access personal data",
-            "Right to correction and erasure",
-            "Right to grievance redressal",
-            "Right to nominate a representative"
-        ],
+        "key_provisions": ["Consent-based processing", "Purpose limitation", "Data principal rights", "Data fiduciary obligations", "Significant data fiduciaries", "Cross-border transfer restrictions", "Data Protection Board"],
+        "rights": ["Right to access", "Right to correction and erasure", "Right to grievance redressal", "Right to nominate a representative"],
         "penalties": "Up to ₹250 crore per instance of violation",
         "effective_date": "2025"
     },
     
-    # GDPR
     "gdpr": {
         "title": "General Data Protection Regulation (EU)",
         "summary": "EU regulation on data protection and privacy",
         "articles": 99,
-        "key_principles": [
-            "Lawfulness, fairness and transparency",
-            "Purpose limitation",
-            "Data minimization",
-            "Accuracy",
-            "Storage limitation",
-            "Integrity and confidentiality",
-            "Accountability"
-        ],
-        "rights": [
-            "Right to be informed",
-            "Right of access",
-            "Right to rectification",
-            "Right to erasure (Right to be forgotten)",
-            "Right to restrict processing",
-            "Right to data portability",
-            "Right to object",
-            "Rights related to automated decision making"
-        ],
+        "key_principles": ["Lawfulness, fairness and transparency", "Purpose limitation", "Data minimization", "Accuracy", "Storage limitation", "Integrity and confidentiality", "Accountability"],
+        "rights": ["Right to be informed", "Right of access", "Right to rectification", "Right to erasure", "Right to restrict processing", "Right to data portability", "Right to object"],
         "penalties": "Up to €20 million or 4% of global turnover"
     },
     
-    # Corporate Law
+    "ccpa": {
+        "title": "California Consumer Privacy Act (CCPA)",
+        "summary": "California consumer privacy law",
+        "key_provisions": ["Right to know", "Right to delete", "Right to opt-out", "Right to non-discrimination"],
+        "penalties": "Up to $7,500 per violation"
+    },
+    
+    "hipaa": {
+        "title": "Health Insurance Portability and Accountability Act (HIPAA)",
+        "summary": "US healthcare privacy law",
+        "key_provisions": ["Privacy Rule", "Security Rule", "Breach Notification Rule", "Enforcement Rule"]
+    },
+    
+    "iso27001": {
+        "title": "ISO/IEC 27001",
+        "summary": "Information security management standard",
+        "key_provisions": ["ISMS", "Risk assessment", "Security controls", "Continuous improvement"]
+    },
+    
+    # ---------- CORPORATE ----------
     "companies_act_2013": {
         "title": "Companies Act, 2013",
         "summary": "Comprehensive corporate law of India",
-        "sections": 470,
-        "schedules": 7,
-        "key_provisions": [
-            "One Person Company (OPC) concept",
-            "Corporate Social Responsibility (CSR) mandatory",
-            "Independent directors required",
-            "National Company Law Tribunal (NCLT)",
-            "Serious Fraud Investigation Office (SFIO)",
-            "Insolvency and Bankruptcy Code (IBC) integration",
-            "Class action suits",
-            "Woman director mandatory"
-        ],
-        "compliance": [
-            "Annual filing with ROC",
-            "Board meeting frequency",
-            "Audit committee",
-            "Risk management",
-            "Related party transactions"
-        ],
+        "sections": 470, "schedules": 7,
+        "key_provisions": ["One Person Company (OPC)", "CSR mandatory", "Independent directors", "NCLT", "SFIO", "Class action suits", "Woman director mandatory"],
+        "compliance": ["Annual ROC filing", "Board meetings", "Audit committee", "Risk management", "Related party transactions"],
         "penalties": "Up to ₹10,00,000 or imprisonment for 6 months"
     },
     
-    # Arbitration Law
-    "arbitration_act": {
-        "title": "Arbitration and Conciliation Act, 1996",
-        "summary": "Law governing arbitration in India",
-        "sections": 86,
-        "key_provisions": [
-            "Arbitration agreement - Section 7",
-            "Appointment of arbitrators - Section 11",
-            "Interim measures - Section 9",
-            "Arbitral award - Section 31",
-            "Setting aside award - Section 34",
-            "Enforcement - Section 36"
-        ],
-        "types": [
-            "Domestic arbitration",
-            "International arbitration",
-            "Ad hoc arbitration",
-            "Institutional arbitration",
-            "Commercial arbitration"
-        ]
+    "ibc_2016": {
+        "title": "Insolvency and Bankruptcy Code, 2016",
+        "summary": "Insolvency resolution in India",
+        "key_provisions": ["CIRP", "Liquidation", "Resolution Plan", "Financial Creditor", "Operational Creditor"]
     },
     
-    # Family Law
-    "hindu_marriage_act": {
-        "title": "Hindu Marriage Act, 1955",
-        "summary": "Law governing Hindu marriages and divorce",
-        "sections": 30,
-        "key_sections": {
-            "5": "Conditions for valid marriage",
-            "7": "Ceremonies for marriage",
-            "13": "Grounds for divorce",
-            "13B": "Divorce by mutual consent",
-            "14": "No petition within 1 year",
-            "21": "Power to transfer petitions",
-            "25": "Permanent alimony and maintenance"
-        },
-        "grounds_for_divorce": [
-            "Adultery",
-            "Cruelty",
-            "Desertion (2+ years)",
-            "Conversion to another religion",
-            "Mental disorder",
-            "Venereal disease",
-            "Renunciation of world",
-            "Not heard from for 7+ years",
-            "No resumption of cohabitation after decree"
-        ],
-        "maintenance": "Section 25 - Permanent alimony and maintenance"
+    "sebi_act": {
+        "title": "SEBI Act, 1992",
+        "summary": "Securities market regulator",
+        "key_provisions": ["Regulation of stock exchanges", "Prohibition of insider trading", "Takeover code"]
     },
     
-    # Property Law
-    "transfer_of_property_act": {
-        "title": "Transfer of Property Act, 1882",
-        "summary": "Law governing property transfer in India",
-        "sections": 137,
-        "key_sections": {
-            "5": "Transfer of property defined",
-            "6": "What may be transferred",
-            "7": "Persons competent to transfer",
-            "54": "Sale of immovable property",
-            "58": "Mortgage defined",
-            "105": "Lease defined",
-            "122": "Gift defined",
-            "123": "Gift how made"
-        },
-        "types": [
-            "Sale",
-            "Mortgage",
-            "Lease",
-            "Exchange",
-            "Gift",
-            "Actionable claim"
-        ]
-    },
-    
-    # Tax Law
+    # ---------- TAX ----------
     "income_tax_act": {
         "title": "Income Tax Act, 1961",
         "summary": "Primary tax law of India",
         "sections": 298,
         "key_sections": {
             "2": "Definitions",
-            "3-9": "Scope of total income",
             "10": "Exemptions",
             "15-17": "Salaries",
             "22-27": "House property",
-            "28-44": "Business/profession",
+            "28-44": "Business income",
             "45-55A": "Capital gains",
             "80A-80RR": "Deductions"
         },
         "slabs_2024": {
-            "old_regime": [
-                {"upto": 250000, "rate": 0},
-                {"250001-500000": "5%"},
-                {"500001-1000000": "20%"},
-                {"above_1000000": "30%"}
-            ],
-            "new_regime": [
-                {"upto": 300000, "rate": 0},
-                {"300001-600000": "5%"},
-                {"600001-900000": "10%"},
-                {"900001-1200000": "15%"},
-                {"1200001-1500000": "20%"},
-                {"above_1500000": "30%"}
-            ]
+            "old_regime": [{"upto": 250000, "rate": 0}, {"250001-500000": "5%"}, {"500001-1000000": "20%"}, {"above_1000000": "30%"}],
+            "new_regime": [{"upto": 300000, "rate": 0}, {"300001-600000": "5%"}, {"600001-900000": "10%"}, {"900001-1200000": "15%"}, {"1200001-1500000": "20%"}, {"above_1500000": "30%"}]
         }
     },
     
-    # Cyber Law
-    "it_act_2000": {
-        "title": "Information Technology Act, 2000",
-        "summary": "Cyber law of India",
-        "sections": 90,
-        "key_sections": {
-            "3": "Digital signatures",
-            "43": "Penalty for damage to computer",
-            "43A": "Data protection",
-            "65": "Tampering with computer source documents",
-            "66": "Computer related offenses",
-            "66A": "Offensive messages (struck down)",
-            "66B": "Receiving stolen computer resource",
-            "66C": "Identity theft",
-            "66D": "Cheating by personation",
-            "67": "Publishing obscene material",
-            "67A": "Publishing sexually explicit material",
-            "69": "Power to intercept",
-            "79": "Intermediary liability"
-        },
-        "penalties": "Imprisonment up to 3 years and fine up to ₹5,00,000"
+    "gst_act": {
+        "title": "Goods and Services Tax Act, 2017",
+        "summary": "Goods and Services Tax in India",
+        "key_provisions": ["GST Council", "Registration", "Taxable supply", "ITC", "Returns"]
     },
     
-    # Intellectual Property
+    # ---------- PROPERTY ----------
+    "transfer_of_property_act": {
+        "title": "Transfer of Property Act, 1882",
+        "summary": "Law governing property transfer in India",
+        "sections": 137,
+        "key_sections": {
+            "5": "Transfer of property defined",
+            "54": "Sale of immovable property",
+            "58": "Mortgage defined",
+            "105": "Lease defined",
+            "122": "Gift defined"
+        },
+        "types": ["Sale", "Mortgage", "Lease", "Exchange", "Gift", "Actionable claim"]
+    },
+    
+    "rera_act": {
+        "title": "Real Estate Regulation Act, 2016",
+        "summary": "Real estate regulation in India",
+        "key_provisions": ["Registration of projects", "Rights of allottees", "Real Estate Regulatory Authority", "Penalties"]
+    },
+    
+    # ---------- FAMILY ----------
+    "hindu_marriage_act": {
+        "title": "Hindu Marriage Act, 1955",
+        "summary": "Law governing Hindu marriages and divorce",
+        "sections": 30,
+        "key_sections": {
+            "5": "Conditions for valid marriage",
+            "13": "Grounds for divorce",
+            "13B": "Divorce by mutual consent",
+            "25": "Permanent alimony and maintenance"
+        },
+        "grounds_for_divorce": ["Adultery", "Cruelty", "Desertion (2+ years)", "Conversion", "Mental disorder", "Venereal disease", "Renunciation", "Not heard from for 7+ years"]
+    },
+    
+    "muslim_personal_law": {
+        "title": "Muslim Personal Law (Shariat)",
+        "summary": "Muslim personal law in India",
+        "key_provisions": ["Marriage (Nikah)", "Divorce (Talaq)", "Maintenance", "Inheritance"]
+    },
+    
+    "christian_marriage_act": {
+        "title": "Indian Christian Marriage Act, 1872",
+        "summary": "Christian marriage law in India",
+        "key_provisions": ["Solemnization of marriage", "Registration", "Divorce under Indian Divorce Act"]
+    },
+    
+    "pocso_act": {
+        "title": "POCSO Act, 2012",
+        "summary": "Protection of Children from Sexual Offences",
+        "key_provisions": ["Definition of child", "Sexual offences", "Penalties", "Special courts"]
+    },
+    
+    "dv_act": {
+        "title": "Domestic Violence Act, 2005",
+        "summary": "Protection against domestic violence",
+        "key_provisions": ["Definition of domestic violence", "Protection orders", "Residence orders", "Magistrate's powers"]
+    },
+    
+    # ---------- LABOUR ----------
+    "industrial_disputes_act": {
+        "title": "Industrial Disputes Act, 1947",
+        "summary": "Labour dispute resolution",
+        "key_provisions": ["Works committee", "Conciliation", "Adjudication", "Strikes and lock-outs"]
+    },
+    
+    "payment_of_wages_act": {
+        "title": "Payment of Wages Act, 1936",
+        "summary": "Wage payment regulation",
+        "key_provisions": ["Time limit for payment", "Deductions", "Penalties"]
+    },
+    
+    "minimum_wages_act": {
+        "title": "Minimum Wages Act, 1948",
+        "summary": "Minimum wage protection",
+        "key_provisions": ["Fixing of minimum wages", "Payment", "Penalties"]
+    },
+    
+    "maternity_benefit_act": {
+        "title": "Maternity Benefit Act, 1961",
+        "summary": "Maternity benefits",
+        "key_provisions": ["Maternity leave", "Medical bonus", "Protection from dismissal"]
+    },
+    
+    # ---------- ENVIRONMENT ----------
+    "environment_protection_act": {
+        "title": "Environment Protection Act, 1986",
+        "summary": "Environmental protection in India",
+        "key_provisions": ["Power of Central Government", "EP Rules", "Hazardous substances", "Penalties"]
+    },
+    
+    "air_act": {
+        "title": "Air (Prevention and Control of Pollution) Act, 1981",
+        "summary": "Air pollution control",
+        "key_provisions": ["Control of air pollution", "Consent", "Penalties"]
+    },
+    
+    "water_act": {
+        "title": "Water (Prevention and Control of Pollution) Act, 1974",
+        "summary": "Water pollution control",
+        "key_provisions": ["Control of water pollution", "Consent", "Penalties"]
+    },
+    
+    "wildlife_protection_act": {
+        "title": "Wildlife Protection Act, 1972",
+        "summary": "Wildlife protection in India",
+        "key_provisions": ["Protected areas", "Prohibition of hunting", "Trade in wildlife"]
+    },
+    
+    # ---------- INTELLECTUAL PROPERTY ----------
     "patents_act_1970": {
         "title": "Patents Act, 1970",
         "summary": "Law governing patents in India",
         "sections": 162,
         "key_sections": {
             "3": "What are not inventions",
-            "5": "Inventions where only methods",
-            "6": "Persons entitled to apply",
-            "7": "Application for patents",
-            "8": "Information and undertaking",
-            "10": "Contents of specification",
             "48": "Rights of patentee",
-            "53": "Term of patent",
+            "53": "Term of patent (20 years)",
             "84": "Compulsory licensing",
             "104": "Infringement"
-        },
-        "term": "20 years from filing date"
+        }
+    },
+    
+    "trademarks_act": {
+        "title": "Trade Marks Act, 1999",
+        "summary": "Trademark protection in India",
+        "key_provisions": ["Registration", "Absolute grounds", "Relative grounds", "Rights of proprietor", "Infringement"]
+    },
+    
+    "copyright_act": {
+        "title": "Copyright Act, 1957",
+        "summary": "Copyright protection in India",
+        "key_provisions": ["Works", "Rights of owner", "Term", "Assignment", "Infringement", "Fair dealing"]
+    },
+    
+    # ---------- CYBER ----------
+    "it_act_2000": {
+        "title": "Information Technology Act, 2000",
+        "summary": "Cyber law of India",
+        "sections": 90,
+        "key_sections": {
+            "3": "Digital signatures",
+            "43": "Penalty for damage",
+            "43A": "Data protection",
+            "66": "Computer related offenses",
+            "66C": "Identity theft",
+            "66D": "Cheating by personation",
+            "67": "Publishing obscene material",
+            "79": "Intermediary liability"
+        }
+    },
+    
+    # ---------- ARBITRATION ----------
+    "arbitration_act": {
+        "title": "Arbitration and Conciliation Act, 1996",
+        "summary": "Arbitration law in India",
+        "sections": 86,
+        "key_provisions": ["Arbitration agreement - Section 7", "Appointment of arbitrators - Section 11", "Interim measures - Section 9", "Arbitral award - Section 31", "Setting aside award - Section 34", "Enforcement - Section 36"],
+        "types": ["Domestic", "International", "Ad hoc", "Institutional", "Commercial"]
+    },
+    
+    # ---------- BANKING ----------
+    "banking_regulation_act": {
+        "title": "Banking Regulation Act, 1949",
+        "summary": "Banking regulation in India",
+        "key_provisions": ["Licensing of banks", "Management", "Reserve requirements", "Inspection", "Winding up"]
+    },
+    
+    "rbi_act": {
+        "title": "Reserve Bank of India Act, 1934",
+        "summary": "RBI establishment and functions",
+        "key_provisions": ["Establishment", "Management", "Functions", "Monetary policy", "Banking regulation"]
+    },
+    
+    # ---------- INSURANCE ----------
+    "insurance_act": {
+        "title": "Insurance Act, 1938",
+        "summary": "Insurance regulation in India",
+        "key_provisions": ["Registration", "Deposits", "Accounts", "Investments", "Reinsurance"]
+    },
+    
+    # ---------- CONSUMER ----------
+    "consumer_protection_act": {
+        "title": "Consumer Protection Act, 2019",
+        "summary": "Consumer rights in India",
+        "key_provisions": ["Definition of consumer", "Deficiency in service", "Unfair trade practices", "Consumer commissions"],
+        "rights": ["Safety", "Information", "Choice", "Hearing", "Redressal", "Education"]
+    },
+    
+    # ---------- COMPETITION ----------
+    "competition_act": {
+        "title": "Competition Act, 2002",
+        "summary": "Competition law in India",
+        "key_provisions": ["Anti-competitive agreements", "Abuse of dominance", "Combinations", "CCI"]
+    },
+    
+    # ---------- MEDIA ----------
+    "press_law": {
+        "title": "Press and Registration of Periodicals Act, 2023",
+        "summary": "Media regulation in India",
+        "key_provisions": ["Registration of periodicals", "Press Council", "False news", "Penalties"]
+    },
+    
+    # ---------- SPACE ----------
+    "space_law": {
+        "title": "Space Law (India)",
+        "summary": "Regulation of space activities",
+        "key_provisions": ["Satellite licensing", "Space debris", "National Space Law", "International treaties"]
+    },
+    
+    # ---------- INTERNATIONAL ----------
+    "un_treaties": {
+        "title": "UN Treaties",
+        "summary": "International treaties applicable to India",
+        "key_provisions": ["UN Charter", "Vienna Convention", "ICCPR", "CRC", "UNCAC"]
+    },
+    
+    "wto_law": {
+        "title": "WTO Law",
+        "summary": "World Trade Organization rules",
+        "key_provisions": ["GATT", "GATS", "TRIPS", "Dispute settlement"]
+    },
+    
+    # ---------- ENERGY ----------
+    "electricity_act": {
+        "title": "Electricity Act, 2003",
+        "summary": "Electricity regulation in India",
+        "key_provisions": ["Generation", "Transmission", "Distribution", "Tariffs", "Regulatory commissions"]
+    },
+    
+    # ---------- HEALTHCARE ----------
+    "clinical_establishments_act": {
+        "title": "Clinical Establishments Act, 2010",
+        "summary": "Healthcare facility regulation",
+        "key_provisions": ["Registration", "Standards", "Penalties"]
+    },
+    
+    "mental_healthcare_act": {
+        "title": "Mental Healthcare Act, 2017",
+        "summary": "Mental health rights",
+        "key_provisions": ["Rights of persons with mental illness", "Treatment", "Advance directives"]
+    },
+    
+    # ---------- EDUCATION ----------
+    "right_to_education_act": {
+        "title": "Right to Education Act, 2009",
+        "summary": "Free and compulsory education",
+        "key_provisions": ["Free education for 6-14 years", "No detention", "School infrastructure"]
+    },
+    
+    # ---------- FINANCE ----------
+    "securities_contracts_act": {
+        "title": "Securities Contracts Regulation Act, 1956",
+        "summary": "Securities regulation in India",
+        "key_provisions": ["Recognized stock exchanges", "Listing", "Penalties"]
+    },
+    
+    # ---------- TRANSPORT ----------
+    "motor_vehicles_act": {
+        "title": "Motor Vehicles Act, 1988",
+        "summary": "Road transport regulation",
+        "key_provisions": ["Licensing", "Registration", "Insurance", "Accident claims", "Penalties"]
+    },
+    
+    # ---------- TELECOM ----------
+    "telecom_law": {
+        "title": "Telecom Regulatory Law",
+        "summary": "Telecom regulation in India",
+        "key_provisions": ["TRAI", "Licensing", "Spectrum", "Consumer protection"]
+    },
+    
+    # ---------- SPORTS ----------
+    "sports_law": {
+        "title": "Sports Law",
+        "summary": "Legal aspects of sports",
+        "key_provisions": ["Player contracts", "Anti-doping", "League compliance", "Sports governance", "WADA compliance"]
+    },
+    
+    # ---------- REAL ESTATE ----------
+    "real_estate_law": {
+        "title": "Real Estate Law",
+        "summary": "Legal aspects of real estate",
+        "key_provisions": ["Property registration", "Title verification", "RERA compliance", "Property disputes"]
+    },
+    
+    # ---------- HR ----------
+    "hr_law": {
+        "title": "HR & Employment Law",
+        "summary": "Employment and labour law",
+        "key_provisions": ["Employment contracts", "Payroll compliance", "Labour law", "Workplace harassment", "Termination"]
+    },
+    
+    # ---------- INTERNATIONAL ----------
+    "international_law": {
+        "title": "International Law",
+        "summary": "Cross-border legal framework",
+        "key_provisions": ["Treaties", "Cross-border transactions", "Jurisdiction mapping", "Sanctions check", "Trade law"]
+    },
+    
+    # ---------- SECURITY ----------
+    "security_law": {
+        "title": "Security & Breach Law",
+        "summary": "Data breach and cyber security law",
+        "key_provisions": ["Data breach response", "Cyber threat monitoring", "Incident reporting", "Compliance framework"]
     }
 }
 
 # ============================================
-# v20.0 - COMPLETE AGI ENGINE
+# v36.0 - COMPLETE AGI ENGINE
 # ============================================
 
-class UnknownVerdictV20:
-    """Complete Autonomous AGI Platform v20.0"""
+class UnknownVerdictV36:
+    """Complete Autonomous AGI Platform v36.0 - All 18 Apps"""
     
     def __init__(self):
-        self.knowledge_base = LEGAL_KNOWLEDGE_V20
+        self.knowledge_base = LEGAL_KNOWLEDGE_V36
         self.agents = self._create_agents()
         self.verifiers = self._create_verifiers()
-        self.judge = "AI Judge v20.0"
+        self.judge = "AI Judge v36.0"
         self.learning_history = []
         self.total_queries = 0
-        self.confidence_scores = []
-        self.knowledge_graph = {}
-        self.embeddings = {}
         
-        logger.info("🚀 Unknown Verdict v20.0 - Complete Autonomous AGI")
+        logger.info("🚀 Unknown Verdict v36.0 - Complete AGI Platform")
         logger.info(f"   ├─ Knowledge Topics: {len(self.knowledge_base)}")
         logger.info(f"   ├─ Agents: {len(self.agents)}")
         logger.info(f"   ├─ Verifiers: {len(self.verifiers)}")
+        logger.info(f"   ├─ Apps: 18")
         logger.info(f"   └─ Judge: {self.judge}")
     
     def _create_agents(self) -> List:
@@ -390,7 +520,8 @@ class UnknownVerdictV20:
             "Copyright Lawyer", "Labour Law Expert", "Insurance Lawyer",
             "Media Lawyer", "Space Law Expert", "Maritime Lawyer",
             "Aviation Lawyer", "Nuclear Law Expert", "Energy Lawyer",
-            "Telecom Lawyer", "Competition Lawyer", "Consumer Law Expert"
+            "Telecom Lawyer", "Competition Lawyer", "Consumer Law Expert",
+            "Real Estate Attorney", "HR Specialist", "Security Analyst"
         ]
         
         agents = []
@@ -420,20 +551,10 @@ class UnknownVerdictV20:
         """Process any query with complete AGI"""
         try:
             self.total_queries += 1
-            
-            # Find relevant knowledge
             knowledge = self._find_knowledge(query)
-            
-            # Get agent responses
             agent_responses = self._get_agent_responses(query, knowledge)
-            
-            # Verify responses
             verified = self._verify_responses(agent_responses)
-            
-            # AI Judge decision
             final_response = self._ai_judge_decision(verified, query)
-            
-            # Learn
             self._learn(query, final_response)
             
             return {
@@ -445,7 +566,6 @@ class UnknownVerdictV20:
                 "session_id": session_id,
                 "timestamp": datetime.now().isoformat()
             }
-            
         except Exception as e:
             logger.error(f"Processing error: {e}")
             return {
@@ -461,17 +581,13 @@ class UnknownVerdictV20:
         
         for key, knowledge in self.knowledge_base.items():
             score = 0
-            # Check title match
             if key.lower() in query_lower:
                 score += 10
-            # Check summary match
             if knowledge.get("summary", "").lower() in query_lower:
                 score += 5
-            # Check key provisions
             for provision in knowledge.get("key_provisions", []):
                 if provision.lower() in query_lower:
                     score += 3
-            # Check sections
             for section, desc in knowledge.get("key_sections", {}).items():
                 if section in query_lower or desc.lower() in query_lower:
                     score += 2
@@ -479,7 +595,6 @@ class UnknownVerdictV20:
             if score > 0:
                 matches[key] = {**knowledge, "_score": score}
         
-        # Sort by score
         matches = dict(sorted(matches.items(), key=lambda x: x[1].get("_score", 0), reverse=True))
         return matches
     
@@ -568,7 +683,7 @@ As a {agent['type']} with {agent['experience']} years of experience, I can provi
         best = max(verified, key=lambda x: x.get("verification_score", 0))
         response = best.get("response", "No response available")
         
-        decision = f"""⚖️ **AI Judge v20.0 - Final Decision**
+        decision = f"""⚖️ **AI Judge v36.0 - Final Decision**
 
 After analyzing your query with {len(verified)} verified agents:
 
@@ -591,20 +706,19 @@ After analyzing your query with {len(verified)} verified agents:
             "response": response[:500],
             "timestamp": datetime.now().isoformat()
         })
-        
-        # Keep only last 10,000 entries
         if len(self.learning_history) > 10000:
             self.learning_history = self.learning_history[-10000:]
     
     def get_status(self) -> Dict:
         """Get system status"""
         return {
-            "version": "20.0",
+            "version": "36.0",
             "status": "online",
             "agents": len(self.agents),
             "verifiers": len(self.verifiers),
             "judge": self.judge,
             "knowledge_base": len(self.knowledge_base),
+            "apps": 18,
             "languages": 20,
             "total_queries": self.total_queries,
             "learning_history": len(self.learning_history),
@@ -618,10 +732,10 @@ After analyzing your query with {len(verified)} verified agents:
 
 _engine_instance = None
 
-def get_engine() -> UnknownVerdictV20:
+def get_engine() -> UnknownVerdictV36:
     global _engine_instance
     if _engine_instance is None:
-        _engine_instance = UnknownVerdictV20()
+        _engine_instance = UnknownVerdictV36()
     return _engine_instance
 
 
@@ -629,4 +743,4 @@ def get_engine() -> UnknownVerdictV20:
 # EXPORTS
 # ============================================
 
-__all__ = ['UnknownVerdictV20', 'get_engine']
+__all__ = ['UnknownVerdictV36', 'get_engine']
