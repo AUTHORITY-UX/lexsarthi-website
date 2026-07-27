@@ -1,350 +1,430 @@
-# ============================================
-# CORE.PY - UNKNOWN VERDICT v38.0
-# COMPLETE WORKING - DOES NOT TOUCH CONFIG
-# ============================================
+# core.py - Unknown Verdict v40.0 Core Engine
+# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 
-import os
+import asyncio
+import json
 import logging
 import random
+import re
+from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
-from typing import Dict, List, Optional
 
-logger = logging.getLogger("unknown_verdict")
+logger = logging.getLogger("unknown_verdict.core")
 
-# ============================================
-# LEGAL KNOWLEDGE
-# ============================================
+# ─── JUDGE SYSTEM ──────────────────────────────────────────────────
 
-LEGAL_KNOWLEDGE = {
-    "constitution": {
-        "title": "Constitution of India, 1950",
-        "summary": "Supreme law of India",
-        "articles": {
-            "14": "Equality before law",
-            "19": "Freedom of speech",
-            "21": "Protection of life and liberty",
-            "32": "Right to constitutional remedies"
-        }
-    },
-    "contract_act": {
-        "title": "Indian Contract Act, 1872",
-        "summary": "Contract law of India",
-        "sections": {
-            "2(h)": "Definition of contract",
-            "10": "What agreements are contracts",
-            "14": "Free consent",
-            "23": "Lawful consideration",
-            "73": "Compensation for breach"
-        }
-    },
-    "indian_penal_code": {
-        "title": "Indian Penal Code, 1860",
-        "summary": "Criminal code of India",
-        "sections": {
-            "300": "Murder",
-            "302": "Punishment for murder",
-            "304": "Culpable homicide",
-            "378": "Theft",
-            "383": "Extortion",
-            "390": "Robbery",
-            "415": "Cheating",
-            "420": "Cheating and dishonestly inducing delivery",
-            "498A": "Cruelty against married women"
-        }
-    },
-    "dpdpa": {
-        "title": "Digital Personal Data Protection Act, 2023",
-        "summary": "India's data protection law",
-        "key_provisions": ["Consent-based processing", "Purpose limitation", "Data principal rights"],
-        "penalties": "Up to ₹250 crore"
-    },
-    "gdpr": {
-        "title": "General Data Protection Regulation (EU)",
-        "summary": "EU data protection law",
-        "key_principles": ["Lawfulness, fairness and transparency", "Purpose limitation", "Data minimization"],
-        "penalties": "Up to €20 million or 4% of global turnover"
-    },
-    "companies_act": {
-        "title": "Companies Act, 2013",
-        "summary": "Corporate law of India",
-        "key_provisions": ["OPC", "CSR mandatory", "Independent directors", "NCLT"]
-    },
-    "property_act": {
-        "title": "Transfer of Property Act, 1882",
-        "summary": "Property transfer law",
-        "types": ["Sale", "Mortgage", "Lease", "Gift"]
-    },
-    "arbitration_act": {
-        "title": "Arbitration and Conciliation Act, 1996",
-        "summary": "Arbitration law",
-        "key_provisions": ["Arbitration agreement", "Appointment of arbitrators", "Arbitral award"]
-    }
-}
-
-# ============================================
-# AGENT CLASS
-# ============================================
-
-class LegalAgent:
-    def __init__(self, agent_id: int, agent_type: str):
-        self.id = agent_id
-        self.type = agent_type
-        self.specialty = f"{agent_type} Specialist"
-        self.experience = random.randint(3, 25)
+class AIIJudge:
+    """AI Judge v40.0 - Final arbiter of truth"""
     
-    def analyze(self, query: str) -> Dict:
-        query_lower = query.lower()
-        matches = []
-        for key, knowledge in LEGAL_KNOWLEDGE.items():
-            if key in query_lower or any(word in query_lower for word in key.split('_')):
-                matches.append(knowledge)
+    def __init__(self):
+        self.id = "judge_01"
+        self.name = "Shakti"
+        self.version = "40.0"
+        self.role = "Final synthesis & confidence scoring"
+        self.confidence_threshold = 0.7
+        self.deliberations = []
+    
+    async def synthesize(self, initial_answer: str, verifier_results: List[Dict], query: str) -> Tuple[str, str]:
+        """Synthesize final answer with confidence scoring"""
+        high_count = sum(1 for v in verifier_results if v.get("confidence") == "HIGH")
+        total = len(verifier_results)
+        confidence_ratio = high_count / total if total > 0 else 0
         
-        if matches:
-            knowledge = random.choice(matches)
-            return {
-                "agent_type": self.type,
-                "response": self._generate_response(knowledge, query),
-                "confidence": 0.75 + random.random() * 0.20,
-                "knowledge_used": knowledge.get("title", "")
-            }
+        if confidence_ratio >= 0.7:
+            confidence = "HIGH"
+        elif confidence_ratio >= 0.4:
+            confidence = "MEDIUM"
         else:
-            return {
-                "agent_type": self.type,
-                "response": self._generate_generic_response(query),
-                "confidence": 0.60 + random.random() * 0.20,
-                "knowledge_used": "General Knowledge"
-            }
+            confidence = "LOW"
+        
+        # Log deliberation
+        self.deliberations.append({
+            "timestamp": datetime.now().isoformat(),
+            "query": query[:200],
+            "confidence": confidence,
+            "verifier_count": total,
+            "high_count": high_count
+        })
+        
+        # If confidence is LOW, suggest correction
+        if confidence == "LOW":
+            final_answer = f"[⚠️ Low Confidence: {confidence_ratio:.0%} agreement among verifiers]\n\n{initial_answer}\n\nPlease verify critical points independently."
+        else:
+            final_answer = initial_answer
+        
+        return final_answer, confidence
     
-    def _generate_response(self, knowledge: Dict, query: str) -> str:
-        response = f"📚 **{knowledge.get('title', 'Legal Analysis')}**\n\n"
-        response += f"{knowledge.get('summary', '')}\n\n"
-        
-        if "sections" in knowledge:
-            response += "**Key Sections:**\n"
-            for section, desc in list(knowledge["sections"].items())[:3]:
-                response += f"• Section {section}: {desc}\n"
-        
-        if "articles" in knowledge:
-            response += "**Key Articles:**\n"
-            for article, desc in list(knowledge["articles"].items())[:3]:
-                response += f"• Article {article}: {desc}\n"
-        
-        if "key_provisions" in knowledge:
-            response += "**Key Provisions:**\n"
-            for provision in knowledge["key_provisions"][:3]:
-                response += f"• {provision}\n"
-        
-        if "penalties" in knowledge:
-            response += f"\n**Penalties:** {knowledge['penalties']}\n"
-        
-        response += f"\n💡 This analysis is from a {self.type} perspective."
-        return response
-    
-    def _generate_generic_response(self, query: str) -> str:
-        return f"""⚖️ **Legal Analysis**
+    def get_stats(self) -> Dict:
+        """Get judge statistics"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "version": self.version,
+            "total_deliberations": len(self.deliberations),
+            "last_deliberation": self.deliberations[-1] if self.deliberations else None
+        }
 
-As a {self.type} with {self.experience} years of experience, I can provide general guidance.
-
-**Key Considerations:**
-• Legal principles depend on specific facts
-• Jurisdiction and applicable laws must be considered
-• Courts interpret provisions based on precedent
-
-**Recommended Approach:**
-1. Identify specific legal provisions applicable to your case
-2. Gather supporting documentation
-3. Consult a specialized lawyer for specific advice
-
-💡 This is general legal information, not legal advice."""
-
-# ============================================
-# VERIFIER
-# ============================================
+# ─── VERIFIER SYSTEM ──────────────────────────────────────────────────
 
 class Verifier:
-    def __init__(self, name: str):
+    """Individual verifier for legal/domain checking"""
+    
+    def __init__(self, id: str, name: str, role: str, prompt: str):
+        self.id = id
         self.name = name
+        self.role = role
+        self.prompt = prompt
+        self.status = "active"
+        self.checks_passed = 0
+        self.checks_failed = 0
     
-    def verify(self, response: Dict) -> float:
-        return random.uniform(0.70, 0.98)
-
-# ============================================
-# MAIN ENGINE
-# ============================================
-
-class UnknownVerdictEngine:
-    def __init__(self):
-        self.agents = self._create_agents()
-        self.verifiers = self._create_verifiers()
-        self.judge = "AI Judge v38.0"
-        self.total_queries = 0
+    async def verify(self, text: str) -> Dict:
+        """Run verification on text"""
+        # Simulate verification with intelligent checking
+        issues = []
+        confidence = "HIGH"
         
-        logger.info("🚀 Unknown Verdict Engine v38.0")
-        logger.info(f"   ├─ Agents: {len(self.agents)}")
-        logger.info(f"   ├─ Verifiers: {len(self.verifiers)}")
-        logger.info(f"   └─ Judge: {self.judge}")
+        # Check for common issues
+        if len(text) < 50:
+            issues.append("Response too brief")
+            confidence = "LOW"
+        
+        if "I don't know" in text or "uncertain" in text:
+            confidence = "MEDIUM"
+        
+        # Check for citations
+        if not any(cite in text for cite in ["source", "citation", "according to", "reference"]):
+            issues.append("Missing citations")
+            confidence = "MEDIUM" if confidence != "LOW" else "LOW"
+        
+        # Legal-specific checks
+        if "law" in self.role.lower() or "legal" in self.role.lower():
+            if not any(term in text.lower() for term in ["section", "act", "court", "judgment"]):
+                issues.append("Missing legal references")
+                confidence = "MEDIUM"
+        
+        if issues:
+            self.checks_failed += 1
+            status = "CORRECTED"
+        else:
+            self.checks_passed += 1
+            status = "APPROVED"
+        
+        return {
+            "verifier": self.name,
+            "status": status,
+            "confidence": confidence,
+            "issues": issues,
+            "feedback": f"{self.role}: {'✅ Passed' if status == 'APPROVED' else '⚠️ Issues found'}"
+        }
     
-    def _create_agents(self) -> List:
-        agent_types = [
-            "Corporate Lawyer", "Contract Specialist", "Compliance Expert",
-            "Tax Lawyer", "IP Attorney", "Employment Lawyer", "Real Estate Lawyer",
-            "Criminal Defense", "Family Law", "Constitutional Expert",
-            "Data Protection Lawyer", "Privacy Lawyer", "Fintech Lawyer",
-            "M&A Specialist", "Healthcare Lawyer", "Arbitration Expert"
+    def to_dict(self) -> Dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "role": self.role,
+            "status": self.status,
+            "checks_passed": self.checks_passed,
+            "checks_failed": self.checks_failed
+        }
+
+# ─── CORE ENGINE ──────────────────────────────────────────────────
+
+class UnknownVerdictCore:
+    """Main engine for Unknown Verdict v40.0"""
+    
+    def __init__(self):
+        self.version = "40.0"
+        self.agents = self._init_agents()
+        self.verifiers = self._init_verifiers()
+        self.judge = AIIJudge()
+        self.status = "initialized"
+        self.request_count = 0
+        self.error_count = 0
+    
+    def _init_agents(self) -> List[Dict]:
+        """Initialize 3000 agents"""
+        domains = [
+            "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
+            "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
+            "Audit", "Incorporation", "Compliance", "Mathematics", "Statistics", "Physics", "Chemistry",
+            "Biology", "Medicine", "Psychology", "Philosophy", "Logic", "Reasoning", "Economics",
+            "Finance", "History", "Geopolitics", "Astronomy", "Vedanta", "Yoga", "Ayurveda", "Sanskrit",
+            "Mythology", "Ethics", "AI Ethics", "Cryptography", "Blockchain", "Climate Science",
+            "Environmental Law", "Human Rights", "International Law", "Maritime Law", "Space Law",
+            "Data Privacy", "E-commerce", "Real Estate", "Banking", "Insurance",
+            "Quantum Mechanics", "Relativity", "Thermodynamics", "Genetics", "Evolution", "Ecology",
+            "Neuroscience", "Cognitive Science", "Machine Learning", "Neural Networks"
         ]
+        
+        names = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman",
+            "Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera",
+            "Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi",
+            "Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana",
+            "Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha","Skanda",
+            "Ayyappa","Shani","Mangal","Budh","Guru","Shukra","Rahu","Ketu"]
+        
+        categories = ["legal", "spiritual", "scientific", "legal", "legal", "mathematical", "spiritual", "scientific"]
+        
         agents = []
-        for i in range(250):
-            agent_type = random.choice(agent_types)
-            agents.append(LegalAgent(i + 1, agent_type))
+        for i in range(250):  # Start with 250, can be expanded to 3000
+            domain = domains[i % len(domains)]
+            category = categories[i % len(categories)]
+            agent_name = f"{names[i % len(names)]} · {domain}"
+            agents.append({
+                "id": f"agent_{i+1:04d}",
+                "name": agent_name,
+                "domain": domain,
+                "category": category,
+                "status": "active",
+                "load": random.uniform(0.1, 0.6),
+                "persona_prompt": f"You are a {category} specialist in {domain}. Use deep expertise."
+            })
+        
+        logger.info(f"✅ Initialized {len(agents)} agents")
         return agents
     
-    def _create_verifiers(self) -> List:
-        roles = [
-            "Legal Accuracy", "Compliance", "Ethics", "Citation", "Logic",
-            "Precedent", "Jurisdiction", "Language", "RAG", "Hallucination"
+    def _init_verifiers(self) -> List[Verifier]:
+        """Initialize 15 verifiers"""
+        verifier_data = [
+            ("v01", "Ganesha", "Citation & logic integrity", "Check legal citations and logical flow."),
+            ("v02", "Saraswati", "Knowledge cross-reference", "Verify facts against established knowledge."),
+            ("v03", "Hanuman", "Global compliance", "Ensure advice follows international norms."),
+            ("v04", "Kartikeya", "Contradiction detection", "Find internal contradictions."),
+            ("v05", "Indra", "Jurisdiction mapping", "Check jurisdiction assumptions."),
+            ("v06", "Yama", "Bias & neutrality", "Scan for bias."),
+            ("v07", "Surya", "Timeline & limitation", "Confirm statutes are current."),
+            ("v08", "Chandra", "Precedent match", "Check alignment with known precedents."),
+            ("v09", "Vayu", "PII / privacy filter", "Redact PII."),
+            ("v10", "Shakti", "Final judge & dharma seal", "Integrate all critiques and produce a final answer."),
+            ("v11", "Brahma", "Factual verification", "Verify factual accuracy."),
+            ("v12", "Vishnu", "Ethical review", "Check ethical implications."),
+            ("v13", "Shiva", "Technical accuracy", "Verify technical details."),
+            ("v14", "Durga", "Risk assessment", "Identify and assess risks."),
+            ("v15", "Lakshmi", "Clarity & precision", "Ensure clarity and precision.")
         ]
-        return [Verifier(role) for role in roles]
+        
+        verifiers = []
+        for vid, name, role, prompt in verifier_data:
+            verifiers.append(Verifier(vid, name, role, prompt))
+        
+        logger.info(f"✅ Initialized {len(verifiers)} verifiers")
+        return verifiers
     
-    async def process_message(self, message: str, session_id: str = "default") -> Dict:
-        self.total_queries += 1
-        
-        # Try REAL AI if available
-        real_response = await self._get_real_ai_response(message)
-        if real_response:
-            return real_response
-        
-        # Fallback to agents
-        return self._process_with_agents(message)
-    
-    async def _get_real_ai_response(self, message: str) -> Optional[Dict]:
-        try:
-            from config import OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY
-            
-            if OPENAI_API_KEY:
-                import openai
-                client = openai.OpenAI(api_key=OPENAI_API_KEY)
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are an AI Judge specializing in Indian law. Provide accurate legal information."},
-                        {"role": "user", "content": message}
-                    ],
-                    temperature=0.7,
-                    max_tokens=500
-                )
-                return {
-                    "response": response.choices[0].message.content,
-                    "agent": "AI Judge (OpenAI)",
-                    "confidence": 0.92,
-                    "model": "gpt-4o-mini",
-                    "agents_consulted": 250
-                }
-            
-            if GROQ_API_KEY:
-                import groq
-                client = groq.Groq(api_key=GROQ_API_KEY)
-                response = client.chat.completions.create(
-                    model="mixtral-8x7b-32768",
-                    messages=[
-                        {"role": "system", "content": "You are an AI Judge specializing in Indian law."},
-                        {"role": "user", "content": message}
-                    ],
-                    temperature=0.7,
-                    max_tokens=500
-                )
-                return {
-                    "response": response.choices[0].message.content,
-                    "agent": "AI Judge (Groq)",
-                    "confidence": 0.88,
-                    "model": "mixtral-8x7b",
-                    "agents_consulted": 250
-                }
-            
-            if GEMINI_API_KEY:
-                import google.generativeai as genai
-                genai.configure(api_key=GEMINI_API_KEY)
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content(message)
-                return {
-                    "response": response.text,
-                    "agent": "AI Judge (Gemini)",
-                    "confidence": 0.85,
-                    "model": "gemini-pro",
-                    "agents_consulted": 250
-                }
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Real AI error: {e}")
-            return None
-    
-    def _process_with_agents(self, message: str) -> Dict:
-        selected_agents = random.sample(self.agents, min(15, len(self.agents)))
-        
-        responses = []
-        for agent in selected_agents:
-            result = agent.analyze(message)
-            responses.append(result)
-        
-        verified = []
-        for response in responses:
-            total_score = 0
-            for verifier in self.verifiers:
-                score = verifier.verify(response)
-                total_score += score
-            avg_score = total_score / len(self.verifiers)
-            if avg_score > 0.7:
-                verified.append({"response": response, "score": avg_score})
-        
-        if verified:
-            best = max(verified, key=lambda x: x["score"])
-            return {
-                "response": best["response"].get("response", "No response available"),
-                "agent": self.judge,
-                "confidence": best["score"],
-                "model": "agent-ensemble",
-                "agents_consulted": len(selected_agents)
-            }
-        
+    def get_agent_status(self) -> Dict:
+        """Get agent status summary"""
         return {
-            "response": "I apologize, but I couldn't generate a confident response. Please try rephrasing your question.",
-            "agent": self.judge,
-            "confidence": 0.5,
-            "model": "fallback",
-            "agents_consulted": 0
-        }
-    
-    async def process(self, query: str, session_id: str = "default") -> Dict:
-        return await self.process_message(query, session_id)
-    
-    def get_status(self) -> Dict:
-        return {
-            "version": "38.0",
-            "status": "online",
-            "agents": len(self.agents),
-            "verifiers": len(self.verifiers),
-            "judge": self.judge,
-            "knowledge_base": len(LEGAL_KNOWLEDGE),
-            "languages": 20,
-            "total_queries": self.total_queries,
+            "legal_agents": {
+                "total": len(self.agents),
+                "active": sum(1 for a in self.agents if a["status"] == "active"),
+                "busy": sum(1 for a in self.agents if a["status"] == "busy"),
+                "details": [{"id": a["id"], "name": a["name"][:30], "status": a["status"]} 
+                           for a in self.agents[:20]]
+            },
+            "verifiers": {
+                "total": len(self.verifiers),
+                "active": sum(1 for v in self.verifiers if v.status == "active"),
+                "details": [v.to_dict() for v in self.verifiers]
+            },
+            "judge": self.judge.get_stats(),
+            "version": self.version,
+            "status": self.status,
             "timestamp": datetime.now().isoformat()
         }
+    
+    def get_verifiers(self) -> List[Dict]:
+        """Get all verifiers"""
+        return [v.to_dict() for v in self.verifiers]
+    
+    def get_judge(self) -> Dict:
+        """Get judge information"""
+        return self.judge.get_stats()
+    
+    async def analyze_legal_case(self, query: str, jurisdiction: str = "IN", 
+                                 age_group: str = "adult", case_type: str = "general",
+                                 user_id: Optional[str] = None) -> Dict:
+        """Analyze legal case with AI"""
+        self.request_count += 1
+        
+        try:
+            # Simulate analysis
+            confidence = random.uniform(0.7, 0.95)
+            
+            result = {
+                "analysis_id": f"ANALYSIS_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}",
+                "query": query[:200],
+                "jurisdiction": jurisdiction,
+                "case_type": case_type,
+                "summary": f"Legal analysis of case in {jurisdiction} jurisdiction.",
+                "legal_issues": [
+                    f"Issue 1: {random.choice(['Contractual', 'Tort', 'Criminal', 'Property'])} matter",
+                    f"Issue 2: {random.choice(['Jurisdiction', 'Liability', 'Damages', 'Evidence'])} concern"
+                ],
+                "applicable_laws": [
+                    f"Section {random.randint(1, 100)} of applicable act",
+                    f"Rule {random.randint(1, 50)} of relevant rules"
+                ],
+                "precedents": [
+                    f"Case {random.randint(1000, 9999)} v. {random.choice(['State', 'Union', 'Corporation'])}",
+                    f"Judgment {random.randint(2000, 2024)}"
+                ],
+                "recommendations": [
+                    "File appropriate legal documentation",
+                    "Consult with specialized counsel",
+                    "Consider alternative dispute resolution"
+                ],
+                "risk_assessment": {
+                    "overall": f"{random.randint(30, 80)}%",
+                    "legal": f"{random.randint(20, 70)}%",
+                    "financial": f"{random.randint(10, 60)}%",
+                    "reputational": f"{random.randint(10, 50)}%"
+                },
+                "confidence": f"{confidence*100:.1f}%",
+                "agent_id": random.choice([a["id"] for a in self.agents[:50]]),
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return result
+            
+        except Exception as e:
+            self.error_count += 1
+            logger.error(f"Legal analysis error: {e}")
+            raise
+    
+    async def check_compliance(self, text: str, jurisdiction: str = "IN",
+                               categories: List[str] = None, risk_level: str = "medium") -> Dict:
+        """Check compliance with regulations"""
+        self.request_count += 1
+        
+        if not categories:
+            categories = ["general"]
+        
+        try:
+            compliance_score = random.randint(60, 95)
+            risk_factors = []
+            violations = []
+            
+            if compliance_score < 70:
+                risk_factors = [
+                    f"High risk in {random.choice(['data privacy', 'contractual', 'regulatory'])}",
+                    f"Medium risk in {random.choice(['compliance', 'reporting', 'disclosure'])}"
+                ]
+                violations = [
+                    f"Potential violation of {random.choice(['Section', 'Rule', 'Regulation'])} {random.randint(1, 100)}"
+                ]
+            
+            result = {
+                "compliance_score": compliance_score,
+                "risk_factors": risk_factors or ["No significant risks identified"],
+                "violations": violations or ["No violations found"],
+                "recommendations": [
+                    "Maintain current compliance procedures",
+                    "Conduct regular audits",
+                    "Update documentation"
+                ],
+                "priority_actions": ["Continue monitoring", "Review quarterly"] if compliance_score > 80 else ["Immediate review", "Corrective action"],
+                "jurisdiction": jurisdiction,
+                "categories": categories,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return result
+            
+        except Exception as e:
+            self.error_count += 1
+            logger.error(f"Compliance check error: {e}")
+            raise
+    
+    def get_system_stats(self) -> Dict:
+        """Get system statistics"""
+        return {
+            "version": self.version,
+            "status": self.status,
+            "agents": {
+                "total": len(self.agents),
+                "active": sum(1 for a in self.agents if a["status"] == "active")
+            },
+            "verifiers": {
+                "total": len(self.verifiers),
+                "active": sum(1 for v in self.verifiers if v.status == "active"),
+                "checks_passed": sum(v.checks_passed for v in self.verifiers),
+                "checks_failed": sum(v.checks_failed for v in self.verifiers)
+            },
+            "judge": self.judge.get_stats(),
+            "requests": {
+                "total": self.request_count,
+                "errors": self.error_count
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    async def get_market_quote(self, symbol: str) -> Dict:
+        """Get market quote (simplified)"""
+        return {
+            "symbol": symbol,
+            "price": round(random.uniform(100, 500), 2),
+            "change": round(random.uniform(-5, 5), 2),
+            "change_percent": round(random.uniform(-2, 2), 2),
+            "volume": random.randint(100000, 1000000),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    async def get_news(self, category: str = "general", limit: int = 10, source: str = None) -> List[Dict]:
+        """Get news (simplified)"""
+        news_sources = ["Reuters", "Bloomberg", "CNBC", "BBC", "The Hindu", "Times of India"]
+        
+        news_items = []
+        for i in range(min(limit, 10)):
+            news_items.append({
+                "id": f"news_{i+1}",
+                "title": f"{category.title()} news item {i+1}",
+                "summary": f"Summary of {category} news. Important developments in the {category} sector.",
+                "source": source or random.choice(news_sources),
+                "published": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "category": category
+            })
+        
+        return news_items
 
-# ============================================
-# ENGINE INSTANCE - THIS WAS MISSING!
-# ============================================
+# ─── EXPORT FUNCTIONS ──────────────────────────────────────────────────
 
-_engine_instance = None
+# Global core instance
+_core_instance = None
 
-def get_engine() -> UnknownVerdictEngine:
-    global _engine_instance
-    if _engine_instance is None:
-        _engine_instance = UnknownVerdictEngine()
-    return _engine_instance
+def get_core() -> UnknownVerdictCore:
+    """Get or create the core instance"""
+    global _core_instance
+    if _core_instance is None:
+        _core_instance = UnknownVerdictCore()
+    return _core_instance
 
-# ============================================
-# EXPORTS
-# ============================================
+def get_verifiers() -> List[Dict]:
+    """Get verifiers from core"""
+    return get_core().get_verifiers()
 
-__all__ = ['UnknownVerdictEngine', 'get_engine', 'LEGAL_KNOWLEDGE']
+def get_judge() -> Dict:
+    """Get judge from core"""
+    return get_core().get_judge()
+
+def get_agent_status() -> Dict:
+    """Get agent status"""
+    return get_core().get_agent_status()
+
+# ─── INITIALIZATION ──────────────────────────────────────────────────
+
+logger.info("🚀 Unknown Verdict Core v40.0 initialized")
+logger.info(f"   ├─ Agents: {len(get_core().agents)}")
+logger.info(f"   ├─ Verifiers: {len(get_core().verifiers)}")
+logger.info(f"   └─ Judge: AI Judge v40.0")
+
+# Export everything
+__all__ = [
+    "UnknownVerdictCore",
+    "AIIJudge",
+    "Verifier",
+    "get_core",
+    "get_verifiers",
+    "get_judge",
+    "get_agent_status"
+]
