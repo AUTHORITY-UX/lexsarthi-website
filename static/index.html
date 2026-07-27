@@ -1,1319 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY – v38.0 · For Everyone</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Unknown Verdict v40.0 – The Advocacy</title>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+        /* Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #050508;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a3a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        .header .logo {
+            font-size: 4em;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 10px 0 5px;
+        }
+        .header .subtitle {
+            font-size: 1.1em;
+            color: #4ECDC4;
+            opacity: 0.8;
+        }
+        .header .version {
+            display: inline-block;
+            background: #6C3CE1;
+            padding: 4px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-top: 10px;
             color: #fff;
-            overflow: hidden;
-            height: 100vh;
         }
-        #grid-overlay {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            pointer-events:none;
-            z-index:1;
-            background-image: 
-                linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
-            background-size:40px 40px;
+        
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        #clock {
-            position: fixed;
-            top:20px; right:30px;
-            z-index:100;
-            text-align:right;
-            pointer-events:none;
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
         }
-        #clock .time { font-size:28px; font-weight:700; color:#00d4ff; letter-spacing:2px; text-shadow:0 0 30px rgba(0,200,255,0.3); }
-        #clock .date { font-size:11px; color:rgba(0,200,255,0.5); letter-spacing:1px; margin-top:2px; }
-        #clock .tz { font-size:9px; color:rgba(0,200,255,0.3); letter-spacing:3px; text-transform:uppercase; margin-top:2px; }
-        #heartbeat {
-            position: fixed;
-            bottom:30px; right:30px;
-            z-index:100;
-            display:flex;
-            align-items:center;
-            gap:10px;
-            pointer-events:none;
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #6C3CE1;
+            box-shadow: 0 5px 30px rgba(108,60,225,0.2);
         }
-        #heartbeat .icon { font-size:20px; color:#00d4ff; animation:beat 1.2s infinite; }
-        #heartbeat .text { font-size:10px; color:rgba(0,200,255,0.4); letter-spacing:3px; text-transform:uppercase; }
-        #heartbeat .line { width:60px; height:2px; background:linear-gradient(90deg,rgba(0,200,255,0.1),rgba(0,200,255,0.4),rgba(0,200,255,0.1)); border-radius:2px; animation:beatLine 1.2s infinite; }
-        @keyframes beat { 0%,100%{transform:scale(1);opacity:0.6} 14%{transform:scale(1.3);opacity:1} 28%{transform:scale(1);opacity:0.6} 42%{transform:scale(1.2);opacity:0.9} 70%{transform:scale(1);opacity:0.6} }
-        @keyframes beatLine { 0%,100%{width:40px;opacity:0.3} 14%{width:80px;opacity:1} 28%{width:40px;opacity:0.3} 42%{width:70px;opacity:0.8} 70%{width:40px;opacity:0.3} }
-        #eyeContainer {
-            position: fixed;
-            top:50%; left:50%;
-            transform:translate(-50%,-50%);
-            z-index:10;
-            cursor:pointer;
-            transition:0.5s;
+        .stat-card .number {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #6C3CE1;
+            display: block;
         }
-        #eyeContainer:hover { transform:translate(-50%,-50%) scale(1.05); }
-        #eyeContainer .eye-ring {
-            position:absolute;
-            top:50%; left:50%;
-            transform:translate(-50%,-50%);
-            border-radius:50%;
-            border:2px solid rgba(0,200,255,0.12);
-            animation:ringExpand 4s infinite;
+        .stat-card .label {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
         }
-        #eyeContainer .eye-ring:nth-child(1) { width:200px; height:200px; }
-        #eyeContainer .eye-ring:nth-child(2) { width:240px; height:240px; animation-delay:1s; }
-        #eyeContainer .eye-ring:nth-child(3) { width:280px; height:280px; animation-delay:2s; }
-        #eyeContainer .eye-ring:nth-child(4) { width:320px; height:320px; animation-delay:3s; }
-        @keyframes ringExpand { 0%{transform:translate(-50%,-50%) scale(0.8);opacity:1} 100%{transform:translate(-50%,-50%) scale(1.5);opacity:0} }
-        #eyeContainer svg { width:180px; height:180px; filter:drop-shadow(0 0 40px rgba(0,200,255,0.3)); animation:eyePulse 3s infinite; }
-        @keyframes eyePulse { 0%,100%{filter:drop-shadow(0 0 40px rgba(0,200,255,0.3))} 50%{filter:drop-shadow(0 0 80px rgba(0,200,255,0.6))} }
-        #eyeContainer.hidden { transform:translate(-50%,-50%) scale(0.3); opacity:0; pointer-events:none; }
-        .click-hint {
-            position: fixed;
-            bottom:40px; left:50%;
-            transform:translateX(-50%);
-            z-index:10;
-            color:rgba(0,200,255,0.3);
-            font-size:10px;
-            letter-spacing:4px;
-            text-transform:uppercase;
-            animation:blinkHint 2s infinite;
+        
+        /* Main Card */
+        .main-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
         }
-        @keyframes blinkHint { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
-        #paymentOverlay {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            z-index:60;
-            background:rgba(0,0,0,0.92);
-            backdrop-filter:blur(20px);
-            display:none;
-            justify-content:center;
-            align-items:center;
+        .main-card h2 {
+            color: #4ECDC4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        #paymentOverlay.active { display:flex; }
-        .payment-box {
-            background:rgba(10,10,30,0.95);
-            border:1px solid rgba(0,200,255,0.2);
-            border-radius:20px;
-            padding:40px;
-            max-width:420px;
-            width:90%;
-            text-align:center;
-            position:relative;
-            animation:fadeIn 0.4s;
+        
+        /* Query Box */
+        .query-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        @keyframes fadeIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
-        .payment-box .lock { font-size:48px; color:#00d4ff; margin-bottom:16px; }
-        .payment-box h2 { font-size:22px; font-weight:700; margin-bottom:8px; }
-        .payment-box p { font-size:14px; color:#9ca3af; margin-bottom:20px; }
-        .payment-box .price { font-size:36px; font-weight:700; background:linear-gradient(135deg,#00d4ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:20px; }
-        .payment-box .btn-pay { background:linear-gradient(135deg,#00d4ff,#a78bfa); color:#000; border:none; padding:14px 40px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; width:100%; }
-        .payment-box .btn-pay:disabled { opacity:0.5; cursor:not-allowed; }
-        .payment-box .btn-close { background:transparent; color:#6b7280; border:none; font-size:24px; position:absolute; top:15px; right:20px; cursor:pointer; }
-        .payment-box .btn-close:hover { color:#ff4444; transform:rotate(90deg); }
-        .payment-box .status { font-size:13px; margin-top:12px; display:none; }
-        .payment-box .status.show { display:block; }
-        .payment-box .status.error { color:#ef4444; }
-        .payment-box .status.success { color:#4ade80; }
-        #vault {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            z-index:20;
-            opacity:0;
-            pointer-events:none;
-            transition:0.8s;
-            overflow-y:auto;
-            background:rgba(5,5,8,0.95);
-            backdrop-filter:blur(20px);
+        .query-box input {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1em;
         }
-        #vault.open { opacity:1; pointer-events:all; }
-        .vault-header {
-            padding:16px 30px;
-            border-bottom:1px solid rgba(0,200,255,0.08);
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            position:sticky;
-            top:0;
-            background:rgba(5,5,8,0.95);
-            z-index:30;
+        .query-box input::placeholder {
+            color: rgba(255,255,255,0.4);
         }
-        .vault-header .logo { display:flex; align-items:center; gap:12px; }
-        .vault-header .logo svg { width:28px; height:28px; }
-        .vault-header .logo h1 { font-size:16px; font-weight:700; background:linear-gradient(135deg,#00d4ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .vault-header .close { color:#9ca3af; cursor:pointer; font-size:22px; }
-        .vault-header .close:hover { color:#ff4444; transform:rotate(90deg); }
-        .vault-content { padding:24px 30px; max-width:1400px; margin:0 auto; }
-        .age-tabs {
-            display:flex;
-            gap:8px;
-            margin-bottom:20px;
-            flex-wrap:wrap;
+        .query-box input:focus {
+            outline: none;
+            border-color: #6C3CE1;
         }
-        .age-tab {
-            padding:8px 16px;
-            border-radius:20px;
-            border:1px solid rgba(255,255,255,0.1);
-            background:transparent;
-            color:#9ca3af;
-            cursor:pointer;
-            transition:0.3s;
-            font-size:12px;
+        .query-box button {
+            padding: 14px 30px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
         }
-        .age-tab:hover { background:rgba(0,200,255,0.1); color:#fff; }
-        .age-tab.active { background:rgba(0,200,255,0.15); color:#00d4ff; border-color:#00d4ff; }
-        .vault-grid {
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-            gap:16px;
-            margin-top:16px;
+        .query-box button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 30px rgba(108,60,225,0.4);
         }
-        .vault-card {
-            background:rgba(10,10,30,0.5);
-            border:1px solid rgba(0,200,255,0.06);
-            border-radius:14px;
-            padding:20px;
-            cursor:pointer;
-            transition:0.4s;
+        .query-box button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
-        .vault-card:hover { transform:translateY(-4px); border-color:rgba(0,200,255,0.2); box-shadow:0 20px 60px rgba(0,200,255,0.05); }
-        .vault-card .icon { font-size:28px; margin-bottom:8px; }
-        .vault-card h3 { font-size:15px; font-weight:600; margin-bottom:4px; }
-        .vault-card p { font-size:12px; color:#9ca3af; line-height:1.5; }
-        .vault-card .badge {
-            display:inline-block;
-            padding:2px 10px;
-            border-radius:20px;
-            font-size:9px;
-            font-weight:600;
-            margin-top:8px;
+        
+        /* Response */
+        .response {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.95em;
+            line-height: 1.6;
         }
-        .vault-card .badge.green { background:rgba(34,197,94,0.15); color:#4ade80; }
-        .vault-card .badge.yellow { background:rgba(234,179,8,0.15); color:#facc15; }
-        .vault-card .badge.purple { background:rgba(168,85,247,0.15); color:#a78bfa; }
-        .vault-card .badge.orange { background:rgba(251,146,60,0.15); color:#fb923c; }
-        .vault-card .badge.cyan { background:rgba(0,200,255,0.15); color:#00d4ff; }
-        .vault-card .badge.pink { background:rgba(236,72,153,0.15); color:#f472b6; }
-        .vault-card .badge.gold { background:rgba(234,179,8,0.25); color:#fbbf24; }
-        .vault-card .badge.red { background:rgba(239,68,68,0.15); color:#ef4444; }
-        .vault-card .badge.teal { background:rgba(20,184,166,0.15); color:#14b8a6; }
-        .app-page { display:none; padding:20px; max-width:1200px; margin:0 auto; }
-        .app-page.active { display:block; }
-        .app-card { background:rgba(10,10,30,0.7); border:1px solid rgba(0,200,255,0.08); border-radius:16px; padding:20px; margin-bottom:16px; }
-        .chat-message { animation:slideUp 0.4s; }
-        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(0,200,255,0.3); border-radius:4px; }
-        .level-badge {
-            background:linear-gradient(135deg,#00d4ff,#a78bfa);
-            border-radius:50%;
-            width:40px;
-            height:40px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:700;
-            font-size:14px;
-            color:#000;
+        .response .loading {
+            color: #4ECDC4;
+            animation: pulse 1s infinite;
         }
-        .xp-bar { height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-top:4px; }
-        .xp-bar .fill { height:100%; background:linear-gradient(90deg,#00d4ff,#a78bfa); border-radius:3px; transition:width 0.5s; }
-        .news-card { background:rgba(10,10,30,0.4); border-radius:12px; padding:16px; margin-bottom:12px; border-left:3px solid #00d4ff; }
-        .news-card h4 { font-size:14px; font-weight:600; margin-bottom:4px; }
-        .news-card p { font-size:12px; color:#9ca3af; }
-        .news-card .time { font-size:10px; color:#6b7280; margin-top:4px; }
-        @media (max-width:768px) {
-            .vault-content { padding:12px 15px; }
-            .vault-grid { grid-template-columns:1fr; }
-            #clock .time { font-size:20px; }
-            #eyeContainer svg { width:120px; height:120px; }
-            .payment-box { padding:24px; }
-            .age-tab { font-size:10px; padding:6px 12px; }
+        .response .error {
+            color: #FF6B6B;
+        }
+        
+        /* Apps Grid */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .app-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .app-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: #6C3CE1;
+            transform: translateY(-3px);
+        }
+        .app-item .icon {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .app-item .name {
+            font-size: 0.85em;
+            color: #ccc;
+        }
+        .app-item .tag {
+            display: inline-block;
+            font-size: 0.6em;
+            background: rgba(108,60,225,0.3);
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-top: 5px;
+            color: #6C3CE1;
+        }
+        
+        /* Footer - TRIDENT PERMANENT ASSET */
+        .footer {
+            text-align: center;
+            padding: 30px 0 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 30px;
+        }
+        .footer .firm {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #4ECDC4;
+        }
+        .footer .powered {
+            font-size: 0.85em;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+        .footer .trident {
+            font-size: 0.8em;
+            color: #FFD700;
+            margin-top: 10px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .query-box { flex-direction: column; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .apps-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .apps-grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+<div class="container">
+    <!-- Header -->
+    <header class="header">
+        <span class="logo">⚖️</span>
+        <h1>THE ADVOCACY</h1>
+        <div class="subtitle">Global Law Firm</div>
+        <div class="version">v40.0 • Unknown Verdict</div>
+    </header>
 
-<div id="grid-overlay"></div>
-
-<!-- CLOCK -->
-<div id="clock">
-    <div class="time" id="clockTime">--:--:--</div>
-    <div class="date" id="clockDate">LOADING...</div>
-    <div class="tz">IST · UTC +5:30</div>
-</div>
-
-<!-- HEARTBEAT -->
-<div id="heartbeat">
-    <span class="icon">❤</span>
-    <span class="text">Infinity</span>
-    <span class="line"></span>
-</div>
-
-<!-- EYE -->
-<div id="eyeContainer" onclick="showPayment()">
-    <div class="eye-ring"></div><div class="eye-ring"></div><div class="eye-ring"></div><div class="eye-ring"></div>
-    <svg viewBox="0 0 300 300">
-        <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0,200,255,0.08)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="110" fill="none" stroke="rgba(0,200,255,0.12)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="80" fill="none" stroke="rgba(0,200,255,0.18)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="50" fill="rgba(0,200,255,0.06)" stroke="rgba(0,200,255,0.25)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="30" fill="rgba(0,200,255,0.1)" stroke="rgba(0,200,255,0.3)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="15" fill="rgba(0,200,255,0.2)" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="6" fill="#00d4ff"/>
-        <circle cx="147" cy="147" r="2" fill="rgba(255,255,255,0.9)"/>
-        <line x1="150" y1="100" x2="150" y2="120" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <line x1="150" y1="180" x2="150" y2="200" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <line x1="100" y1="150" x2="120" y2="150" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <line x1="180" y1="150" x2="200" y2="150" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="70" fill="none" stroke="rgba(0,200,255,0.08)">
-            <animate attributeName="r" values="70;100;70" dur="3s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.08;0;0.08" dur="3s" repeatCount="indefinite"/>
-        </circle>
-    </svg>
-</div>
-<div class="click-hint">◈ Click the Eye to Enter ◈</div>
-
-<!-- PAYMENT -->
-<div id="paymentOverlay">
-    <div class="payment-box">
-        <button class="btn-close" onclick="closePayment()">✕</button>
-        <div class="lock">🔓</div>
-        <h2>Welcome to THE ADVOCACY</h2>
-        <p>For Everyone – Kids · Teens · Adults · Seniors</p>
-        <div class="price">₹2</div>
-        <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
-            <i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter
-        </button>
-        <div class="status" id="paymentStatus">⏳ Processing...</div>
-        <p style="font-size:10px; color:#4b5563; margin-top:16px;">🔒 Secure via Razorpay</p>
-    </div>
-</div>
-
-<!-- VAULT -->
-<div id="vault">
-    <div class="vault-header">
-        <div class="logo">
-            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.3)" stroke-width="2"/><circle cx="50" cy="50" r="35" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.15)" stroke-width="1.5"/><circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.2)" stroke-width="1.5"/><circle cx="50" cy="50" r="15" fill="rgba(0,200,255,0.15)" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/><circle cx="50" cy="50" r="8" fill="#00d4ff"/><circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.9)"/></svg>
-            <h1>THE ADVOCACY · FOR EVERYONE</h1>
+    <!-- Stats -->
+    <div class="stats" id="stats">
+        <div class="stat-card">
+            <span class="number" id="agentCount">250</span>
+            <span class="label">AI Agents</span>
         </div>
-        <div class="close" onclick="closeVault()">✕</div>
-    </div>
-
-    <div class="vault-content">
-        <!-- Age Tabs -->
-        <div class="age-tabs">
-            <button class="age-tab active" onclick="filterApps('all')">🌟 All</button>
-            <button class="age-tab" onclick="filterApps('kids')">🧒 Kids (2-12)</button>
-            <button class="age-tab" onclick="filterApps('teens')">🧑 Teens (13-19)</button>
-            <button class="age-tab" onclick="filterApps('adults')">👨 Adults (20-60)</button>
-            <button class="age-tab" onclick="filterApps('seniors')">👴 Seniors (60+)</button>
+        <div class="stat-card">
+            <span class="number" id="verifierCount">15</span>
+            <span class="label">Verifiers</span>
         </div>
-
-        <!-- Stats -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:20px;">
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" id="appCount">32</div>
-                <div style="font-size:10px;color:#6b7280;">Apps</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">1000</div>
-                <div style="font-size:10px;color:#6b7280;">AI Agents</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">24/7</div>
-                <div style="font-size:10px;color:#6b7280;">Available</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" id="userXP">0</div>
-                <div style="font-size:10px;color:#6b7280;">Your XP</div>
-            </div>
+        <div class="stat-card">
+            <span class="number" id="appCount">32</span>
+            <span class="label">Applications</span>
         </div>
-
-        <h2 style="font-size:18px;font-weight:600;">⚡ 32 Apps for Every Age</h2>
-        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;">Tap any app to open it</p>
-
-        <div class="vault-grid" id="appGrid">
-            <!-- ===== KIDS APPS (2-12) ===== -->
-            <div class="vault-card kids" onclick="openApp('kids_stories')">
-                <div class="icon">📖</div>
-                <h3>Kids Stories</h3>
-                <p>Bedtime stories, moral tales, fairy tales</p>
-                <span class="badge gold">🧒 Kids</span>
-            </div>
-            <div class="vault-card kids" onclick="openApp('kids_coloring')">
-                <div class="icon">🎨</div>
-                <h3>Coloring Fun</h3>
-                <p>Digital coloring pages for kids</p>
-                <span class="badge gold">🧒 Kids</span>
-            </div>
-            <div class="vault-card kids" onclick="openApp('kids_learning')">
-                <div class="icon">🧮</div>
-                <h3>Learning Games</h3>
-                <p>ABC, 123, shapes, animals</p>
-                <span class="badge gold">🧒 Kids</span>
-            </div>
-            <div class="vault-card kids" onclick="openApp('kids_nursery')">
-                <div class="icon">🎵</div>
-                <h3>Nursery Rhymes</h3>
-                <p>Classic rhymes and songs</p>
-                <span class="badge gold">🧒 Kids</span>
-            </div>
-
-            <!-- ===== TEENS APPS (13-19) ===== -->
-            <div class="vault-card teens" onclick="openApp('teens_quizzes')">
-                <div class="icon">🧠</div>
-                <h3>Teen Quizzes</h3>
-                <p>Fun quizzes, personality tests</p>
-                <span class="badge pink">🧑 Teens</span>
-            </div>
-            <div class="vault-card teens" onclick="openApp('teens_career')">
-                <div class="icon">💼</div>
-                <h3>Career Guide</h3>
-                <p>Career paths, college advice</p>
-                <span class="badge pink">🧑 Teens</span>
-            </div>
-            <div class="vault-card teens" onclick="openApp('teens_social')">
-                <div class="icon">👥</div>
-                <h3>Social Connect</h3>
-                <p>Peer advice, mental health</p>
-                <span class="badge pink">🧑 Teens</span>
-            </div>
-            <div class="vault-card teens" onclick="openApp('teens_legal')">
-                <div class="icon">⚖️</div>
-                <h3>Your Rights</h3>
-                <p>Know your legal rights</p>
-                <span class="badge pink">🧑 Teens</span>
-            </div>
-
-            <!-- ===== ADULTS APPS (20-60) ===== -->
-            <div class="vault-card adults" onclick="openApp('chat')">
-                <div class="icon">⚖️</div>
-                <h3>AI Counsel</h3>
-                <p>Legal advice from 1000 agents</p>
-                <span class="badge green">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('markets')">
-                <div class="icon">📊</div>
-                <h3>Global Markets</h3>
-                <p>Live stocks, crypto, indices</p>
-                <span class="badge green">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('reports')">
-                <div class="icon">📄</div>
-                <h3>AI Reports</h3>
-                <p>Generate PDF reports</p>
-                <span class="badge purple">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('compliance')">
-                <div class="icon">🛡️</div>
-                <h3>Compliance</h3>
-                <p>GDPR, DPDPA, CCPA</p>
-                <span class="badge yellow">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('news')">
-                <div class="icon">📰</div>
-                <h3>Live News</h3>
-                <p>Legal, business, tech news</p>
-                <span class="badge green">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('lens')">
-                <div class="icon">👁️</div>
-                <h3>Lens Scan</h3>
-                <p>Website compliance scanner</p>
-                <span class="badge purple">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('finance')">
-                <div class="icon">💰</div>
-                <h3>Wealth Manager</h3>
-                <p>Portfolio tracker</p>
-                <span class="badge green">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('realestate')">
-                <div class="icon">🏠</div>
-                <h3>Property Pro</h3>
-                <p>Valuation, RERA</p>
-                <span class="badge orange">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('hr')">
-                <div class="icon">👔</div>
-                <h3>People Ops</h3>
-                <p>Employment, payroll</p>
-                <span class="badge purple">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('international')">
-                <div class="icon">🌍</div>
-                <h3>Global Counsel</h3>
-                <p>Cross-border legal</p>
-                <span class="badge cyan">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('security')">
-                <div class="icon">🔒</div>
-                <h3>Breach Shield</h3>
-                <p>Data breach, cyber</p>
-                <span class="badge red">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('sports')">
-                <div class="icon">⚽</div>
-                <h3>Sports Law</h3>
-                <p>Contracts, anti-doping</p>
-                <span class="badge orange">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('governance')">
-                <div class="icon">⚖️</div>
-                <h3>AI Governance</h3>
-                <p>Ethics, policies</p>
-                <span class="badge purple">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('predict')">
-                <div class="icon">🔮</div>
-                <h3>Predictive AI</h3>
-                <p>Case/market forecasts</p>
-                <span class="badge green">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('train')">
-                <div class="icon">🧠</div>
-                <h3>Training</h3>
-                <p>Autonomous learning</p>
-                <span class="badge yellow">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('techradar')">
-                <div class="icon">📡</div>
-                <h3>Tech Radar</h3>
-                <p>YC 12 Focus Areas</p>
-                <span class="badge cyan">👨 Adults</span>
-            </div>
-            <div class="vault-card adults" onclick="openApp('paymentscanner')">
-                <div class="icon">💳</div>
-                <h3>Payment Scanner</h3>
-                <p>Razorpay scanning</p>
-                <span class="badge cyan">👨 Adults</span>
-            </div>
-
-            <!-- ===== SENIORS APPS (60+) ===== -->
-            <div class="vault-card seniors" onclick="openApp('seniors_health')">
-                <div class="icon">🏥</div>
-                <h3>Senior Health</h3>
-                <p>Health monitoring, tips</p>
-                <span class="badge teal">👴 Seniors</span>
-            </div>
-            <div class="vault-card seniors" onclick="openApp('seniors_legal')">
-                <div class="icon">⚖️</div>
-                <h3>Elder Law</h3>
-                <p>Will, power of attorney, rights</p>
-                <span class="badge teal">👴 Seniors</span>
-            </div>
-            <div class="vault-card seniors" onclick="openApp('seniors_spiritual')">
-                <div class="icon">🕉️</div>
-                <h3>Spiritual Wisdom</h3>
-                <p>Meditation, astrology, mantras</p>
-                <span class="badge gold">👴 Seniors</span>
-            </div>
-            <div class="vault-card seniors" onclick="openApp('seniors_news')">
-                <div class="icon">📰</div>
-                <h3>Senior News</h3>
-                <p>Simple, clear news summaries</p>
-                <span class="badge teal">👴 Seniors</span>
-            </div>
-            <div class="vault-card seniors" onclick="openApp('seniors_legacy')">
-                <div class="icon">📝</div>
-                <h3>Legacy Planning</h3>
-                <p>Will, trust, family records</p>
-                <span class="badge gold">👴 Seniors</span>
-            </div>
-
-            <!-- ===== COMMON APPS ===== -->
-            <div class="vault-card all" onclick="openApp('entertainment')">
-                <div class="icon">🎬</div>
-                <h3>Entertainment</h3>
-                <p>Quizzes, puzzles, trivia</p>
-                <span class="badge pink">🌟 All</span>
-            </div>
-            <div class="vault-card all" onclick="openApp('wellness')">
-                <div class="icon">🧘</div>
-                <h3>Health & Wellness</h3>
-                <p>Yoga, mental health</p>
-                <span class="badge green">🌟 All</span>
-            </div>
-            <div class="vault-card all" onclick="openApp('gaming')">
-                <div class="icon">🎮</div>
-                <h3>Gaming Hub</h3>
-                <p>Challenges, leaderboards</p>
-                <span class="badge gold">🌟 All</span>
-            </div>
-            <div class="vault-card all" onclick="openApp('spiritual')">
-                <div class="icon">🕉️</div>
-                <h3>Spiritual Wisdom</h3>
-                <p>Meditation, astrology</p>
-                <span class="badge gold">🌟 All</span>
-            </div>
-        </div>
-
-        <div style="margin-top:30px;padding-top:16px;border-top:1px solid rgba(0,200,255,0.05);text-align:center;color:#4b5563;font-size:10px;">
-            THE ADVOCACY · v38.0 · 32 Apps · For Everyone
+        <div class="stat-card">
+            <span class="number" id="statusBadge">🟢</span>
+            <span class="label">Online</span>
         </div>
     </div>
 
-    <!-- ===== APP PAGES ===== -->
-    
-    <!-- KIDS: Stories -->
-    <div id="app-kids_stories" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📖 Kids Stories</h2>
-            <p class="text-xs text-gray-400">Bedtime stories, moral tales</p>
-            <div id="storiesContent" class="mt-3 space-y-2">
-                <div class="bg-black/30 p-4 rounded-xl border border-white/5">
-                    <h3 class="font-bold text-pink-400">🐰 The Hare and the Tortoise</h3>
-                    <p class="text-gray-300 text-sm mt-1">"Slow and steady wins the race!"</p>
-                    <button onclick="addXP(5)" class="mt-2 text-xs bg-pink-600/20 text-pink-400 px-3 py-1 rounded hover:bg-pink-600/30">+5 XP – Read</button>
-                </div>
-                <div class="bg-black/30 p-4 rounded-xl border border-white/5">
-                    <h3 class="font-bold text-blue-400">🦁 The Lion and the Mouse</h3>
-                    <p class="text-gray-300 text-sm mt-1">"Even the smallest can help the greatest."</p>
-                    <button onclick="addXP(5)" class="mt-2 text-xs bg-blue-600/20 text-blue-400 px-3 py-1 rounded hover:bg-blue-600/30">+5 XP – Read</button>
-                </div>
-            </div>
+    <!-- Main Chat -->
+    <div class="main-card">
+        <h2>💬 Legal AI Assistant</h2>
+        <div class="query-box">
+            <input type="text" id="queryInput" placeholder="Ask a legal question..." />
+            <button id="sendBtn">Send</button>
         </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        <div class="response" id="responseArea">
+            <span style="opacity:0.5;">Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
+        </div>
     </div>
 
-    <!-- KIDS: Coloring -->
-    <div id="app-kids_coloring" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🎨 Coloring Fun</h2>
-            <p class="text-xs text-gray-400">Digital coloring pages</p>
-            <div class="grid grid-cols-3 gap-4 mt-3">
-                <div class="bg-black/30 p-4 rounded-xl text-center border border-white/5" onclick="addXP(3)">
-                    <div class="text-4xl">🦄</div>
-                    <p class="text-xs text-gray-400 mt-1">Unicorn</p>
-                </div>
-                <div class="bg-black/30 p-4 rounded-xl text-center border border-white/5" onclick="addXP(3)">
-                    <div class="text-4xl">🚀</div>
-                    <p class="text-xs text-gray-400 mt-1">Rocket</p>
-                </div>
-                <div class="bg-black/30 p-4 rounded-xl text-center border border-white/5" onclick="addXP(3)">
-                    <div class="text-4xl">🐉</div>
-                    <p class="text-xs text-gray-400 mt-1">Dragon</p>
-                </div>
-            </div>
+    <!-- 32 Apps -->
+    <div class="main-card">
+        <h2>📱 32 Applications</h2>
+        <div class="apps-grid" id="appsGrid">
+            <!-- Apps will be rendered by JavaScript -->
         </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
     </div>
 
-    <!-- KIDS: Learning -->
-    <div id="app-kids_learning" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🧮 Learning Games</h2>
-            <p class="text-xs text-gray-400">ABC, 123, shapes, animals</p>
-            <div class="grid grid-cols-4 gap-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔤 A</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔤 B</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔤 C</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔤 D</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔢 1</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔢 2</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔢 3</div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5" onclick="addXP(2)">🔢 4</div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- KIDS: Nursery Rhymes -->
-    <div id="app-kids_nursery" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🎵 Nursery Rhymes</h2>
-            <p class="text-xs text-gray-400">Classic rhymes</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center" onclick="addXP(3)">
-                    <span>🎵 Twinkle Twinkle Little Star</span>
-                    <span class="text-xs text-cyan-400">▶ Play</span>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center" onclick="addXP(3)">
-                    <span>🎵 Baa Baa Black Sheep</span>
-                    <span class="text-xs text-cyan-400">▶ Play</span>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center" onclick="addXP(3)">
-                    <span>🎵 Humpty Dumpty</span>
-                    <span class="text-xs text-cyan-400">▶ Play</span>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- TEENS: Quizzes -->
-    <div id="app-teens_quizzes" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🧠 Teen Quizzes</h2>
-            <p class="text-xs text-gray-400">Fun quizzes, personality tests</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-pink-400">🎭 What's Your Personality Type?</h3>
-                    <p class="text-xs text-gray-400">Find out now!</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-blue-400">🧠 How Smart Are You?</h3>
-                    <p class="text-xs text-gray-400">IQ challenge!</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- TEENS: Career Guide -->
-    <div id="app-teens_career" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">💼 Career Guide</h2>
-            <p class="text-xs text-gray-400">Career paths, college advice</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-green-400">🎓 Top 10 College Courses</h3>
-                    <p class="text-xs text-gray-400">Find your future path</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-purple-400">💼 Career Quiz</h3>
-                    <p class="text-xs text-gray-400">What career fits you best?</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- TEENS: Social Connect -->
-    <div id="app-teens_social" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">👥 Social Connect</h2>
-            <p class="text-xs text-gray-400">Peer advice, mental health</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-cyan-400">💬 Peer Advice</h3>
-                    <p class="text-xs text-gray-400">Get advice from peers</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-pink-400">🧠 Mental Health Check</h3>
-                    <p class="text-xs text-gray-400">How are you feeling?</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SENIORS: Health -->
-    <div id="app-seniors_health" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🏥 Senior Health</h2>
-            <p class="text-xs text-gray-400">Health monitoring, tips</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
-                    <h3 class="font-bold text-green-400">💊 Daily Health Tips</h3>
-                    <p class="text-sm text-gray-300">Take your vitamins, walk 30 minutes, stay hydrated!</p>
-                    <button onclick="addXP(10)" class="mt-2 text-xs bg-green-600/20 text-green-400 px-3 py-1 rounded hover:bg-green-600/30">+10 XP – Check</button>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
-                    <h3 class="font-bold text-blue-400">🫀 Blood Pressure Tracker</h3>
-                    <p class="text-sm text-gray-300">Record your BP daily</p>
-                    <button onclick="addXP(10)" class="mt-2 text-xs bg-blue-600/20 text-blue-400 px-3 py-1 rounded hover:bg-blue-600/30">+10 XP – Record</button>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SENIORS: Elder Law -->
-    <div id="app-seniors_legal" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">⚖️ Elder Law</h2>
-            <p class="text-xs text-gray-400">Will, power of attorney, rights</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-cyan-400">📝 Write Your Will</h3>
-                    <p class="text-xs text-gray-400">Simple template for you</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-purple-400">📋 Power of Attorney</h3>
-                    <p class="text-xs text-gray-400">Protect your rights</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SENIORS: Spiritual -->
-    <div id="app-seniors_spiritual" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🕉️ Spiritual Wisdom</h2>
-            <p class="text-xs text-gray-400">Meditation, astrology, mantras</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-yellow-400">🧘 Daily Meditation</h3>
-                    <p class="text-sm text-gray-300">5 minutes of peace</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-purple-400">🔱 Mantra of the Day</h3>
-                    <p class="text-sm text-gray-300">"Om Namah Shivaya"</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SENIORS: News -->
-    <div id="app-seniors_news" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📰 Senior News</h2>
-            <p class="text-xs text-gray-400">Simple, clear news summaries</p>
-            <div id="seniorNews" class="space-y-2 mt-3">
-                <div class="news-card">
-                    <h4>📌 Today's Top Story</h4>
-                    <p>AI is helping seniors live independently longer.</p>
-                    <div class="time">2 hours ago</div>
-                </div>
-                <div class="news-card">
-                    <h4>📌 Health Update</h4>
-                    <p>New study: Walking 30 minutes daily reduces risk.</p>
-                    <div class="time">4 hours ago</div>
-                </div>
-                <div class="news-card">
-                    <h4>📌 Legal Rights</h4>
-                    <p>New elder law protections announced.</p>
-                    <div class="time">6 hours ago</div>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SENIORS: Legacy -->
-    <div id="app-seniors_legacy" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📝 Legacy Planning</h2>
-            <p class="text-xs text-gray-400">Will, trust, family records</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(15)">
-                    <h3 class="font-bold text-gold">📖 Family History</h3>
-                    <p class="text-xs text-gray-400">Record your family story</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(15)">
-                    <h3 class="font-bold text-cyan-400">📋 Will Template</h3>
-                    <p class="text-xs text-gray-400">Simple legal will</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- CHAT -->
-    <div id="app-chat" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">⚖️ AI Counsel</h2>
-            <p class="text-xs text-gray-400">1000 agents · AI Judge</p>
-            <div id="chatMessages" class="h-[400px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4">
-                <div class="text-center text-gray-500 py-16">Start your consultation</div>
-            </div>
-            <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
-                <button onclick="sendMessage()" class="bg-cyan-600 hover:bg-cyan-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-3">
-                <button onclick="quickPrompt('What is GDPR?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">GDPR</button>
-                <button onclick="quickPrompt('Explain DPDPA')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">DPDPA</button>
-                <button onclick="quickPrompt('Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">Contract</button>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- ENTERTAINMENT -->
-    <div id="app-entertainment" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🎬 Entertainment Hub</h2>
-            <p class="text-xs text-gray-400">Quizzes, puzzles, trivia</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(5)">
-                    <h3 class="font-bold text-pink-400">🧩 Daily Quiz</h3>
-                    <p class="text-xs text-gray-400">Test your knowledge!</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(3)">
-                    <h3 class="font-bold text-cyan-400">😄 Daily Joke</h3>
-                    <p class="text-xs text-gray-400">Laugh a little</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- WELLNESS -->
-    <div id="app-wellness" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🧘 Health & Wellness</h2>
-            <p class="text-xs text-gray-400">Yoga, mental health</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(5)">
-                    <h3 class="font-bold text-green-400">🚶 Daily Steps</h3>
-                    <p class="text-xs text-gray-400">Walk for health</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(5)">
-                    <h3 class="font-bold text-blue-400">🧠 Mental Health Check</h3>
-                    <p class="text-xs text-gray-400">How are you today?</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- GAMING -->
-    <div id="app-gaming" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🎮 Gaming Hub</h2>
-            <p class="text-xs text-gray-400">Challenges, leaderboards</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-gold">🏆 Daily Challenge</h3>
-                    <p class="text-xs text-gray-400">Win and earn XP!</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
-                    <h3 class="font-bold text-purple-400">📊 Leaderboard</h3>
-                    <div class="text-xs text-gray-400 mt-1">1️⃣ You – 0 XP</div>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SPIRITUAL -->
-    <div id="app-spiritual" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🕉️ Spiritual Wisdom</h2>
-            <p class="text-xs text-gray-400">Meditation, astrology</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-yellow-400">🧘 Daily Meditation</h3>
-                    <p class="text-xs text-gray-400">5 minutes of peace</p>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5" onclick="addXP(10)">
-                    <h3 class="font-bold text-purple-400">🔱 Mantra of the Day</h3>
-                    <p class="text-xs text-gray-400">"Om" for inner peace</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- MARKETS -->
-    <div id="app-markets" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📊 Global Markets</h2>
-            <p class="text-xs text-gray-400">Live indices</p>
-            <div id="marketData" class="grid grid-cols-1 gap-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>NIFTY 50</span><span class="text-green-400">+0.49%</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>SENSEX</span><span class="text-green-400">+0.31%</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>BTC</span><span class="text-red-400">-1.81%</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- REPORTS -->
-    <div id="app-reports" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📄 AI Reports</h2>
-            <p class="text-xs text-gray-400">Generate PDF reports</p>
-            <button onclick="addXP(10)" class="mt-3 text-xs bg-purple-600/20 text-purple-400 px-4 py-2 rounded hover:bg-purple-600/30">+10 XP – Generate Report</button>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- COMPLIANCE -->
-    <div id="app-compliance" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🛡️ Compliance</h2>
-            <p class="text-xs text-gray-400">GDPR, DPDPA, CCPA</p>
-            <div class="grid grid-cols-3 gap-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5"><div class="text-xs text-gray-400">GDPR</div><div class="text-green-400 font-bold">85%</div></div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5"><div class="text-xs text-gray-400">DPDPA</div><div class="text-yellow-400 font-bold">70%</div></div>
-                <div class="bg-black/30 p-3 rounded-xl text-center border border-white/5"><div class="text-xs text-gray-400">CCPA</div><div class="text-green-400 font-bold">90%</div></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- NEWS -->
-    <div id="app-news" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📰 Live News</h2>
-            <p class="text-xs text-gray-400">Legal, business, tech</p>
-            <div id="newsData" class="space-y-2 mt-3">
-                <div class="news-card"><h4>Supreme Court AI Ruling</h4><p>Landmark judgment on AI liability</p><div class="time">2 hours ago</div></div>
-                <div class="news-card"><h4>DPDPA Guidelines</h4><p>New implementation rules</p><div class="time">4 hours ago</div></div>
-                <div class="news-card"><h4>Legal Tech Investment</h4><p>$500M invested in AI startups</p><div class="time">6 hours ago</div></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- LENS -->
-    <div id="app-lens" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">👁️ Lens Scan</h2>
-            <p class="text-xs text-gray-400">Website compliance scanner</p>
-            <div class="flex gap-2 mt-3">
-                <input type="text" id="lensInput" placeholder="Enter URL..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm border border-white/5">
-                <button onclick="runLensScan()" class="bg-purple-600 hover:bg-purple-700 px-4 rounded-xl text-white text-sm"><i class="fas fa-search mr-1"></i>Scan</button>
-            </div>
-            <div id="lensResults" class="mt-3 text-xs text-gray-400"></div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- FINANCE -->
-    <div id="app-finance" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">💰 Wealth Manager</h2>
-            <p class="text-xs text-gray-400">Portfolio tracker</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Portfolio Value</span><span class="text-green-400">₹12,45,000</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Today's Gain</span><span class="text-green-400">+₹5,200</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- REAL ESTATE -->
-    <div id="app-realestate" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🏠 Property Pro</h2>
-            <p class="text-xs text-gray-400">Valuation, RERA</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>2 BHK Andheri</span><span>₹1.2 Cr</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>3 BHK Bandra</span><span>₹3.5 Cr</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- HR -->
-    <div id="app-hr" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">👔 People Ops</h2>
-            <p class="text-xs text-gray-400">Employment, payroll</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Employees</span><span>25</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Payroll</span><span>₹12.5L</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- INTERNATIONAL -->
-    <div id="app-international" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🌍 Global Counsel</h2>
-            <p class="text-xs text-gray-400">Cross-border legal</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>USA Tax Treaty</span><span class="text-green-400">Active</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>UK Trade</span><span class="text-yellow-400">Pending</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SECURITY -->
-    <div id="app-security" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🔒 Breach Shield</h2>
-            <p class="text-xs text-gray-400">Data breach, cyber</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Breach Alerts</span><span class="text-green-400">0</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Threat Level</span><span class="text-green-400">Low</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- SPORTS -->
-    <div id="app-sports" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">⚽ Sports Law</h2>
-            <p class="text-xs text-gray-400">Contracts, anti-doping</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Player Contracts</span><span>3 Active</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Anti-Doping</span><span class="text-green-400">Compliant</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- GOVERNANCE -->
-    <div id="app-governance" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">⚖️ AI Governance</h2>
-            <p class="text-xs text-gray-400">Ethics, policies</p>
-            <div class="space-y-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Ethics Framework</span><span class="text-green-400">Active</span></div>
-                <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span>Risk Assessment</span><span class="text-green-400">Low</span></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- PREDICT -->
-    <div id="app-predict" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🔮 Predictive AI</h2>
-            <p class="text-xs text-gray-400">Case/market forecasts</p>
-            <div class="grid grid-cols-3 gap-2 mt-3">
-                <div class="bg-black/30 p-2 rounded-xl text-center border border-white/5"><div class="text-xs text-gray-400">Case</div><div class="text-sm text-cyan-400">85%</div></div>
-                <div class="bg-black/30 p-2 rounded-xl text-center border border-white/5"><div class="text-xs text-gray-400">Market</div><div class="text-sm text-cyan-400">Bullish</div></div>
-                <div class="bg-black/30 p-2 rounded-xl text-center border border-white/5"><div class="text-xs text-gray-400">Risk</div><div class="text-sm text-cyan-400">Low</div></div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- TRAIN -->
-    <div id="app-train" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🧠 Training</h2>
-            <p class="text-xs text-gray-400">Autonomous learning</p>
-            <button onclick="startTraining()" class="mt-3 text-xs bg-purple-600/20 text-purple-400 px-4 py-2 rounded hover:bg-purple-600/30"><i class="fas fa-play mr-1"></i>Start Training</button>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- TECH RADAR -->
-    <div id="app-techradar" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📡 Tech Radar</h2>
-            <p class="text-xs text-gray-400">YC 12 Focus Areas</p>
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <div class="bg-black/30 p-2 rounded-xl text-xs border border-white/5">01 Defense</div>
-                <div class="bg-black/30 p-2 rounded-xl text-xs border border-white/5">02 Cloud</div>
-                <div class="bg-black/30 p-2 rounded-xl text-xs border border-white/5">03 Multiplayer AI</div>
-                <div class="bg-black/30 p-2 rounded-xl text-xs border border-white/5">04 Compute at Sea</div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
-    <!-- PAYMENT SCANNER -->
-    <div id="app-paymentscanner" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">💳 Payment Scanner</h2>
-            <p class="text-xs text-gray-400">Razorpay scanning</p>
-            <div class="flex gap-2 mt-3">
-                <input type="text" id="scanDomainInput" placeholder="Enter domain..." class="flex-1 bg-gray-800/50 text-white p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
-                <button onclick="addDomain()" class="bg-cyan-600 hover:bg-cyan-700 px-4 rounded-xl text-white text-sm"><i class="fas fa-plus mr-1"></i>Add</button>
-            </div>
-            <div id="domainList" class="space-y-2 mt-3 text-sm"></div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-    </div>
-
+    <!-- Footer - TRIDENT PERMANENT ASSET -->
+    <footer class="footer">
+        <div class="firm">⚖️ THE ADVOCACY – Global Law Firm</div>
+        <div class="powered">Powered by Unknown Verdict v40.0</div>
+        <div class="trident">🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE</div>
+    </footer>
 </div>
 
 <script>
-// ============================================
-// CLOCK
-// ============================================
-function updateClock() {
+// ─── APP DATA ──────────────────────────────────────────────────
+const apps = [
+    { name: "Legal AI", icon: "⚖️", tag: "AI" },
+    { name: "Contract Drafting", icon: "📄", tag: "Legal" },
+    { name: "Case Analysis", icon: "🔍", tag: "Legal" },
+    { name: "Legal Research", icon: "📚", tag: "Legal" },
+    { name: "Market Analysis", icon: "📈", tag: "Markets" },
+    { name: "Crypto Trading", icon: "₿", tag: "Crypto" },
+    { name: "AI Trading", icon: "🤖", tag: "AI" },
+    { name: "Forex Analysis", icon: "💱", tag: "Forex" },
+    { name: "Global News", icon: "📰", tag: "News" },
+    { name: "Legal News", icon: "⚖️", tag: "Legal" },
+    { name: "Health AI", icon: "💊", tag: "Health" },
+    { name: "Meditation Guide", icon: "🧘", tag: "Spiritual" },
+    { name: "Astrology", icon: "🌟", tag: "Spiritual" },
+    { name: "Live Sports", icon: "⚽", tag: "Sports" },
+    { name: "Gaming Hub", icon: "🎮", tag: "Gaming" },
+    { name: "Chess Master", icon: "♟️", tag: "Gaming" },
+    { name: "Legal Education", icon: "🎓", tag: "Education" },
+    { name: "Law Library", icon: "📖", tag: "Library" },
+    { name: "Legal Community", icon: "👥", tag: "Social" },
+    { name: "Business Law", icon: "💼", tag: "Business" },
+    { name: "Real Estate", icon: "🏠", tag: "Property" },
+    { name: "Family Law", icon: "💕", tag: "Personal" },
+    { name: "Immigration", icon: "🛂", tag: "Legal" },
+    { name: "AI Governance", icon: "🧠", tag: "AI" },
+    { name: "Cybersecurity", icon: "🔒", tag: "Security" },
+    { name: "Tax Planning", icon: "💰", tag: "Tax" },
+    { name: "Arbitration", icon: "⚖️", tag: "Legal" },
+    { name: "IP Management", icon: "💡", tag: "IP" },
+    { name: "Compliance", icon: "✅", tag: "Compliance" },
+    { name: "Yoga Guide", icon: "🧘", tag: "Wellness" },
+    { name: "Legal Chat", icon: "💬", tag: "Chat" },
+    { name: "Analytics", icon: "📊", tag: "Analytics" }
+];
+
+// ─── RENDER APPS ──────────────────────────────────────────────
+function renderApps() {
+    const grid = document.getElementById('appsGrid');
+    grid.innerHTML = apps.map(app => `
+        <div class="app-item">
+            <span class="icon">${app.icon}</span>
+            <div class="name">${app.name}</div>
+            <span class="tag">${app.tag}</span>
+        </div>
+    `).join('');
+}
+
+// ─── CHAT FUNCTION ─────────────────────────────────────────────
+async function sendQuery() {
+    const input = document.getElementById('queryInput');
+    const responseArea = document.getElementById('responseArea');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    const query = input.value.trim();
+    if (!query) return;
+    
+    // Update UI
+    responseArea.innerHTML = '<span class="loading">⚡ Processing your query...</span>';
+    sendBtn.disabled = true;
+    input.disabled = true;
+    
     try {
-        var now = new Date();
-        var h = String(now.getHours()).padStart(2,'0');
-        var m = String(now.getMinutes()).padStart(2,'0');
-        var s = String(now.getSeconds()).padStart(2,'0');
-        document.getElementById('clockTime').textContent = h+':'+m+':'+s;
-        var opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
-        document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', opts);
-    } catch(e) {}
-}
-updateClock();
-setInterval(updateClock, 1000);
-
-// ============================================
-// GAMIFICATION
-// ============================================
-var userXP = 0;
-var userLevel = 1;
-function addXP(amount) {
-    userXP += amount;
-    var xpForNextLevel = userLevel * 100;
-    while (userXP >= xpForNextLevel) {
-        userXP -= xpForNextLevel;
-        userLevel++;
-        alert('🎉 LEVEL UP! You are now Level ' + userLevel + '!');
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+        
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+            const result = data.data;
+            let html = `<strong>📋 Analysis Result</strong>\n\n`;
+            html += `Summary: ${result.summary || 'Analysis complete'}\n\n`;
+            
+            if (result.legal_issues) {
+                html += `⚖️ Legal Issues:\n${result.legal_issues.map(i => `  • ${i}`).join('\n')}\n\n`;
+            }
+            
+            if (result.applicable_laws) {
+                html += `📚 Applicable Laws:\n${result.applicable_laws.map(l => `  • ${l}`).join('\n')}\n\n`;
+            }
+            
+            if (result.recommendations) {
+                html += `💡 Recommendations:\n${result.recommendations.map(r => `  • ${r}`).join('\n')}\n\n`;
+            }
+            
+            html += `\n📊 Confidence: ${result.confidence || 'N/A'}`;
+            html += `\n🏛️ Jurisdiction: ${result.jurisdiction || 'IN'}`;
+            
+            // Add verifiers info
+            if (result.verifiers) {
+                html += `\n\n🔍 Verifiers: ${result.verifiers.map(v => `${v.name}(${v.status})`).join(', ')}`;
+            }
+            
+            responseArea.textContent = html;
+        } else {
+            responseArea.innerHTML = `<span class="error">❌ Error: ${data.detail || 'Unknown error'}</span>`;
+        }
+    } catch (error) {
+        responseArea.innerHTML = `<span class="error">❌ Network error: ${error.message}</span>`;
+    } finally {
+        sendBtn.disabled = false;
+        input.disabled = false;
+        input.value = '';
+        input.focus();
     }
-    document.getElementById('userXP').textContent = userXP;
 }
 
-// ============================================
-// AGE FILTER
-// ============================================
-function filterApps(age) {
-    document.querySelectorAll('.age-tab').forEach(function(tab) { tab.classList.remove('active'); });
-    event.target.classList.add('active');
-    document.querySelectorAll('.vault-card').forEach(function(card) {
-        if (age === 'all') { card.style.display = 'block'; }
-        else if (card.classList.contains(age)) { card.style.display = 'block'; }
-        else { card.style.display = 'none'; }
+// ─── UPDATE STATS ─────────────────────────────────────────────
+async function updateStats() {
+    try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        document.getElementById('agentCount').textContent = data.agents || '250';
+        document.getElementById('verifierCount').textContent = data.verifiers || '15';
+        document.getElementById('statusBadge').textContent = '🟢';
+    } catch {
+        document.getElementById('statusBadge').textContent = '🟡';
+    }
+}
+
+// ─── EVENT LISTENERS ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    renderApps();
+    updateStats();
+    setInterval(updateStats, 30000);
+    
+    // Send on Enter key
+    document.getElementById('queryInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendQuery();
     });
-}
-
-// ============================================
-// PAYMENT
-// ============================================
-var paymentDone = false;
-
-function showPayment() {
-    if (!paymentDone) {
-        document.getElementById('paymentOverlay').classList.add('active');
-    } else {
-        openVault();
-    }
-}
-
-function closePayment() {
-    document.getElementById('paymentOverlay').classList.remove('active');
-}
-
-function initiatePayment() {
-    var btn = document.getElementById('payBtn');
-    var status = document.getElementById('paymentStatus');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-    status.className = 'status show';
-    status.textContent = '⏳ Initializing...';
-    setTimeout(function() {
-        status.className = 'status show success';
-        status.textContent = '✅ Payment successful! Welcome!';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
-        document.getElementById('paymentOverlay').classList.remove('active');
-        paymentDone = true;
-        addXP(10);
-        openVault();
-    }, 1000);
-}
-
-// ============================================
-// VAULT
-// ============================================
-function openVault() {
-    document.getElementById('eyeContainer').classList.add('hidden');
-    document.getElementById('vault').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-}
-
-function closeVault() {
-    document.getElementById('vault').classList.remove('open');
-    document.getElementById('eyeContainer').classList.remove('hidden');
-    document.body.style.overflow = '';
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-}
-
-function goBack() {
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-}
-
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeVault(); });
-
-// ============================================
-// NAVIGATION
-// ============================================
-function openApp(app) {
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-    var target = document.getElementById('app-'+app);
-    if (target) target.classList.add('active');
-    addXP(2);
-}
-
-// ============================================
-// CHAT
-// ============================================
-function sendMessage() {
-    var input = document.getElementById('chatInput');
-    var msg = input.value.trim();
-    if (!msg) return;
-    var div = document.getElementById('chatMessages');
-    div.innerHTML += '<div class="chat-message flex justify-end mb-3"><div class="bg-cyan-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">'+msg+'</div></div>';
-    input.value = '';
-    div.scrollTop = div.scrollHeight;
-    div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><span class="typing-dots">...</span></div></div>';
-    div.scrollTop = div.scrollHeight;
-    setTimeout(function() {
-        div.innerHTML = div.innerHTML.replace('<span class="typing-dots">...</span>', '');
-        div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-cyan-500/10"><div class="text-xs text-cyan-400">⚖️ AI Judge</div><div class="text-sm leading-relaxed">Under Indian law, this matter requires careful consideration.</div></div></div>';
-        div.scrollTop = div.scrollHeight;
-        addXP(5);
-    }, 1500);
-}
-
-function quickPrompt(text) {
-    document.getElementById('chatInput').value = text;
-    sendMessage();
-}
-
-// ============================================
-// LENS SCAN
-// ============================================
-function runLensScan() {
-    var url = document.getElementById('lensInput').value.trim();
-    if (!url) { alert('Enter URL'); return; }
-    var div = document.getElementById('lensResults');
-    div.innerHTML = '<div class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin"></i> Scanning...</div>';
-    setTimeout(function() {
-        div.innerHTML = '<div class="bg-black/30 p-3 rounded-xl"><div class="text-sm text-white">'+url+'</div><div class="text-xs text-green-400 mt-1">✅ Scan complete</div></div>';
-        addXP(5);
-    }, 1500);
-}
-
-// ============================================
-// PAYMENT SCANNER
-// ============================================
-var knownDomains = {
-    'https://advocacyalawfrim.in': {status:'approved', details:'✅ Detected'},
-    'https://upamnyu12-lex.hf.space': {status:'scanning', details:'⏳ Scanning...'}
-};
-
-function loadDomains() {
-    var div = document.getElementById('domainList');
-    div.innerHTML = Object.entries(knownDomains).map(function(d) {
-        return '<div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><div><div class="font-medium text-white text-sm">'+d[0]+'</div><div class="text-xs text-gray-400">'+d[1].details+'</div></div><span class="text-xs text-green-400">'+d[1].status.toUpperCase()+'</span></div>';
-    }).join('');
-}
-
-function addDomain() {
-    var input = document.getElementById('scanDomainInput');
-    var domain = input.value.trim();
-    if (!domain) { alert('Enter domain'); return; }
-    var clean = domain.startsWith('http') ? domain : 'https://'+domain;
-    knownDomains[clean] = {status:'pending', details:'⏸️ Added'};
-    input.value = '';
-    loadDomains();
-    addXP(3);
-}
-
-function startTraining() {
-    alert('Training started! AI is learning...');
-    addXP(10);
-}
-
-// ============================================
-// INIT
-// ============================================
-console.log('👁️ THE ADVOCACY v38.0 - For Everyone');
-console.log('👶 Kids · 🧑 Teens · 👨 Adults · 👴 Seniors');
-console.log('📊 32 Apps · 1000 Agents');
-loadDomains();
+    
+    document.getElementById('sendBtn').addEventListener('click', sendQuery);
+    
+    // Log
+    console.log('🚀 Unknown Verdict v40.0 loaded');
+    console.log('⚖️ THE ADVOCACY – Global Law Firm');
+    console.log('🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE');
+});
 </script>
 </body>
 </html>
