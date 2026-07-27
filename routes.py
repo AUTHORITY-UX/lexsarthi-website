@@ -881,7 +881,73 @@ async def scan_all_payment_domains():
                 scanned_domains[domain]["status"] = "failed"
                 scanned_domains[domain]["details"] = "❌ Scan failed"
     return {"status": "success", "data": scanned_domains}
+# ============================================
+# NEW: FINANCE (stocks/crypto)
+# ============================================
+@router.get("/api/finance/stocks")
+async def get_stocks():
+    return [
+        {"name": "NIFTY 50", "price": "₹24,500", "change": "+0.49%"},
+        {"name": "SENSEX", "price": "₹81,500", "change": "+0.31%"},
+        {"name": "BTC", "price": "$65,000", "change": "-1.81%"},
+        {"name": "ETH", "price": "$3,500", "change": "+0.25%"},
+        {"name": "SOL", "price": "$150", "change": "-0.50%"}
+    ]
 
+# ============================================
+# NEW: HEALTHCARE
+# ============================================
+@router.get("/api/health/compliance")
+async def get_health_compliance():
+    return [
+        {"title": "HIPAA Compliance", "status": "Compliant", "score": "95%"},
+        {"title": "Patient Privacy", "status": "In Progress", "score": "80%"},
+        {"title": "Clinical Trials", "status": "Approved", "score": "100%"}
+    ]
+
+# ============================================
+# NEW: REAL ESTATE
+# ============================================
+@router.get("/api/realestate/properties")
+async def get_properties():
+    return [
+        {"address": "2 BHK, Andheri East", "value": "₹1.2 Cr", "rera": "Approved"},
+        {"address": "3 BHK, Bandra West", "value": "₹3.5 Cr", "rera": "Pending"},
+        {"address": "Commercial, BKC", "value": "₹5.0 Cr", "rera": "Approved"}
+    ]
+
+# ============================================
+# NEW: HR
+# ============================================
+@router.get("/api/hr/tasks")
+async def get_hr_tasks():
+    return [
+        {"title": "Employment Contract", "status": "Drafted"},
+        {"title": "Payroll Compliance", "status": "Pending"},
+        {"title": "Labour Law Audit", "status": "Completed"}
+    ]
+
+# ============================================
+# NEW: INTERNATIONAL
+# ============================================
+@router.get("/api/international/treaties")
+async def get_treaties():
+    return [
+        {"country": "USA", "treaty": "Tax Treaty", "status": "Active"},
+        {"country": "UK", "treaty": "Trade Agreement", "status": "Pending"},
+        {"country": "UAE", "treaty": "Double Taxation", "status": "Active"}
+    ]
+
+# ============================================
+# NEW: SECURITY
+# ============================================
+@router.get("/api/security/alerts")
+async def get_security_alerts():
+    return [
+        {"title": "Data Breach Simulation", "status": "Resolved", "severity": "Low"},
+        {"title": "Phishing Attempts", "status": "Active", "severity": "High"},
+        {"title": "Vulnerability Scan", "status": "Completed", "severity": "Medium"}
+    ]
 # ============================================
 # EXPORTS
 # ============================================
