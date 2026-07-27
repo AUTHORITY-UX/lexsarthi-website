@@ -373,3 +373,48 @@ async def catch_all(path: str):
             "suggestion": "Visit /docs for interactive API documentation"
         }
     )
+# ─── API INFO ENDPOINT ──────────────────────────────────────────────
+
+@router.get("/info")
+async def get_api_info():
+    """Get comprehensive API information"""
+    core = get_core()
+    return {
+        "name": "Unknown Verdict v40.0",
+        "version": "40.0",
+        "firm": "THE ADVOCACY – Global Law Firm",
+        "description": "Complete AGI Legal Platform with 250+ Agents",
+        "status": "online",
+        "timestamp": datetime.now().isoformat(),
+        "system": {
+            "agents": {
+                "total": len(core.agents),
+                "active": sum(1 for a in core.agents if a["status"] == "active")
+            },
+            "verifiers": {
+                "total": len(core.verifiers),
+                "active": sum(1 for v in core.verifiers if v.status == "active")
+            },
+            "judge": core.judge.get_stats() if hasattr(core, 'judge') else {"status": "active"}
+        },
+        "endpoints": {
+            "GET /api/": "API root",
+            "GET /api/health": "Health check",
+            "POST /api/chat": "Chat with AI agents",
+            "GET /api/agents": "List all agents",
+            "GET /api/verifiers": "List all verifiers",
+            "GET /api/judge": "Judge information",
+            "GET /api/stats": "System statistics",
+            "POST /api/compliance": "Check compliance",
+            "POST /api/market/quote": "Get market quote",
+            "GET /api/news": "Get news",
+            "GET /api/info": "This information"
+        },
+        "docs": {
+            "swagger": "/docs",
+            "redoc": "/redoc",
+            "openapi": "/openapi.json"
+        },
+        "trident": "🔱 PERMANENT ASSET - NEVER REMOVE",
+        "branding": "⚖️ THE ADVOCACY – Global Law Firm"
+    }
