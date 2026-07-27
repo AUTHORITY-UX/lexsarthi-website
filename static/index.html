@@ -5,127 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Unknown Verdict v40.0 – The Advocacy</title>
     <style>
-        /* Reset & Base */
+        /* ============================================================
+           UNKNOWN VERDICT v40.0 - THIRD EYE THEME
+           🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+           ⚖️ THE ADVOCACY – Global Law Firm
+           ============================================================ */
+
+        /* ─── RESET ────────────────────────────────────────────────── */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a3a 100%);
+            background: #0a0a1a;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(108, 60, 225, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(78, 205, 196, 0.06) 0%, transparent 60%);
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
         }
-        
-        /* Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* Header */
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* ─── HEADER ────────────────────────────────────────────────── */
         .header {
             text-align: center;
-            padding: 40px 0 30px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 30px;
+            padding: 30px 0 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 25px;
         }
-        .header .logo {
-            font-size: 4em;
-            display: block;
-            animation: float 3s ease-in-out infinite;
+
+        .header .logo { font-size: 4em; display: block; animation: float 3s ease-in-out infinite; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
+
         .header h1 {
             font-size: 2.5em;
-            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            font-weight: 800;
+            background: linear-gradient(135deg, #6C3CE1, #9B59B6, #4ECDC4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin: 10px 0 5px;
+            margin: 8px 0 2px;
+            letter-spacing: 1px;
         }
+
         .header .subtitle {
             font-size: 1.1em;
             color: #4ECDC4;
             opacity: 0.8;
+            letter-spacing: 3px;
+            font-weight: 300;
         }
+
         .header .version {
             display: inline-block;
-            background: #6C3CE1;
-            padding: 4px 15px;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            padding: 4px 18px;
             border-radius: 20px;
             font-size: 0.8em;
             margin-top: 10px;
             color: #fff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 0 30px rgba(108, 60, 225, 0.2);
         }
-        
-        /* Stats */
+
+        /* ─── THIRD EYE SYMBOL ────────────────────────────────────── */
+        .third-eye {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .third-eye .eye {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle at 30% 30%, #6C3CE1, #1a0a3a);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 50px rgba(108, 60, 225, 0.25), inset 0 0 50px rgba(108, 60, 225, 0.05);
+            animation: eyePulse 3s ease-in-out infinite;
+        }
+
+        .third-eye .eye::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, #FFD700, #FF6B00);
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+            animation: pupilPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes eyePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes pupilPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
+        }
+
+        /* ─── STATS ────────────────────────────────────────────────── */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
         }
+
         .stat-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
             padding: 20px;
             text-align: center;
             transition: all 0.3s;
         }
+
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             border-color: #6C3CE1;
-            box-shadow: 0 5px 30px rgba(108,60,225,0.2);
+            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.15);
         }
+
         .stat-card .number {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #6C3CE1;
             display: block;
+            font-size: 2.4em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
+
         .stat-card .label {
             font-size: 0.8em;
-            opacity: 0.7;
-            margin-top: 5px;
+            opacity: 0.6;
+            letter-spacing: 1px;
+            font-weight: 300;
         }
-        
-        /* Main Card */
+
+        .stat-card .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ECDC4;
+            margin-right: 6px;
+            animation: statusPulse 1.5s infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ─── MAIN CHAT ────────────────────────────────────────────── */
         .main-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 18px;
             padding: 30px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
         }
+
         .main-card h2 {
             color: #4ECDC4;
-            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
-        /* Query Box */
+
+        /* ─── QUERY BOX ────────────────────────────────────────────── */
         .query-box {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
+
         .query-box input {
             flex: 1;
             padding: 14px 20px;
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
             color: #fff;
-            font-size: 1em;
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: all 0.3s;
         }
+
         .query-box input::placeholder {
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.25);
         }
+
         .query-box input:focus {
             outline: none;
             border-color: #6C3CE1;
+            box-shadow: 0 0 25px rgba(108, 60, 225, 0.08);
+            background: rgba(255,255,255,0.06);
         }
+
         .query-box button {
             padding: 14px 30px;
             border-radius: 10px;
@@ -135,95 +229,108 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1em;
+            font-size: 0.95em;
+            font-family: inherit;
+            white-space: nowrap;
         }
+
         .query-box button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 30px rgba(108,60,225,0.4);
+            transform: scale(1.04);
+            box-shadow: 0 5px 25px rgba(108, 60, 225, 0.3);
         }
+
         .query-box button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
-        
-        /* Response */
+
+        /* ─── RESPONSE ─────────────────────────────────────────────── */
         .response {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.25);
             border-radius: 10px;
             padding: 20px;
             min-height: 100px;
             white-space: pre-wrap;
             word-wrap: break-word;
-            border: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.95em;
-            line-height: 1.6;
+            border: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.9em;
+            line-height: 1.7;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: inherit;
         }
-        .response .loading {
-            color: #4ECDC4;
-            animation: pulse 1s infinite;
+
+        .response::-webkit-scrollbar { width: 6px; }
+        .response::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+        .response::-webkit-scrollbar-thumb { background: #6C3CE1; border-radius: 3px; }
+
+        .response .loading { color: #4ECDC4; animation: pulseText 1s infinite; }
+        .response .error { color: #FF6B6B; }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .response .error {
-            color: #FF6B6B;
-        }
-        
-        /* Apps Grid */
+
+        /* ─── APPS GRID ────────────────────────────────────────────── */
         .apps-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
         }
+
         .app-item {
             background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 10px;
-            padding: 15px;
+            padding: 12px 8px;
             text-align: center;
             transition: all 0.3s;
-            cursor: pointer;
         }
+
         .app-item:hover {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.07);
             border-color: #6C3CE1;
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
-        .app-item .icon {
-            font-size: 2em;
-            display: block;
-            margin-bottom: 8px;
-        }
-        .app-item .name {
-            font-size: 0.85em;
-            color: #ccc;
-        }
+
+        .app-item .icon { font-size: 1.8em; display: block; margin-bottom: 4px; }
+        .app-item .name { font-size: 0.75em; color: #bbb; font-weight: 400; }
         .app-item .tag {
             display: inline-block;
-            font-size: 0.6em;
-            background: rgba(108,60,225,0.3);
-            padding: 2px 10px;
-            border-radius: 10px;
-            margin-top: 5px;
-            color: #6C3CE1;
+            font-size: 0.5em;
+            background: rgba(108, 60, 225, 0.2);
+            padding: 1px 8px;
+            border-radius: 8px;
+            margin-top: 3px;
+            color: #9B59B6;
+            font-weight: 500;
         }
-        
-        /* Footer - TRIDENT PERMANENT ASSET */
+
+        /* ─── FOOTER - TRIDENT PERMANENT ASSET ────────────────────── */
         .footer {
             text-align: center;
-            padding: 30px 0 20px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            margin-top: 30px;
+            padding: 25px 0 15px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 25px;
         }
+
         .footer .firm {
             font-size: 1.2em;
-            font-weight: 600;
+            font-weight: 700;
             color: #4ECDC4;
+            letter-spacing: 1px;
         }
+
         .footer .powered {
-            font-size: 0.85em;
-            opacity: 0.6;
-            margin-top: 5px;
+            font-size: 0.8em;
+            opacity: 0.4;
+            margin-top: 4px;
+            letter-spacing: 1px;
         }
+
         .footer .trident {
             font-size: 0.8em;
             color: #FFD700;
@@ -231,41 +338,59 @@
             letter-spacing: 2px;
             font-weight: 700;
         }
-        
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+        .footer .trident .symbol {
+            display: inline-block;
+            animation: tridentGlow 2s ease-in-out infinite;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+        @keyframes tridentGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+            50% { text-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
         }
-        
-        /* Responsive */
+
+        .footer .copyright {
+            font-size: 0.7em;
+            opacity: 0.2;
+            margin-top: 6px;
+        }
+
+        /* ─── RESPONSIVE ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            .header h1 { font-size: 1.8em; }
+            .header h1 { font-size: 2em; }
+            .header .logo { font-size: 3.5em; }
             .query-box { flex-direction: column; }
-            .stats { grid-template-columns: repeat(2, 1fr); }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .apps-grid { grid-template-columns: repeat(2, 1fr); }
+            .main-card { padding: 20px; }
+            .stat-card .number { font-size: 2em; }
+            .third-eye .eye { width: 55px; height: 55px; }
+            .third-eye .eye::after { width: 20px; height: 20px; }
         }
+
         @media (max-width: 480px) {
-            .apps-grid { grid-template-columns: 1fr; }
             .stats { grid-template-columns: 1fr; }
+            .apps-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.6em; }
+            .header .logo { font-size: 3em; }
         }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <!-- Header -->
+    <!-- ─── HEADER ────────────────────────────────────────────────── -->
     <header class="header">
         <span class="logo">⚖️</span>
         <h1>THE ADVOCACY</h1>
         <div class="subtitle">Global Law Firm</div>
+        <div class="third-eye">
+            <div class="eye"></div>
+        </div>
         <div class="version">v40.0 • Unknown Verdict</div>
     </header>
 
-    <!-- Stats -->
+    <!-- ─── STATS ────────────────────────────────────────────────── -->
     <div class="stats" id="stats">
         <div class="stat-card">
             <span class="number" id="agentCount">250</span>
@@ -276,16 +401,19 @@
             <span class="label">Verifiers</span>
         </div>
         <div class="stat-card">
-            <span class="number" id="appCount">32</span>
+            <span class="number">32</span>
             <span class="label">Applications</span>
         </div>
         <div class="stat-card">
-            <span class="number" id="statusBadge">🟢</span>
-            <span class="label">Online</span>
+            <span class="number">
+                <span class="status-dot"></span>
+                <span id="statusText">Online</span>
+            </span>
+            <span class="label">System Status</span>
         </div>
     </div>
 
-    <!-- Main Chat -->
+    <!-- ─── MAIN CHAT ────────────────────────────────────────────── -->
     <div class="main-card">
         <h2>💬 Legal AI Assistant</h2>
         <div class="query-box">
@@ -293,28 +421,29 @@
             <button id="sendBtn">Send</button>
         </div>
         <div class="response" id="responseArea">
-            <span style="opacity:0.5;">Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
+            <span style="opacity:0.35;">Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
         </div>
     </div>
 
-    <!-- 32 Apps -->
+    <!-- ─── 32 APPS ────────────────────────────────────────────────── -->
     <div class="main-card">
         <h2>📱 32 Applications</h2>
-        <div class="apps-grid" id="appsGrid">
-            <!-- Apps will be rendered by JavaScript -->
-        </div>
+        <div class="apps-grid" id="appsGrid"></div>
     </div>
 
-    <!-- Footer - TRIDENT PERMANENT ASSET -->
+    <!-- ─── FOOTER - TRIDENT PERMANENT ASSET ─────────────────────── -->
     <footer class="footer">
         <div class="firm">⚖️ THE ADVOCACY – Global Law Firm</div>
         <div class="powered">Powered by Unknown Verdict v40.0</div>
-        <div class="trident">🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE</div>
+        <div class="trident">
+            <span class="symbol">🔱</span> TRIDENT – PERMANENT ASSET – NEVER REMOVE
+        </div>
+        <div class="copyright">© 2026 All Rights Reserved</div>
     </footer>
 </div>
 
 <script>
-// ─── APP DATA ──────────────────────────────────────────────────
+// ─── APP DATA ──────────────────────────────────────────────────────
 const apps = [
     { name: "Legal AI", icon: "⚖️", tag: "AI" },
     { name: "Contract Drafting", icon: "📄", tag: "Legal" },
@@ -350,7 +479,7 @@ const apps = [
     { name: "Analytics", icon: "📊", tag: "Analytics" }
 ];
 
-// ─── RENDER APPS ──────────────────────────────────────────────
+// ─── RENDER APPS ──────────────────────────────────────────────────
 function renderApps() {
     const grid = document.getElementById('appsGrid');
     grid.innerHTML = apps.map(app => `
@@ -362,7 +491,36 @@ function renderApps() {
     `).join('');
 }
 
-// ─── CHAT FUNCTION ─────────────────────────────────────────────
+// ─── UPDATE STATS ──────────────────────────────────────────────────
+async function updateStats() {
+    try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        
+        // FIXED: Properly access data properties
+        const agentEl = document.getElementById('agentCount');
+        const verifierEl = document.getElementById('verifierCount');
+        
+        if (data.agents !== undefined && data.agents !== null) {
+            agentEl.textContent = data.agents;
+        }
+        if (data.verifiers !== undefined && data.verifiers !== null) {
+            verifierEl.textContent = data.verifiers;
+        }
+        
+        const statusText = document.getElementById('statusText');
+        if (data.status === 'healthy') {
+            statusText.textContent = 'Online';
+        } else {
+            statusText.textContent = '⚠️ Degraded';
+        }
+    } catch (error) {
+        console.error('Stats update failed:', error);
+        document.getElementById('statusText').textContent = '⚠️ Offline';
+    }
+}
+
+// ─── SEND QUERY ──────────────────────────────────────────────────
 async function sendQuery() {
     const input = document.getElementById('queryInput');
     const responseArea = document.getElementById('responseArea');
@@ -371,8 +529,7 @@ async function sendQuery() {
     const query = input.value.trim();
     if (!query) return;
     
-    // Update UI
-    responseArea.innerHTML = '<span class="loading">⚡ Processing your query...</span>';
+    responseArea.innerHTML = '<span class="loading">⚡ Processing through 250 agents...</span>';
     sendBtn.disabled = true;
     input.disabled = true;
     
@@ -380,37 +537,69 @@ async function sendQuery() {
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
+            body: JSON.stringify({ 
+                query: query,
+                jurisdiction: 'IN'
+            })
         });
         
         const data = await res.json();
         
-        if (data.status === 'success') {
+        if (data.status === 'success' && data.data) {
             const result = data.data;
-            let html = `<strong>📋 Analysis Result</strong>\n\n`;
-            html += `Summary: ${result.summary || 'Analysis complete'}\n\n`;
+            let html = '';
             
-            if (result.legal_issues) {
-                html += `⚖️ Legal Issues:\n${result.legal_issues.map(i => `  • ${i}`).join('\n')}\n\n`;
+            // Summary
+            if (result.summary) {
+                html += `📋 <strong>Analysis Result</strong>\n\n`;
+                html += `Summary: ${result.summary}\n\n`;
             }
             
-            if (result.applicable_laws) {
-                html += `📚 Applicable Laws:\n${result.applicable_laws.map(l => `  • ${l}`).join('\n')}\n\n`;
+            // Legal Issues
+            if (result.legal_issues && result.legal_issues.length > 0) {
+                html += `⚖️ Legal Issues:\n`;
+                result.legal_issues.forEach(issue => {
+                    html += `  • ${issue}\n`;
+                });
+                html += '\n';
             }
             
-            if (result.recommendations) {
-                html += `💡 Recommendations:\n${result.recommendations.map(r => `  • ${r}`).join('\n')}\n\n`;
+            // Applicable Laws
+            if (result.applicable_laws && result.applicable_laws.length > 0) {
+                html += `📚 Applicable Laws:\n`;
+                result.applicable_laws.forEach(law => {
+                    html += `  • ${law}\n`;
+                });
+                html += '\n';
             }
             
-            html += `\n📊 Confidence: ${result.confidence || 'N/A'}`;
-            html += `\n🏛️ Jurisdiction: ${result.jurisdiction || 'IN'}`;
-            
-            // Add verifiers info
-            if (result.verifiers) {
-                html += `\n\n🔍 Verifiers: ${result.verifiers.map(v => `${v.name}(${v.status})`).join(', ')}`;
+            // Recommendations
+            if (result.recommendations && result.recommendations.length > 0) {
+                html += `💡 Recommendations:\n`;
+                result.recommendations.forEach(rec => {
+                    html += `  • ${rec}\n`;
+                });
+                html += '\n';
             }
             
-            responseArea.textContent = html;
+            // Confidence & Metadata
+            if (result.confidence) {
+                html += `📊 Confidence: ${result.confidence}\n`;
+            }
+            if (result.jurisdiction) {
+                html += `🏛️ Jurisdiction: ${result.jurisdiction}\n`;
+            }
+            if (result.agent_id) {
+                html += `🤖 Agent: ${result.agent_id}\n`;
+            }
+            
+            // Verifiers
+            if (result.verifiers && result.verifiers.length > 0) {
+                html += `\n🔍 Verifiers: `;
+                html += result.verifiers.map(v => `${v.name}(${v.status})`).join(', ');
+            }
+            
+            responseArea.textContent = html || 'No analysis data returned.';
         } else {
             responseArea.innerHTML = `<span class="error">❌ Error: ${data.detail || 'Unknown error'}</span>`;
         }
@@ -424,36 +613,21 @@ async function sendQuery() {
     }
 }
 
-// ─── UPDATE STATS ─────────────────────────────────────────────
-async function updateStats() {
-    try {
-        const res = await fetch('/api/health');
-        const data = await res.json();
-        document.getElementById('agentCount').textContent = data.agents || '250';
-        document.getElementById('verifierCount').textContent = data.verifiers || '15';
-        document.getElementById('statusBadge').textContent = '🟢';
-    } catch {
-        document.getElementById('statusBadge').textContent = '🟡';
-    }
-}
-
-// ─── EVENT LISTENERS ──────────────────────────────────────────
+// ─── INIT ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     renderApps();
     updateStats();
     setInterval(updateStats, 30000);
     
-    // Send on Enter key
     document.getElementById('queryInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendQuery();
     });
-    
     document.getElementById('sendBtn').addEventListener('click', sendQuery);
     
-    // Log
-    console.log('🚀 Unknown Verdict v40.0 loaded');
-    console.log('⚖️ THE ADVOCACY – Global Law Firm');
-    console.log('🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE');
+    // Console branding
+    console.log('%c⚖️ THE ADVOCACY – Global Law Firm', 'font-size:18px; font-weight:bold; color:#4ECDC4;');
+    console.log('%c🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE', 'font-size:14px; color:#FFD700;');
+    console.log('%c🚀 Unknown Verdict v40.0 | 250 Agents | 15 Verifiers', 'font-size:12px; color:#6C3CE1;');
 });
 </script>
 </body>
