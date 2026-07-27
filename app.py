@@ -1,10 +1,10 @@
-# app.py - Main FastAPI Application for Hugging Face
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
+# app.py - Unknown Verdict v40.0 Main Application
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ⚖️ THE ADVOCACY – Global Law Firm
 
-import logging
-import sys
 import os
+import sys
+import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,8 +15,7 @@ from datetime import datetime
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)-8s | %(name)s  | %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[logging.StreamHandler(sys.stdout)]
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger("unknown_verdict")
 
@@ -67,29 +66,57 @@ logger.info(f"   └─ Judge: AI Judge v40.0")
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Serve index.html"""
+    """Serve index.html with Third Eye theme"""
     index_path = os.path.join(static_dir, "index.html")
     if os.path.exists(index_path):
         with open(index_path, "r", encoding="utf-8") as f:
             html = f.read()
-            # Add version info
+            # Replace version placeholders
             html = html.replace("{{VERSION}}", "40.0")
             html = html.replace("{{YEAR}}", str(datetime.now().year))
             return HTMLResponse(html)
     else:
+        # Fallback if index.html missing
         return HTMLResponse(f"""
         <!DOCTYPE html>
         <html>
-        <head><title>Unknown Verdict v40.0</title></head>
+        <head>
+            <title>Unknown Verdict v40.0</title>
+            <style>
+                body {{
+                    background: #0a0a1a;
+                    color: #e0e0e0;
+                    font-family: 'Segoe UI', sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    margin: 0;
+                    text-align: center;
+                }}
+                .container {{
+                    max-width: 600px;
+                    padding: 40px;
+                }}
+                .logo {{ font-size: 4em; }}
+                h1 {{
+                    background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }}
+                .trident {{ color: #FFD700; margin-top: 20px; }}
+            </style>
+        </head>
         <body>
-            <h1>⚖️ Unknown Verdict v40.0</h1>
-            <h2>THE ADVOCACY – Global Law Firm</h2>
-            <p>Status: ✅ Online</p>
-            <p>Agents: {len(_core.agents)}</p>
-            <p>Verifiers: {len(_core.verifiers)}</p>
-            <p>Judge: AI Judge v40.0</p>
-            <p><a href="/docs">📚 API Documentation</a></p>
-            <p><a href="/static/index.html">📄 Static Index</a></p>
+            <div class="container">
+                <div class="logo">⚖️</div>
+                <h1>THE ADVOCACY</h1>
+                <p>Global Law Firm</p>
+                <p style="color: #4ECDC4;">v40.0 • Unknown Verdict</p>
+                <p>✅ {len(_core.agents)} Agents • {len(_core.verifiers)} Verifiers • AI Judge Online</p>
+                <p><a href="/docs" style="color: #6C3CE1;">📚 API Documentation</a></p>
+                <div class="trident">🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE</div>
+            </div>
         </body>
         </html>
         """)
@@ -101,10 +128,12 @@ async def startup_event():
     logger.info("=" * 60)
     logger.info("🚀 Unknown Verdict v40.0 - Application Startup")
     logger.info("=" * 60)
-    logger.info(f"📊 System Statistics:")
+    logger.info("📊 System Statistics:")
     logger.info(f"   ├─ Python Version: {sys.version.split()[0]}")
     logger.info(f"   ├─ FastAPI Version: 40.0")
     logger.info(f"   ├─ API Docs: /docs")
+    logger.info(f"   ├─ Agents: {len(_core.agents)}")
+    logger.info(f"   ├─ Verifiers: {len(_core.verifiers)}")
     logger.info(f"   └─ Status: 🟢 ONLINE")
     logger.info("=" * 60)
     logger.info("🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE")
@@ -118,14 +147,15 @@ async def health_check():
     return JSONResponse({
         "status": "healthy",
         "version": "40.0",
-        "timestamp": datetime.now().isoformat(),
         "agents": len(_core.agents),
-        "verifiers": len(_core.verifiers)
+        "verifiers": len(_core.verifiers),
+        "timestamp": datetime.now().isoformat()
     })
 
 # ─── MAIN ──────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8000))
+    # Hugging Face uses PORT 7860 by default
+    port = int(os.getenv("PORT", 7860))
     uvicorn.run(app, host="0.0.0.0", port=port)
