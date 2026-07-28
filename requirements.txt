@@ -1,9 +1,8 @@
-# ============================================
-# UNKNOWN VERDICT v40.0 - CONFLICT-FREE
-# TESTED & WORKING ON HUGGING FACE
-# ============================================
+# Unknown Verdict v40.0 - Requirements (CONFLICT-FREE)
+# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+# ⚖️ THE ADVOCACY – Global Law Firm
 
-# ─── CORE ──────────────────────────────────────────────────────────
+# ─── CORE FRAMEWORKS ──────────────────────────────────────────────
 fastapi==0.110.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.9
@@ -19,21 +18,29 @@ asyncpg==0.29.0
 psycopg2-binary==2.9.9
 redis==5.0.1
 
-# ─── AUTH ──────────────────────────────────────────────────────────
+# ─── AUTHENTICATION ──────────────────────────────────────────────
 pyjwt==2.8.0
 python-jose==3.3.0
 passlib==1.7.4
 bcrypt==4.1.2
 cryptography==41.0.7
 
-# ─── AI ────────────────────────────────────────────────────────────
+# ─── AI & ML ──────────────────────────────────────────────────────
 openai==1.12.0
 groq==0.5.0
 google-generativeai==0.3.2
 numpy==1.24.4
 pandas==2.1.4
+sentence-transformers>=2.2.0
 
-# ─── WEB ───────────────────────────────────────────────────────────
+# ─── LEXICAL & DOCUMENT INTELLIGENCE ────────────────────────────
+# LlamaIndex - Using the main package only (includes everything)
+llama-index>=0.10.0
+llama-index-core>=0.10.0
+llama-index-readers-file>=0.1.0
+llama-index-embeddings-huggingface>=0.1.0
+
+# ─── WEB SCRAPING ─────────────────────────────────────────────────
 aiohttp==3.9.1
 beautifulsoup4==4.12.3
 lxml==4.9.4
@@ -48,10 +55,6 @@ click==8.1.7
 typing-extensions==4.9.0
 loguru==0.7.2
 tqdm==4.66.1
-llama-index>=0.10.0
-sentence-transformers>=2.2.0
+
+# ─── VECTOR DATABASE ─────────────────────────────────────────────
 pgvector>=0.1.8
-asyncpg>=0.29.0
-llama-index-core>=0.10.0
-llama-index-extractors>=0.1.0
-llama-index-readers-file>=0.1.0
