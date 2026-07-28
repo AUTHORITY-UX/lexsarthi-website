@@ -52,3 +52,6 @@ llama-index>=0.10.0
 sentence-transformers>=2.2.0
 pgvector>=0.1.8
 asyncpg>=0.29.0
+llama-index-core>=0.10.0
+llama-index-extractors>=0.1.0
+llama-index-readers-file>=0.1.0
