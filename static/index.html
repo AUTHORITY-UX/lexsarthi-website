@@ -3,281 +3,96 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Unknown Verdict v40.0 – THE ADVOCACY</title>
-    <meta name="description" content="Complete AGI Legal Platform with 250 AI Agents - THE ADVOCACY Global Law Firm" />
-    <link rel="icon" type="image/png" href="/static/favicon.png" />
-    
+    <title>Unknown Verdict v40.0 – The Advocacy</title>
     <style>
-        /* ============================================================
-           UNKNOWN VERDICT v40.0 - THIRD EYE THEME
-           🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-           ⚖️ THE ADVOCACY – Global Law Firm
-           ============================================================ */
-
-        /* ─── CSS VARIABLES ─────────────────────────────────────────── */
-        :root {
-            --primary: #6C3CE1;
-            --primary-dark: #5228B5;
-            --secondary: #FF6B6B;
-            --accent: #4ECDC4;
-            --gold: #FFD700;
-            --dark: #0A0A1A;
-            --darker: #050510;
-            --light: #F5F5FF;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            --neon-glow: 0 0 30px rgba(108, 60, 225, 0.3);
-        }
-
-        /* ─── RESET ────────────────────────────────────────────────── */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html { scroll-behavior: smooth; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--dark);
+            background: #0a0a1a;
             background-image: 
                 radial-gradient(ellipse at 20% 50%, rgba(108, 60, 225, 0.12) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 50%, rgba(78, 205, 196, 0.06) 0%, transparent 60%);
             color: #e0e0e0;
             min-height: 100vh;
-            padding: 0;
-            margin: 0;
+            padding: 20px;
         }
 
-        /* ─── SCROLLBAR ────────────────────────────────────────────── */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--darker); }
-        ::-webkit-scrollbar-thumb { 
-            background: var(--primary); 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        /* ─── CONTAINER ────────────────────────────────────────────── */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* ─── HEADER ────────────────────────────────────────────────── */
         .header {
-            background: rgba(10, 10, 26, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .logo-icon {
-            font-size: 2.5rem;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .logo-text h1 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.2;
-        }
-
-        .logo-text p {
-            font-size: 0.7rem;
-            color: var(--accent);
-            opacity: 0.8;
-            letter-spacing: 2px;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            background: var(--primary);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            animation: pulse 2s infinite;
-        }
-
-        .agent-count {
-            background: var(--glass);
-            padding: 0.3rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            border: 1px solid var(--glass-border);
-        }
-
-        .agent-count span {
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        .live-dot {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #4ECDC4;
-            animation: statusPulse 1.5s infinite;
-            margin-right: 6px;
-        }
-
-        @keyframes statusPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.8); }
-        }
-
-        /* ─── NAVIGATION ───────────────────────────────────────────── */
-        .nav {
-            background: rgba(10, 10, 26, 0.6);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 0.5rem 0;
-            overflow-x: auto;
-        }
-
-        .nav-content {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: nowrap;
-        }
-
-        .nav-content a {
-            color: var(--light);
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-            transition: all 0.3s;
-            opacity: 0.7;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-
-        .nav-content a:hover,
-        .nav-content a.active {
-            opacity: 1;
-            background: var(--glass);
-        }
-
-        .nav-content a i { margin-right: 0.5rem; }
-
-        /* ─── HERO ──────────────────────────────────────────────────── */
-        .hero {
-            padding: 3rem 0 2rem;
             text-align: center;
-            border-bottom: 1px solid var(--glass-border);
-            margin-bottom: 2rem;
+            padding: 30px 0 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 25px;
         }
 
-        .hero h2 {
-            font-size: 2.5rem;
+        .header .logo { font-size: 4em; display: block; animation: float 3s ease-in-out infinite; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff, var(--primary));
+            background: linear-gradient(135deg, #6C3CE1, #9B59B6, #4ECDC4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin: 8px 0 2px;
+            letter-spacing: 1px;
         }
 
-        .hero p {
-            font-size: 1.1rem;
-            opacity: 0.7;
-            margin-top: 0.5rem;
+        .header .subtitle {
+            font-size: 1.1em;
+            color: #4ECDC4;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            font-weight: 300;
         }
 
-        .hero-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .hero-stat {
-            background: var(--glass);
-            padding: 1.5rem;
-            border-radius: 15px;
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s;
-        }
-
-        .hero-stat:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: var(--neon-glow);
-        }
-
-        .hero-stat .number {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--primary);
-            display: block;
-        }
-
-        .hero-stat .label {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        /* ─── THIRD EYE ────────────────────────────────────────────── */
-        .third-eye-container {
-            display: flex;
-            justify-content: center;
-            margin: 1.5rem 0;
+        .header .version {
+            display: inline-block;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            padding: 4px 18px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-top: 10px;
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 0 30px rgba(108, 60, 225, 0.2);
         }
 
         .third-eye {
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle at 30% 30%, var(--primary), var(--darker));
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .third-eye .eye {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle at 30% 30%, #6C3CE1, #1a0a3a);
             border-radius: 50%;
             position: relative;
-            box-shadow: 
-                0 0 60px rgba(108, 60, 225, 0.3),
-                inset 0 0 60px rgba(108, 60, 225, 0.1);
+            box-shadow: 0 0 50px rgba(108, 60, 225, 0.25), inset 0 0 50px rgba(108, 60, 225, 0.05);
             animation: eyePulse 3s ease-in-out infinite;
         }
 
-        .third-eye::after {
+        .third-eye .eye::after {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 30px;
-            height: 30px;
-            background: radial-gradient(circle at 30% 30%, var(--gold), #FF6B00);
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, #FFD700, #FF6B00);
             border-radius: 50%;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
             animation: pupilPulse 2s ease-in-out infinite;
         }
 
@@ -288,95 +103,136 @@
 
         @keyframes pupilPulse {
             0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* ─── MAIN LAYOUT ──────────────────────────────────────────── */
-        .main-grid {
+        .stats {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
-        @media (max-width: 1024px) {
-            .main-grid { grid-template-columns: 1fr; }
-        }
-
-        /* ─── CHAT CARD ────────────────────────────────────────────── */
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            backdrop-filter: blur(10px);
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
             transition: all 0.3s;
         }
 
-        .card:hover { border-color: rgba(108, 60, 225, 0.2); }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: #6C3CE1;
+            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.15);
+        }
 
-        .card-title {
-            color: var(--accent);
-            font-size: 1.2rem;
+        .stat-card .number {
+            display: block;
+            font-size: 2.4em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .label {
+            font-size: 0.8em;
+            opacity: 0.6;
+            letter-spacing: 1px;
+            font-weight: 300;
+        }
+
+        .stat-card .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ECDC4;
+            margin-right: 6px;
+            animation: statusPulse 1.5s infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .main-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 18px;
+            padding: 30px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .main-card h2 {
+            color: #4ECDC4;
+            font-size: 1.4em;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
+        }
+
+        .main-card h2 .badge {
+            background: rgba(108, 60, 225, 0.3);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 0.6em;
+            color: #9B59B6;
         }
 
         .query-box {
             display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: 10px;
+            margin-bottom: 18px;
         }
 
         .query-box input {
             flex: 1;
-            padding: 0.8rem 1.2rem;
+            padding: 14px 20px;
             border-radius: 10px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
             color: #fff;
-            font-size: 0.95rem;
+            font-size: 0.95em;
+            font-family: inherit;
             transition: all 0.3s;
         }
 
         .query-box input::placeholder {
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.25);
         }
 
         .query-box input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 30px rgba(108, 60, 225, 0.1);
+            border-color: #6C3CE1;
+            box-shadow: 0 0 25px rgba(108, 60, 225, 0.08);
+            background: rgba(255,255,255,0.06);
         }
 
         .query-box button {
-            padding: 0.8rem 1.8rem;
+            padding: 14px 30px;
             border-radius: 10px;
             border: none;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
             color: #fff;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 0.95em;
+            font-family: inherit;
             white-space: nowrap;
         }
 
         .query-box button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 30px rgba(108, 60, 225, 0.4);
+            transform: scale(1.04);
+            box-shadow: 0 5px 25px rgba(108, 60, 225, 0.3);
         }
 
         .query-box button:disabled {
@@ -386,152 +242,191 @@
         }
 
         .response {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.25);
             border-radius: 10px;
-            padding: 1.2rem;
-            min-height: 120px;
+            padding: 20px;
+            min-height: 100px;
             white-space: pre-wrap;
             word-wrap: break-word;
-            border: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.9em;
             line-height: 1.7;
             max-height: 400px;
             overflow-y: auto;
+            font-family: inherit;
         }
 
-        .response .loading {
-            color: var(--accent);
-            animation: pulseText 1s infinite;
-        }
+        .response::-webkit-scrollbar { width: 6px; }
+        .response::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+        .response::-webkit-scrollbar-thumb { background: #6C3CE1; border-radius: 3px; }
 
-        .response .error { color: var(--secondary); }
-        .response .highlight { color: var(--gold); }
+        .response .loading { color: #4ECDC4; animation: pulseText 1s infinite; }
+        .response .error { color: #FF6B6B; }
 
         @keyframes pulseText {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
-        /* ─── SIDEBAR ───────────────────────────────────────────────── */
-        .sidebar-section {
-            margin-bottom: 1.5rem;
+        /* ─── NEWS SECTION ────────────────────────────────────────────── */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
 
-        .sidebar-section:last-child { margin-bottom: 0; }
-
-        .sidebar-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--accent);
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .news-item {
+        .news-card {
             background: rgba(255,255,255,0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 0.8rem;
-            margin-bottom: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 18px;
             transition: all 0.3s;
-            cursor: pointer;
         }
 
-        .news-item:hover {
+        .news-card:hover {
             background: rgba(255,255,255,0.06);
-            border-color: var(--primary);
+            border-color: #6C3CE1;
+            transform: translateY(-3px);
         }
 
-        .news-item .headline {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #fff;
+        .news-card .news-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #4ECDC4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .news-item .meta {
-            font-size: 0.7rem;
-            opacity: 0.5;
-            margin-top: 0.3rem;
+        .news-card .news-summary {
+            font-size: 0.85em;
+            opacity: 0.7;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-card .news-meta {
             display: flex;
             justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.7em;
+            opacity: 0.5;
         }
 
-        .news-item .tag {
-            display: inline-block;
-            font-size: 0.6rem;
+        .news-card .news-source {
+            color: #6C3CE1;
+        }
+
+        .news-card .news-time {
+            color: #888;
+        }
+
+        .news-categories {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .news-categories button {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.8em;
+        }
+
+        .news-categories button:hover,
+        .news-categories button.active {
+            border-color: #6C3CE1;
+            color: #fff;
             background: rgba(108, 60, 225, 0.2);
-            padding: 0.1rem 0.6rem;
-            border-radius: 10px;
-            color: var(--primary);
+        }
+
+        .news-loading {
+            text-align: center;
+            padding: 40px;
+            color: #4ECDC4;
+        }
+
+        .news-empty {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.5;
         }
 
         /* ─── APPS GRID ────────────────────────────────────────────── */
-        .apps-section {
-            margin-top: 2rem;
-        }
-
         .apps-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 0.75rem;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .app-item {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 10px;
-            padding: 0.8rem 0.5rem;
+            padding: 12px 8px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
         }
 
         .app-item:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--primary);
-            transform: translateY(-3px);
+            background: rgba(255,255,255,0.07);
+            border-color: #6C3CE1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(108, 60, 225, 0.1);
         }
 
-        .app-item .icon { font-size: 1.8rem; display: block; }
-        .app-item .name { font-size: 0.7rem; color: #ccc; margin-top: 0.3rem; }
+        .app-item .icon { font-size: 1.8em; display: block; margin-bottom: 4px; }
+        .app-item .name { font-size: 0.75em; color: #bbb; font-weight: 400; }
         .app-item .tag {
             display: inline-block;
-            font-size: 0.5rem;
+            font-size: 0.5em;
             background: rgba(108, 60, 225, 0.2);
-            padding: 0.1rem 0.5rem;
+            padding: 1px 8px;
             border-radius: 8px;
-            color: var(--primary);
-            margin-top: 0.2rem;
+            margin-top: 3px;
+            color: #9B59B6;
+            font-weight: 500;
         }
 
-        /* ─── FOOTER - TRIDENT PERMANENT ASSET ────────────────────── */
         .footer {
             text-align: center;
-            padding: 2rem 0 1rem;
-            border-top: 1px solid var(--glass-border);
-            margin-top: 2rem;
+            padding: 25px 0 15px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 25px;
         }
 
         .footer .firm {
-            font-size: 1.2rem;
+            font-size: 1.2em;
             font-weight: 700;
-            color: var(--accent);
+            color: #4ECDC4;
             letter-spacing: 1px;
         }
 
         .footer .powered {
-            font-size: 0.8rem;
+            font-size: 0.8em;
             opacity: 0.4;
-            margin-top: 0.3rem;
+            margin-top: 4px;
             letter-spacing: 1px;
         }
 
         .footer .trident {
-            font-size: 0.8rem;
-            color: var(--gold);
-            margin-top: 0.8rem;
+            font-size: 0.8em;
+            color: #FFD700;
+            margin-top: 10px;
             letter-spacing: 2px;
             font-weight: 700;
         }
@@ -547,189 +442,115 @@
         }
 
         .footer .copyright {
-            font-size: 0.7rem;
+            font-size: 0.7em;
             opacity: 0.2;
-            margin-top: 0.5rem;
+            margin-top: 6px;
         }
 
-        /* ─── RESPONSIVE ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            .header-content { flex-direction: column; text-align: center; }
-            .header-right { justify-content: center; }
-            .hero h2 { font-size: 1.8rem; }
+            .header h1 { font-size: 2em; }
+            .header .logo { font-size: 3.5em; }
             .query-box { flex-direction: column; }
-            .main-grid { grid-template-columns: 1fr; }
-            .apps-grid { grid-template-columns: repeat(3, 1fr); }
-            .hero-stats { grid-template-columns: repeat(2, 1fr); }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .apps-grid { grid-template-columns: repeat(2, 1fr); }
+            .news-grid { grid-template-columns: 1fr; }
+            .main-card { padding: 20px; }
+            .stat-card .number { font-size: 2em; }
+            .third-eye .eye { width: 55px; height: 55px; }
+            .third-eye .eye::after { width: 20px; height: 20px; }
         }
 
         @media (max-width: 480px) {
-            .apps-grid { grid-template-columns: repeat(2, 1fr); }
-            .hero-stats { grid-template-columns: 1fr; }
-            .logo-text h1 { font-size: 1.2rem; }
-            .logo-icon { font-size: 2rem; }
+            .stats { grid-template-columns: 1fr; }
+            .apps-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.6em; }
+            .header .logo { font-size: 3em; }
         }
     </style>
 </head>
 <body>
 
-<!-- ─── HEADER ────────────────────────────────────────────────────── -->
-<header class="header">
-    <div class="container header-content">
-        <a href="/" class="logo">
-            <span class="logo-icon">⚖️</span>
-            <div class="logo-text">
-                <h1>THE ADVOCACY</h1>
-                <p>Global Law Firm</p>
-            </div>
-        </a>
-        <div class="header-right">
-            <span class="badge">v40.0</span>
-            <span class="agent-count">
-                <span class="live-dot"></span>
-                <span id="agentCount">250</span> Agents
+<div class="container">
+    <header class="header">
+        <span class="logo">⚖️</span>
+        <h1>THE ADVOCACY</h1>
+        <div class="subtitle">Global Law Firm</div>
+        <div class="third-eye">
+            <div class="eye"></div>
+        </div>
+        <div class="version">v40.0 • Unknown Verdict</div>
+    </header>
+
+    <div class="stats" id="stats">
+        <div class="stat-card">
+            <span class="number" id="agentCount">250</span>
+            <span class="label">AI Agents</span>
+        </div>
+        <div class="stat-card">
+            <span class="number" id="verifierCount">20</span>
+            <span class="label">Verifiers</span>
+        </div>
+        <div class="stat-card">
+            <span class="number">32</span>
+            <span class="label">Applications</span>
+        </div>
+        <div class="stat-card">
+            <span class="number">
+                <span class="status-dot"></span>
+                <span id="statusText">Online</span>
             </span>
-            <span class="agent-count">
-                <span id="verifierCount">20</span> Verifiers
-            </span>
-        </div>
-    </div>
-</header>
-
-<!-- ─── NAVIGATION ────────────────────────────────────────────────── -->
-<nav class="nav">
-    <div class="container nav-content">
-        <a href="#" class="active" data-section="home"><i class="fas fa-home"></i> Home</a>
-        <a href="#" data-section="legal"><i class="fas fa-gavel"></i> Legal</a>
-        <a href="#" data-section="market"><i class="fas fa-chart-line"></i> Markets</a>
-        <a href="#" data-section="news"><i class="fas fa-newspaper"></i> News</a>
-        <a href="#" data-section="compliance"><i class="fas fa-shield-alt"></i> Compliance</a>
-        <a href="#" data-section="agents"><i class="fas fa-robot"></i> Agents</a>
-        <a href="/docs"><i class="fas fa-book"></i> API Docs</a>
-    </div>
-</nav>
-
-<!-- ─── MAIN CONTENT ──────────────────────────────────────────────── -->
-<main class="container">
-
-    <!-- ─── HERO ────────────────────────────────────────────────────── -->
-    <section class="hero">
-        <div class="third-eye-container">
-            <div class="third-eye"></div>
-        </div>
-        <h2>Complete AGI Legal Platform</h2>
-        <p>250 AI Agents • 20 Verifiers • AI Judge • Real-time Intelligence</p>
-        <div class="hero-stats" id="heroStats">
-            <div class="hero-stat">
-                <span class="number" id="statAgents">250</span>
-                <span class="label">AI Agents</span>
-            </div>
-            <div class="hero-stat">
-                <span class="number" id="statVerifiers">20</span>
-                <span class="label">Verifiers</span>
-            </div>
-            <div class="hero-stat">
-                <span class="number" id="statApps">32</span>
-                <span class="label">Applications</span>
-            </div>
-            <div class="hero-stat">
-                <span class="number" id="statStatus">🟢</span>
-                <span class="label">Online</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- ─── MAIN GRID ───────────────────────────────────────────────── -->
-    <div class="main-grid">
-
-        <!-- ─── LEFT: CHAT ──────────────────────────────────────────── -->
-        <div class="card">
-            <div class="card-title">💬 Legal AI Assistant</div>
-            <div class="query-box">
-                <input type="text" id="queryInput" placeholder="Ask a legal question..." />
-                <button id="sendBtn">Send</button>
-            </div>
-            <div class="response" id="responseArea">
-                <span style="opacity:0.4;">Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
-            </div>
-        </div>
-
-        <!-- ─── RIGHT: SIDEBAR ──────────────────────────────────────── -->
-        <div>
-
-            <!-- Live News -->
-            <div class="card sidebar-section">
-                <div class="sidebar-title">📰 Live News</div>
-                <div id="newsFeed">
-                    <div class="news-item">
-                        <div class="headline">Loading latest legal news...</div>
-                        <div class="meta"><span>AI Engine</span><span class="tag">Live</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Agent Factory Status -->
-            <div class="card sidebar-section">
-                <div class="sidebar-title">🏭 Agent Factory Status</div>
-                <div id="factoryStatus">
-                    <div class="news-item">
-                        <div class="headline">🟢 All 250 Agents Active</div>
-                        <div class="meta"><span>Last run: <span id="lastRun">Just now</span></span></div>
-                    </div>
-                    <div class="news-item">
-                        <div class="headline">📊 <span id="tasksCompleted">0</span> tasks completed today</div>
-                        <div class="meta"><span>⚡ Processing</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="card sidebar-section">
-                <div class="sidebar-title">📊 System Stats</div>
-                <div id="systemStats">
-                    <div class="news-item">
-                        <div class="headline">🧠 Agents: <span id="qsAgents">250</span></div>
-                        <div class="meta"><span>✅ All Active</span></div>
-                    </div>
-                    <div class="news-item">
-                        <div class="headline">🔍 Verifiers: <span id="qsVerifiers">20</span></div>
-                        <div class="meta"><span>✅ All Active</span></div>
-                    </div>
-                    <div class="news-item">
-                        <div class="headline">⚖️ Judge: <span id="qsJudge">Shakti v40.0</span></div>
-                        <div class="meta"><span>🟢 Online</span></div>
-                    </div>
-                </div>
-            </div>
-
+            <span class="label">System Status</span>
         </div>
     </div>
 
-    <!-- ─── 32 APPS ─────────────────────────────────────────────────── -->
-    <section class="apps-section">
-        <div class="card">
-            <div class="card-title">📱 32 Applications</div>
-            <div class="apps-grid" id="appsGrid"></div>
+    <!-- ─── LEGAL AI ASSISTANT ────────────────────────────────────── -->
+    <div class="main-card">
+        <h2>💬 Legal AI Assistant</h2>
+        <div class="query-box">
+            <input type="text" id="queryInput" placeholder="Ask a legal question..." />
+            <button id="sendBtn">Send</button>
         </div>
-    </section>
+        <div class="response" id="responseArea">
+            <span style="opacity:0.35;">Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
+        </div>
+    </div>
 
-</main>
+    <!-- ─── REAL AI NEWS ────────────────────────────────────────── -->
+    <div class="main-card" id="newsSection">
+        <h2>
+            📰 Real AI News & Articles
+            <span class="badge">LIVE</span>
+        </h2>
+        <div class="news-categories" id="newsCategories">
+            <button class="active" data-category="all">All</button>
+            <button data-category="legal">Legal</button>
+            <button data-category="financial">Financial</button>
+            <button data-category="general">General</button>
+            <button data-category="ai">AI</button>
+        </div>
+        <div id="newsContainer">
+            <div class="news-loading">📡 Loading real AI news...</div>
+        </div>
+    </div>
 
-<!-- ─── FOOTER - TRIDENT PERMANENT ASSET ──────────────────────────── -->
-<footer class="footer">
-    <div class="container">
+    <!-- ─── 32 APPLICATIONS ────────────────────────────────────────── -->
+    <div class="main-card">
+        <h2>📱 32 Applications</h2>
+        <div class="apps-grid" id="appsGrid"></div>
+    </div>
+
+    <footer class="footer">
         <div class="firm">⚖️ THE ADVOCACY – Global Law Firm</div>
         <div class="powered">Powered by Unknown Verdict v40.0</div>
         <div class="trident">
             <span class="symbol">🔱</span> TRIDENT – PERMANENT ASSET – NEVER REMOVE
         </div>
         <div class="copyright">© 2026 All Rights Reserved</div>
-    </div>
-</footer>
+    </footer>
+</div>
 
-<!-- ─── SCRIPTS ────────────────────────────────────────────────────── -->
 <script>
-// ─── 32 APPS DATA ──────────────────────────────────────────────────
+// ─── 32 APPS ──────────────────────────────────────────────────────────
 const apps = [
     { name: "Legal AI", icon: "⚖️", tag: "AI" },
     { name: "Contract Drafting", icon: "📄", tag: "Legal" },
@@ -765,7 +586,6 @@ const apps = [
     { name: "Analytics", icon: "📊", tag: "Analytics" }
 ];
 
-// ─── RENDER APPS ──────────────────────────────────────────────────
 function renderApps() {
     const grid = document.getElementById('appsGrid');
     grid.innerHTML = apps.map(app => `
@@ -777,20 +597,107 @@ function renderApps() {
     `).join('');
 }
 
-// ─── OPEN APP ──────────────────────────────────────────────────────
 function openApp(name) {
-    const input = document.getElementById('queryInput');
-    const messages = {
-        "Legal AI": "Ask a legal question...",
-        "Contract Drafting": "Describe the contract you need...",
-        "Market Analysis": "Enter stock symbol (e.g., AAPL)",
-        "Compliance": "Enter text to check compliance...",
-        "Legal Research": "What legal topic to research?",
-    };
-    input.placeholder = messages[name] || `Ask about ${name}...`;
-    input.focus();
-    document.getElementById('responseArea').innerHTML = 
-        `<span style="color:var(--accent);">📱 <strong>${name}</strong></span>\n\n<span style="opacity:0.5;">Type your question and press Send.</span>`;
+    document.getElementById('queryInput').placeholder = `Ask about ${name}...`;
+    document.getElementById('queryInput').focus();
+    document.getElementById('responseArea').innerHTML = `<span style="color:#4ECDC4;">📱 <strong>${name}</strong></span>\n\n<span style="opacity:0.5;">Type your question and press Send.</span>`;
+}
+
+// ─── UPDATE STATS ──────────────────────────────────────────────────
+async function updateStats() {
+    try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        
+        if (data.agents && data.agents.total !== undefined) {
+            document.getElementById('agentCount').textContent = data.agents.total;
+        }
+        if (data.verifiers && data.verifiers.total !== undefined) {
+            document.getElementById('verifierCount').textContent = data.verifiers.total;
+        }
+        
+        const statusText = document.getElementById('statusText');
+        if (data.status === 'healthy') {
+            statusText.textContent = 'Online';
+        }
+    } catch (error) {
+        console.error('Stats update failed:', error);
+    }
+}
+
+// ─── LOAD REAL NEWS ──────────────────────────────────────────────
+let currentCategory = 'all';
+
+async function loadNews(category = 'all') {
+    const container = document.getElementById('newsContainer');
+    container.innerHTML = '<div class="news-loading">📡 Fetching real AI news...</div>';
+    
+    try {
+        const url = category === 'all' 
+            ? '/api/news?category=general&limit=20'
+            : `/api/news?category=${category}&limit=15`;
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.status === 'success' && data.data && data.data.length > 0) {
+            renderNews(data.data);
+        } else {
+            container.innerHTML = `
+                <div class="news-empty">
+                    <p>📭 No news found for "${category}"</p>
+                    <p style="font-size:0.8em; opacity:0.5;">Try refreshing or selecting a different category</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        container.innerHTML = `
+            <div class="news-empty">
+                <p>❌ Error loading news</p>
+                <p style="font-size:0.8em; opacity:0.5;">${error.message}</p>
+            </div>
+        `;
+        console.error('News load error:', error);
+    }
+}
+
+function renderNews(newsItems) {
+    const container = document.getElementById('newsContainer');
+    
+    if (!newsItems || newsItems.length === 0) {
+        container.innerHTML = '<div class="news-empty">📭 No news articles available</div>';
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="news-grid">
+            ${newsItems.map(item => `
+                <div class="news-card">
+                    <div class="news-title">${item.title || 'Untitled'}</div>
+                    <div class="news-summary">${item.summary || item.description || 'No summary available'}</div>
+                    <div class="news-meta">
+                        <span class="news-source">📰 ${item.source || 'Unknown'}</span>
+                        <span class="news-time">${formatDate(item.published || item.date)}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return 'Just now';
+    try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000 / 60);
+        if (diff < 1) return 'Just now';
+        if (diff < 60) return `${diff}m ago`;
+        if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+        return date.toLocaleDateString();
+    } catch {
+        return dateStr;
+    }
 }
 
 // ─── SEND QUERY ──────────────────────────────────────────────────
@@ -822,24 +729,41 @@ async function sendQuery() {
         if (data.status === 'success' && data.data) {
             const result = data.data;
             let html = '';
+            
             html += `📋 <strong>Analysis Result</strong>\n\n`;
-            if (result.summary) html += `📝 ${result.summary}\n\n`;
-            if (result.legal_issues?.length) {
-                html += `⚖️ Legal Issues:\n${result.legal_issues.map(i => `  • ${i}`).join('\n')}\n\n`;
+            
+            if (result.summary) {
+                html += `📝 ${result.summary}\n\n`;
             }
-            if (result.applicable_laws?.length) {
-                html += `📚 Applicable Laws:\n${result.applicable_laws.map(l => `  • ${l}`).join('\n')}\n\n`;
+            
+            if (result.legal_issues && result.legal_issues.length > 0) {
+                html += `⚖️ Legal Issues:\n`;
+                result.legal_issues.forEach(issue => {
+                    html += `  • ${issue}\n`;
+                });
+                html += '\n';
             }
-            if (result.recommendations?.length) {
-                html += `💡 Recommendations:\n${result.recommendations.map(r => `  • ${r}`).join('\n')}\n\n`;
+            
+            if (result.applicable_laws && result.applicable_laws.length > 0) {
+                html += `📚 Applicable Laws:\n`;
+                result.applicable_laws.forEach(law => {
+                    html += `  • ${law}\n`;
+                });
+                html += '\n';
             }
+            
+            if (result.recommendations && result.recommendations.length > 0) {
+                html += `💡 Recommendations:\n`;
+                result.recommendations.forEach(rec => {
+                    html += `  • ${rec}\n`;
+                });
+                html += '\n';
+            }
+            
             html += `📊 Confidence: ${result.confidence || 'N/A'}\n`;
             html += `🏛️ Jurisdiction: ${result.jurisdiction || 'IN'}\n`;
-            if (result.agent_id) html += `🤖 Agent: ${result.agent_id}\n`;
-            if (result.verifiers?.length) {
-                const active = result.verifiers.filter(v => v.status === 'active' || v.status === 'APPROVED');
-                html += `\n🔍 ${active.length} Verifiers Approved`;
-            }
+            html += `🤖 Agent: ${result.agent_id || 'unknown'}\n`;
+            
             responseArea.textContent = html;
         } else {
             responseArea.innerHTML = `<span class="error">❌ ${data.detail || 'Unknown error'}</span>`;
@@ -854,119 +778,38 @@ async function sendQuery() {
     }
 }
 
-// ─── UPDATE STATS ──────────────────────────────────────────────────
-async function updateStats() {
-    try {
-        const res = await fetch('/api/health');
-        const data = await res.json();
-        
-        if (data.agents) {
-            const count = data.agents.total || data.agents || 250;
-            document.getElementById('agentCount').textContent = count;
-            document.getElementById('statAgents').textContent = count;
-            document.getElementById('qsAgents').textContent = count;
-        }
-        if (data.verifiers) {
-            const count = data.verifiers.total || data.verifiers || 20;
-            document.getElementById('verifierCount').textContent = count;
-            document.getElementById('statVerifiers').textContent = count;
-            document.getElementById('qsVerifiers').textContent = count;
-        }
-        
-        document.getElementById('statStatus').textContent = '🟢';
-        document.getElementById('qsJudge').textContent = 'Shakti v40.0';
-        
-    } catch (error) {
-        console.error('Stats update failed:', error);
-    }
-}
-
-// ─── LOAD NEWS ──────────────────────────────────────────────────────
-async function loadNews() {
-    try {
-        const res = await fetch('/api/news?category=legal&limit=5');
-        const data = await res.json();
-        const newsFeed = document.getElementById('newsFeed');
-        
-        if (data.status === 'success' && data.data?.length) {
-            newsFeed.innerHTML = data.data.map(item => `
-                <div class="news-item">
-                    <div class="headline">${item.title || 'Legal Update'}</div>
-                    <div class="meta">
-                        <span>${item.source || 'AI Engine'}</span>
-                        <span class="tag">${item.category || 'Legal'}</span>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            // Generate sample news if API returns empty
-            const samples = [
-                "Supreme Court issues landmark judgment on privacy rights",
-                "New GST council meeting scheduled for next week",
-                "SEBI announces new corporate governance guidelines",
-                "RBI maintains repo rate at 6.5%",
-                "Delhi High Court rules on data protection case"
-            ];
-            newsFeed.innerHTML = samples.map(title => `
-                <div class="news-item">
-                    <div class="headline">${title}</div>
-                    <div class="meta">
-                        <span>AI Generated</span>
-                        <span class="tag">Live</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-    } catch (error) {
-        console.error('News load failed:', error);
-    }
-}
-
-// ─── LOAD FACTORY STATUS ───────────────────────────────────────────
-async function loadFactoryStatus() {
-    try {
-        const res = await fetch('/api/stats');
-        const data = await res.json();
-        
-        if (data.status === 'success') {
-            const stats = data.data;
-            const tasks = stats.requests?.total || 0;
-            document.getElementById('tasksCompleted').textContent = tasks;
-            document.getElementById('lastRun').textContent = new Date().toLocaleTimeString();
-        }
-    } catch (error) {
-        console.error('Factory status load failed:', error);
-    }
-}
-
 // ─── INIT ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     renderApps();
     updateStats();
-    loadNews();
-    loadFactoryStatus();
-    
-    // Auto-refresh every 30 seconds
     setInterval(updateStats, 30000);
-    setInterval(loadNews, 60000);
-    setInterval(loadFactoryStatus, 30000);
     
-    // Event listeners
+    // Load news
+    loadNews('all');
+    
+    // Category buttons
+    document.querySelectorAll('.news-categories button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.news-categories button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentCategory = this.dataset.category;
+            loadNews(currentCategory);
+        });
+    });
+    
+    // Chat
     document.getElementById('queryInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendQuery();
     });
     document.getElementById('sendBtn').addEventListener('click', sendQuery);
     
-    // Console branding - TRIDENT PERMANENT ASSET
-    console.log('%c⚖️ THE ADVOCACY – Global Law Firm', 'font-size:20px; font-weight:bold; color:#4ECDC4;');
+    // Refresh news every 60 seconds
+    setInterval(() => loadNews(currentCategory), 60000);
+    
+    console.log('%c⚖️ THE ADVOCACY – Global Law Firm', 'font-size:18px; font-weight:bold; color:#4ECDC4;');
     console.log('%c🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE', 'font-size:14px; color:#FFD700;');
-    console.log('%c🚀 Unknown Verdict v40.0 | 250 Agents | 20 Verifiers', 'font-size:12px; color:#6C3CE1;');
-    console.log('%c🌐 www.advocacyalawfrim.in - Powered by AGI', 'font-size:12px; color:#888;');
+    console.log('%c🚀 Unknown Verdict v40.0 | Real AI News Loading...', 'font-size:12px; color:#6C3CE1;');
 });
 </script>
-
-<!-- Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
 </body>
 </html>
