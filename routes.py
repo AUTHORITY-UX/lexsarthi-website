@@ -514,3 +514,51 @@ async def update_policy(key: str, value: str):
     monitor = get_safety_monitor()
     await monitor.set_policy(key, value)
     return {"key": key, "value": value, "status": "updated"}
+
+# Add to routes.py
+
+# ─── SAFETY ENDPOINTS ──────────────────────────────────────────────
+
+@router.get("/safety/status")
+async def safety_status():
+    """Get safety monitor status"""
+    from safety_monitor import get_safety_monitor
+    monitor = get_safety_monitor()
+    return {
+        "status": "active",
+        "monitor": monitor.get_status(),
+        "kill_switch_active": monitor.kill_switch_active,
+        "killed_agents": list(monitor.killed_agents)
+    }
+
+@router.get("/safety/audit")
+async def get_audit_log(limit: int = 100, agent_id: Optional[str] = None):
+    """Get audit log"""
+    from safety_monitor import get_safety_monitor
+    monitor = get_safety_monitor()
+    logs = await monitor.get_audit_log(limit, agent_id)
+    return {"logs": logs, "count": len(logs)}
+
+@router.get("/safety/alerts")
+async def get_alerts(resolved: Optional[bool] = None):
+    """Get safety alerts"""
+    from safety_monitor import get_safety_monitor
+    monitor = get_safety_monitor()
+    alerts = await monitor.get_alerts(resolved)
+    return {"alerts": alerts}
+
+@router.post("/safety/kill_agent")
+async def kill_agent(agent_id: str):
+    """Kill a rogue agent"""
+    from safety_monitor import get_safety_monitor
+    monitor = get_safety_monitor()
+    await monitor.activate_kill_switch(agent_id)
+    return {"status": "killed", "agent_id": agent_id}
+
+@router.post("/safety/revive_agent")
+async def revive_agent(agent_id: str):
+    """Revive a killed agent"""
+    from safety_monitor import get_safety_monitor
+    monitor = get_safety_monitor()
+    await monitor.deactivate_kill_switch(agent_id)
+    return {"status": "revived", "agent_id": agent_id}
