@@ -31,16 +31,12 @@ class AIJudge:
         query: str,
         jurisdiction: str = "IN"
     ) -> Dict:
-        """
-        Synthesize final answer from all agent responses and jury scores.
-        """
+        """Synthesize final answer from all agent responses and jury scores."""
         self.total_cases += 1
         
-        # Extract responses and scores
         jury_summary = responses.get("jury_summary", {})
         detailed_responses = responses.get("detailed_verifier_responses", [])
         
-        # Find best agent based on jury scores
         best_agent_id = None
         best_score = 0
         for agent_id, scores in jury_summary.items():
@@ -49,19 +45,16 @@ class AIJudge:
                 best_score = avg_score
                 best_agent_id = agent_id
         
-        # Get the best agent's response
         best_response = None
         for resp in detailed_responses:
             if isinstance(resp, dict) and resp.get("agent_id") == best_agent_id:
                 best_response = resp.get("response", "")
                 break
         
-        # If no response found, use fallback
         if not best_response:
             best_response = "Analysis complete. Please consult a legal professional for specific advice."
             best_score = 0.5
         
-        # Determine confidence level
         if best_score >= 0.8:
             confidence = "HIGH"
         elif best_score >= 0.5:
@@ -69,10 +62,8 @@ class AIJudge:
         else:
             confidence = "LOW"
         
-        # Generate analysis_id
         analysis_id = f"ANALYSIS_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}"
         
-        # Log deliberation
         self.deliberations.append({
             "timestamp": datetime.now().isoformat(),
             "query": query[:200],
@@ -82,7 +73,6 @@ class AIJudge:
             "jurisdiction": jurisdiction
         })
         
-        # Return structured response
         return {
             "analysis_id": analysis_id,
             "summary": best_response[:500] if best_response else "Analysis complete.",
@@ -102,7 +92,6 @@ class AIJudge:
         }
     
     def _extract_issues(self, text: str) -> List[str]:
-        """Extract legal issues from response text."""
         if not text:
             return ["Issue identification pending"]
         issues = []
@@ -115,7 +104,6 @@ class AIJudge:
         return issues[:3] if issues else ["Legal issues identified, please review full analysis"]
     
     def _extract_laws(self, text: str) -> List[str]:
-        """Extract applicable laws from response."""
         if not text:
             return ["Applicable laws pending"]
         laws = []
@@ -128,7 +116,6 @@ class AIJudge:
         return laws[:3] if laws else ["Refer to relevant acts and sections"]
     
     def _extract_precedents(self, text: str) -> List[str]:
-        """Extract legal precedents from response."""
         if not text:
             return ["Precedent analysis pending"]
         precedents = []
@@ -141,7 +128,6 @@ class AIJudge:
         return precedents[:3] if precedents else ["Refer to relevant case law"]
     
     def _extract_recommendations(self, text: str) -> List[str]:
-        """Extract recommendations from response."""
         if not text:
             return ["Consult legal professional"]
         recs = []
@@ -154,7 +140,6 @@ class AIJudge:
         return recs[:3] if recs else ["Review all legal documentation carefully"]
     
     def get_stats(self) -> Dict:
-        """Get judge statistics."""
         return {
             "id": self.id,
             "name": self.name,
@@ -180,36 +165,29 @@ class Verifier:
         self.checks_failed = 0
     
     async def verify(self, text: str, query: str = "", jurisdiction: str = "IN") -> Dict:
-        """Run verification on text with context."""
         issues = []
         confidence = "HIGH"
         
-        # Check response length
         if len(text) < 50:
             issues.append("Response too brief")
             confidence = "LOW"
         
-        # Check for uncertainty markers
         if any(marker in text.lower() for marker in ["i don't know", "uncertain", "not sure", "maybe"]):
             confidence = "MEDIUM"
             issues.append("Response contains uncertainty")
         
-        # Check for citations
         if not any(cite in text.lower() for cite in ["source", "citation", "according to", "reference", "section", "act"]):
             issues.append("Missing citations or legal references")
             confidence = "MEDIUM" if confidence != "LOW" else "LOW"
         
-        # Legal-specific checks
         if "legal" in self.role.lower() or "law" in self.role.lower():
             if not any(term in text.lower() for term in ["section", "act", "court", "judgment", "rule", "regulation"]):
                 issues.append("Missing legal references")
                 confidence = "MEDIUM"
         
-        # Jurisdiction check
         if jurisdiction and jurisdiction.lower() not in text.lower():
             issues.append(f"Jurisdiction {jurisdiction} not explicitly referenced")
         
-        # Update statistics
         if issues:
             self.checks_failed += 1
             status = "CORRECTED"
@@ -217,7 +195,6 @@ class Verifier:
             self.checks_passed += 1
             status = "APPROVED"
         
-        # Calculate confidence score
         confidence_score = 0.9 if confidence == "HIGH" else 0.6 if confidence == "MEDIUM" else 0.3
         
         return {
@@ -249,7 +226,6 @@ class JuryVerifier:
         self.verifiers = self._load_verifiers()
     
     def _load_verifiers(self) -> List[Verifier]:
-        """Load 20 verifiers."""
         verifier_data = [
             ("v01", "Ganesha", "Citation & logic integrity", "Check legal citations and logical flow."),
             ("v02", "Saraswati", "Knowledge cross-reference", "Verify facts against established knowledge."),
@@ -280,15 +256,12 @@ class JuryVerifier:
         return verifiers
     
     async def evaluate(self, responses: List[Dict], query: str, jurisdiction: str) -> Dict:
-        """Run each verifier on each response."""
         jury_results = {}
         detailed_results = []
         
-        # If no responses, return empty
         if not responses:
             return {"jury_summary": {}, "detailed_verifier_responses": []}
         
-        # For each response, run all verifiers
         for resp in responses:
             if 'error' in resp:
                 continue
@@ -306,7 +279,6 @@ class JuryVerifier:
                 agent_results.append(result)
                 detailed_results.append(result)
             
-            # Aggregate scores for this agent
             approved = sum(1 for r in agent_results if r['status'] == 'APPROVED')
             corrected = sum(1 for r in agent_results if r['status'] == 'CORRECTED')
             rejected = sum(1 for r in agent_results if r['status'] == 'REJECTED')
@@ -326,13 +298,20 @@ class JuryVerifier:
             "detailed_verifier_responses": detailed_results
         }
 
-# ─── AGENT REGISTRY (SIMPLIFIED) ─────────────────────────────────────
+# ─── UNKNOWN VERDICT CORE ─────────────────────────────────────────────
 
-class AgentRegistry:
-    """Simplified agent registry for demo/standalone mode"""
+class UnknownVerdictCore:
+    """Main engine orchestrating the entire AGI pipeline"""
     
     def __init__(self):
         self.agents = self._init_agents()
+        self.jury = JuryVerifier()
+        self.judge = AIJudge()
+        self.version = "40.0"
+        self.status = "initialized"
+        self.request_count = 0
+        self.error_count = 0
+        self.verifiers = self.jury.verifiers
     
     def _init_agents(self) -> List[Dict]:
         """Initialize 250 agents."""
@@ -363,7 +342,6 @@ class AgentRegistry:
             category = categories[i % len(categories)]
             agent_name = f"{names[i % len(names)]} · {domain}"
             
-            # Build persona prompt with domain expertise
             persona = f"You are a {category} specialist in {domain}. "
             if category == "legal":
                 persona += f"You provide expert legal analysis on {domain}. You cite relevant sections, acts, and case law. "
@@ -390,7 +368,6 @@ class AgentRegistry:
         return agents
     
     def _get_statutes(self, domain: str) -> List[str]:
-        """Get relevant statutes for a domain."""
         statute_map = {
             "Contract Law": ["Indian Contract Act, 1872", "Specific Relief Act, 1963"],
             "Criminal Law": ["Indian Penal Code, 1860", "Criminal Procedure Code, 1973", "Indian Evidence Act, 1872"],
@@ -412,7 +389,6 @@ class AgentRegistry:
         return statute_map.get(domain, [])
     
     def _get_key_sections(self, domain: str) -> List[str]:
-        """Get key sections for a domain."""
         section_map = {
             "Contract Law": ["Section 10", "Section 23", "Section 73"],
             "Criminal Law": ["Section 302 IPC", "Section 377 IPC", "Section 498A IPC"],
@@ -427,119 +403,101 @@ class AgentRegistry:
         }
         return section_map.get(domain, ["Relevant sections apply"])
     
-    async def semantic_search(self, query: str, filters: Dict = None, top_k: int = 15) -> List[Dict]:
-        """Search agents semantically."""
-        # Simple keyword-based search for demo
-        query_lower = query.lower()
-        scored = []
-        
-        for agent in self.agents:
-            score = 0
-            # Check domain match
-            if agent['domain'].lower() in query_lower:
-                score += 0.5
-            # Check category match
-            if agent['category'].lower() in query_lower:
-                score += 0.3
-            # Check any keyword match
-            for word in query_lower.split():
-                if word in agent['domain'].lower() or word in agent['persona_prompt'].lower():
-                    score += 0.1
-            
-            # Apply filters
-            if filters:
-                if filters.get('jurisdiction') and agent.get('jurisdiction') != filters['jurisdiction']:
-                    continue
-                if filters.get('category') and agent.get('category') != filters['category']:
-                    continue
-            
-            if score > 0:
-                scored.append((score, agent))
-        
-        # Sort by score descending
-        scored.sort(reverse=True, key=lambda x: x[0])
-        
-        # Return top_k
-        return [agent for score, agent in scored[:top_k]]
-    
-    def count_agents(self) -> int:
-        return len(self.agents)
-    
-    def get_agent(self, agent_id: str) -> Optional[Dict]:
-        for agent in self.agents:
-            if agent['id'] == agent_id:
-                return agent
-        return None
-
-# ─── AGENT SELECTOR ──────────────────────────────────────────────────
-
-class AgentSelector:
-    """Semantic selection with filtering"""
-    
-    def __init__(self):
-        self.registry = AgentRegistry()
-    
-    async def select_agents(
+    async def analyze_legal_case(
         self,
         query: str,
         jurisdiction: str = "IN",
         age_group: str = "adult",
         case_type: str = "general",
-        top_k: int = 15
-    ) -> List[Dict]:
-        """Return top-k agents matching the query context."""
-        filters = {"jurisdiction": jurisdiction}
-        
-        # Map case_type to category filter
-        legal_cases = ["contract", "corporate", "tax", "ip", "criminal", "property", "family"]
-        if any(c in case_type.lower() for c in legal_cases):
-            filters["category"] = "legal"
-        elif case_type.lower() in ["spiritual", "meditation", "yoga", "vedanta"]:
-            filters["category"] = "spiritual"
-        elif case_type.lower() in ["physics", "chemistry", "biology", "math", "science"]:
-            filters["category"] = "scientific"
-        
-        # Semantic search
-        candidates = await self.registry.semantic_search(
-            query=query,
-            filters=filters,
-            top_k=top_k * 2
-        )
-        
-        # Prioritize senior agents for complex queries
-        if len(query.split()) > 10:
-            candidates.sort(key=lambda x: 1 if x.get('experience_level') == 'senior' else 0, reverse=True)
-        
-        return candidates[:top_k]
-
-# ─── AGENT EXECUTOR ──────────────────────────────────────────────────
-
-class AgentExecutor:
-    """Parallel agent execution"""
-    
-    def __init__(self):
-        self.registry = AgentRegistry()
-    
-    async def execute_agents(
-        self,
-        agents: List[Dict],
-        query: str,
-        jurisdiction: str = "IN",
+        user_id: Optional[str] = None,
         files: Optional[List[Dict]] = None,
-    ) -> List[Dict]:
-        """Run each agent with its persona."""
-        results = []
-        for agent in agents[:5]:  # Limit to 5 for speed
-            result = await self._run_single_agent(agent, query, jurisdiction)
-            results.append(result)
-        return results
-    
-    async def _run_single_agent(self, agent: Dict, query: str, jurisdiction: str) -> Dict:
+    ) -> Dict:
+        """Full pipeline: select → execute → jury → judge."""
+        self.request_count += 1
         try:
-            # Build system prompt
-            system_prompt = self._build_prompt(agent, jurisdiction)
+            # Select top agents based on query
+            selected = self._select_agents(query, jurisdiction, case_type, top_k=5)
+            if not selected:
+                selected = self.agents[:5]
             
-            # Use the agent's persona to generate response
+            # Execute agents
+            responses = []
+            for agent in selected:
+                response = await self._run_agent(agent, query, jurisdiction)
+                responses.append(response)
+            
+            valid_responses = [r for r in responses if 'error' not in r]
+            if not valid_responses:
+                valid_responses = [{
+                    "agent_id": "fallback",
+                    "agent_name": "General Assistant",
+                    "domain": "General",
+                    "category": "general",
+                    "response": f"I'll help with your query: {query[:100]}...",
+                    "timestamp": datetime.now().isoformat()
+                }]
+            
+            # Jury scoring
+            scored = await self.jury.evaluate(valid_responses, query, jurisdiction)
+            
+            # AI Judge final synthesis
+            final = await self.judge.synthesize(
+                responses=scored,
+                query=query,
+                jurisdiction=jurisdiction
+            )
+            
+            result = {
+                "analysis_id": final.get("analysis_id"),
+                "summary": final.get("summary"),
+                "legal_issues": final.get("legal_issues", []),
+                "applicable_laws": final.get("applicable_laws", []),
+                "precedents": final.get("precedents", []),
+                "recommendations": final.get("recommendations", []),
+                "risk_assessment": final.get("risk_assessment", {}),
+                "confidence": final.get("confidence", "MEDIUM"),
+                "agent_id": final.get("winning_agent_id"),
+                "jury_summary": scored.get("jury_summary", {}),
+                "verifiers": [v.to_dict() for v in self.jury.verifiers],
+                "judge": self.judge.get_stats(),
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return result
+            
+        except Exception as e:
+            self.error_count += 1
+            logger.exception(f"Pipeline error: {e}")
+            raise
+    
+    def _select_agents(self, query: str, jurisdiction: str, case_type: str, top_k: int = 5) -> List[Dict]:
+        """Select top agents based on query matching."""
+        query_lower = query.lower()
+        scored = []
+        
+        for agent in self.agents:
+            score = 0
+            if agent['domain'].lower() in query_lower:
+                score += 0.5
+            if agent['category'].lower() in query_lower:
+                score += 0.3
+            for word in query_lower.split():
+                if word in agent['domain'].lower() or word in agent['persona_prompt'].lower():
+                    score += 0.1
+            
+            if jurisdiction and agent.get('jurisdiction') == jurisdiction:
+                score += 0.2
+            
+            if score > 0:
+                scored.append((score, agent))
+        
+        scored.sort(reverse=True, key=lambda x: x[0])
+        return [agent for score, agent in scored[:top_k]]
+    
+    async def _run_agent(self, agent: Dict, query: str, jurisdiction: str) -> Dict:
+        """Run a single agent."""
+        try:
+            system_prompt = self._build_prompt(agent, jurisdiction)
             response = f"Based on my expertise in {agent['domain']}, I provide the following analysis:\n\n"
             response += f"This is a {agent['category']} matter under {jurisdiction} jurisdiction.\n"
             response += f"Key considerations include relevant statutes and precedents.\n"
@@ -565,104 +523,6 @@ class AgentExecutor:
         if agent.get('key_sections'):
             base += f" Key sections: {', '.join(agent['key_sections'])}."
         return base
-
-# ─── UNKNOWN VERDICT CORE ─────────────────────────────────────────────
-
-class UnknownVerdictCore:
-    """Main engine orchestrating the entire AGI pipeline"""
-    
-    def __init__(self):
-        self.registry = AgentRegistry()
-        self.selector = AgentSelector()
-        self.executor = AgentExecutor()
-        self.jury = JuryVerifier()
-        self.judge = AIJudge()
-        self.version = "40.0"
-        self.status = "initialized"
-        self.request_count = 0
-        self.error_count = 0
-        self.agents = self.registry.agents  # For backward compatibility
-    
-    async def analyze_legal_case(
-        self,
-        query: str,
-        jurisdiction: str = "IN",
-        age_group: str = "adult",
-        case_type: str = "general",
-        user_id: Optional[str] = None,
-        files: Optional[List[Dict]] = None,
-    ) -> Dict:
-        """Full pipeline: select → execute → jury → judge."""
-        self.request_count += 1
-        try:
-            # 1. Semantic selection – top agents
-            selected = await self.selector.select_agents(
-                query=query,
-                jurisdiction=jurisdiction,
-                age_group=age_group,
-                case_type=case_type,
-                top_k=15
-            )
-            if not selected:
-                # Fallback to all agents
-                selected = self.registry.agents[:5]
-            
-            # 2. Parallel execution
-            responses = await self.executor.execute_agents(
-                agents=selected,
-                query=query,
-                jurisdiction=jurisdiction,
-                files=files
-            )
-            
-            # Filter out errors
-            valid_responses = [r for r in responses if 'error' not in r]
-            if not valid_responses:
-                valid_responses = [{
-                    "agent_id": "fallback",
-                    "agent_name": "General Assistant",
-                    "domain": "General",
-                    "category": "general",
-                    "response": f"I'll help with your query: {query[:100]}...",
-                    "timestamp": datetime.now().isoformat()
-                }]
-            
-            # 3. Jury scoring
-            scored = await self.jury.evaluate(valid_responses, query, jurisdiction)
-            
-            # 4. AI Judge final synthesis
-            final = await self.judge.synthesize(
-                responses=scored,
-                query=query,
-                jurisdiction=jurisdiction
-            )
-            
-            # 5. Log deliberation
-            # await self._log_deliberation(query, selected, responses, scored, final)
-            
-            # Build response
-            result = {
-                "analysis_id": final.get("analysis_id"),
-                "summary": final.get("summary"),
-                "legal_issues": final.get("legal_issues", []),
-                "applicable_laws": final.get("applicable_laws", []),
-                "precedents": final.get("precedents", []),
-                "recommendations": final.get("recommendations", []),
-                "risk_assessment": final.get("risk_assessment", {}),
-                "confidence": final.get("confidence", "MEDIUM"),
-                "agent_id": final.get("winning_agent_id"),
-                "jury_summary": scored.get("jury_summary", {}),
-                "verifiers": [v.to_dict() for v in self.jury.verifiers],
-                "judge": self.judge.get_stats(),
-                "timestamp": datetime.now().isoformat()
-            }
-            
-            return result
-            
-        except Exception as e:
-            self.error_count += 1
-            logger.exception(f"Pipeline error: {e}")
-            raise
     
     async def check_compliance(self, text: str, jurisdiction: str = "IN",
                                categories: List[str] = None, risk_level: str = "medium") -> Dict:
@@ -724,10 +584,10 @@ class UnknownVerdictCore:
         """Get agent status summary."""
         return {
             "legal_agents": {
-                "total": len(self.registry.agents),
-                "active": sum(1 for a in self.registry.agents if a["status"] == "active"),
+                "total": len(self.agents),
+                "active": sum(1 for a in self.agents if a["status"] == "active"),
                 "details": [{"id": a["id"], "name": a["name"][:30], "status": a["status"]} 
-                           for a in self.registry.agents[:20]]
+                           for a in self.agents[:20]]
             },
             "verifiers": {
                 "total": len(self.jury.verifiers),
@@ -746,8 +606,8 @@ class UnknownVerdictCore:
             "version": self.version,
             "status": self.status,
             "agents": {
-                "total": len(self.registry.agents),
-                "active": sum(1 for a in self.registry.agents if a["status"] == "active")
+                "total": len(self.agents),
+                "active": sum(1 for a in self.agents if a["status"] == "active")
             },
             "verifiers": {
                 "total": len(self.jury.verifiers),
@@ -774,10 +634,27 @@ def get_core() -> UnknownVerdictCore:
         _core_instance = UnknownVerdictCore()
     return _core_instance
 
+# ─── EXPORT FUNCTIONS FOR routes.py ──────────────────────────────────
+
+def get_verifiers() -> List[Dict]:
+    """Get all verifiers as dicts."""
+    core = get_core()
+    return [v.to_dict() for v in core.jury.verifiers]
+
+def get_judge() -> Dict:
+    """Get judge information."""
+    core = get_core()
+    return core.judge.get_stats()
+
+def get_agent_status() -> Dict:
+    """Get agent status."""
+    core = get_core()
+    return core.get_agent_status()
+
 # ─── INIT LOG ────────────────────────────────────────────────────────
 
 logger.info("🚀 Unknown Verdict Core v40.0 initialized")
-logger.info(f"   ├─ Agents: {len(get_core().registry.agents)}")
+logger.info(f"   ├─ Agents: {len(get_core().agents)}")
 logger.info(f"   ├─ Verifiers: {len(get_core().jury.verifiers)}")
 logger.info(f"   └─ Judge: AI Judge v40.0")
 
@@ -786,8 +663,8 @@ __all__ = [
     "AIJudge",
     "Verifier",
     "JuryVerifier",
-    "AgentRegistry",
-    "AgentSelector", 
-    "AgentExecutor",
-    "get_core"
+    "get_core",
+    "get_verifiers",
+    "get_judge",
+    "get_agent_status"
 ]
