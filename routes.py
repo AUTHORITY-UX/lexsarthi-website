@@ -450,3 +450,67 @@ async def get_api_info():
         "trident": "🔱 PERMANENT ASSET - NEVER REMOVE",
         "branding": "⚖️ THE ADVOCACY – Global Law Firm"
     }
+from safety_monitor import get_safety_monitor, ActionType
+
+# ─── SAFETY ENDPOINTS ──────────────────────────────────────────────
+
+@router.get("/safety/status")
+async def safety_status():
+    monitor = get_safety_monitor()
+    return {
+        "status": "active",
+        "monitor": monitor.get_status(),
+        "kill_switch_active": monitor.kill_switch_active,
+        "killed_agents": list(monitor.killed_agents)
+    }
+
+@router.get("/safety/audit")
+async def get_audit_log(limit: int = 100, agent_id: Optional[str] = None):
+    monitor = get_safety_monitor()
+    logs = await monitor.get_audit_log(limit, agent_id)
+    return {"logs": logs, "count": len(logs)}
+
+@router.get("/safety/alerts")
+async def get_alerts(resolved: Optional[bool] = None):
+    monitor = get_safety_monitor()
+    alerts = await monitor.get_alerts(resolved)
+    return {"alerts": alerts}
+
+@router.post("/safety/resolve_alert")
+async def resolve_alert(alert_id: str):
+    monitor = get_safety_monitor()
+    success = await monitor.resolve_alert(alert_id)
+    return {"success": success}
+
+@router.post("/safety/kill_agent")
+async def kill_agent(agent_id: str):
+    monitor = get_safety_monitor()
+    await monitor.activate_kill_switch(agent_id)
+    return {"status": "killed", "agent_id": agent_id}
+
+@router.post("/safety/revive_agent")
+async def revive_agent(agent_id: str):
+    monitor = get_safety_monitor()
+    await monitor.deactivate_kill_switch(agent_id)
+    return {"status": "revived", "agent_id": agent_id}
+
+@router.post("/safety/policy")
+async def update_policy(key: str, value: str):
+    # Convert value to appropriate type (basic)
+    try:
+        if value.lower() in ["true", "false"]:
+            value = value.lower() == "true"
+        elif value.isdigit():
+            value = int(value)
+        else:
+            # might be list
+            import json
+            try:
+                value = json.loads(value)
+            except:
+                pass
+    except:
+        pass
+    monitor = get_safety_monitor()
+    await monitor.set_policy(key, value)
+    return {"key": key, "value": value, "status": "updated"}
