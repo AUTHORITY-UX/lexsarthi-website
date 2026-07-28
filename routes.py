@@ -372,7 +372,39 @@ async def catch_all(path: str):
             "redoc": "/redoc",
             "suggestion": "Visit /docs for interactive API documentation"
         }
-    )
+    ) 
+# Add document intelligence routes
+from document_extractor import DocumentExtractor
+from policies import validate_credit_agreement
+from fastapi import UploadFile, File, Form
+
+@router.post("/document/upload")
+async def upload_document(file: UploadFile = File(...)):
+    """Upload a legal document for extraction."""
+    # Save file temporarily
+    import tempfile
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+    # Extract using LlamaIndex
+    extractor = DocumentExtractor()
+    result = await extractor.extract_from_files([{"path": tmp_path, "filename": file.filename}])
+    os.unlink(tmp_path)
+    return {"status": "success", "extracted": result}
+
+@router.post("/document/analyze")
+async def analyze_document(data: Dict):
+    """Run AGI analysis on extracted document data."""
+    # Validate business rules
+    if "credit_agreement" in data:
+        validation = validate_credit_agreement(data["credit_agreement"])
+        data["validation"] = validation
+    # Now run the agents on the document content
+    core = get_core()
+    query = "Analyze this legal document: " + json.dumps(data)
+    result = await core.analyze_legal_case(query=query, files=[data])
+    return {"status": "success", "analysis": result}
 # ─── API INFO ENDPOINT ──────────────────────────────────────────────
 
 @router.get("/info")
