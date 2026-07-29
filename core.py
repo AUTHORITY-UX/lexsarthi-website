@@ -12,6 +12,7 @@ import feedparser
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 from bs4 import BeautifulSoup
+from document_extractor import DocumentExtractor
 
 logger = logging.getLogger("unknown_verdict.core")
 
