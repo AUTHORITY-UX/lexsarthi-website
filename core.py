@@ -666,3 +666,77 @@ __all__ = [
     "get_judge",
     "get_agent_status"
 ]
+async def general_chat(self, query: str) -> Dict:
+    """Handle general AI questions (not just legal)"""
+    
+    # Check if it's a legal question
+    legal_keywords = ["law", "legal", "court", "section", "act", "constitution", 
+                      "contract", "crime", "property", "tax", "compliance", 
+                      "arbitration", "judgment", "supreme", "high court"]
+    
+    is_legal = any(kw in query.lower() for kw in legal_keywords)
+    
+    if is_legal:
+        # Use legal analysis
+        result = await self.analyze_legal_case(query)
+        return {
+            "summary": result.get("summary"),
+            "confidence": result.get("confidence", "HIGH"),
+            "source": "Legal AI",
+            "legal_issues": result.get("legal_issues", []),
+            "applicable_laws": result.get("applicable_laws", []),
+            "recommendations": result.get("recommendations", []),
+            "agent_id": result.get("agent_id"),
+            "verifiers": result.get("verifiers", [])
+        }
+    else:
+        # Try OpenAI v2
+        if self.analyzer.openai_key:
+            try:
+                from openai import AsyncOpenAI
+                client = AsyncOpenAI(api_key=self.analyzer.openai_key)
+                response = await client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful AI assistant. Answer questions clearly and concisely."},
+                        {"role": "user", "content": query}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                return {
+                    "summary": response.choices[0].message.content,
+                    "confidence": "HIGH",
+                    "source": "OpenAI"
+                }
+            except Exception as e:
+                logger.warning(f"OpenAI general chat failed: {e}")
+        
+        # Try Groq v2
+        if self.analyzer.groq_key:
+            try:
+                from groq import AsyncGroq
+                client = AsyncGroq(api_key=self.analyzer.groq_key)
+                response = await client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful AI assistant."},
+                        {"role": "user", "content": query}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                return {
+                    "summary": response.choices[0].message.content,
+                    "confidence": "HIGH",
+                    "source": "Groq"
+                }
+            except Exception as e:
+                logger.warning(f"Groq general chat failed: {e}")
+        
+        # Fallback
+        return {
+            "summary": f"I understand you're asking about: {query[:100]}...\n\nI'm a legal AI platform specializing in legal matters. Please ask me about:\n- Legal analysis\n- Compliance checking\n- Contract review\n- Case research\n\nOr use the News tab for breaking AI news!",
+            "confidence": "MEDIUM",
+            "source": "Fallback"
+        }
