@@ -635,3 +635,86 @@ __all__ = [
     "get_judge",
     "get_agent_status"
 ]
+
+import yfinance as yf
+import feedparser
+import aiohttp
+from datetime import datetime, timedelta
+
+async def get_realtime_market(self, symbol: str) -> Dict:
+    """Get real-time market data from Yahoo Finance"""
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+        return {
+            "symbol": symbol,
+            "price": info.get('currentPrice', info.get('regularMarketPrice')),
+            "change": info.get('regularMarketChange'),
+            "change_percent": info.get('regularMarketChangePercent'),
+            "volume": info.get('regularMarketVolume'),
+            "high": info.get('dayHigh'),
+            "low": info.get('dayLow'),
+            "open": info.get('regularMarketOpen'),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Market data error: {e}")
+        return {"symbol": symbol, "error": str(e)}
+
+async def get_daily_market_report(self) -> Dict:
+    """Generate daily market report"""
+    indices = [
+        {"symbol": "^GSPC", "name": "S&P 500"},
+        {"symbol": "^DJI", "name": "Dow Jones"},
+        {"symbol": "^IXIC", "name": "NASDAQ"},
+        {"symbol": "BTC-USD", "name": "Bitcoin"},
+        {"symbol": "ETH-USD", "name": "Ethereum"}
+    ]
+    
+    reports = []
+    for index in indices:
+        data = await self.get_realtime_market(index["symbol"])
+        reports.append({
+            "name": index["name"],
+            "symbol": index["symbol"],
+            "price": data.get("price"),
+            "change": data.get("change"),
+            "change_percent": data.get("change_percent")
+        })
+    
+    return {
+        "date": datetime.now().isoformat(),
+        "indices": reports
+    }
+
+async def get_breaking_news(self, limit: int = 10) -> List[Dict]:
+    """Get breaking news from RSS feeds"""
+    breaking_feeds = [
+        "https://feeds.bbci.co.uk/news/rss.xml",
+        "https://www.reuters.com/feed",
+        "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "https://feeds.feedburner.com/TechnologyReview/AI"
+    ]
+    
+    articles = []
+    async with aiohttp.ClientSession() as session:
+        for feed_url in breaking_feeds[:3]:
+            try:
+                async with session.get(feed_url, timeout=10) as response:
+                    if response.status == 200:
+                        content = await response.text()
+                        feed = feedparser.parse(content)
+                        for entry in feed.entries[:5]:
+                            articles.append({
+                                "title": entry.get('title', ''),
+                                "summary": entry.get('summary', '')[:300],
+                                "source": feed.feed.get('title', 'Unknown'),
+                                "published": entry.get('published', datetime.now().isoformat()),
+                                "link": entry.get('link', '')
+                            })
+            except Exception as e:
+                continue
+    
+    # Sort by date
+    articles.sort(key=lambda x: x.get('published', ''), reverse=True)
+    return articles[:limit]
