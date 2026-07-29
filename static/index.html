@@ -5,91 +5,275 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Unknown Verdict v40.0 – The Advocacy</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ============================================================
+           UNKNOWN VERDICT v40.0 - SPACE + THIRD EYE THEME
+           🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
+           ⚖️ THE ADVOCACY – Global Law Firm
+           ============================================================ */
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a1a;
-            background-image: 
-                radial-gradient(ellipse at 20% 50%, rgba(108, 60, 225, 0.12) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(78, 205, 196, 0.06) 0%, transparent 60%);
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .container { max-width: 1200px; margin: 0 auto; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
 
+        /* ─── SPACE BACKGROUND ────────────────────────────────────── */
+        .space-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(108, 60, 225, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(78, 205, 196, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(255, 107, 107, 0.03) 0%, transparent 50%),
+                #0a0a1a;
+        }
+
+        /* ─── STARS ────────────────────────────────────────────────── */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ─── NEBULA GLOW ────────────────────────────────────────── */
+        .nebula {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: nebulaDrift 20s ease-in-out infinite alternate;
+        }
+
+        .nebula-1 {
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            right: -200px;
+            background: radial-gradient(circle, rgba(108, 60, 225, 0.15), transparent);
+        }
+
+        .nebula-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -150px;
+            left: -150px;
+            background: radial-gradient(circle, rgba(78, 205, 196, 0.08), transparent);
+        }
+
+        .nebula-3 {
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.04), transparent);
+            animation: nebulaPulse 10s ease-in-out infinite;
+        }
+
+        @keyframes nebulaDrift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, -30px) scale(1.1); }
+        }
+
+        @keyframes nebulaPulse {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── HEADER ────────────────────────────────────────────────── */
         .header {
             text-align: center;
             padding: 30px 0 25px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
             margin-bottom: 25px;
+            position: relative;
         }
 
-        .header .logo { font-size: 4em; display: block; animation: float 3s ease-in-out infinite; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(108, 60, 225, 0.3), rgba(78, 205, 196, 0.3), transparent);
+        }
+
+        .header .logo {
+            font-size: 4.5em;
+            display: block;
+            animation: floatLogo 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 40px rgba(108, 60, 225, 0.3));
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-12px) scale(1.05); }
         }
 
         .header h1 {
-            font-size: 2.5em;
-            font-weight: 800;
-            background: linear-gradient(135deg, #6C3CE1, #9B59B6, #4ECDC4);
+            font-size: 2.8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6C3CE1, #9B59B6, #4ECDC4, #FFD700);
+            background-size: 300% 300%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin: 8px 0 2px;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            animation: gradientShift 6s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .header .subtitle {
-            font-size: 1.1em;
+            font-size: 1.2em;
             color: #4ECDC4;
             opacity: 0.8;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             font-weight: 300;
+            text-shadow: 0 0 30px rgba(78, 205, 196, 0.1);
         }
 
         .header .version {
             display: inline-block;
             background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
-            padding: 4px 18px;
+            padding: 4px 20px;
             border-radius: 20px;
-            font-size: 0.8em;
-            margin-top: 10px;
+            font-size: 0.85em;
+            margin-top: 12px;
             color: #fff;
             font-weight: 600;
             letter-spacing: 1px;
-            box-shadow: 0 0 30px rgba(108, 60, 225, 0.2);
+            box-shadow: 0 0 40px rgba(108, 60, 225, 0.2);
+            animation: glowPulse 3s ease-in-out infinite;
         }
 
-        .third-eye {
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(108, 60, 225, 0.2); }
+            50% { box-shadow: 0 0 50px rgba(108, 60, 225, 0.4); }
+        }
+
+        /* ─── THIRD EYE SYMBOL ────────────────────────────────────── */
+        .third-eye-container {
             display: flex;
             justify-content: center;
-            margin: 10px 0;
-        }
-
-        .third-eye .eye {
-            width: 70px;
-            height: 70px;
-            background: radial-gradient(circle at 30% 30%, #6C3CE1, #1a0a3a);
-            border-radius: 50%;
+            margin: 15px 0;
             position: relative;
-            box-shadow: 0 0 50px rgba(108, 60, 225, 0.25), inset 0 0 50px rgba(108, 60, 225, 0.05);
-            animation: eyePulse 3s ease-in-out infinite;
         }
 
-        .third-eye .eye::after {
+        .third-eye-container::before {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 25px;
-            height: 25px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(108, 60, 225, 0.05), transparent 70%);
+            border-radius: 50%;
+            animation: eyeGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes eyeGlow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+        }
+
+        .third-eye {
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle at 30% 30%, #6C3CE1, #1a0a3a, #0a0a1a);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 
+                0 0 60px rgba(108, 60, 225, 0.3),
+                0 0 120px rgba(108, 60, 225, 0.1),
+                inset 0 0 60px rgba(108, 60, 225, 0.05);
+            animation: eyePulse 4s ease-in-out infinite;
+            border: 2px solid rgba(108, 60, 225, 0.2);
+        }
+
+        .third-eye::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(108, 60, 225, 0.3), transparent, rgba(78, 205, 196, 0.3));
+            animation: eyeBorder 3s ease-in-out infinite;
+        }
+
+        @keyframes eyeBorder {
+            0%, 100% { opacity: 0.3; transform: rotate(0deg); }
+            50% { opacity: 1; transform: rotate(180deg); }
+        }
+
+        .third-eye .iris {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 40% 40%, #4ECDC4, #1a6a5a, #0a3a2a);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(78, 205, 196, 0.2);
+            animation: irisPulse 3s ease-in-out infinite;
+        }
+
+        .third-eye .pupil {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 18px;
+            height: 18px;
             background: radial-gradient(circle at 30% 30%, #FFD700, #FF6B00);
             border-radius: 50%;
             box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
@@ -97,15 +281,21 @@
         }
 
         @keyframes eyePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(108, 60, 225, 0.2); }
+            50% { transform: scale(1.03); box-shadow: 0 0 100px rgba(108, 60, 225, 0.4); }
+        }
+
+        @keyframes irisPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
         }
 
         @keyframes pupilPulse {
             0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.15); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
         }
 
+        /* ─── STATS CARDS ──────────────────────────────────────────── */
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -116,91 +306,137 @@
         .stat-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 20px;
             text-align: center;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(108, 60, 225, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
         }
 
         .stat-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-6px) scale(1.02);
             border-color: #6C3CE1;
-            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.15);
+            box-shadow: 0 10px 50px rgba(108, 60, 225, 0.15);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
         }
 
         .stat-card .number {
             display: block;
-            font-size: 2.4em;
+            font-size: 2.6em;
             font-weight: 800;
             background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-card .label {
-            font-size: 0.8em;
+            font-size: 0.85em;
             opacity: 0.6;
             letter-spacing: 1px;
             font-weight: 300;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-card .status-dot {
             display: inline-block;
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: #4ECDC4;
             margin-right: 6px;
             animation: statusPulse 1.5s infinite;
         }
 
-        @keyframes statusPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        .stat-card .status-dot.online {
+            background: #4ECDC4;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.4);
         }
 
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        /* ─── MAIN CARDS ───────────────────────────────────────────── */
         .main-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 18px;
+            border-radius: 20px;
             padding: 30px;
             margin-bottom: 25px;
             backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .main-card:hover {
+            border-color: rgba(108, 60, 225, 0.15);
         }
 
         .main-card h2 {
             color: #4ECDC4;
-            font-size: 1.4em;
+            font-size: 1.5em;
             font-weight: 600;
             margin-bottom: 18px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .main-card h2 .badge {
-            background: rgba(108, 60, 225, 0.3);
-            padding: 2px 12px;
+            background: rgba(108, 60, 225, 0.2);
+            padding: 2px 14px;
             border-radius: 12px;
-            font-size: 0.6em;
+            font-size: 0.55em;
             color: #9B59B6;
+            border: 1px solid rgba(108, 60, 225, 0.1);
         }
 
+        .main-card h2 .badge.live {
+            color: #4ECDC4;
+            border-color: rgba(78, 205, 196, 0.2);
+            animation: pulseBadge 2s infinite;
+        }
+
+        @keyframes pulseBadge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ─── QUERY BOX ────────────────────────────────────────────── */
         .query-box {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 18px;
         }
 
         .query-box input {
             flex: 1;
-            padding: 14px 20px;
-            border-radius: 10px;
+            padding: 16px 24px;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.08);
             background: rgba(255,255,255,0.04);
             color: #fff;
-            font-size: 0.95em;
+            font-size: 1em;
             font-family: inherit;
             transition: all 0.3s;
         }
@@ -212,27 +448,27 @@
         .query-box input:focus {
             outline: none;
             border-color: #6C3CE1;
-            box-shadow: 0 0 25px rgba(108, 60, 225, 0.08);
+            box-shadow: 0 0 30px rgba(108, 60, 225, 0.08);
             background: rgba(255,255,255,0.06);
         }
 
         .query-box button {
-            padding: 14px 30px;
-            border-radius: 10px;
+            padding: 16px 35px;
+            border-radius: 12px;
             border: none;
             background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
             color: #fff;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 0.95em;
+            font-size: 1em;
             font-family: inherit;
             white-space: nowrap;
         }
 
         .query-box button:hover {
             transform: scale(1.04);
-            box-shadow: 0 5px 25px rgba(108, 60, 225, 0.3);
+            box-shadow: 0 5px 30px rgba(108, 60, 225, 0.4);
         }
 
         .query-box button:disabled {
@@ -241,34 +477,51 @@
             transform: none;
         }
 
+        /* ─── RESPONSE ─────────────────────────────────────────────── */
         .response {
-            background: rgba(0,0,0,0.25);
-            border-radius: 10px;
-            padding: 20px;
-            min-height: 100px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 25px;
+            min-height: 120px;
             white-space: pre-wrap;
             word-wrap: break-word;
             border: 1px solid rgba(255,255,255,0.04);
-            font-size: 0.9em;
-            line-height: 1.7;
-            max-height: 400px;
+            font-size: 0.95em;
+            line-height: 1.8;
+            max-height: 450px;
             overflow-y: auto;
             font-family: inherit;
         }
 
-        .response::-webkit-scrollbar { width: 6px; }
-        .response::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
-        .response::-webkit-scrollbar-thumb { background: #6C3CE1; border-radius: 3px; }
+        .response::-webkit-scrollbar {
+            width: 8px;
+        }
 
-        .response .loading { color: #4ECDC4; animation: pulseText 1s infinite; }
-        .response .error { color: #FF6B6B; }
+        .response::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
+        }
+
+        .response::-webkit-scrollbar-thumb {
+            background: #6C3CE1;
+            border-radius: 4px;
+        }
+
+        .response .loading {
+            color: #4ECDC4;
+            animation: pulseText 1s infinite;
+        }
+
+        .response .error {
+            color: #FF6B6B;
+        }
 
         @keyframes pulseText {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
-        /* ─── NEWS SECTION ────────────────────────────────────────────── */
+        /* ─── NEWS SECTION ─────────────────────────────────────────── */
         .news-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -279,15 +532,17 @@
         .news-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            padding: 18px;
+            border-radius: 14px;
+            padding: 18px 20px;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .news-card:hover {
             background: rgba(255,255,255,0.06);
             border-color: #6C3CE1;
-            transform: translateY(-3px);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.08);
         }
 
         .news-card .news-title {
@@ -314,9 +569,11 @@
         .news-card .news-meta {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 0.7em;
             opacity: 0.5;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.04);
         }
 
         .news-card .news-source {
@@ -335,21 +592,28 @@
         }
 
         .news-categories button {
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
             background: transparent;
             color: #888;
             cursor: pointer;
             transition: all 0.3s;
             font-size: 0.8em;
+            font-family: inherit;
         }
 
-        .news-categories button:hover,
+        .news-categories button:hover {
+            border-color: #6C3CE1;
+            color: #fff;
+            background: rgba(108, 60, 225, 0.15);
+        }
+
         .news-categories button.active {
             border-color: #6C3CE1;
             color: #fff;
             background: rgba(108, 60, 225, 0.2);
+            box-shadow: 0 0 20px rgba(108, 60, 225, 0.05);
         }
 
         .news-loading {
@@ -375,76 +639,115 @@
         .app-item {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 12px 8px;
+            border-radius: 12px;
+            padding: 14px 8px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6C3CE1, #4ECDC4);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .app-item:hover::after {
+            transform: scaleX(1);
         }
 
         .app-item:hover {
             background: rgba(255,255,255,0.07);
             border-color: #6C3CE1;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(108, 60, 225, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.08);
         }
 
-        .app-item .icon { font-size: 1.8em; display: block; margin-bottom: 4px; }
-        .app-item .name { font-size: 0.75em; color: #bbb; font-weight: 400; }
+        .app-item .icon {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .app-item .name {
+            font-size: 0.75em;
+            color: #bbb;
+            font-weight: 400;
+        }
+
         .app-item .tag {
             display: inline-block;
             font-size: 0.5em;
-            background: rgba(108, 60, 225, 0.2);
-            padding: 1px 8px;
+            background: rgba(108, 60, 225, 0.15);
+            padding: 1px 10px;
             border-radius: 8px;
-            margin-top: 3px;
+            margin-top: 4px;
             color: #9B59B6;
             font-weight: 500;
         }
 
+        /* ─── FOOTER - TRIDENT ─────────────────────────────────────── */
         .footer {
             text-align: center;
-            padding: 25px 0 15px;
+            padding: 30px 0 20px;
             border-top: 1px solid rgba(255,255,255,0.04);
             margin-top: 25px;
         }
 
         .footer .firm {
-            font-size: 1.2em;
+            font-size: 1.3em;
             font-weight: 700;
             color: #4ECDC4;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+        }
+
+        .footer .firm .icon {
+            color: #FFD700;
         }
 
         .footer .powered {
-            font-size: 0.8em;
+            font-size: 0.85em;
             opacity: 0.4;
             margin-top: 4px;
             letter-spacing: 1px;
         }
 
         .footer .trident {
-            font-size: 0.8em;
+            font-size: 0.85em;
             color: #FFD700;
-            margin-top: 10px;
-            letter-spacing: 2px;
+            margin-top: 12px;
+            letter-spacing: 3px;
             font-weight: 700;
         }
 
         .footer .trident .symbol {
             display: inline-block;
-            animation: tridentGlow 2s ease-in-out infinite;
+            animation: tridentGlow 2.5s ease-in-out infinite;
         }
 
         @keyframes tridentGlow {
             0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
-            50% { text-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
+            50% { text-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
         }
 
         .footer .copyright {
             font-size: 0.7em;
             opacity: 0.2;
-            margin-top: 6px;
+            margin-top: 8px;
+        }
+
+        /* ─── RESPONSIVE ───────────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .news-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 768px) {
@@ -456,8 +759,9 @@
             .news-grid { grid-template-columns: 1fr; }
             .main-card { padding: 20px; }
             .stat-card .number { font-size: 2em; }
-            .third-eye .eye { width: 55px; height: 55px; }
-            .third-eye .eye::after { width: 20px; height: 20px; }
+            .third-eye { width: 70px; height: 70px; }
+            .third-eye .iris { width: 30px; height: 30px; }
+            .third-eye .pupil { width: 14px; height: 14px; }
         }
 
         @media (max-width: 480px) {
@@ -465,29 +769,44 @@
             .apps-grid { grid-template-columns: 1fr; }
             .header h1 { font-size: 1.6em; }
             .header .logo { font-size: 3em; }
+            .third-eye { width: 60px; height: 60px; }
+            .third-eye .iris { width: 26px; height: 26px; }
+            .third-eye .pupil { width: 12px; height: 12px; }
         }
     </style>
 </head>
 <body>
 
+<!-- ─── SPACE BACKGROUND ──────────────────────────────────────────── -->
+<div class="space-bg"></div>
+<div class="stars" id="stars"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+
 <div class="container">
+    <!-- ─── HEADER ────────────────────────────────────────────────── -->
     <header class="header">
         <span class="logo">⚖️</span>
         <h1>THE ADVOCACY</h1>
         <div class="subtitle">Global Law Firm</div>
-        <div class="third-eye">
-            <div class="eye"></div>
+        <div class="third-eye-container">
+            <div class="third-eye">
+                <div class="iris"></div>
+                <div class="pupil"></div>
+            </div>
         </div>
         <div class="version">v40.0 • Unknown Verdict</div>
     </header>
 
+    <!-- ─── STATS ────────────────────────────────────────────────── -->
     <div class="stats" id="stats">
         <div class="stat-card">
             <span class="number" id="agentCount">250</span>
             <span class="label">AI Agents</span>
         </div>
         <div class="stat-card">
-            <span class="number" id="verifierCount">20</span>
+            <span class="number" id="verifierCount">15</span>
             <span class="label">Verifiers</span>
         </div>
         <div class="stat-card">
@@ -496,7 +815,7 @@
         </div>
         <div class="stat-card">
             <span class="number">
-                <span class="status-dot"></span>
+                <span class="status-dot online"></span>
                 <span id="statusText">Online</span>
             </span>
             <span class="label">System Status</span>
@@ -505,13 +824,16 @@
 
     <!-- ─── LEGAL AI ASSISTANT ────────────────────────────────────── -->
     <div class="main-card">
-        <h2>💬 Legal AI Assistant</h2>
+        <h2>
+            💬 Legal AI Assistant
+            <span class="badge live">● LIVE</span>
+        </h2>
         <div class="query-box">
             <input type="text" id="queryInput" placeholder="Ask a legal question..." />
             <button id="sendBtn">Send</button>
         </div>
         <div class="response" id="responseArea">
-            <span style="opacity:0.35;">Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
+            <span style="opacity:0.35;">🌌 Welcome to Unknown Verdict. Ask me anything about law, compliance, or legal analysis...</span>
         </div>
     </div>
 
@@ -519,7 +841,7 @@
     <div class="main-card" id="newsSection">
         <h2>
             📰 Real AI News & Articles
-            <span class="badge">LIVE</span>
+            <span class="badge live">● LIVE</span>
         </h2>
         <div class="news-categories" id="newsCategories">
             <button class="active" data-category="all">All</button>
@@ -529,18 +851,24 @@
             <button data-category="ai">AI</button>
         </div>
         <div id="newsContainer">
-            <div class="news-loading">📡 Loading real AI news...</div>
+            <div class="news-loading">🛸 Fetching real news from the cosmos...</div>
         </div>
     </div>
 
     <!-- ─── 32 APPLICATIONS ────────────────────────────────────────── -->
     <div class="main-card">
-        <h2>📱 32 Applications</h2>
+        <h2>
+            🚀 32 Applications
+            <span class="badge">Constellation</span>
+        </h2>
         <div class="apps-grid" id="appsGrid"></div>
     </div>
 
+    <!-- ─── FOOTER - TRIDENT ─────────────────────────────────────── -->
     <footer class="footer">
-        <div class="firm">⚖️ THE ADVOCACY – Global Law Firm</div>
+        <div class="firm">
+            <span class="icon">⚖️</span> THE ADVOCACY – Global Law Firm
+        </div>
         <div class="powered">Powered by Unknown Verdict v40.0</div>
         <div class="trident">
             <span class="symbol">🔱</span> TRIDENT – PERMANENT ASSET – NEVER REMOVE
@@ -550,6 +878,26 @@
 </div>
 
 <script>
+// ─── GENERATE STARS ──────────────────────────────────────────────────
+function generateStars() {
+    const container = document.getElementById('stars');
+    const count = 200;
+    
+    for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 3 + 1;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+        star.style.animationDelay = (Math.random() * 5) + 's';
+        container.appendChild(star);
+    }
+}
+generateStars();
+
 // ─── 32 APPS ──────────────────────────────────────────────────────────
 const apps = [
     { name: "Legal AI", icon: "⚖️", tag: "AI" },
@@ -600,7 +948,7 @@ function renderApps() {
 function openApp(name) {
     document.getElementById('queryInput').placeholder = `Ask about ${name}...`;
     document.getElementById('queryInput').focus();
-    document.getElementById('responseArea').innerHTML = `<span style="color:#4ECDC4;">📱 <strong>${name}</strong></span>\n\n<span style="opacity:0.5;">Type your question and press Send.</span>`;
+    document.getElementById('responseArea').innerHTML = `<span style="color:#4ECDC4;">🚀 <strong>${name}</strong></span>\n\n<span style="opacity:0.5;">Type your question and press Send.</span>`;
 }
 
 // ─── UPDATE STATS ──────────────────────────────────────────────────
@@ -630,7 +978,7 @@ let currentCategory = 'all';
 
 async function loadNews(category = 'all') {
     const container = document.getElementById('newsContainer');
-    container.innerHTML = '<div class="news-loading">📡 Fetching real AI news...</div>';
+    container.innerHTML = '<div class="news-loading">🛸 Fetching real news from the cosmos...</div>';
     
     try {
         const url = category === 'all' 
@@ -645,7 +993,7 @@ async function loadNews(category = 'all') {
         } else {
             container.innerHTML = `
                 <div class="news-empty">
-                    <p>📭 No news found for "${category}"</p>
+                    <p>🌌 No news found for "${category}"</p>
                     <p style="font-size:0.8em; opacity:0.5;">Try refreshing or selecting a different category</p>
                 </div>
             `;
@@ -665,14 +1013,14 @@ function renderNews(newsItems) {
     const container = document.getElementById('newsContainer');
     
     if (!newsItems || newsItems.length === 0) {
-        container.innerHTML = '<div class="news-empty">📭 No news articles available</div>';
+        container.innerHTML = '<div class="news-empty">🌌 No news articles available</div>';
         return;
     }
     
     container.innerHTML = `
         <div class="news-grid">
             ${newsItems.map(item => `
-                <div class="news-card">
+                <div class="news-card" onclick="window.open('${item.link || '#'}', '_blank')">
                     <div class="news-title">${item.title || 'Untitled'}</div>
                     <div class="news-summary">${item.summary || item.description || 'No summary available'}</div>
                     <div class="news-meta">
@@ -709,7 +1057,7 @@ async function sendQuery() {
     const query = input.value.trim();
     if (!query) return;
     
-    responseArea.innerHTML = '<span class="loading">⚡ Processing through 250 agents...</span>';
+    responseArea.innerHTML = '<span class="loading">⚡ Processing through 250 cosmic agents...</span>';
     sendBtn.disabled = true;
     input.disabled = true;
     
@@ -764,6 +1112,11 @@ async function sendQuery() {
             html += `🏛️ Jurisdiction: ${result.jurisdiction || 'IN'}\n`;
             html += `🤖 Agent: ${result.agent_id || 'unknown'}\n`;
             
+            if (result.verifiers && result.verifiers.length > 0) {
+                const active = result.verifiers.filter(v => v.status === 'active' || v.status === 'APPROVED');
+                html += `\n🔍 ${active.length} Verifiers Approved`;
+            }
+            
             responseArea.textContent = html;
         } else {
             responseArea.innerHTML = `<span class="error">❌ ${data.detail || 'Unknown error'}</span>`;
@@ -806,9 +1159,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Refresh news every 60 seconds
     setInterval(() => loadNews(currentCategory), 60000);
     
-    console.log('%c⚖️ THE ADVOCACY – Global Law Firm', 'font-size:18px; font-weight:bold; color:#4ECDC4;');
+    console.log('%c⚖️ THE ADVOCACY – Global Law Firm', 'font-size:20px; font-weight:bold; color:#4ECDC4;');
     console.log('%c🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE', 'font-size:14px; color:#FFD700;');
-    console.log('%c🚀 Unknown Verdict v40.0 | Real AI News Loading...', 'font-size:12px; color:#6C3CE1;');
+    console.log('%c🚀 Unknown Verdict v40.0 | Space Theme | 250 Agents | 15 Verifiers', 'font-size:12px; color:#6C3CE1;');
 });
 </script>
 </body>
