@@ -1,4 +1,4 @@
-# core.py - Unknown Verdict v40.0 with REAL AI & REAL NEWS
+# core.py - Unknown Verdict v40.0 Core Engine
 # 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
 # ⚖️ THE ADVOCACY – Global Law Firm
 
@@ -104,7 +104,6 @@ class Verifier:
         self.checks_failed = 0
     
     async def verify(self, text: str) -> Dict:
-        # Simple but real verification
         issues = []
         confidence = "HIGH"
         
@@ -156,21 +155,21 @@ class RealAIAnalyzer:
             try:
                 return await self._analyze_with_openai(query, jurisdiction)
             except Exception as e:
-                logger.warning(f"OpenAI failed: {e}, trying Groq...")
+                logger.warning(f"OpenAI failed: {e}")
         
         # Try Groq second
         if self.groq_key:
             try:
                 return await self._analyze_with_groq(query, jurisdiction)
             except Exception as e:
-                logger.warning(f"Groq failed: {e}, trying Gemini...")
+                logger.warning(f"Groq failed: {e}")
         
         # Try Gemini third
         if self.gemini_key:
             try:
                 return await self._analyze_with_gemini(query, jurisdiction)
             except Exception as e:
-                logger.warning(f"Gemini failed: {e}, using fallback...")
+                logger.warning(f"Gemini failed: {e}")
         
         # Fallback to intelligent template
         return self._fallback_analysis(query, jurisdiction)
@@ -222,7 +221,6 @@ class RealAIAnalyzer:
         return self._parse_ai_response(response.text, jurisdiction)
     
     def _parse_ai_response(self, text: str, jurisdiction: str) -> Dict:
-        """Parse AI response into structured format"""
         lines = text.split('\n')
         
         result = {
@@ -275,7 +273,6 @@ class RealAIAnalyzer:
                 key, value = line.split(":", 1)
                 result["risk_assessment"][key.strip()] = value.strip()
         
-        # If no issues found, add default
         if not result["legal_issues"]:
             result["legal_issues"] = ["Review all relevant legal aspects", "Consider applicable jurisdiction"]
         if not result["applicable_laws"]:
@@ -286,7 +283,6 @@ class RealAIAnalyzer:
         return result
     
     def _fallback_analysis(self, query: str, jurisdiction: str) -> Dict:
-        """Intelligent fallback when no AI available"""
         return {
             "summary": f"Legal analysis of your query under {jurisdiction} jurisdiction.",
             "legal_issues": [
@@ -326,6 +322,7 @@ class UnknownVerdictCore:
         self.request_count = 0
         self.error_count = 0
         self._news_cache = {}
+        self._market_cache = {}
     
     def _init_agents(self) -> List[Dict]:
         domains = [
@@ -400,28 +397,23 @@ class UnknownVerdictCore:
         cache_key = f"{category}_{limit}"
         if cache_key in self._news_cache:
             cached = self._news_cache[cache_key]
-            if (datetime.now() - cached['timestamp']).seconds < 300:  # 5 min cache
+            if (datetime.now() - cached['timestamp']).seconds < 300:
                 logger.info(f"📰 Returning cached news for {category}")
                 return cached['data'][:limit]
         
         logger.info(f"📰 Fetching REAL news for category: {category}")
         
         try:
-            # Map category to source
             feed_map = {
-                "legal": "legal",
-                "financial": "financial", 
-                "general": "general",
-                "ai": "ai",
-                "sports": "sports",
-                "health": "health"
+                "legal": "legal", "financial": "financial", "general": "general",
+                "ai": "ai", "sports": "sports", "health": "health"
             }
             feed_category = feed_map.get(category.lower(), "general")
             feed_urls = REAL_NEWS_SOURCES.get(feed_category, REAL_NEWS_SOURCES["general"])
             
             articles = []
             async with aiohttp.ClientSession() as session:
-                for feed_url in feed_urls[:4]:  # Limit to 4 sources
+                for feed_url in feed_urls[:4]:
                     try:
                         async with session.get(feed_url, timeout=10) as response:
                             if response.status == 200:
@@ -429,7 +421,6 @@ class UnknownVerdictCore:
                                 feed = feedparser.parse(content)
                                 for entry in feed.entries[:5]:
                                     if entry.get('title'):
-                                        # Clean HTML from summary
                                         summary = entry.get('summary', '')
                                         if summary:
                                             soup = BeautifulSoup(summary, 'html.parser')
@@ -448,23 +439,17 @@ class UnknownVerdictCore:
                         logger.debug(f"Feed error {feed_url}: {e}")
                         continue
             
-            # If no articles, return sample with note
             if not articles:
                 articles = [{
                     "id": f"news_{i}",
                     "title": f"{category.title()} News Update {i+1}",
-                    "summary": f"Latest {category} news and developments from our sources.",
+                    "summary": f"Latest {category} news and developments.",
                     "source": "THE ADVOCACY News Network",
                     "published": datetime.now().isoformat(),
                     "category": category
                 } for i in range(min(limit, 5))]
             
-            # Cache
-            self._news_cache[cache_key] = {
-                'data': articles,
-                'timestamp': datetime.now()
-            }
-            
+            self._news_cache[cache_key] = {'data': articles, 'timestamp': datetime.now()}
             logger.info(f"📰 Fetched {len(articles)} real news articles")
             return articles[:limit]
             
@@ -473,25 +458,81 @@ class UnknownVerdictCore:
             return [{
                 "id": "news_fallback",
                 "title": "📡 News Service Active",
-                "summary": "Connected to real news sources. Fetching articles...",
+                "summary": "Connected to real news sources.",
                 "source": "THE ADVOCACY",
                 "published": datetime.now().isoformat(),
                 "category": category
             }]
+    
+    # ─── MARKET DATA ──────────────────────────────────────────────────
+    
+    async def get_market_quote(self, symbol: str) -> Dict:
+        """Get market quote with fallback"""
+        try:
+            # Try to import yfinance
+            try:
+                import yfinance as yf
+                ticker = yf.Ticker(symbol)
+                info = ticker.info
+                return {
+                    "symbol": symbol,
+                    "price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
+                    "change": info.get("regularMarketChange", 0),
+                    "change_percent": info.get("regularMarketChangePercent", 0),
+                    "volume": info.get("regularMarketVolume", 0),
+                    "high": info.get("dayHigh", 0),
+                    "low": info.get("dayLow", 0),
+                    "open": info.get("regularMarketOpen", 0),
+                    "timestamp": datetime.now().isoformat()
+                }
+            except ImportError:
+                logger.warning("yfinance not installed, using fallback market data")
+                return self._fallback_market_data(symbol)
+        except Exception as e:
+            logger.error(f"Market data error: {e}")
+            return self._fallback_market_data(symbol)
+    
+    def _fallback_market_data(self, symbol: str) -> Dict:
+        """Fallback market data when yfinance is not available"""
+        # Simulate realistic market data
+        price = random.uniform(100, 500)
+        change = random.uniform(-10, 10)
+        return {
+            "symbol": symbol,
+            "price": round(price, 2),
+            "change": round(change, 2),
+            "change_percent": round((change / price) * 100, 2),
+            "volume": random.randint(100000, 1000000),
+            "high": round(price + abs(change) * 0.5, 2),
+            "low": round(price - abs(change) * 0.5, 2),
+            "open": round(price - change, 2),
+            "timestamp": datetime.now().isoformat(),
+            "note": "Simulated data (yfinance not installed)"
+        }
+    
+    async def get_market_data(self, symbols: List[str] = None) -> List[Dict]:
+        """Get market data for multiple symbols"""
+        if not symbols:
+            symbols = ["AAPL", "GOOGL", "MSFT", "AMZN", "BTC-USD", "ETH-USD"]
+        
+        results = []
+        for symbol in symbols:
+            data = await self.get_market_quote(symbol)
+            results.append(data)
+            await asyncio.sleep(0.1)  # Rate limiting
+        
+        return results
     
     # ─── LEGAL ANALYSIS ─────────────────────────────────────────────
     
     async def analyze_legal_case(self, query: str, jurisdiction: str = "IN", 
                                  age_group: str = "adult", case_type: str = "general",
                                  user_id: Optional[str] = None) -> Dict:
-        """Analyze legal case with REAL AI"""
         self.request_count += 1
         
         try:
-            # Use REAL AI analysis
             ai_result = await self.analyzer.analyze_legal_query(query, jurisdiction)
             
-            # Add metadata
             result = {
                 "analysis_id": f"ANALYSIS_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}",
                 "query": query[:200],
@@ -521,12 +562,7 @@ class UnknownVerdictCore:
         self.request_count += 1
         
         try:
-            # Use real AI for compliance
-            result = await self.analyzer.analyze_legal_query(
-                f"Check compliance for: {text[:500]}", 
-                jurisdiction
-            )
-            
+            result = await self.analyzer.analyze_legal_query(f"Check compliance for: {text[:500]}", jurisdiction)
             compliance_score = random.randint(65, 95)
             
             return {
@@ -543,29 +579,6 @@ class UnknownVerdictCore:
             self.error_count += 1
             logger.error(f"Compliance error: {e}")
             raise
-    
-    async def get_market_quote(self, symbol: str) -> Dict:
-        try:
-            import yfinance as yf
-            ticker = yf.Ticker(symbol)
-            info = ticker.info
-            return {
-                "symbol": symbol,
-                "price": info.get("currentPrice", random.uniform(100, 500)),
-                "change": info.get("change", random.uniform(-5, 5)),
-                "change_percent": info.get("changePercent", random.uniform(-2, 2)),
-                "volume": info.get("volume", random.randint(100000, 1000000)),
-                "timestamp": datetime.now().isoformat()
-            }
-        except:
-            return {
-                "symbol": symbol,
-                "price": round(random.uniform(100, 500), 2),
-                "change": round(random.uniform(-5, 5), 2),
-                "change_percent": round(random.uniform(-2, 2), 2),
-                "volume": random.randint(100000, 1000000),
-                "timestamp": datetime.now().isoformat()
-            }
     
     def get_agent_status(self) -> Dict:
         return {
@@ -635,86 +648,3 @@ __all__ = [
     "get_judge",
     "get_agent_status"
 ]
-
-import yfinance as yf
-import feedparser
-import aiohttp
-from datetime import datetime, timedelta
-
-async def get_realtime_market(self, symbol: str) -> Dict:
-    """Get real-time market data from Yahoo Finance"""
-    try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-        return {
-            "symbol": symbol,
-            "price": info.get('currentPrice', info.get('regularMarketPrice')),
-            "change": info.get('regularMarketChange'),
-            "change_percent": info.get('regularMarketChangePercent'),
-            "volume": info.get('regularMarketVolume'),
-            "high": info.get('dayHigh'),
-            "low": info.get('dayLow'),
-            "open": info.get('regularMarketOpen'),
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Market data error: {e}")
-        return {"symbol": symbol, "error": str(e)}
-
-async def get_daily_market_report(self) -> Dict:
-    """Generate daily market report"""
-    indices = [
-        {"symbol": "^GSPC", "name": "S&P 500"},
-        {"symbol": "^DJI", "name": "Dow Jones"},
-        {"symbol": "^IXIC", "name": "NASDAQ"},
-        {"symbol": "BTC-USD", "name": "Bitcoin"},
-        {"symbol": "ETH-USD", "name": "Ethereum"}
-    ]
-    
-    reports = []
-    for index in indices:
-        data = await self.get_realtime_market(index["symbol"])
-        reports.append({
-            "name": index["name"],
-            "symbol": index["symbol"],
-            "price": data.get("price"),
-            "change": data.get("change"),
-            "change_percent": data.get("change_percent")
-        })
-    
-    return {
-        "date": datetime.now().isoformat(),
-        "indices": reports
-    }
-
-async def get_breaking_news(self, limit: int = 10) -> List[Dict]:
-    """Get breaking news from RSS feeds"""
-    breaking_feeds = [
-        "https://feeds.bbci.co.uk/news/rss.xml",
-        "https://www.reuters.com/feed",
-        "https://www.cnbc.com/id/100003114/device/rss/rss.html",
-        "https://feeds.feedburner.com/TechnologyReview/AI"
-    ]
-    
-    articles = []
-    async with aiohttp.ClientSession() as session:
-        for feed_url in breaking_feeds[:3]:
-            try:
-                async with session.get(feed_url, timeout=10) as response:
-                    if response.status == 200:
-                        content = await response.text()
-                        feed = feedparser.parse(content)
-                        for entry in feed.entries[:5]:
-                            articles.append({
-                                "title": entry.get('title', ''),
-                                "summary": entry.get('summary', '')[:300],
-                                "source": feed.feed.get('title', 'Unknown'),
-                                "published": entry.get('published', datetime.now().isoformat()),
-                                "link": entry.get('link', '')
-                            })
-            except Exception as e:
-                continue
-    
-    # Sort by date
-    articles.sort(key=lambda x: x.get('published', ''), reverse=True)
-    return articles[:limit]
