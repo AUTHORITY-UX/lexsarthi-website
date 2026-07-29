@@ -584,3 +584,25 @@ async def get_realtime_market(symbol: str):
     core = get_core()
     data = await core.get_realtime_market(symbol)
     return {"status": "success", "data": data}
+# Add this to routes.py
+
+@router.post("/chat/general")
+async def general_chat(request: ChatRequest):
+    """General AI chat - handles both legal and general questions"""
+    core = get_core()
+    
+    try:
+        result = await core.general_chat(request.query)
+        
+        return JSONResponse({
+            "status": "success",
+            "data": {
+                "summary": result.get("summary"),
+                "confidence": result.get("confidence", "HIGH"),
+                "source": result.get("source", "AI"),
+                "timestamp": datetime.now().isoformat()
+            }
+        })
+    except Exception as e:
+        logger.error(f"General chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
