@@ -648,3 +648,70 @@ __all__ = [
     "get_judge",
     "get_agent_status"
 ]
+# Add this method to the UnknownVerdictCore class
+
+async def general_chat(self, query: str) -> Dict:
+    """Handle general AI questions (not just legal)"""
+    
+    # Check if it's a legal question
+    legal_keywords = ["law", "legal", "court", "section", "act", "constitution", 
+                      "contract", "crime", "property", "tax", "compliance", 
+                      "arbitration", "judgment", "supreme", "high court"]
+    
+    is_legal = any(kw in query.lower() for kw in legal_keywords)
+    
+    if is_legal:
+        # Use legal analysis
+        return await self.analyze_legal_case(query)
+    else:
+        # Use general AI
+        try:
+            # Try OpenAI
+            if self.analyzer.openai_key:
+                import openai
+                openai.api_key = self.analyzer.openai_key
+                response = await asyncio.to_thread(
+                    openai.ChatCompletion.create,
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful AI assistant. Answer questions clearly and concisely."},
+                        {"role": "user", "content": query}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                return {
+                    "summary": response.choices[0].message.content,
+                    "confidence": "HIGH",
+                    "source": "OpenAI"
+                }
+            
+            # Try Groq
+            if self.analyzer.groq_key:
+                from groq import Groq
+                client = Groq(api_key=self.analyzer.groq_key)
+                response = await asyncio.to_thread(
+                    client.chat.completions.create,
+                    model="mixtral-8x7b-32768",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful AI assistant."},
+                        {"role": "user", "content": query}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                return {
+                    "summary": response.choices[0].message.content,
+                    "confidence": "HIGH",
+                    "source": "Groq"
+                }
+                
+        except Exception as e:
+            logger.error(f"General chat error: {e}")
+        
+        # Fallback
+        return {
+            "summary": f"I understand you're asking about: {query[:100]}...\n\nAs a legal AI platform, I specialize in legal matters. Please ask me about:\n- Legal analysis\n- Compliance checking\n- Contract review\n- Case research\n\nOr use the News tab for breaking AI news!",
+            "confidence": "MEDIUM",
+            "source": "Fallback"
+        }
