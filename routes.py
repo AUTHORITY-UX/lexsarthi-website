@@ -606,3 +606,74 @@ async def general_chat(request: ChatRequest):
     except Exception as e:
         logger.error(f"General chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+# Add this endpoint to routes.py
+
+@router.post("/chat/general")
+async def general_chat(request: ChatRequest):
+    """General AI chat - handles both legal and general questions"""
+    core = get_core()
+    
+    try:
+        # Check if it's a legal question
+        legal_keywords = ["law", "legal", "court", "section", "act", "constitution", 
+                         "contract", "crime", "property", "tax", "compliance", 
+                         "arbitration", "judgment", "supreme", "high court"]
+        
+        is_legal = any(kw in request.query.lower() for kw in legal_keywords)
+        
+        if is_legal:
+            result = await core.analyze_legal_case(
+                query=request.query,
+                jurisdiction=request.jurisdiction or "IN",
+                age_group=request.age_group or "adult",
+                case_type=request.case_type or "general",
+                user_id=request.user_id
+            )
+            return JSONResponse({
+                "status": "success",
+                "data": {
+                    "summary": result.get("summary"),
+                    "confidence": result.get("confidence", "HIGH"),
+                    "source": "Legal AI",
+                    "legal_issues": result.get("legal_issues", []),
+                    "applicable_laws": result.get("applicable_laws", []),
+                    "recommendations": result.get("recommendations", []),
+                    "agent_id": result.get("agent_id"),
+                    "verifiers": result.get("verifiers", [])
+                }
+            })
+        else:
+            # Use general AI
+            try:
+                import openai
+                openai.api_key = os.getenv("OPENAI_API_KEY")
+                response = await asyncio.to_thread(
+                    openai.ChatCompletion.create,
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful AI assistant. Answer questions clearly and concisely."},
+                        {"role": "user", "content": request.query}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                return JSONResponse({
+                    "status": "success",
+                    "data": {
+                        "summary": response.choices[0].message.content,
+                        "confidence": "HIGH",
+                        "source": "OpenAI"
+                    }
+                })
+            except:
+                return JSONResponse({
+                    "status": "success",
+                    "data": {
+                        "summary": f"I understand you're asking about: {request.query[:100]}...\n\nI'm a legal AI platform specializing in legal matters. Please ask me about:\n- Legal analysis\n- Compliance checking\n- Contract review\n- Case research\n\nOr use the News tab for breaking AI news!",
+                        "confidence": "MEDIUM",
+                        "source": "Fallback"
+                    }
+                })
+    except Exception as e:
+        logger.error(f"General chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
