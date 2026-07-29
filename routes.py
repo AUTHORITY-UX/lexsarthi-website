@@ -562,3 +562,25 @@ async def revive_agent(agent_id: str):
     monitor = get_safety_monitor()
     await monitor.deactivate_kill_switch(agent_id)
     return {"status": "revived", "agent_id": agent_id}
+# Add these endpoints
+
+@router.get("/news/breaking")
+async def get_breaking_news():
+    """Get breaking news from multiple sources"""
+    core = get_core()
+    news = await core.get_breaking_news()
+    return {"status": "success", "data": news}
+
+@router.get("/market/daily")
+async def get_daily_market_report():
+    """Get daily market report"""
+    core = get_core()
+    report = await core.get_daily_market_report()
+    return {"status": "success", "data": report}
+
+@router.get("/market/realtime/{symbol}")
+async def get_realtime_market(symbol: str):
+    """Get real-time market data"""
+    core = get_core()
+    data = await core.get_realtime_market(symbol)
+    return {"status": "success", "data": data}
