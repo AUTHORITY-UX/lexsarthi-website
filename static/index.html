@@ -5,11 +5,168 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Unknown Verdict v40.0 – The Advocacy</title>
     <style>
-        /* ─── ALL STYLES FROM PREVIOUS VERSION ─── */
-        /* (Keep all the styles from the previous complete index.html) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a1a;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(108, 60, 225, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(78, 205, 196, 0.06) 0%, transparent 60%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .header {
+            text-align: center;
+            padding: 30px 0 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 25px;
+        }
+
+        .header .logo { font-size: 4em; display: block; animation: float 3s ease-in-out infinite; }
         
-        /* Additional styles for tabs */
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6C3CE1, #9B59B6, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 8px 0 2px;
+            letter-spacing: 1px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            color: #4ECDC4;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            font-weight: 300;
+        }
+
+        .header .version {
+            display: inline-block;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            padding: 4px 18px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-top: 10px;
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 0 30px rgba(108, 60, 225, 0.2);
+        }
+
+        .third-eye {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .third-eye .eye {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle at 30% 30%, #6C3CE1, #1a0a3a);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 50px rgba(108, 60, 225, 0.25), inset 0 0 50px rgba(108, 60, 225, 0.05);
+            animation: eyePulse 3s ease-in-out infinite;
+        }
+
+        .third-eye .eye::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, #FFD700, #FF6B00);
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+            animation: pupilPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes eyePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes pupilPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: #6C3CE1;
+            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.15);
+        }
+
+        .stat-card .number {
+            display: block;
+            font-size: 2em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .label {
+            font-size: 0.7em;
+            opacity: 0.6;
+            letter-spacing: 1px;
+            font-weight: 300;
+        }
+
+        .stat-card .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ECDC4;
+            margin-right: 6px;
+            animation: statusPulse 1.5s infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
         .tab-btn {
             padding: 10px 24px;
             border-radius: 12px;
@@ -24,13 +181,159 @@
             align-items: center;
             gap: 8px;
         }
-        .tab-btn:hover { border-color: rgba(108,60,225,0.3); color: #fff; }
-        .tab-btn.active { border-color: #6C3CE1; color: #fff; background: rgba(108,60,225,0.15); }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
+
+        .tab-btn:hover {
+            border-color: rgba(108, 60, 225, 0.3);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            border-color: #6C3CE1;
+            color: #fff;
+            background: rgba(108, 60, 225, 0.15);
+            box-shadow: 0 0 30px rgba(108, 60, 225, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .main-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 18px;
+            padding: 25px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .main-card h2 {
+            color: #4ECDC4;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-card h2 .badge {
+            background: rgba(108, 60, 225, 0.2);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 0.55em;
+            color: #9B59B6;
+            border: 1px solid rgba(108, 60, 225, 0.1);
+        }
+
+        .main-card h2 .badge.live {
+            color: #4ECDC4;
+            border-color: rgba(78, 205, 196, 0.2);
+            animation: pulseBadge 2s infinite;
+        }
+
+        @keyframes pulseBadge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .query-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .query-box input {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .query-box input::placeholder {
+            color: rgba(255,255,255,0.25);
+        }
+
+        .query-box input:focus {
+            outline: none;
+            border-color: #6C3CE1;
+            box-shadow: 0 0 25px rgba(108, 60, 225, 0.08);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .query-box button {
+            padding: 14px 30px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #6C3CE1, #4ECDC4);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .query-box button:hover {
+            transform: scale(1.04);
+            box-shadow: 0 5px 25px rgba(108, 60, 225, 0.3);
+        }
+
+        .query-box button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response {
+            background: rgba(0,0,0,0.25);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 120px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.9em;
+            line-height: 1.8;
+            max-height: 450px;
+            overflow-y: auto;
+            font-family: inherit;
+        }
+
+        .response::-webkit-scrollbar { width: 6px; }
+        .response::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+        .response::-webkit-scrollbar-thumb { background: #6C3CE1; border-radius: 3px; }
+
+        .response .loading { color: #4ECDC4; animation: pulseText 1s infinite; }
+        .response .error { color: #FF6B6B; }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+        }
+
         .news-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
@@ -39,28 +342,60 @@
             transition: all 0.3s;
             cursor: pointer;
         }
-        .news-card:hover { background: rgba(255,255,255,0.06); border-color: #6C3CE1; transform: translateY(-4px); }
-        .news-card .news-title { font-size: 1em; font-weight: 600; color: #4ECDC4; margin-bottom: 8px; }
-        .news-card .news-summary { font-size: 0.85em; opacity: 0.7; line-height: 1.5; }
-        .news-card .news-meta { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.7em; opacity: 0.5; }
-        .news-card .news-source { color: #6C3CE1; }
-        
-        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-        .market-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            padding: 18px;
-            text-align: center;
-            transition: all 0.3s;
+
+        .news-card:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: #6C3CE1;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(108, 60, 225, 0.08);
         }
-        .market-card:hover { border-color: #6C3CE1; transform: translateY(-3px); }
-        .market-card .symbol { font-size: 0.8em; opacity: 0.5; }
-        .market-card .price { font-size: 2em; font-weight: 700; color: #4ECDC4; margin: 5px 0; }
-        .market-card .change.positive { color: #4ECDC4; }
-        .market-card .change.negative { color: #FF6B6B; }
-        
-        .news-categories { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+
+        .news-card .news-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #4ECDC4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-card .news-summary {
+            font-size: 0.85em;
+            opacity: 0.7;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-card .news-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.7em;
+            opacity: 0.5;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .news-card .news-source {
+            color: #6C3CE1;
+        }
+
+        .news-card .news-time {
+            color: #888;
+        }
+
+        .news-categories {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
         .news-categories button {
             padding: 5px 16px;
             border-radius: 20px;
@@ -72,12 +407,78 @@
             font-size: 0.75em;
             font-family: inherit;
         }
-        .news-categories button:hover { border-color: #6C3CE1; color: #fff; background: rgba(108,60,225,0.15); }
-        .news-categories button.active { border-color: #6C3CE1; color: #fff; background: rgba(108,60,225,0.2); }
-        .news-loading { text-align: center; padding: 40px; color: #4ECDC4; }
-        .news-empty { text-align: center; padding: 40px; opacity: 0.5; }
-        
-        .apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 15px; }
+
+        .news-categories button:hover {
+            border-color: #6C3CE1;
+            color: #fff;
+            background: rgba(108, 60, 225, 0.15);
+        }
+
+        .news-categories button.active {
+            border-color: #6C3CE1;
+            color: #fff;
+            background: rgba(108, 60, 225, 0.2);
+        }
+
+        .news-loading {
+            text-align: center;
+            padding: 40px;
+            color: #4ECDC4;
+        }
+
+        .news-empty {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.5;
+        }
+
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .market-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .market-card:hover {
+            border-color: #6C3CE1;
+            transform: translateY(-3px);
+        }
+
+        .market-card .symbol {
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .market-card .price {
+            font-size: 2em;
+            font-weight: 700;
+            color: #4ECDC4;
+            margin: 5px 0;
+        }
+
+        .market-card .change.positive {
+            color: #4ECDC4;
+        }
+
+        .market-card .change.negative {
+            color: #FF6B6B;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
         .app-item {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.05);
@@ -87,55 +488,90 @@
             transition: all 0.3s;
             cursor: pointer;
         }
-        .app-item:hover { background: rgba(255,255,255,0.07); border-color: #6C3CE1; transform: translateY(-2px); }
+
+        .app-item:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: #6C3CE1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(108, 60, 225, 0.1);
+        }
+
         .app-item .icon { font-size: 1.8em; display: block; margin-bottom: 4px; }
         .app-item .name { font-size: 0.75em; color: #bbb; font-weight: 400; }
-        .app-item .tag { display: inline-block; font-size: 0.5em; background: rgba(108,60,225,0.2); padding: 1px 8px; border-radius: 8px; margin-top: 3px; color: #9B59B6; font-weight: 500; }
-        
-        .footer { text-align: center; padding: 25px 0 15px; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 25px; }
-        .footer .firm { font-size: 1.2em; font-weight: 700; color: #4ECDC4; letter-spacing: 1px; }
-        .footer .powered { font-size: 0.8em; opacity: 0.4; margin-top: 4px; letter-spacing: 1px; }
-        .footer .trident { font-size: 0.8em; color: #FFD700; margin-top: 10px; letter-spacing: 2px; font-weight: 700; }
-        
-        .main-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 25px; margin-bottom: 25px; backdrop-filter: blur(10px); }
-        .main-card h2 { color: #4ECDC4; font-size: 1.3em; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .main-card h2 .badge { background: rgba(108,60,225,0.2); padding: 2px 12px; border-radius: 12px; font-size: 0.55em; color: #9B59B6; border: 1px solid rgba(108,60,225,0.1); }
-        .main-card h2 .badge.live { color: #4ECDC4; border-color: rgba(78,205,196,0.2); animation: pulseBadge 2s infinite; }
-        @keyframes pulseBadge { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .query-box { display: flex; gap: 10px; margin-bottom: 15px; }
-        .query-box input { flex: 1; padding: 14px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #fff; font-size: 0.95em; font-family: inherit; transition: all 0.3s; }
-        .query-box input:focus { outline: none; border-color: #6C3CE1; box-shadow: 0 0 25px rgba(108,60,225,0.08); }
-        .query-box button { padding: 14px 30px; border-radius: 10px; border: none; background: linear-gradient(135deg, #6C3CE1, #4ECDC4); color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.95em; font-family: inherit; }
-        .query-box button:hover { transform: scale(1.04); box-shadow: 0 5px 25px rgba(108,60,225,0.3); }
-        .response { background: rgba(0,0,0,0.25); border-radius: 10px; padding: 20px; min-height: 120px; white-space: pre-wrap; word-wrap: break-word; border: 1px solid rgba(255,255,255,0.04); font-size: 0.9em; line-height: 1.8; max-height: 450px; overflow-y: auto; }
-        .response .loading { color: #4ECDC4; animation: pulseText 1s infinite; }
-        .response .error { color: #FF6B6B; }
-        @keyframes pulseText { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .header { text-align: center; padding: 30px 0 25px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 25px; }
-        .header .logo { font-size: 4em; display: block; animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        .header h1 { font-size: 2.5em; font-weight: 800; background: linear-gradient(135deg, #6C3CE1, #9B59B6, #4ECDC4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 8px 0 2px; letter-spacing: 1px; }
-        .header .subtitle { font-size: 1.1em; color: #4ECDC4; opacity: 0.8; letter-spacing: 3px; font-weight: 300; }
-        .header .version { display: inline-block; background: linear-gradient(135deg, #6C3CE1, #4ECDC4); padding: 4px 18px; border-radius: 20px; font-size: 0.8em; margin-top: 10px; color: #fff; font-weight: 600; letter-spacing: 1px; box-shadow: 0 0 30px rgba(108,60,225,0.2); }
-        
-        .third-eye { display: flex; justify-content: center; margin: 10px 0; }
-        .third-eye .eye { width: 70px; height: 70px; background: radial-gradient(circle at 30% 30%, #6C3CE1, #1a0a3a); border-radius: 50%; position: relative; box-shadow: 0 0 50px rgba(108,60,225,0.25); animation: eyePulse 3s ease-in-out infinite; }
-        .third-eye .eye::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 25px; height: 25px; background: radial-gradient(circle at 30% 30%, #FFD700, #FF6B00); border-radius: 50%; box-shadow: 0 0 25px rgba(255,215,0,0.3); animation: pupilPulse 2s ease-in-out infinite; }
-        @keyframes eyePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes pupilPulse { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.15); } }
-        
-        .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 25px; }
-        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 15px; text-align: center; transition: all 0.3s; }
-        .stat-card:hover { transform: translateY(-4px); border-color: #6C3CE1; box-shadow: 0 8px 30px rgba(108,60,225,0.15); }
-        .stat-card .number { display: block; font-size: 2em; font-weight: 800; background: linear-gradient(135deg, #6C3CE1, #4ECDC4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .stat-card .label { font-size: 0.7em; opacity: 0.6; letter-spacing: 1px; font-weight: 300; }
-        .stat-card .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4ECDC4; margin-right: 6px; animation: statusPulse 1.5s infinite; }
-        @keyframes statusPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-        
-        @media (max-width: 768px) { .stats { grid-template-columns: repeat(3, 1fr); } .news-grid { grid-template-columns: 1fr; } .market-grid { grid-template-columns: repeat(2, 1fr); } .apps-grid { grid-template-columns: repeat(2, 1fr); } .header h1 { font-size: 2em; } }
-        @media (max-width: 480px) { .stats { grid-template-columns: 1fr; } .market-grid { grid-template-columns: 1fr; } .apps-grid { grid-template-columns: 1fr; } }
+        .app-item .tag {
+            display: inline-block;
+            font-size: 0.5em;
+            background: rgba(108, 60, 225, 0.2);
+            padding: 1px 8px;
+            border-radius: 8px;
+            margin-top: 3px;
+            color: #9B59B6;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px 0 15px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 25px;
+        }
+
+        .footer .firm {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #4ECDC4;
+            letter-spacing: 1px;
+        }
+
+        .footer .powered {
+            font-size: 0.8em;
+            opacity: 0.4;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        .footer .trident {
+            font-size: 0.8em;
+            color: #FFD700;
+            margin-top: 10px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .footer .trident .symbol {
+            display: inline-block;
+            animation: tridentGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes tridentGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+            50% { text-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
+        }
+
+        @media (max-width: 1024px) {
+            .stats { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .header .logo { font-size: 3.5em; }
+            .query-box { flex-direction: column; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .apps-grid { grid-template-columns: repeat(2, 1fr); }
+            .news-grid { grid-template-columns: 1fr; }
+            .market-grid { grid-template-columns: repeat(2, 1fr); }
+            .main-card { padding: 20px; }
+            .tabs { flex-wrap: wrap; }
+            .tab-btn { padding: 8px 16px; font-size: 0.8em; }
+        }
+
+        @media (max-width: 480px) {
+            .stats { grid-template-columns: 1fr; }
+            .apps-grid { grid-template-columns: 1fr; }
+            .market-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.6em; }
+            .header .logo { font-size: 3em; }
+        }
     </style>
 </head>
 <body>
@@ -145,17 +581,40 @@
         <span class="logo">⚖️</span>
         <h1>THE ADVOCACY</h1>
         <div class="subtitle">Global Law Firm</div>
-        <div class="third-eye"><div class="eye"></div></div>
+        <div class="third-eye">
+            <div class="eye"></div>
+        </div>
         <div class="version">v40.0 • Unknown Verdict</div>
     </header>
 
     <div class="stats" id="stats">
-        <div class="stat-card"><span class="number" id="agentCount">250</span><span class="label">AI Agents</span></div>
-        <div class="stat-card"><span class="number" id="verifierCount">15</span><span class="label">Verifiers</span></div>
-        <div class="stat-card"><span class="number">32</span><span class="label">Applications</span></div>
-        <div class="stat-card"><span class="number"><span class="status-dot"></span><span id="statusText">Online</span></span><span class="label">System Status</span></div>
-        <div class="stat-card"><span class="number" id="newsCount">0</span><span class="label">News Articles</span></div>
-        <div class="stat-card"><span class="number" id="marketCount">0</span><span class="label">Markets Tracked</span></div>
+        <div class="stat-card">
+            <span class="number" id="agentCount">250</span>
+            <span class="label">AI Agents</span>
+        </div>
+        <div class="stat-card">
+            <span class="number" id="verifierCount">15</span>
+            <span class="label">Verifiers</span>
+        </div>
+        <div class="stat-card">
+            <span class="number">32</span>
+            <span class="label">Applications</span>
+        </div>
+        <div class="stat-card">
+            <span class="number">
+                <span class="status-dot"></span>
+                <span id="statusText">Online</span>
+            </span>
+            <span class="label">System Status</span>
+        </div>
+        <div class="stat-card">
+            <span class="number" id="newsCount">0</span>
+            <span class="label">News Articles</span>
+        </div>
+        <div class="stat-card">
+            <span class="number" id="marketCount">0</span>
+            <span class="label">Markets Tracked</span>
+        </div>
     </div>
 
     <!-- ─── TABS ────────────────────────────────────────────────────── -->
@@ -171,7 +630,7 @@
         <div class="main-card">
             <h2>💬 AI Chat Assistant <span class="badge live">● LIVE</span></h2>
             <div class="query-box">
-                <input type="text" id="queryInput" placeholder="Ask anything... legal, AI, news, or general questions..." />
+                <input type="text" id="queryInput" placeholder="Ask anything... legal analysis, AI questions, breaking news..." />
                 <button id="sendBtn">Send</button>
             </div>
             <div class="response" id="responseArea">
@@ -258,6 +717,7 @@ const apps = [
 
 function renderApps() {
     const grid = document.getElementById('appsGrid');
+    if (!grid) return;
     grid.innerHTML = apps.map(app => `
         <div class="app-item" onclick="openApp('${app.name}')">
             <span class="icon">${app.icon}</span>
@@ -268,9 +728,13 @@ function renderApps() {
 }
 
 function openApp(name) {
-    document.getElementById('queryInput').placeholder = `Ask about ${name}...`;
-    document.querySelector('[data-tab="chat"]').click();
-    document.getElementById('queryInput').focus();
+    const input = document.getElementById('queryInput');
+    if (input) {
+        input.placeholder = `Ask about ${name}...`;
+        input.focus();
+    }
+    const chatTab = document.querySelector('[data-tab="chat"]');
+    if (chatTab) chatTab.click();
 }
 
 // ─── TABS ──────────────────────────────────────────────────────────
@@ -279,7 +743,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
-        document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+        const tabId = document.getElementById('tab-' + this.dataset.tab);
+        if (tabId) tabId.classList.add('active');
         if (this.dataset.tab === 'news') loadNews(currentCategory);
         if (this.dataset.tab === 'market') loadMarketData();
     });
@@ -296,7 +761,9 @@ async function updateStats() {
         if (data.verifiers && data.verifiers.total !== undefined) {
             document.getElementById('verifierCount').textContent = data.verifiers.total;
         }
-    } catch (error) { console.error('Stats update failed:', error); }
+    } catch (error) {
+        console.error('Stats update failed:', error);
+    }
 }
 
 // ─── LOAD NEWS ──────────────────────────────────────────────────
@@ -305,6 +772,7 @@ let newsCount = 0;
 
 async function loadNews(category = 'all') {
     const container = document.getElementById('newsContainer');
+    if (!container) return;
     container.innerHTML = '<div class="news-loading">📡 Fetching breaking news...</div>';
     
     try {
@@ -315,7 +783,8 @@ async function loadNews(category = 'all') {
         if (data.status === 'success' && data.data && data.data.length > 0) {
             renderNews(data.data);
             newsCount = data.data.length;
-            document.getElementById('newsCount').textContent = newsCount;
+            const countEl = document.getElementById('newsCount');
+            if (countEl) countEl.textContent = newsCount;
         } else {
             container.innerHTML = `<div class="news-empty">🌌 No news found for "${category}"</div>`;
         }
@@ -327,6 +796,7 @@ async function loadNews(category = 'all') {
 
 function renderNews(newsItems) {
     const container = document.getElementById('newsContainer');
+    if (!container) return;
     if (!newsItems || newsItems.length === 0) {
         container.innerHTML = '<div class="news-empty">🌌 No news articles available</div>';
         return;
@@ -353,6 +823,7 @@ let marketCount = 0;
 
 async function loadMarketData() {
     const container = document.getElementById('marketContainer');
+    if (!container) return;
     container.innerHTML = '<div class="news-loading">📈 Fetching real-time market data...</div>';
     
     try {
@@ -376,7 +847,8 @@ async function loadMarketData() {
         if (marketData.length > 0) {
             renderMarketData(marketData);
             marketCount = marketData.length;
-            document.getElementById('marketCount').textContent = marketCount;
+            const countEl = document.getElementById('marketCount');
+            if (countEl) countEl.textContent = marketCount;
         } else {
             renderFallbackMarketData();
         }
@@ -388,6 +860,7 @@ async function loadMarketData() {
 
 function renderMarketData(data) {
     const container = document.getElementById('marketContainer');
+    if (!container) return;
     container.innerHTML = `
         <div class="market-grid">
             ${data.map(item => {
@@ -410,6 +883,7 @@ function renderMarketData(data) {
 
 function renderFallbackMarketData() {
     const container = document.getElementById('marketContainer');
+    if (!container) return;
     const fallbackData = [
         { symbol: 'S&P 500', price: 5432.10, change: 12.50, change_percent: 0.23 },
         { symbol: 'Dow Jones', price: 38987.30, change: -45.20, change_percent: -0.12 },
@@ -441,15 +915,16 @@ async function sendQuery() {
     const responseArea = document.getElementById('responseArea');
     const sendBtn = document.getElementById('sendBtn');
     
+    if (!input || !responseArea) return;
+    
     const query = input.value.trim();
     if (!query) return;
     
     responseArea.innerHTML = '<span class="loading">⚡ Processing through 250 agents...</span>';
-    sendBtn.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
     input.disabled = true;
     
     try {
-        // Use general chat endpoint
         const res = await fetch('/api/chat/general', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -479,7 +954,7 @@ async function sendQuery() {
     } catch (error) {
         responseArea.innerHTML = `<span class="error">❌ Network error: ${error.message}</span>`;
     } finally {
-        sendBtn.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
         input.disabled = false;
         input.value = '';
         input.focus();
@@ -501,7 +976,9 @@ function formatDate(dateStr) {
 }
 
 // ─── INIT ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Unknown Verdict v40.0 - Initializing...');
+    
     renderApps();
     updateStats();
     setInterval(updateStats, 30000);
@@ -509,6 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadNews('all');
     loadMarketData();
     
+    // News category buttons
     document.querySelectorAll('#newsCategories button').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('#newsCategories button').forEach(b => b.classList.remove('active'));
@@ -518,13 +996,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    document.getElementById('queryInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendQuery();
-    });
-    document.getElementById('sendBtn').addEventListener('click', sendQuery);
+    // Chat - Enter key
+    const queryInput = document.getElementById('queryInput');
+    if (queryInput) {
+        queryInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendQuery();
+            }
+        });
+    }
     
-    setInterval(() => { if (document.getElementById('tab-news').classList.contains('active')) loadNews(currentCategory); }, 60000);
-    setInterval(() => { if (document.getElementById('tab-market').classList.contains('active')) loadMarketData(); }, 30000);
+    // Send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', sendQuery);
+    }
+    
+    // Auto-refresh
+    setInterval(() => {
+        if (document.getElementById('tab-news') && document.getElementById('tab-news').classList.contains('active')) {
+            loadNews(currentCategory);
+        }
+    }, 60000);
+    
+    setInterval(() => {
+        if (document.getElementById('tab-market') && document.getElementById('tab-market').classList.contains('active')) {
+            loadMarketData();
+        }
+    }, 30000);
     
     console.log('%c⚖️ THE ADVOCACY – Global Law Firm', 'font-size:18px; font-weight:bold; color:#4ECDC4;');
     console.log('%c🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE', 'font-size:14px; color:#FFD700;');
