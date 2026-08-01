@@ -1,127 +1,99 @@
-# Unknown Verdict v40.0
+---
+title: Unknown Verdict v40.0
+emoji: ⚖️
+colorFrom: blue
+colorTo: purple
+sdk: docker
+sdk_version: "1.0"
+app_file: app.py
+pinned: false
+license: apache-2.0
+---
 
-**Production Legal AI Platform — 36 API Endpoints powered by Sarvam AI**
+# ⚖️ THE ADVOCACY – Unknown Verdict v40.0
 
-## Architecture
+## AI-Powered Legal Intelligence Platform
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│                    Unknown Verdict v40.0                        │
-├──────────┬────────────┬─────────────┬──────────┬──────────────┤
-│ 250 Agents│ 15 Verifiers│  AI Judge   │ RAG System│ 8 Engines   │
-│ (12 specs)│ (quality QA)│ (105B)      │ (pgvector)│ (predict,   │
-│           │             │             │           │  gov, fin…) │
-├──────────┴────────────┴─────────────┴──────────┴──────────────┤
-│                   Sarvam AI Engine (105B + 30B)                │
-├────────────────────────────────────────────────────────────────┤
-│              FastAPI · 36 Endpoints · 8 App Groups              │
-└────────────────────────────────────────────────────────────────┘
-```
+Unknown Verdict is a **multi-agent legal AI platform** with:
+- **250 specialized AI agents** across 12+ legal domains
+- **15 verifiers** for quality assurance
+- **Sarvam 105B AI Judge** – India's sovereign AI model
+- **40 API endpoints** for legal, compliance, markets, and more
+- **32 frontend apps** in a unified vault
 
-## All 36 Endpoints
+## All 40 Endpoints
 
-### 1. Core Legal (8)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 1 | `/api/chat` | POST | AI Counsel with Sarvam 105B reasoning |
-| 2 | `/api/legal/research` | POST | Legal research with citations |
-| 3 | `/api/legal/draft` | POST | Draft contracts, notices, pleadings |
-| 4 | `/api/legal/cases` | GET | Case law search and analysis |
-| 5 | `/api/legal/manage` | GET | Case management system |
-| 6 | `/api/compliance/snapshot` | GET | GDPR, DPDPA, CCPA, HIPAA dashboard |
-| 7 | `/api/compliance/scan` | POST | Website compliance scanner |
-| 8 | `/api/compliance/monitor` | GET | Real-time compliance monitoring |
+### Core Legal (8)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/chat` | POST | AI Counsel with Sarvam 105B |
+| `/api/legal/research` | POST | Legal research with citations |
+| `/api/legal/draft` | POST | Draft contracts, notices, pleadings |
+| `/api/legal/cases` | GET | Case law search |
+| `/api/legal/manage` | GET | Case management |
+| `/api/compliance/snapshot` | GET | GDPR, DPDPA, CCPA dashboard |
+| `/api/compliance/scan` | POST | Website compliance scanner |
+| `/api/compliance/monitor` | GET | Real-time monitoring |
 
-### 2. Markets & Trading (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 9 | `/api/trading/indices` | GET | NIFTY, SENSEX, Nasdaq, FTSE, Dubai |
-| 10 | `/api/trading/crypto` | GET | BTC, ETH, SOL prices |
-| 11 | `/api/trading/market/{symbol}` | GET | Individual stock data |
-| 12 | `/api/market/global` | GET | All global markets combined |
+### Markets & Trading (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/trading/indices` | GET | NIFTY, SENSEX, Nasdaq, FTSE, Dubai |
+| `/api/trading/crypto` | GET | BTC, ETH, SOL prices |
+| `/api/trading/market/{symbol}` | GET | Individual stock data |
+| `/api/market/global` | GET | All global markets |
 
-### 3. Reports & News (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 13 | `/api/reports/generate` | POST | AI-generated reports with charts |
-| 14 | `/api/reports/pdf` | POST | PDF export of reports |
-| 15 | `/api/news/real` | GET | Live legal news from RSS feeds |
-| 16 | `/api/news/personalized` | POST | AI-curated personalized news |
+### Reports & News (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/reports/generate` | POST | AI-generated reports with charts |
+| `/api/reports/pdf` | POST | PDF export |
+| `/api/news/real` | GET | Live legal news from RSS |
+| `/api/news/personalized` | POST | AI-curated personalized news |
 
-### 4. Sports & Governance (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 17 | `/api/sports/cricket` | GET | Live cricket scores & sports law |
-| 18 | `/api/sports/player/{player_id}` | GET | Player contracts and legal status |
-| 19 | `/api/governance/framework` | GET | AI ethics and governance framework |
-| 20 | `/api/governance/policy` | POST | Generate AI governance policies |
+### Sports & Governance (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sports/cricket` | GET | Live cricket scores |
+| `/api/sports/player/{player_id}` | GET | Player contracts |
+| `/api/governance/framework` | GET | AI ethics framework |
+| `/api/governance/policy` | POST | Generate AI governance policies |
 
-### 5. Predictive AI & Training (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 21 | `/api/predict/case` | POST | Case outcome prediction |
-| 22 | `/api/predict/market` | POST | Market trend prediction |
-| 23 | `/api/predict/risk` | POST | Regulatory risk assessment |
-| 24 | `/api/train/web` | POST | Autonomous web training |
+### Predictive AI & Training (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/predict/case` | POST | Case outcome prediction |
+| `/api/predict/market` | POST | Market trend prediction |
+| `/api/predict/risk` | POST | Regulatory risk assessment |
+| `/api/train/web` | POST | Autonomous web training |
 
-### 6. Privacy & Security (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 25 | `/api/privacy/dsar` | POST | Data Subject Access Request |
-| 26 | `/api/privacy/drop/check` | GET | California DROP integration |
-| 27 | `/api/security/alerts` | GET | Breach shield and cyber alerts |
-| 28 | `/api/security/scan` | POST | Vulnerability scanning |
+### Privacy & Security (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/privacy/dsar` | POST | Data Subject Access Request |
+| `/api/privacy/drop/check` | GET | California DROP integration |
+| `/api/security/alerts` | GET | Breach shield and cyber alerts |
+| `/api/security/scan` | POST | Vulnerability scanning |
 
-### 7. Finance, HR, Real Estate, International (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 29 | `/api/finance/stocks` | GET | Wealth manager - stocks & portfolio |
-| 30 | `/api/hr/tasks` | GET | People Ops - employment, payroll |
-| 31 | `/api/realestate/properties` | GET | Property Pro - valuation, RERA |
-| 32 | `/api/international/treaties` | GET | Global Counsel - cross-border legal |
+### Finance, HR, Real Estate, International (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/finance/stocks` | GET | Wealth manager - stocks & portfolio |
+| `/api/hr/tasks` | GET | People Ops - employment, payroll |
+| `/api/realestate/properties` | GET | Property Pro - valuation, RERA |
+| `/api/international/treaties` | GET | Global Counsel - cross-border legal |
 
-### 8. Additional Core (4)
-| # | Endpoint | Method | Description |
-|---|----------|--------|-------------|
-| 33 | `/api/health/compliance` | GET | HIPAA, patient privacy |
-| 34 | `/api/doc/intelligence` | POST | Document upload and extraction |
-| 35 | `/api/lens/agents` | POST | Lens scanning agents |
-| 36 | `/api/infinity/status` | GET | Infinity mode - system status |
+### Additional Core (4)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health/compliance` | GET | HIPAA, patient privacy |
+| `/api/doc/intelligence` | POST | Document upload and extraction |
+| `/api/lens/agents` | POST | Lens scanning agents |
+| `/api/infinity/status` | GET | Infinity mode - system status |
 
 ## Quick Start
 
 ```bash
 pip install -r requirements.txt
 cp .env.example .env  # Add SARVAM_API_KEY
-uvicorn unknown_verdict.app:app --host 0.0.0.0 --port 7860
-```
-
-## File Structure
-
-```
-unknown_verdict/
-├── app.py              # FastAPI entry point
-├── config.py           # Settings (pydantic-settings)
-├── routes.py           # ALL 36 endpoints
-├── schemas.py          # Pydantic models
-├── core/
-│   ├── __init__.py     # Core orchestrator + 8 engines
-│   ├── agents.py       # 250 legal agents
-│   ├── verifiers.py    # 15 quality verifiers
-│   ├── judge.py        # AI Judge (Sarvam 105B)
-│   └── rag.py          # RAG system (pgvector)
-├── sarvam/
-│   ├── __init__.py
-│   └── client.py       # Sarvam AI client (105B + 30B)
-├── static/
-│   └── index.html      # Dashboard with all 32 apps
-├── requirements.txt
-├── Dockerfile
-├── Procfile
-└── .env.example
-```
-
----
-
-🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-⚖️ THE ADVOCACY – Global Law Firm
+uvicorn app:app --host 0.0.0.0 --port 7860
