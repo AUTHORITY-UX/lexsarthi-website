@@ -1,178 +1,96 @@
-# =============================================================================
-# config.py - Configuration & Environment Variables
-# Copyright © 2026 THE ADVOCACY – A LAW FIRM. All rights reserved.
-# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-# =============================================================================
+"""
+Configuration for Unknown Verdict v40.0
+Centralized settings using pydantic-settings.
+"""
+from __future__ import annotations
 
 import os
-import logging
-from datetime import timedelta
+from functools import lru_cache
+from typing import List, Optional
 
-# ─── LOGGING ──────────────────────────────────────────────────────────
-LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s"
-DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# ─── ENVIRONMENT ────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL")
-SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "")
-SARVAM_DEFAULT_MODEL = os.getenv("SARVAM_DEFAULT_MODEL", "sarvam-105b")
-SARVAM_FAST_MODEL = os.getenv("SARVAM_FAST_MODEL", "sarvam-30b")
-REDIS_URL = os.getenv("REDIS_URL", None)
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_DB = int(os.getenv("REDIS_DB", 0))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
 
-if not REDIS_URL and REDIS_HOST:
-    REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
-    if REDIS_PASSWORD:
-        REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
 
-JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_MINUTES = 60 * 24 * 7
+    # Application
+    APP_NAME: str = "Unknown Verdict"
+    APP_VERSION: str = "40.0"
+    ENVIRONMENT: str = "production"
+    DEBUG: bool = False
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-SERPAPI_KEY = os.getenv("SERPAPI_KEY")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", None)
+    # Sarvam AI
+    SARVAM_API_KEY: str = Field(default="", description="Sarvam AI API key")
+    SARVAM_105B_MODEL: str = "sarvam-105b"
+    SARVAM_30B_MODEL: str = "sarvam-30b"
+    SARVAM_BASE_URL: str = "https://api.sarvam.ai/v1"
+    SARVAM_TIMEOUT: int = 120
+    SARVAM_MAX_RETRIES: int = 3
 
-# ============================================
-# CONFIG.PY - ADD THESE LINES
-# ============================================
+    # Database & Vector Store
+    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/unknown_verdict"
+    PGVECTOR_ENABLED: bool = True
+    VECTOR_DIMENSIONS: int = 1536
 
-import os
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+    # Redis
+    REDIS_URL: str = "redis://localhost:6379/0"
 
-LINKEDIN_ACCESS_TOKEN = os.getenv("LINKEDIN_ACCESS_TOKEN")
-LINKEDIN_USER_ID = os.getenv("LINKEDIN_USER_ID")
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me")
+    # Razorpay
+    RAZORPAY_KEY_ID: str = "rzp_test_XXXXXXXX"
+    RAZORPAY_KEY_SECRET: str = ""
+    PAYMENT_AMOUNT: int = 200  # ₹2 in paise
 
-# ─── AI NEWS FEEDS ──────────────────────────────────────────────────
-AI_NEWS_FEEDS = [
-    "https://arxiv.org/rss/cs.AI",
-    "https://feeds.feedburner.com/TechnologyReview/AI",
-    "https://deepmind.com/blog/feed.xml",
-    "https://openai.com/blog/rss.xml",
-    "https://ai.meta.com/blog/feed/",
-    "https://www.analyticsvidhya.com/feed/",
-    "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
-    "https://www.wired.com/feed/tag/ai/latest/rss",
-    "https://www.theverge.com/rss/ai/index.xml",
-    "https://www.ibm.com/blogs/research/feed/",
-    "https://research.google/blog/feed/",
-    "https://venturebeat.com/category/ai/feed/",
-]
+    # Server
+    HOST: str = "0.0.0.0"
+    PORT: int = 7860
 
-# ─── SYSTEM PROMPT ──────────────────────────────────────────────────
-SYSTEM_BASE = """You are the Unknown Verdict Engine – an AI advisory OS with 250 specialist personas, 
-a jury of 10 verifiers, and a final judge. You have access to a knowledge base and live web search. 
-Always strive for accuracy, cite sources, and admit uncertainty. 
-Default jurisdiction: India. Tone: professional, wise, neutral."""
+    # Security
+    JWT_SECRET: str = "unknown-verdict-secret-change-me"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    CORS_ORIGINS: List[str] = ["*"]
 
-# ─── DOMAINS ──────────────────────────────────────────────────────
-DOMAINS_FULL = [
-    # Legal
-    "Constitutional Law", "Contract Law", "Criminal Law", "Corporate Law", "Tax Law",
-    "IP Law", "Family Law", "Cyber Law", "Arbitration", "Property Law", "GST", "Income Tax",
-    "Audit", "Incorporation", "Compliance", "Environmental Law", "Human Rights", 
-    "International Law", "Maritime Law", "Space Law", "Data Privacy", "E-commerce", 
-    "Real Estate", "Banking", "Insurance",
-    # Spiritual & Philosophical
-    "Vedanta", "Yoga", "Ayurveda", "Sanskrit", "Mythology", "Ethics", "Philosophy", "Logic",
-    "Reasoning", "Psychology", "Cognitive Science", "Neuroscience",
-    # Mathematical & Scientific
-    "Mathematics", "Statistics", "Physics", "Chemistry", "Biology", "Medicine",
-    "Astronomy", "Geology", "Climate Science", "Cryptography", "Blockchain",
-    "Quantum Mechanics", "Relativity", "Thermodynamics", "Electromagnetism",
-    "Genetics", "Evolution", "Ecology", "Oceanography", "Meteorology",
-    "Computer Science", "AI Ethics", "Machine Learning", "Neural Networks"
-]
+    # Logging
+    LOG_LEVEL: str = "INFO"
 
-DIVINE_NAMES_POOL = ["Brahma","Vishnu","Shiva","Saraswati","Lakshmi","Ganesha","Hanuman",
-    "Kartikeya","Indra","Yama","Surya","Chandra","Vayu","Agni","Varuna","Kubera",
-    "Yamuna","Ganga","Durga","Kali","Tara","Bhuvaneshwari","Chinnamasta","Bhairavi",
-    "Dhumavati","Bagalamukhi","Matangi","Kamala","Dattatreya","Narasimha","Vamana",
-    "Parashurama","Rama","Krishna","Buddha","Kalki","Matsya","Kurma","Varaha","Skanda",
-    "Ayyappa","Shani","Mangal","Budh","Guru","Shukra","Rahu","Ketu"]
+    # Agents
+    AGENT_COUNT: int = 250
+    VERIFIER_COUNT: int = 15
 
-sub_specialties = {
-    # Legal
-    "Constitutional Law": ["Fundamental Rights", "Federalism", "Judicial Review", "Amendment", "Emergency"],
-    "Contract Law": ["Formation", "Performance", "Breach", "Remedies", "Specific Relief"],
-    "Criminal Law": ["IPC", "CrPC", "Evidence", "White Collar", "Sentencing"],
-    "Corporate Law": ["M&A", "Board Governance", "Shareholder Rights", "Insolvency", "SEBI"],
-    "Tax Law": ["Direct Tax", "Indirect Tax", "International Tax", "Transfer Pricing", "Tax Litigation"],
-    # Spiritual
-    "Vedanta": ["Advaita", "Dvaita", "Upanishads", "Bhagavad Gita", "Meditation"],
-    "Yoga": ["Asanas", "Pranayama", "Dhyana", "Karma Yoga", "Bhakti Yoga"],
-    "Ayurveda": ["Doshas", "Herbal Medicine", "Panchakarma", "Dietetics", "Rasayana"],
-    "Psychology": ["Cognitive", "Behavioral", "Developmental", "Clinical", "Neuropsychology"],
-    # Mathematical & Scientific
-    "Mathematics": ["Algebra", "Calculus", "Geometry", "Number Theory", "Topology"],
-    "Physics": ["Quantum", "Relativity", "Thermodynamics", "Electromagnetism", "Optics"],
-    "Chemistry": ["Organic", "Inorganic", "Physical", "Biochemistry", "Analytical"],
-    "Biology": ["Genetics", "Evolution", "Cell Biology", "Ecology", "Microbiology"],
-    "Medicine": ["Anatomy", "Physiology", "Pathology", "Pharmacology", "Surgery"],
-    "Cryptography": ["Symmetric", "Asymmetric", "Hash Functions", "Blockchain", "Zero-Knowledge"],
-    "Machine Learning": ["Supervised", "Unsupervised", "Reinforcement", "Deep Learning", "Transformers"],
-    "Quantum Mechanics": ["Wave Functions", "Entanglement", "Superposition", "Measurement", "Quantum Computing"],
-}
+    # RAG
+    RAG_CHUNK_SIZE: int = 1024
+    RAG_CHUNK_OVERLAP: int = 128
+    RAG_TOP_K: int = 5
 
-# ─── VERIFIERS ──────────────────────────────────────────────────────
-VERIFIERS = [
-    {"id":"v01","name":"Ganesha","role":"Citation & logic integrity","prompt":"Check legal citations and logical flow."},
-    {"id":"v02","name":"Saraswati","role":"Knowledge cross-reference","prompt":"Verify facts against established knowledge."},
-    {"id":"v03","name":"Hanuman","role":"Global compliance","prompt":"Ensure advice follows international norms."},
-    {"id":"v04","name":"Kartikeya","role":"Contradiction detection","prompt":"Find internal contradictions."},
-    {"id":"v05","name":"Indra","role":"Jurisdiction mapping","prompt":"Check jurisdiction assumptions."},
-    {"id":"v06","name":"Yama","role":"Bias & neutrality","prompt":"Scan for bias."},
-    {"id":"v07","name":"Surya","role":"Timeline & limitation","prompt":"Confirm statutes are current."},
-    {"id":"v08","name":"Chandra","role":"Precedent match","prompt":"Check alignment with known precedents."},
-    {"id":"v09","name":"Vayu","role":"PII / privacy filter","prompt":"Redact PII."},
-    {"id":"v10","name":"Shakti","role":"Final judge & dharma seal","prompt":"Integrate all critiques and produce a final answer with a confidence rating."}
-]
+    # Compliance
+    COMPLIANCE_MIN_SCORE: float = 0.75
 
-# ─── TEMPLATES ──────────────────────────────────────────────────────
-TEMPLATES = {
-    "demand_letter": {
-        "name": "Demand Letter (Personal Injury)",
-        "fields": [
-            {"key": "client_name", "label": "Client Name", "type": "text"},
-            {"key": "client_address", "label": "Client Address", "type": "text"},
-            {"key": "date_of_accident", "label": "Date of Accident", "type": "date"},
-            {"key": "at_fault_driver", "label": "At-Fault Driver", "type": "text"},
-            {"key": "insurance_company", "label": "Insurance Company", "type": "text"},
-            {"key": "claim_number", "label": "Claim Number", "type": "text"},
-            {"key": "injuries", "label": "Injuries", "type": "text"},
-            {"key": "medical_bills", "label": "Medical Bills ($)", "type": "number"},
-            {"key": "lost_wages", "label": "Lost Wages ($)", "type": "number"},
-        ],
-        "prompt": """Draft a professional demand letter with: Client: {client_name}, Address: {client_address}, Date: {date_of_accident}, Driver: {at_fault_driver}, Insurance: {insurance_company}, Claim #: {claim_number}, Injuries: {injuries}, Medical: ${medical_bills}, Lost Wages: ${lost_wages}."""
-    },
-    "nda": {
-        "name": "Mutual Non-Disclosure Agreement",
-        "fields": [
-            {"key": "party_a", "label": "Party A", "type": "text"},
-            {"key": "party_b", "label": "Party B", "type": "text"},
-            {"key": "purpose", "label": "Purpose of Disclosure", "type": "text"},
-            {"key": "term", "label": "Term (months)", "type": "number"},
-        ],
-        "prompt": """Draft a Mutual NDA between {party_a} and {party_b} for {purpose}. Term: {term} months."""
-    },
-    "motion_to_modify": {
-        "name": "Motion to Modify Custody",
-        "fields": [
-            {"key": "petitioner", "label": "Petitioner", "type": "text"},
-            {"key": "respondent", "label": "Respondent", "type": "text"},
-            {"key": "case_number", "label": "Case Number", "type": "text"},
-            {"key": "court", "label": "Court", "type": "text"},
-            {"key": "reason", "label": "Reason", "type": "text"},
-            {"key": "child_name", "label": "Child Name", "type": "text"},
-        ],
-        "prompt": """Draft a Motion to Modify Custody for {petitioner} vs {respondent}, Case # {case_number} in {court}. Reason: {reason}. Child: {child_name}."""
-    }
-} 
+    # California DROP
+    DROP_API_URL: str = "https://oag.ca.gov/privacy/data-brokers"
+    DROP_ENABLED: bool = True
+
+    # Infinity mode
+    INFINITY_MODE: bool = True
+
+    @property
+    def is_sarvam_configured(self) -> bool:
+        return bool(self.SARVAM_API_KEY) and self.SARVAM_API_KEY != "your_sarvam_api_key_here"
+
+    @property
+    def is_razorpay_configured(self) -> bool:
+        return "test" in self.RAZORPAY_KEY_ID or "live" in self.RAZORPAY_KEY_ID
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

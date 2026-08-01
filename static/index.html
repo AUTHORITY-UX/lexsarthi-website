@@ -1,481 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>THE ADVOCACY – Unknown Verdict v40.0</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            background:#050508;
-            font-family:'Inter', sans-serif;
-            color:#fff;
-            overflow:hidden;
-            height:100vh;
-        }
-        #grid-overlay {
-            position:fixed; top:0; left:0; width:100%; height:100%;
-            pointer-events:none; z-index:1;
-            background-image:linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);
-            background-size:40px 40px;
-        }
-        #clock {
-            position:fixed; top:20px; right:30px; z-index:100; text-align:right; pointer-events:none;
-        }
-        #clock .time { font-size:28px; font-weight:700; color:#00d4ff; letter-spacing:2px; text-shadow:0 0 30px rgba(0,200,255,0.3); }
-        #clock .date { font-size:11px; color:rgba(0,200,255,0.5); letter-spacing:1px; margin-top:2px; }
-        #clock .tz { font-size:9px; color:rgba(0,200,255,0.3); letter-spacing:3px; text-transform:uppercase; margin-top:2px; }
-        #heartbeat {
-            position:fixed; bottom:30px; right:30px; z-index:100; display:flex; align-items:center; gap:10px; pointer-events:none;
-        }
-        #heartbeat .icon { font-size:20px; color:#00d4ff; animation:beat 1.2s infinite; }
-        #heartbeat .text { font-size:10px; color:rgba(0,200,255,0.4); letter-spacing:3px; text-transform:uppercase; }
-        #heartbeat .line { width:60px; height:2px; background:linear-gradient(90deg,rgba(0,200,255,0.1),rgba(0,200,255,0.4),rgba(0,200,255,0.1)); border-radius:2px; animation:beatLine 1.2s infinite; }
-        @keyframes beat { 0%,100%{transform:scale(1);opacity:0.6} 14%{transform:scale(1.3);opacity:1} 28%{transform:scale(1);opacity:0.6} 42%{transform:scale(1.2);opacity:0.9} 70%{transform:scale(1);opacity:0.6} }
-        @keyframes beatLine { 0%,100%{width:40px;opacity:0.3} 14%{width:80px;opacity:1} 28%{width:40px;opacity:0.3} 42%{width:70px;opacity:0.8} 70%{width:40px;opacity:0.3} }
-        #eyeContainer {
-            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:10; cursor:pointer; transition:0.5s;
-        }
-        #eyeContainer:hover { transform:translate(-50%,-50%) scale(1.05); }
-        #eyeContainer .eye-ring {
-            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border-radius:50%; border:2px solid rgba(0,200,255,0.12); animation:ringExpand 4s infinite;
-        }
-        #eyeContainer .eye-ring:nth-child(1) { width:200px; height:200px; }
-        #eyeContainer .eye-ring:nth-child(2) { width:240px; height:240px; animation-delay:1s; }
-        #eyeContainer .eye-ring:nth-child(3) { width:280px; height:280px; animation-delay:2s; }
-        #eyeContainer .eye-ring:nth-child(4) { width:320px; height:320px; animation-delay:3s; }
-        @keyframes ringExpand { 0%{transform:translate(-50%,-50%) scale(0.8);opacity:1} 100%{transform:translate(-50%,-50%) scale(1.5);opacity:0} }
-        #eyeContainer svg { width:180px; height:180px; filter:drop-shadow(0 0 40px rgba(0,200,255,0.3)); animation:eyePulse 3s infinite; }
-        @keyframes eyePulse { 0%,100%{filter:drop-shadow(0 0 40px rgba(0,200,255,0.3))} 50%{filter:drop-shadow(0 0 80px rgba(0,200,255,0.6))} }
-        #eyeContainer.hidden { transform:translate(-50%,-50%) scale(0.3); opacity:0; pointer-events:none; }
-        .click-hint {
-            position:fixed; bottom:40px; left:50%; transform:translateX(-50%); z-index:10;
-            color:rgba(0,200,255,0.3); font-size:10px; letter-spacing:4px; text-transform:uppercase; animation:blinkHint 2s infinite;
-        }
-        @keyframes blinkHint { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
-        #paymentOverlay {
-            position:fixed; top:0; left:0; width:100%; height:100%; z-index:60;
-            background:rgba(0,0,0,0.92); backdrop-filter:blur(20px); display:none; justify-content:center; align-items:center;
-        }
-        #paymentOverlay.active { display:flex; }
-        .payment-box {
-            background:rgba(10,10,30,0.95); border:1px solid rgba(0,200,255,0.2); border-radius:20px; padding:40px; max-width:420px; width:90%; text-align:center; position:relative; animation:fadeIn 0.4s;
-        }
-        @keyframes fadeIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
-        .payment-box .lock { font-size:48px; color:#00d4ff; margin-bottom:16px; }
-        .payment-box h2 { font-size:22px; font-weight:700; margin-bottom:8px; }
-        .payment-box p { font-size:14px; color:#9ca3af; margin-bottom:20px; }
-        .payment-box .price { font-size:36px; font-weight:700; background:linear-gradient(135deg,#00d4ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:20px; }
-        .payment-box .btn-pay { background:linear-gradient(135deg,#00d4ff,#a78bfa); color:#000; border:none; padding:14px 40px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; width:100%; }
-        .payment-box .btn-pay:disabled { opacity:0.5; cursor:not-allowed; }
-        .payment-box .btn-close { background:transparent; color:#6b7280; border:none; font-size:24px; position:absolute; top:15px; right:20px; cursor:pointer; }
-        .payment-box .btn-close:hover { color:#ff4444; transform:rotate(90deg); }
-        .payment-box .status { font-size:13px; margin-top:12px; display:none; }
-        .payment-box .status.show { display:block; }
-        .payment-box .status.error { color:#ef4444; }
-        .payment-box .status.success { color:#4ade80; }
-        #vault {
-            position:fixed; top:0; left:0; width:100%; height:100%; z-index:20; opacity:0; pointer-events:none; transition:0.8s;
-            overflow-y:auto; background:rgba(5,5,8,0.95); backdrop-filter:blur(20px);
-        }
-        #vault.open { opacity:1; pointer-events:all; }
-        .vault-header {
-            padding:16px 30px; border-bottom:1px solid rgba(0,200,255,0.08);
-            display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:rgba(5,5,8,0.95); z-index:30;
-        }
-        .vault-header .logo { display:flex; align-items:center; gap:12px; }
-        .vault-header .logo svg { width:28px; height:28px; }
-        .vault-header .logo h1 { font-size:16px; font-weight:700; background:linear-gradient(135deg,#00d4ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .vault-header .close { color:#9ca3af; cursor:pointer; font-size:22px; }
-        .vault-header .close:hover { color:#ff4444; transform:rotate(90deg); }
-        .vault-content { padding:24px 30px; max-width:1400px; margin:0 auto; }
-        .vault-grid {
-            display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:16px;
-        }
-        .vault-card {
-            background:rgba(10,10,30,0.5); border:1px solid rgba(0,200,255,0.06); border-radius:14px; padding:20px; cursor:pointer; transition:0.4s;
-        }
-        .vault-card:hover { transform:translateY(-4px); border-color:rgba(0,200,255,0.2); box-shadow:0 20px 60px rgba(0,200,255,0.05); }
-        .vault-card .icon { font-size:28px; margin-bottom:8px; }
-        .vault-card h3 { font-size:15px; font-weight:600; margin-bottom:4px; }
-        .vault-card p { font-size:12px; color:#9ca3af; line-height:1.5; }
-        .vault-card .badge {
-            display:inline-block; padding:2px 10px; border-radius:20px; font-size:9px; font-weight:600; margin-top:8px;
-            background:rgba(0,200,255,0.1); color:#00d4ff;
-        }
-        .vault-card .badge.green { background:rgba(34,197,94,0.15); color:#4ade80; }
-        .vault-card .badge.yellow { background:rgba(234,179,8,0.15); color:#facc15; }
-        .vault-card .badge.purple { background:rgba(168,85,247,0.15); color:#a78bfa; }
-        .vault-card .badge.orange { background:rgba(251,146,60,0.15); color:#fb923c; }
-        .vault-card .badge.cyan { background:rgba(0,200,255,0.15); color:#00d4ff; }
-        .app-page {
-            display:none; padding:20px; max-width:1200px; margin:0 auto;
-        }
-        .app-page.active { display:block; }
-        .app-card {
-            background:rgba(10,10,30,0.7); border:1px solid rgba(0,200,255,0.08); border-radius:16px; padding:20px; margin-bottom:16px;
-        }
-        .chat-message { animation:slideUp 0.4s; }
-        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(0,200,255,0.3); border-radius:4px; }
-        @media (max-width:768px) {
-            .vault-content { padding:12px 15px; }
-            .vault-grid { grid-template-columns:1fr; }
-            #clock .time { font-size:20px; }
-            #eyeContainer svg { width:120px; height:120px; }
-            .payment-box { padding:24px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unknown Verdict v40.0 - Legal AI Platform</title>
+<style>
+:root{--bg:#0a0e17;--card:#121829;--border:#1e2a42;--accent:#3b82f6;--accent2:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{text-align:center;padding:2rem 1rem;border-bottom:1px solid var(--border)}
+.header h1{font-size:2.2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--muted);margin-top:.5rem;font-size:.95rem}
+.stats-bar{display:flex;justify-content:center;gap:2rem;padding:1rem;flex-wrap:wrap}
+.stat{text-align:center}
+.stat .num{font-size:1.8rem;font-weight:bold;color:var(--accent)}
+.stat .label{font-size:.8rem;color:var(--muted)}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 200px)}
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:1rem;overflow-y:auto}
+.sidebar h3{color:var(--accent2);font-size:.85rem;text-transform:uppercase;letter-spacing:.05rem;margin:1rem .5rem .5rem}
+.nav-item{display:block;padding:.6rem .8rem;border-radius:8px;color:var(--text);text-decoration:none;font-size:.9rem;cursor:pointer;transition:.2s}
+.nav-item:hover{background:var(--border)}
+.nav-item.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.main{padding:1.5rem;overflow-y:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.app-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+.app-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 30px rgba(59,130,246,.15)}
+.app-card .icon{font-size:1.8rem;margin-bottom:.5rem}
+.app-card .title{font-size:1rem;font-weight:600;margin-bottom:.3rem}
+.app-card .desc{font-size:.8rem;color:var(--muted);line-height:1.4}
+.app-card .badge{position:absolute;top:.6rem;right:.6rem;font-size:.65rem;padding:.15rem .5rem;border-radius:20px;background:var(--green);color:#fff}
+.app-card .group{font-size:.65rem;color:var(--accent2);margin-top:.5rem;text-transform:uppercase;letter-spacing:.03rem}
+.search-box{width:100%;padding:.7rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem;margin-bottom:1rem}
+.section-title{font-size:1.3rem;margin-bottom:1rem;color:var(--text);display:flex;align-items:center;gap:.5rem}
+.section-title .count{font-size:.8rem;color:var(--muted);background:var(--border);padding:.15rem .6rem;border-radius:12px}
+#content{display:block}
+.panel{display:none}
+.panel.active{display:block}
+.footer{text-align:center;padding:1.5rem;border-top:1px solid var(--border);color:var(--muted);font-size:.8rem}
+@media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
 </head>
 <body>
-
-<div id="grid-overlay"></div>
-
-<!-- CLOCK -->
-<div id="clock">
-    <div class="time" id="clockTime">--:--:--</div>
-    <div class="date" id="clockDate">LOADING...</div>
-    <div class="tz">IST · UTC +5:30</div>
+<div class="header">
+<h1>⚖️ Unknown Verdict v40.0</h1>
+<p>Production Legal AI Platform powered by Sarvam AI · 250 Agents · 15 Verifiers · AI Judge</p>
+<div class="stats-bar">
+<div class="stat"><div class="num" id="stat-agents">250</div><div class="label">Legal Agents</div></div>
+<div class="stat"><div class="num">15</div><div class="label">Verifiers</div></div>
+<div class="stat"><div class="num">36</div><div class="label">API Endpoints</div></div>
+<div class="stat"><div class="num">12</div><div class="label">Specializations</div></div>
+<div class="stat"><div class="num">4</div><div class="label">Compliance FW</div></div>
+</div>
 </div>
 
-<!-- HEARTBEAT -->
-<div id="heartbeat">
-    <span class="icon">❤</span>
-    <span class="text">Infinity</span>
-    <span class="line"></span>
+<div class="layout">
+<div class="sidebar">
+<input type="text" class="search-box" id="search" placeholder="🔍 Search apps..." onkeyup="filterApps()">
+<h3>Navigation</h3>
+<div class="nav-item active" onclick="showPanel('all')">📊 All Apps</div>
+<div class="nav-item" onclick="showPanel('g1')">⚖️ Core Legal</div>
+<div class="nav-item" onclick="showPanel('g2')">📈 Markets & Trading</div>
+<div class="nav-item" onclick="showPanel('g3')">📰 Reports & News</div>
+<div class="nav-item" onclick="showPanel('g4')">🏆 Sports & Governance</div>
+<div class="nav-item" onclick="showPanel('g5')">🤖 Predictive AI</div>
+<div class="nav-item" onclick="showPanel('g6')">🔒 Privacy & Security</div>
+<div class="nav-item" onclick="showPanel('g7')">💼 Finance/HR/RE/Intl</div>
+<div class="nav-item" onclick="showPanel('g8')">⚙️ Additional Core</div>
+<h3>Quick Links</h3>
+<div class="nav-item" onclick="window.open('/docs','_blank')">📖 API Docs</div>
+<div class="nav-item" onclick="window.open('/redoc','_blank')">📕 ReDoc</div>
+<div class="nav-item" onclick="fetchAPI('/api/infinity/status')">♾️ Infinity Status</div>
 </div>
 
-<!-- EYE -->
-<div id="eyeContainer" onclick="showPayment()">
-    <div class="eye-ring"></div><div class="eye-ring"></div><div class="eye-ring"></div><div class="eye-ring"></div>
-    <svg viewBox="0 0 300 300">
-        <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0,200,255,0.08)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="110" fill="none" stroke="rgba(0,200,255,0.12)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="80" fill="none" stroke="rgba(0,200,255,0.18)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="50" fill="rgba(0,200,255,0.06)" stroke="rgba(0,200,255,0.25)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="30" fill="rgba(0,200,255,0.1)" stroke="rgba(0,200,255,0.3)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="15" fill="rgba(0,200,255,0.2)" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="6" fill="#00d4ff"/>
-        <circle cx="147" cy="147" r="2" fill="rgba(255,255,255,0.9)"/>
-        <line x1="150" y1="100" x2="150" y2="120" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <line x1="150" y1="180" x2="150" y2="200" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <line x1="100" y1="150" x2="120" y2="150" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <line x1="180" y1="150" x2="200" y2="150" stroke="rgba(0,200,255,0.4)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="70" fill="none" stroke="rgba(0,200,255,0.08)">
-            <animate attributeName="r" values="70;100;70" dur="3s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.08;0;0.08" dur="3s" repeatCount="indefinite"/>
-        </circle>
-    </svg>
+<div class="main">
+<div id="content">
+<div class="section-title">All Applications <span class="count">32 Apps</span></div>
+<div class="grid" id="grid"></div>
+</div>
+</div>
 </div>
 
-<div class="click-hint">◈ Click the Eye to Enter ◈</div>
-
-<!-- PAYMENT OVERLAY -->
-<div id="paymentOverlay">
-    <div class="payment-box">
-        <button class="btn-close" onclick="closePayment()">✕</button>
-        <div class="lock">🔓</div>
-        <h2>Unlock The Vault</h2>
-        <p>Full access to 32+ apps with 250 AI agents</p>
-        <div class="price">₹2</div>
-        <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
-            <i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter
-        </button>
-        <div class="status" id="paymentStatus">⏳ Processing...</div>
-    </div>
-</div>
-
-<!-- VAULT -->
-<div id="vault">
-    <div class="vault-header">
-        <div class="logo">
-            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0,200,255,0.3)" stroke-width="2"/><circle cx="50" cy="50" r="35" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.15)" stroke-width="1.5"/><circle cx="50" cy="50" r="25" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.2)" stroke-width="1.5"/><circle cx="50" cy="50" r="15" fill="rgba(0,200,255,0.15)" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/><circle cx="50" cy="50" r="8" fill="#00d4ff"/><circle cx="47" cy="47" r="2" fill="rgba(255,255,255,0.9)"/></svg>
-            <h1>THE ADVOCACY · VAULT</h1>
-        </div>
-        <div class="close" onclick="closeVault()">✕</div>
-    </div>
-
-    <div class="vault-content">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:24px;">
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">250</div>
-                <div style="font-size:10px;color:#6b7280;">AI Agents</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">32</div>
-                <div style="font-size:10px;color:#6b7280;">Apps</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">24/7</div>
-                <div style="font-size:10px;color:#6b7280;">Autonomous</div>
-            </div>
-        </div>
-
-        <h2 style="font-size:18px;font-weight:600;">⚡ Complete Legal & Business Suite</h2>
-        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;">32 apps · 250 agents · All services from one domain</p>
-
-        <div class="vault-grid">
-            <!-- Core Apps -->
-            <div class="vault-card" onclick="openApp('chat')"><div class="icon">⚖️</div><h3>AI Counsel</h3><p>Chat with AI Judge</p><span class="badge green">● Live</span></div>
-            <div class="vault-card" onclick="openApp('markets')"><div class="icon">📊</div><h3>Global Markets</h3><p>Live indices</p><span class="badge green">● Live</span></div>
-            <div class="vault-card" onclick="openApp('reports')"><div class="icon">📄</div><h3>AI Reports</h3><p>Generate PDFs</p><span class="badge purple">● Generate</span></div>
-            <div class="vault-card" onclick="openApp('compliance')"><div class="icon">🛡️</div><h3>Compliance</h3><p>GDPR, DPDPA, CCPA</p><span class="badge yellow">● Scanning</span></div>
-            <div class="vault-card" onclick="openApp('news')"><div class="icon">📰</div><h3>Legal News</h3><p>50+ sources</p><span class="badge green">● Live Feed</span></div>
-            <div class="vault-card" onclick="openApp('lens')"><div class="icon">👁️</div><h3>Lens Scan</h3><p>Website compliance</p><span class="badge purple">● Scan</span></div>
-            <div class="vault-card" onclick="openApp('sports')"><div class="icon">⚽</div><h3>Sports Law</h3><p>Contracts, anti-doping</p><span class="badge orange">● Active</span></div>
-            <div class="vault-card" onclick="openApp('governance')"><div class="icon">⚖️</div><h3>AI Governance</h3><p>Ethics, policies</p><span class="badge purple">● Active</span></div>
-            <div class="vault-card" onclick="openApp('predict')"><div class="icon">🔮</div><h3>Predictive AI</h3><p>Case/market forecasts</p><span class="badge green">● Predict</span></div>
-            <div class="vault-card" onclick="openApp('train')"><div class="icon">🧠</div><h3>Training</h3><p>Autonomous learning</p><span class="badge yellow">● Learning</span></div>
-            
-            <!-- Advanced Apps -->
-            <div class="vault-card" onclick="openApp('privacy')"><div class="icon">🛡️</div><h3>Privacy Compliance</h3><p>CCPA, GDPR, DPDPA</p><span class="badge cyan">● Active</span></div>
-            <div class="vault-card" onclick="openApp('sarvam')"><div class="icon">🇮🇳</div><h3>Sarvam AI</h3><p>India's 105B model</p><span class="badge cyan">● Active</span></div>
-            <div class="vault-card" onclick="openApp('finance')"><div class="icon">💰</div><h3>Wealth Manager</h3><p>Live stocks, crypto</p><span class="badge green">● Live</span></div>
-            <div class="vault-card" onclick="openApp('health')"><div class="icon">🏥</div><h3>Health Compliance</h3><p>HIPAA, patient privacy</p><span class="badge yellow">● Active</span></div>
-            <div class="vault-card" onclick="openApp('realestate')"><div class="icon">🏠</div><h3>Property Pro</h3><p>Valuation, RERA</p><span class="badge orange">● Active</span></div>
-            <div class="vault-card" onclick="openApp('hr')"><div class="icon">👔</div><h3>People Ops</h3><p>Employment, payroll</p><span class="badge purple">● Active</span></div>
-            <div class="vault-card" onclick="openApp('international')"><div class="icon">🌍</div><h3>Global Counsel</h3><p>Cross-border, treaties</p><span class="badge cyan">● Active</span></div>
-            <div class="vault-card" onclick="openApp('security')"><div class="icon">🔒</div><h3>Breach Shield</h3><p>Data breach, cyber</p><span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">● Active</span></div>
-        </div>
-
-        <div style="margin-top:30px;padding-top:16px;border-top:1px solid rgba(0,200,255,0.05);text-align:center;color:#4b5563;font-size:10px;">
-            THE ADVOCACY · v40.0 · 32 Apps · 250 Agents
-        </div>
-    </div>
-
-    <!-- CHAT APP -->
-    <div id="app-chat" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">⚖️ AI Counsel</h2>
-            <p class="text-xs text-gray-400">250 agents · AI Judge v40.0</p>
-            <div id="chatMessages" class="h-[400px] overflow-y-auto bg-black/30 rounded-xl p-4 mb-4">
-                <div class="text-center text-gray-500 py-16">Start your consultation</div>
-            </div>
-            <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
-                <button onclick="sendMessage()" class="bg-cyan-600 hover:bg-cyan-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-3">
-                <button onclick="quickPrompt('What is GDPR?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">GDPR</button>
-                <button onclick="quickPrompt('Explain DPDPA')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">DPDPA</button>
-                <button onclick="quickPrompt('Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">Contract Act</button>
-                <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">IPC 420</button>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
-    </div>
-
-    <!-- MARKETS APP -->
-    <div id="app-markets" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">📊 Global Markets</h2>
-            <div id="marketData" class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3"></div>
-            <button onclick="refreshMarkets()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg mt-3 hover:bg-cyan-600/30"><i class="fas fa-sync mr-1"></i>Refresh</button>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
-    </div>
-
-    <!-- SARVAM APP -->
-    <div id="app-sarvam" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🇮🇳 Sarvam AI</h2>
-            <p class="text-xs text-gray-400">India's sovereign 105B model · 22 languages</p>
-            <div class="grid grid-cols-4 gap-2 mt-3">
-                <div class="bg-black/30 p-2 rounded text-center"><div class="text-lg font-bold text-cyan-400">105B</div><div class="text-[8px] text-gray-400">Params</div></div>
-                <div class="bg-black/30 p-2 rounded text-center"><div class="text-lg font-bold text-green-400">22</div><div class="text-[8px] text-gray-400">Languages</div></div>
-                <div class="bg-black/30 p-2 rounded text-center"><div class="text-lg font-bold text-yellow-400">128K</div><div class="text-[8px] text-gray-400">Context</div></div>
-                <div class="bg-black/30 p-2 rounded text-center"><div class="text-lg font-bold text-purple-400">🇮🇳</div><div class="text-[8px] text-gray-400">Sovereign</div></div>
-            </div>
-            <div class="mt-3">
-                <textarea id="sarvamInput" placeholder="Ask in any Indian language..." class="w-full bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5 min-h-[80px]"></textarea>
-                <button onclick="sarvamChat()" class="mt-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-xl text-white text-sm w-full"><i class="fas fa-paper-plane mr-1"></i> Ask Sarvam</button>
-            </div>
-            <div id="sarvamResponse" class="mt-3 bg-black/30 rounded-xl p-4 text-gray-300 text-sm max-h-60 overflow-y-auto">
-                <div class="text-gray-500 text-center py-4">Ask a legal question in any Indian language</div>
-            </div>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
-    </div>
-
-    <!-- PRIVACY APP -->
-    <div id="app-privacy" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🛡️ Privacy Compliance</h2>
-            <p class="text-xs text-gray-400">CCPA · GDPR · DPDPA · HIPAA</p>
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-blue-400">85%</div><div class="text-xs text-gray-400">GDPR</div></div>
-                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-green-400">70%</div><div class="text-xs text-gray-400">DPDPA</div></div>
-                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-yellow-400">90%</div><div class="text-xs text-gray-400">CCPA</div></div>
-                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-red-400">75%</div><div class="text-xs text-gray-400">HIPAA</div></div>
-            </div>
-            <button onclick="refreshPrivacy()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg mt-3 hover:bg-cyan-600/30"><i class="fas fa-sync mr-1"></i>Refresh</button>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
-    </div>
-
+<div class="footer">
+🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE<br>
+⚖️ THE ADVOCACY – Global Law Firm · Unknown Verdict v40.0
 </div>
 
 <script>
-// ============================================
-// CLOCK
-// ============================================
-function updateClock() {
-    try {
-        var now = new Date();
-        var h = String(now.getHours()).padStart(2,'0');
-        var m = String(now.getMinutes()).padStart(2,'0');
-        var s = String(now.getSeconds()).padStart(2,'0');
-        document.getElementById('clockTime').textContent = h+':'+m+':'+s;
-        var opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
-        document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', opts);
-    } catch(e) {}
-}
-updateClock();
-setInterval(updateClock, 1000);
+const apps=[
+// Group 1: Core Legal
+{g:'g1',icon:'⚖️',title:'AI Counsel Chat',desc:'Sarvam 105B-powered legal chat with agent routing, 15 verifiers & AI Judge',badge:'POST',endpoint:'/api/chat'},
+{g:'g1',icon:'🔍',title:'Legal Research',desc:'Deep legal research with citations from RAG knowledge base',badge:'POST',endpoint:'/api/legal/research'},
+{g:'g1',icon:'📝',title:'Legal Drafting',desc:'Draft contracts, notices, pleadings with AI assistance',badge:'POST',endpoint:'/api/legal/draft'},
+{g:'g1',icon:'📚',title:'Case Law Search',desc:'Search and analyze case law with precedents',badge:'GET',endpoint:'/api/legal/cases'},
+{g:'g1',icon:'🗂️',title:'Case Management',desc:'Full case management system with billing & hearings',badge:'GET',endpoint:'/api/legal/manage'},
+{g:'g1',icon:'🛡️',title:'Compliance Snapshot',desc:'GDPR, DPDPA, CCPA, HIPAA dashboard with scores',badge:'GET',endpoint:'/api/compliance/snapshot'},
+{g:'g1',icon:'🔎',title:'Compliance Scanner',desc:'Website compliance scanner for data protection',badge:'POST',endpoint:'/api/compliance/scan'},
+{g:'g1',icon:'📡',title:'Compliance Monitor',desc:'Real-time compliance monitoring across systems',badge:'GET',endpoint:'/api/compliance/monitor'},
+// Group 2: Markets & Trading
+{g:'g2',icon:'📊',title:'Trading Indices',desc:'NIFTY, SENSEX, Nasdaq, FTSE, Dubai live data',badge:'GET',endpoint:'/api/trading/indices'},
+{g:'g2',icon:'₿',title:'Crypto Prices',desc:'BTC, ETH, SOL and more cryptocurrency data',badge:'GET',endpoint:'/api/trading/crypto'},
+{g:'g2',icon:'📈',title:'Stock Details',desc:'Individual stock data with metrics & analysis',badge:'GET',endpoint:'/api/trading/market/{symbol}'},
+{g:'g2',icon:'🌍',title:'Global Markets',desc:'All global indices, commodities & currencies',badge:'GET',endpoint:'/api/market/global'},
+// Group 3: Reports & News
+{g:'g3',icon:'📄',title:'Report Generator',desc:'AI-generated market & legal reports with charts',badge:'POST',endpoint:'/api/reports/generate'},
+{g:'g3',icon:'📕',title:'PDF Export',desc:'Export reports to PDF format',badge:'POST',endpoint:'/api/reports/pdf'},
+{g:'g3',icon:'📰',title:'Legal News',desc:'Live legal news from RSS feeds',badge:'GET',endpoint:'/api/news/real'},
+{g:'g3',icon:'🎯',title:'Personalized News',desc:'AI-curated news based on your interests',badge:'POST',endpoint:'/api/news/personalized'},
+// Group 4: Sports & Governance
+{g:'g4',icon:'🏏',title:'Cricket Scores',desc:'Live cricket scores & sports law insights',badge:'GET',endpoint:'/api/sports/cricket'},
+{g:'g4',icon:'👤',title:'Player Profile',desc:'Player contracts, endorsements & legal status',badge:'GET',endpoint:'/api/sports/player/{id}'},
+{g:'g4',icon:'🧭',title:'AI Governance',desc:'AI ethics & governance framework',badge:'GET',endpoint:'/api/governance/framework'},
+{g:'g4',icon:'📋',title:'Policy Generator',desc:'Generate AI governance policies for organizations',badge:'POST',endpoint:'/api/governance/policy'},
+// Group 5: Predictive AI
+{g:'g5',icon:'⚖️',title:'Case Prediction',desc:'Predict case outcomes with confidence scores',badge:'POST',endpoint:'/api/predict/case'},
+{g:'g5',icon:'📉',title:'Market Prediction',desc:'Market trend prediction with indicators',badge:'POST',endpoint:'/api/predict/market'},
+{g:'g5',icon:'⚠️',title:'Risk Assessment',desc:'Regulatory risk assessment by industry',badge:'POST',endpoint:'/api/predict/risk'},
+{g:'g5',icon:'🌐',title:'Web Training',desc:'Autonomous web training for RAG knowledge',badge:'POST',endpoint:'/api/train/web'},
+// Group 6: Privacy & Security
+{g:'g6',icon:'🔐',title:'DSAR Processing',desc:'Data Subject Access Request under GDPR/DPDP',badge:'POST',endpoint:'/api/privacy/dsar'},
+{g:'g6',icon:'🌴',title:'California DROP',desc:'California Data Broker Registry check',badge:'GET',endpoint:'/api/privacy/drop/check'},
+{g:'g6',icon:'🚨',title:'Security Alerts',desc:'Breach shield & cyber threat alerts',badge:'GET',endpoint:'/api/security/alerts'},
+{g:'g6',icon:'🛡️',title:'Vulnerability Scan',desc:'Security vulnerability scanning & assessment',badge:'POST',endpoint:'/api/security/scan'},
+// Group 7: Finance/HR/RE/Intl
+{g:'g7',icon:'💰',title:'Wealth Manager',desc:'Stocks, portfolio management & financial data',badge:'GET',endpoint:'/api/finance/stocks'},
+{g:'g7',icon:'👥',title:'People Ops',desc:'Employment, payroll & labour compliance',badge:'GET',endpoint:'/api/hr/tasks'},
+{g:'g7',icon:'🏠',title:'Property Pro',desc:'Real estate valuation & RERA compliance',badge:'GET',endpoint:'/api/realestate/properties'},
+{g:'g7',icon:'🌐',title:'Global Counsel',desc:'Cross-border legal & international treaties',badge:'GET',endpoint:'/api/international/treaties'},
+// Group 8: Additional Core
+{g:'g8',icon:'🏥',title:'Health Compliance',desc:'HIPAA & patient privacy compliance',badge:'GET',endpoint:'/api/health/compliance'},
+{g:'g8',icon:'📎',title:'Doc Intelligence',desc:'Document upload, OCR & entity extraction',badge:'POST',endpoint:'/api/doc/intelligence'},
+{g:'g8',icon:'🔬',title:'Lens Scanner',desc:'Website compliance scanning agents',badge:'POST',endpoint:'/api/lens/agents'},
+{g:'g8',icon:'♾️',title:'Infinity Status',desc:'System-wide infinite operation mode',badge:'GET',endpoint:'/api/infinity/status'},
+];
 
-// ============================================
-// PAYMENT
-// ============================================
-var paymentDone = false;
-function showPayment() {
-    if (!paymentDone) {
-        document.getElementById('paymentOverlay').classList.add('active');
-    } else {
-        openVault();
-    }
-}
-function closePayment() {
-    document.getElementById('paymentOverlay').classList.remove('active');
-}
-function initiatePayment() {
-    var btn = document.getElementById('payBtn');
-    var status = document.getElementById('paymentStatus');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-    status.className = 'status show';
-    status.textContent = '⏳ Initializing...';
-    setTimeout(function() {
-        status.className = 'status show success';
-        status.textContent = '✅ Payment successful! Opening vault...';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter';
-        document.getElementById('paymentOverlay').classList.remove('active');
-        paymentDone = true;
-        openVault();
-    }, 1000);
-}
+const groupNames={g1:'Core Legal',g2:'Markets & Trading',g3:'Reports & News',g4:'Sports & Governance',g5:'Predictive AI',g6:'Privacy & Security',g7:'Finance/HR/RE/Intl',g8:'Additional Core'};
 
-// ============================================
-// VAULT
-// ============================================
-function openVault() {
-    document.getElementById('eyeContainer').classList.add('hidden');
-    document.getElementById('vault').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeVault() {
-    document.getElementById('vault').classList.remove('open');
-    document.getElementById('eyeContainer').classList.remove('hidden');
-    document.body.style.overflow = '';
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-}
-function goBack() {
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-}
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeVault(); });
-
-// ============================================
-// NAVIGATION
-// ============================================
-function openApp(app) {
-    document.querySelectorAll('.app-page').forEach(function(el) { el.classList.remove('active'); });
-    var target = document.getElementById('app-'+app);
-    if (target) target.classList.add('active');
-    if (app === 'markets') refreshMarkets();
+function renderGrid(filter){
+const grid=document.getElementById('grid');
+const filtered=filter==='all'?apps:apps.filter(a=>a.g===filter);
+grid.innerHTML=filtered.map(a=>`
+<div class="app-card" onclick="fetchAPI('${a.endpoint}','${a.badge}')">
+<span class="badge" style="background:${a.badge==='GET'?'#10b981':'#8b5cf6'}">${a.badge}</span>
+<div class="icon">${a.icon}</div>
+<div class="title">${a.title}</div>
+<div class="desc">${a.desc}</div>
+<div class="group">${groupNames[a.g]||''}</div>
+</div>`).join('');
+document.querySelector('.section-title').innerHTML=`${filter==='all'?'All Applications':groupNames[filter]} <span class="count">${filtered.length} Apps</span>`;
 }
 
-// ============================================
-// CHAT
-// ============================================
-async function sendMessage() {
-    var input = document.getElementById('chatInput');
-    var msg = input.value.trim();
-    if (!msg) return;
-    var div = document.getElementById('chatMessages');
-    div.innerHTML += '<div class="chat-message flex justify-end mb-3"><div class="bg-cyan-600/80 text-white p-3 rounded-xl max-w-[80%] text-sm">'+msg+'</div></div>';
-    input.value = '';
-    div.scrollTop = div.scrollHeight;
-    div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-gray-300 p-4 rounded-xl"><span class="typing-dots">...</span></div></div>';
-    div.scrollTop = div.scrollHeight;
-    try {
-        var res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
-        var data = await res.json();
-        div.innerHTML = div.innerHTML.replace('<span class="typing-dots">...</span>', '');
-        div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-cyan-500/10"><div class="text-xs text-cyan-400">⚖️ AI Judge v40.0</div><div class="text-sm leading-relaxed">'+(data.response || data.message || 'I have processed your query.')+'</div></div></div>';
-        div.scrollTop = div.scrollHeight;
-    } catch(e) {
-        div.innerHTML = div.innerHTML.replace('<span class="typing-dots">...</span>', '');
-        div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-red-900/30 text-red-400 p-3 rounded-xl">❌ '+e.message+'</div></div>';
-    }
-}
-function quickPrompt(text) {
-    document.getElementById('chatInput').value = text;
-    sendMessage();
+function showPanel(g){
+document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+event.target.classList.add('active');
+renderGrid(g);
 }
 
-// ============================================
-// MARKETS
-// ============================================
-function refreshMarkets() {
-    var div = document.getElementById('marketData');
-    var data = [
-        {name:'NIFTY 50', price:'₹24,500', change:'+0.49%'},
-        {name:'SENSEX', price:'₹81,500', change:'+0.31%'},
-        {name:'Nasdaq', price:'$18,500', change:'-0.64%'},
-        {name:'FTSE 100', price:'£8,000', change:'+0.91%'}
-    ];
-    div.innerHTML = data.map(function(d) {
-        var color = d.change.startsWith('+') ? 'text-green-400' : 'text-red-400';
-        return '<div class="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between"><span class="text-white text-sm">'+d.name+'</span><span class="text-white text-sm">'+d.price+'</span><span class="'+color+' text-sm">'+d.change+'</span></div>';
-    }).join('');
+function filterApps(){
+const q=document.getElementById('search').value.toLowerCase();
+const grid=document.getElementById('grid');
+const filtered=apps.filter(a=>a.title.toLowerCase().includes(q)||a.desc.toLowerCase().includes(q));
+grid.innerHTML=filtered.map(a=>`
+<div class="app-card" onclick="fetchAPI('${a.endpoint}','${a.badge}')">
+<span class="badge" style="background:${a.badge==='GET'?'#10b981':'#8b5cf6'}">${a.badge}</span>
+<div class="icon">${a.icon}</div>
+<div class="title">${a.title}</div>
+<div class="desc">${a.desc}</div>
+<div class="group">${groupNames[a.g]||''}</div>
+</div>`).join('');
 }
 
-// ============================================
-// SARVAM CHAT
-// ============================================
-async function sarvamChat() {
-    var input = document.getElementById('sarvamInput');
-    var div = document.getElementById('sarvamResponse');
-    var query = input.value.trim();
-    if (!query) { alert('Enter a question'); return; }
-    div.innerHTML = '<div class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Sarvam 105B reasoning...</p></div>';
-    try {
-        var res = await fetch('/api/sarvam/reason', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query,reasoning_effort:'high'})});
-        var data = await res.json();
-        div.innerHTML = '<div class="bg-cyan-900/20 p-4 rounded-xl border border-cyan-500/20"><div class="text-xs text-cyan-400 mb-2">🇮🇳 Sarvam 105B</div><div class="whitespace-pre-wrap">'+data.response+'</div></div>';
-    } catch(e) {
-        div.innerHTML = '<div class="text-red-400">❌ '+e.message+'</div>';
-    }
+function fetchAPI(endpoint,method='GET'){
+const url=endpoint.replace('{symbol}','RELIANCE').replace('{player_id}','1').replace('{id}','1');
+if(method==='GET'){
+window.open(url,'_blank');
+}else{
+// For POST endpoints, open the docs
+window.open('/docs','_blank');
+}
 }
 
-// ============================================
-// PRIVACY
-// ============================================
-function refreshPrivacy() {
-    alert('🛡️ Privacy Compliance Dashboard\n\nGDPR: 85% ✅\nDPDPA: 70% ⏳\nCCPA: 90% ✅\nHIPAA: 75% ⚠️\n\nCalifornia DROP: 45-day deadline active');
-}
-
-// ============================================
-// INIT
-// ============================================
-console.log('👁️ THE ADVOCACY v40.0 - 32 Apps');
-refreshMarkets();
+renderGrid('all');
 </script>
-
 </body>
 </html>

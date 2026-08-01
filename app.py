@@ -1,154 +1,151 @@
-# app.py - Unknown Verdict v40.0 Main Application
-# 🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE
-# ⚖️ THE ADVOCACY – Global Law Firm
+"""
+Unknown Verdict v40.0 - Main FastAPI Application
+Production Legal AI Platform powered by Sarvam AI.
+
+36 API Endpoints · 250 Agents · 15 Verifiers · AI Judge · RAG
+"""
+from __future__ import annotations
 
 import os
-import sys
-import logging
+import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from loguru import logger as log
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)-8s | %(name)s  | %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger("unknown_verdict")
+from .config import settings
+from .core import core as uv_core
+from .routes import router
 
-# Import routes
-from routes import router
+_start_time = time.time()
 
-# Import core
-from core import get_core, UnknownVerdictCore
 
-# Create FastAPI app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: startup and shutdown."""
+    log.info("=" * 60)
+    log.info("🚀 Unknown Verdict v40.0 - Initializing...")
+    log.info("=" * 60)
+
+    uv_core.initialize()
+
+    log.info("=" * 60)
+    log.info("🚀 Unknown Verdict v40.0 - Application Startup")
+    log.info("=" * 60)
+    log.info("📊 System Statistics:")
+    log.info(f"   ├─ Python Version: 3.{os.sys.version_info.minor}.{os.sys.version_info.micro}")
+    log.info(f"   ├─ FastAPI Version: {__import__('fastapi').__version__}")
+    log.info(f"   ├─ API Docs: /docs")
+    log.info(f"   ├─ ReDoc: /redoc")
+    log.info(f"   ├─ Agents: {uv_core.agents.stats()['total_agents']}")
+    log.info(f"   ├─ Verifiers: {uv_core.verifiers.stats()['total_verifiers']}")
+    log.info(f"   ├─ Endpoints: 36")
+    log.info(f"   └─ Status: 🟢 ONLINE")
+    log.info("=" * 60)
+    log.info("🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE")
+    log.info("⚖️ THE ADVOCACY – Global Law Firm")
+    log.info("=" * 60)
+
+    yield
+
+    log.info("Unknown Verdict v40.0 - Shutting down...")
+    from .sarvam.client import sarvam_client
+    await sarvam_client.close()
+    log.info("Unknown Verdict v40.0 - Shutdown complete.")
+
+
 app = FastAPI(
-    title="Unknown Verdict v40.0",
-    description="Complete AGI Legal Platform - THE ADVOCACY",
+    title="Unknown Verdict",
+    description=(
+        "Production Legal AI Platform powered by Sarvam AI.\n\n"
+        "**36 API Endpoints** across 8 application groups:\n"
+        "1. Core Legal (8) - chat, research, draft, cases, manage, compliance\n"
+        "2. Markets & Trading (4) - indices, crypto, stocks, global\n"
+        "3. Reports & News (4) - generate, pdf, news, personalized\n"
+        "4. Sports & Governance (4) - cricket, player, framework, policy\n"
+        "5. Predictive AI (4) - case, market, risk, training\n"
+        "6. Privacy & Security (4) - dsar, drop, alerts, scan\n"
+        "7. Finance/HR/RE/Intl (4) - stocks, hr, properties, treaties\n"
+        "8. Additional Core (4) - health, docs, lens, infinity\n\n"
+        "250 Legal Agents · 15 Verifiers · AI Judge · RAG"
+    ),
     version="40.0",
+    lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include router - THIS IS CRITICAL
-app.include_router(router)
+# Include all 36 endpoints under /api prefix
+app.include_router(router, prefix="/api")
 
-# Mount static files
-static_dir = "static"
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-    logger.info(f"✅ Static files mounted from /{static_dir}")
-else:
-    os.makedirs(static_dir, exist_ok=True)
-    logger.warning(f"⚠️ Static directory created: {static_dir}")
 
-# Initialize core
-_core = get_core()
-logger.info("🚀 Unknown Verdict v40.0 - Initializing...")
-logger.info(f"   ├─ Agents: {len(_core.agents)}")
-logger.info(f"   ├─ Verifiers: {len(_core.verifiers)}")
-logger.info(f"   └─ Judge: AI Judge v40.0")
+# ===== Root and System Endpoints =====
 
-# ─── REDIRECTS FOR /api/docs → /docs ──────────────────────────────
-
-@app.get("/api/docs")
-async def redirect_to_docs():
-    """Redirect /api/docs to /docs"""
-    return RedirectResponse(url="/docs")
-
-@app.get("/api/redoc")
-async def redirect_to_redoc():
-    """Redirect /api/redoc to /redoc"""
-    return RedirectResponse(url="/redoc")
-
-@app.get("/api/openapi.json")
-async def redirect_to_openapi():
-    """Redirect /api/openapi.json to /openapi.json"""
-    return RedirectResponse(url="/openapi.json")
-
-# ─── ROOT ENDPOINT ──────────────────────────────────────────────────
-
-@app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    """Serve index.html with Third Eye theme"""
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint - serve dashboard."""
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
     index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            html = f.read()
-            html = html.replace("{{VERSION}}", "40.0")
-            html = html.replace("{{YEAR}}", str(datetime.now().year))
-            return HTMLResponse(html)
-    else:
-        return HTMLResponse(f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Unknown Verdict v40.0</title>
-            <style>
-                body {{ background: #0a0a1a; color: #e0e0e0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; }}
-                .container {{ max-width: 600px; padding: 40px; }}
-                .logo {{ font-size: 4em; }}
-                h1 {{ background: linear-gradient(135deg, #6C3CE1, #4ECDC4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
-                .trident {{ color: #FFD700; margin-top: 20px; }}
-                .links {{ margin-top: 20px; }}
-                .links a {{ color: #6C3CE1; margin: 0 10px; text-decoration: none; }}
-                .links a:hover {{ text-decoration: underline; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="logo">⚖️</div>
-                <h1>THE ADVOCACY</h1>
-                <p>Global Law Firm</p>
-                <p style="color: #4ECDC4;">v40.0 • Unknown Verdict</p>
-                <p>✅ {len(_core.agents)} Agents • {len(_core.verifiers)} Verifiers • AI Judge Online</p>
-                <div class="links">
-                    <a href="/docs">📚 API Documentation</a>
-                    <a href="/redoc">📖 ReDoc</a>
-                    <a href="/api/health">💚 Health Check</a>
-                </div>
-                <div class="trident">🔱 TRIDENT – PERMANENT ASSET – NEVER REMOVE</div>
-            </div>
-        </body>
-        </html>
-        """)
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    return {
+        "name": "Unknown Verdict", "version": "40.0",
+        "status": "🟢 ONLINE", "endpoints": 36,
+        "docs": "/docs", "redoc": "/redoc",
+    }
 
-# ─── STARTUP EVENT ──────────────────────────────────────────────────
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("=" * 60)
-    logger.info("🚀 Unknown Verdict v40.0 - Application Startup")
-    logger.info("=" * 60)
-    logger.info("📊 System Statistics:")
-    logger.info(f"   ├─ Python Version: {sys.version.split()[0]}")
-    logger.info(f"   ├─ FastAPI Version: 40.0")
-    logger.info(f"   ├─ API Docs: /docs")
-    logger.info(f"   ├─ ReDoc: /redoc")
-    logger.info(f"   ├─ Agents: {len(_core.agents)}")
-    logger.info(f"   ├─ Verifiers: {len(_core.verifiers)}")
-    logger.info(f"   └─ Status: 🟢 ONLINE")
-    logger.info("=" * 60)
-    logger.info("🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE")
-    logger.info("⚖️ THE ADVOCACY – Global Law Firm")
-    logger.info("=" * 60)
+@app.get("/health", tags=["System"])
+async def health():
+    """Health check."""
+    uptime = time.time() - _start_time
+    return {
+        "status": "healthy", "version": "40.0",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "uptime_seconds": round(uptime, 2),
+        "components": {
+            "agents": "operational", "verifiers": "operational",
+            "judge": "operational", "rag": "operational",
+            "sarvam": "operational" if settings.is_sarvam_configured else "not_configured",
+            "infinity": "ENABLED",
+        },
+    }
 
-# ─── MAIN ──────────────────────────────────────────────────────────
+
+# ===== Static files =====
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+    log.info("✅ Static files mounted from /static")
+
+
+# ===== Error handler =====
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    log.error(f"Unhandled exception: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal Server Error", "detail": str(exc), "code": "INTERNAL_ERROR"},
+    )
+
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 7860))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(
+        "unknown_verdict.app:app",
+        host=settings.HOST, port=settings.PORT,
+        reload=settings.DEBUG, log_level=settings.LOG_LEVEL.lower(),
+    )
