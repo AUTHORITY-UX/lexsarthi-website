@@ -133,7 +133,42 @@ class Verifier:
         }
 
 # ─── REAL AI ANALYZER (FIXED APIs) ──────────────────────────────────
+# core.py - Add Sarvam integration
 
+from sarvam_integration import get_sarvam
+
+class UnknownVerdictEngine:
+    def __init__(self):
+        # ... existing init ...
+        self.sarvam = get_sarvam()
+    
+    async def process_query(self, query: str, session_id: str = "default") -> Dict:
+        # 1. Get agent responses (existing)
+        agent_responses = await self._get_agent_responses(query)
+        
+        # 2. Jury verification (existing)
+        verified = self.jury.verify_responses(agent_responses, {})
+        
+        # 3. AI Judge - Use Sarvam 105B for final judgment
+        context = {
+            "query": query,
+            "agent_responses": verified[:5],
+            "verifier_scores": [r.get("verification_score", 0) for r in verified]
+        }
+        
+        # Use Sarvam with reasoning for the final judgment
+        final_judgment = await self.sarvam.chat_with_reasoning(
+            query,
+            context,
+            reasoning_effort="high"  # High reasoning for legal decisions
+        )
+        
+        return {
+            "response": final_judgment,
+            "agent": "AI Judge v40.0 (Sarvam 105B)",
+            "confidence": verified[0].get("verification_score", 0.85) if verified else 0.5,
+            "model": "sarvam-105b"
+        }
 class RealAIAnalyzer:
     def __init__(self):
         self.openai_key = os.getenv("OPENAI_API_KEY")
@@ -207,6 +242,7 @@ class RealAIAnalyzer:
         )
         
         return self._parse_ai_response(response.choices[0].message.content, jurisdiction)
+        
     
     # ─── GEMINI V2 (Updated Model) ────────────────────────────────────
     
