@@ -14,6 +14,9 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # ─── ENVIRONMENT ────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL")
+SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "")
+SARVAM_DEFAULT_MODEL = os.getenv("SARVAM_DEFAULT_MODEL", "sarvam-105b")
+SARVAM_FAST_MODEL = os.getenv("SARVAM_FAST_MODEL", "sarvam-30b")
 REDIS_URL = os.getenv("REDIS_URL", None)
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
