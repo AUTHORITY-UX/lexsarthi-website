@@ -45,3 +45,5 @@ typing-extensions==4.9.0
 loguru==0.7.2
 tqdm==4.66.1
 pgvector>=0.1.8
+langchain-sarvam>=0.1.0
+sarvamai>=1.0.0
