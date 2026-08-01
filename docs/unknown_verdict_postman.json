@@ -1,0 +1,625 @@
+{
+  "info": {
+    "name": "Unknown Verdict v40.0 API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Production Legal AI Platform - 36 API Endpoints powered by Sarvam AI.\n\nAuthentication:\n- JWT Bearer: Authorization: Bearer <token>\n- API Key: X-API-Key: <your-api-key>\n\nDefault admin: admin@unknownverdict.ai / admin123"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:7860"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@unknownverdict.ai\",\n  \"password\": \"admin123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"full_name\": \"Test User\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/refresh",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"<your-refresh-token>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create API Key",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/api-keys",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My API Key\",\n  \"scopes\": [\n    \"chat\",\n    \"legal\"\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "List API Keys",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/auth/api-keys"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Core Legal",
+      "item": [
+        {
+          "name": "1. Chat",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/chat",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What are my fundamental rights under Article 21?\",\n  \"use_rag\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Legal Research",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/legal/research",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"right to privacy India\",\n  \"depth\": \"deep\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Legal Draft",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/legal/draft",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_type\": \"contract\",\n  \"title\": \"NDA\",\n  \"parties\": [\n    \"Party A\",\n    \"Party B\"\n  ],\n  \"terms\": [\n    \"Confidentiality\",\n    \"Term: 2 years\"\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Case Law Search",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/legal/cases?query=privacy"
+          }
+        },
+        {
+          "name": "5. Case Management",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/legal/manage?status=active"
+          }
+        },
+        {
+          "name": "6. Compliance Snapshot",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/compliance/snapshot"
+          }
+        },
+        {
+          "name": "7. Compliance Scan",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/compliance/scan",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "8. Compliance Monitor",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/compliance/monitor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Markets & Trading",
+      "item": [
+        {
+          "name": "9. Trading Indices",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/trading/indices"
+          }
+        },
+        {
+          "name": "10. Crypto Prices",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/trading/crypto"
+          }
+        },
+        {
+          "name": "11. Stock Details",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/trading/market/RELIANCE"
+          }
+        },
+        {
+          "name": "12. Global Markets",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/market/global"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Reports & News",
+      "item": [
+        {
+          "name": "13. Generate Report",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/reports/generate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"report_type\": \"market_analysis\",\n  \"title\": \"Q3 Report\"\n}"
+            }
+          }
+        },
+        {
+          "name": "14. PDF Export",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/reports/pdf",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Report\",\n  \"content\": \"Report content here.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "15. Legal News",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/news/real?limit=10"
+          }
+        },
+        {
+          "name": "16. Personalized News",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/news/personalized",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interests\": [\n    \"Corporate\",\n    \"Tax\"\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Sports & Governance",
+      "item": [
+        {
+          "name": "17. Cricket Scores",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/sports/cricket"
+          }
+        },
+        {
+          "name": "18. Player Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/sports/player/P001"
+          }
+        },
+        {
+          "name": "19. Governance Framework",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/governance/framework"
+          }
+        },
+        {
+          "name": "20. Generate Policy",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/governance/policy",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organization\": \"TestCorp\",\n  \"policy_type\": \"AI Usage Policy\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Predictive AI",
+      "item": [
+        {
+          "name": "21. Case Prediction",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/predict/case",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"case_type\": \"civil\",\n  \"facts\": \"Breach of contract\"\n}"
+            }
+          }
+        },
+        {
+          "name": "22. Market Prediction",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/predict/market",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"NIFTY_50\"\n}"
+            }
+          }
+        },
+        {
+          "name": "23. Risk Assessment",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/predict/risk",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"industry\": \"Technology\"\n}"
+            }
+          }
+        },
+        {
+          "name": "24. Web Training",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/train/web",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://indiacode.nic.in\",\n  \"max_pages\": 50\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Privacy & Security",
+      "item": [
+        {
+          "name": "25. DSAR Request",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/privacy/dsar",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_type\": \"access\",\n  \"data_subject_name\": \"John Doe\",\n  \"data_subject_email\": \"john@example.com\",\n  \"identification_verified\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "26. California DROP",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/privacy/drop/check?entity_name=TestCorp"
+          }
+        },
+        {
+          "name": "27. Security Alerts",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/security/alerts"
+          }
+        },
+        {
+          "name": "28. Vulnerability Scan",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/security/scan",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": \"system\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Finance/HR/RE/Intl",
+      "item": [
+        {
+          "name": "29. Finance Stocks",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/finance/stocks"
+          }
+        },
+        {
+          "name": "30. HR Tasks",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/hr/tasks"
+          }
+        },
+        {
+          "name": "31. Real Estate",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/realestate/properties?city=Mumbai"
+          }
+        },
+        {
+          "name": "32. International Treaties",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/international/treaties"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Additional Core",
+      "item": [
+        {
+          "name": "33. Health Compliance",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/health/compliance"
+          }
+        },
+        {
+          "name": "34. Doc Intelligence",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/doc/intelligence",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filename\": \"test.txt\",\n  \"content_type\": \"text/plain\"\n}"
+            }
+          }
+        },
+        {
+          "name": "35. Lens Scanner",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/lens/agents",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "36. Infinity Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/infinity/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          }
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/metrics"
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/info"
+          }
+        },
+        {
+          "name": "Agents Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/agents/status"
+          }
+        },
+        {
+          "name": "Sarvam Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/sarvam/status"
+          }
+        },
+        {
+          "name": "Sarvam Reason",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/sarvam/reason",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Analyze Article 21\",\n  \"use_rag\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Payment Key",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/payment/key"
+          }
+        }
+      ]
+    }
+  ]
+}
