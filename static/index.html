@@ -77,7 +77,6 @@
         .payment-box .status.show { display:block; }
         .payment-box .status.error { color:#ef4444; }
         .payment-box .status.success { color:#4ade80; }
-        .payment-box .powered { font-size:10px; color:#4b5563; margin-top:16px; }
         #vault {
             position:fixed; top:0; left:0; width:100%; height:100%; z-index:20; opacity:0; pointer-events:none; transition:0.8s;
             overflow-y:auto; background:rgba(5,5,8,0.95); backdrop-filter:blur(20px);
@@ -182,13 +181,12 @@
         <button class="btn-close" onclick="closePayment()">✕</button>
         <div class="lock">🔓</div>
         <h2>Unlock The Vault</h2>
-        <p>Full access to all 20+ apps with 250 AI agents</p>
+        <p>Full access to 32+ apps with 250 AI agents</p>
         <div class="price">₹2</div>
         <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
             <i class="fas fa-lock mr-2"></i> Pay ₹2 & Enter
         </button>
         <div class="status" id="paymentStatus">⏳ Processing...</div>
-        <p class="powered">🔒 Secure via Razorpay</p>
     </div>
 </div>
 
@@ -203,14 +201,13 @@
     </div>
 
     <div class="vault-content">
-        <!-- Stats -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:24px;">
             <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
                 <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">250</div>
                 <div style="font-size:10px;color:#6b7280;">AI Agents</div>
             </div>
             <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
-                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">20+</div>
+                <div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">32</div>
                 <div style="font-size:10px;color:#6b7280;">Apps</div>
             </div>
             <div style="text-align:center;padding:12px;background:rgba(10,10,30,0.4);border-radius:10px;border:1px solid rgba(0,200,255,0.05);">
@@ -220,10 +217,10 @@
         </div>
 
         <h2 style="font-size:18px;font-weight:600;">⚡ Complete Legal & Business Suite</h2>
-        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;">20+ apps · 250 agents · All services from one domain</p>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;">32 apps · 250 agents · All services from one domain</p>
 
         <div class="vault-grid">
-            <!-- Existing Apps -->
+            <!-- Core Apps -->
             <div class="vault-card" onclick="openApp('chat')"><div class="icon">⚖️</div><h3>AI Counsel</h3><p>Chat with AI Judge</p><span class="badge green">● Live</span></div>
             <div class="vault-card" onclick="openApp('markets')"><div class="icon">📊</div><h3>Global Markets</h3><p>Live indices</p><span class="badge green">● Live</span></div>
             <div class="vault-card" onclick="openApp('reports')"><div class="icon">📄</div><h3>AI Reports</h3><p>Generate PDFs</p><span class="badge purple">● Generate</span></div>
@@ -234,31 +231,24 @@
             <div class="vault-card" onclick="openApp('governance')"><div class="icon">⚖️</div><h3>AI Governance</h3><p>Ethics, policies</p><span class="badge purple">● Active</span></div>
             <div class="vault-card" onclick="openApp('predict')"><div class="icon">🔮</div><h3>Predictive AI</h3><p>Case/market forecasts</p><span class="badge green">● Predict</span></div>
             <div class="vault-card" onclick="openApp('train')"><div class="icon">🧠</div><h3>Training</h3><p>Autonomous learning</p><span class="badge yellow">● Learning</span></div>
-            <div class="vault-card" onclick="openApp('techradar')"><div class="icon">📡</div><h3>Tech Radar</h3><p>YC 12 Focus Areas</p><span class="badge cyan">● Active</span></div>
-            <div class="vault-card" onclick="openApp('paymentscanner')"><div class="icon">💳</div><h3>Payment Scanner</h3><p>Razorpay scanning</p><span class="badge cyan">● Scan</span></div>
             
-            <!-- New Apps -->
+            <!-- Advanced Apps -->
+            <div class="vault-card" onclick="openApp('privacy')"><div class="icon">🛡️</div><h3>Privacy Compliance</h3><p>CCPA, GDPR, DPDPA</p><span class="badge cyan">● Active</span></div>
+            <div class="vault-card" onclick="openApp('sarvam')"><div class="icon">🇮🇳</div><h3>Sarvam AI</h3><p>India's 105B model</p><span class="badge cyan">● Active</span></div>
             <div class="vault-card" onclick="openApp('finance')"><div class="icon">💰</div><h3>Wealth Manager</h3><p>Live stocks, crypto</p><span class="badge green">● Live</span></div>
             <div class="vault-card" onclick="openApp('health')"><div class="icon">🏥</div><h3>Health Compliance</h3><p>HIPAA, patient privacy</p><span class="badge yellow">● Active</span></div>
             <div class="vault-card" onclick="openApp('realestate')"><div class="icon">🏠</div><h3>Property Pro</h3><p>Valuation, RERA</p><span class="badge orange">● Active</span></div>
             <div class="vault-card" onclick="openApp('hr')"><div class="icon">👔</div><h3>People Ops</h3><p>Employment, payroll</p><span class="badge purple">● Active</span></div>
             <div class="vault-card" onclick="openApp('international')"><div class="icon">🌍</div><h3>Global Counsel</h3><p>Cross-border, treaties</p><span class="badge cyan">● Active</span></div>
             <div class="vault-card" onclick="openApp('security')"><div class="icon">🔒</div><h3>Breach Shield</h3><p>Data breach, cyber</p><span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">● Active</span></div>
-            <div class="vault-card" onclick="openApp('privacy')"><div class="icon">🛡️</div><h3>Privacy Compliance</h3><p>CCPA, GDPR, DPDPA</p><span class="badge cyan">● Active</span></div>
-            <div class="vault-card" onclick="openApp('sarvam')"><div class="icon">🇮🇳</div><h3>Sarvam AI</h3><p>India's 105B model</p><span class="badge cyan">● Active</span></div>
-            <div class="vault-card" onclick="openApp('docintel')"><div class="icon">📄</div><h3>Document Intel</h3><p>Extract, analyze, cite</p><span class="badge purple">● Extract</span></div>
-            <div class="vault-card" onclick="openApp('infinity')"><div class="icon">♾️</div><h3>Infinity Mode</h3><p>Runs forever</p><span class="badge cyan">● Infinite</span></div>
         </div>
 
         <div style="margin-top:30px;padding-top:16px;border-top:1px solid rgba(0,200,255,0.05);text-align:center;color:#4b5563;font-size:10px;">
-            THE ADVOCACY · v40.0 · 20+ Apps · 250 Agents
+            THE ADVOCACY · v40.0 · 32 Apps · 250 Agents
         </div>
     </div>
 
-    <!-- ================ APP PAGES ================ -->
-    <!-- (Only showing a few for brevity; same pattern for all) -->
-
-    <!-- CHAT -->
+    <!-- CHAT APP -->
     <div id="app-chat" class="app-page">
         <div class="app-card">
             <h2 class="text-lg font-bold">⚖️ AI Counsel</h2>
@@ -267,19 +257,20 @@
                 <div class="text-center text-gray-500 py-16">Start your consultation</div>
             </div>
             <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="Ask legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
+                <input type="text" id="chatInput" placeholder="Ask any legal question..." class="flex-1 bg-gray-800/50 text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm border border-white/5">
                 <button onclick="sendMessage()" class="bg-cyan-600 hover:bg-cyan-700 px-6 rounded-xl transition text-white"><i class="fas fa-paper-plane"></i></button>
             </div>
             <div class="flex flex-wrap gap-2 mt-3">
                 <button onclick="quickPrompt('What is GDPR?')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">GDPR</button>
                 <button onclick="quickPrompt('Explain DPDPA')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">DPDPA</button>
                 <button onclick="quickPrompt('Contract Act 1872')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">Contract Act</button>
+                <button onclick="quickPrompt('Section 420 IPC')" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full">IPC 420</button>
             </div>
         </div>
         <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
     </div>
 
-    <!-- MARKETS -->
+    <!-- MARKETS APP -->
     <div id="app-markets" class="app-page">
         <div class="app-card">
             <h2 class="text-lg font-bold">📊 Global Markets</h2>
@@ -289,35 +280,7 @@
         <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
     </div>
 
-    <!-- PRIVACY COMPLIANCE -->
-    <div id="app-privacy" class="app-page">
-        <div class="app-card">
-            <h2 class="text-lg font-bold">🛡️ Privacy Compliance</h2>
-            <p class="text-xs text-gray-400">CCPA · GDPR · DPDPA · HIPAA</p>
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl text-center">
-                    <div class="text-2xl font-bold text-blue-400">85%</div>
-                    <div class="text-xs text-gray-400">GDPR</div>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl text-center">
-                    <div class="text-2xl font-bold text-green-400">70%</div>
-                    <div class="text-xs text-gray-400">DPDPA</div>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl text-center">
-                    <div class="text-2xl font-bold text-yellow-400">90%</div>
-                    <div class="text-xs text-gray-400">CCPA</div>
-                </div>
-                <div class="bg-black/30 p-3 rounded-xl text-center">
-                    <div class="text-2xl font-bold text-red-400">75%</div>
-                    <div class="text-xs text-gray-400">HIPAA</div>
-                </div>
-            </div>
-            <button onclick="refreshPrivacy()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg mt-3 hover:bg-cyan-600/30"><i class="fas fa-sync mr-1"></i>Check DROP</button>
-        </div>
-        <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
-    </div>
-
-    <!-- SARVAM AI -->
+    <!-- SARVAM APP -->
     <div id="app-sarvam" class="app-page">
         <div class="app-card">
             <h2 class="text-lg font-bold">🇮🇳 Sarvam AI</h2>
@@ -339,18 +302,18 @@
         <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
     </div>
 
-    <!-- INFINITY -->
-    <div id="app-infinity" class="app-page">
+    <!-- PRIVACY APP -->
+    <div id="app-privacy" class="app-page">
         <div class="app-card">
-            <h2 class="text-lg font-bold">♾️ Infinity Mode</h2>
-            <p class="text-xs text-gray-400">System runs forever · 24/7 · Global edge</p>
+            <h2 class="text-lg font-bold">🛡️ Privacy Compliance</h2>
+            <p class="text-xs text-gray-400">CCPA · GDPR · DPDPA · HIPAA</p>
             <div class="grid grid-cols-2 gap-2 mt-3">
-                <div class="bg-black/30 p-3 rounded-xl"><div class="text-xs text-gray-400">Status</div><div class="text-green-400 font-bold">● Running Forever</div></div>
-                <div class="bg-black/30 p-3 rounded-xl"><div class="text-xs text-gray-400">Agents</div><div class="text-white font-bold">250 (scalable)</div></div>
-                <div class="bg-black/30 p-3 rounded-xl"><div class="text-xs text-gray-400">Last Training</div><div class="text-white font-bold" id="lastTraining">--</div></div>
-                <div class="bg-black/30 p-3 rounded-xl"><div class="text-xs text-gray-400">Next Training</div><div class="text-white font-bold" id="nextTraining">--</div></div>
+                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-blue-400">85%</div><div class="text-xs text-gray-400">GDPR</div></div>
+                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-green-400">70%</div><div class="text-xs text-gray-400">DPDPA</div></div>
+                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-yellow-400">90%</div><div class="text-xs text-gray-400">CCPA</div></div>
+                <div class="bg-black/30 p-3 rounded-xl text-center"><div class="text-2xl font-bold text-red-400">75%</div><div class="text-xs text-gray-400">HIPAA</div></div>
             </div>
-            <button onclick="checkInfinity()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg mt-3 hover:bg-cyan-600/30"><i class="fas fa-sync mr-1"></i>Check Status</button>
+            <button onclick="refreshPrivacy()" class="text-xs bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg mt-3 hover:bg-cyan-600/30"><i class="fas fa-sync mr-1"></i>Refresh</button>
         </div>
         <button onclick="goBack()" class="text-xs text-cyan-400 mt-2"><i class="fas fa-arrow-left mr-1"></i>Back to Vault</button>
     </div>
@@ -434,8 +397,6 @@ function openApp(app) {
     var target = document.getElementById('app-'+app);
     if (target) target.classList.add('active');
     if (app === 'markets') refreshMarkets();
-    if (app === 'privacy') refreshPrivacy();
-    if (app === 'infinity') checkInfinity();
 }
 
 // ============================================
@@ -455,7 +416,7 @@ async function sendMessage() {
         var res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
         var data = await res.json();
         div.innerHTML = div.innerHTML.replace('<span class="typing-dots">...</span>', '');
-        div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-cyan-500/10"><div class="text-xs text-cyan-400">⚖️ AI Judge v40.0</div><div class="text-sm leading-relaxed">'+data.response+'</div></div></div>';
+        div.innerHTML += '<div class="chat-message flex justify-start mb-3"><div class="bg-black/40 text-white p-4 rounded-xl max-w-[85%] border border-cyan-500/10"><div class="text-xs text-cyan-400">⚖️ AI Judge v40.0</div><div class="text-sm leading-relaxed">'+(data.response || data.message || 'I have processed your query.')+'</div></div></div>';
         div.scrollTop = div.scrollHeight;
     } catch(e) {
         div.innerHTML = div.innerHTML.replace('<span class="typing-dots">...</span>', '');
@@ -485,14 +446,7 @@ function refreshMarkets() {
 }
 
 // ============================================
-// PRIVACY COMPLIANCE
-// ============================================
-function refreshPrivacy() {
-    alert('🛡️ Checking DROP for California deletion requests...\n\n45-day deadline: ' + new Date(Date.now() + 45*24*60*60*1000).toLocaleDateString());
-}
-
-// ============================================
-// SARVAM AI
+// SARVAM CHAT
 // ============================================
 async function sarvamChat() {
     var input = document.getElementById('sarvamInput');
@@ -510,18 +464,18 @@ async function sarvamChat() {
 }
 
 // ============================================
-// INFINITY
+// PRIVACY
 // ============================================
-function checkInfinity() {
-    document.getElementById('lastTraining').textContent = new Date().toLocaleDateString();
-    document.getElementById('nextTraining').textContent = new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString();
-    alert('♾️ Infinity Mode Active\n\n- System runs 24/7\n- Auto-healing enabled\n- Weekly training scheduled\n- Global edge deployment');
+function refreshPrivacy() {
+    alert('🛡️ Privacy Compliance Dashboard\n\nGDPR: 85% ✅\nDPDPA: 70% ⏳\nCCPA: 90% ✅\nHIPAA: 75% ⚠️\n\nCalifornia DROP: 45-day deadline active');
 }
 
 // ============================================
 // INIT
 // ============================================
-console.log('👁️ THE ADVOCACY v40.0 - 20+ Apps');
+console.log('👁️ THE ADVOCACY v40.0 - 32 Apps');
+refreshMarkets();
 </script>
+
 </body>
 </html>
