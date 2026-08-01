@@ -731,3 +731,63 @@ async def general_chat(request: ChatRequest):
     except Exception as e:
         logger.error(f"General chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# routes.py - Add Sarvam endpoints
+
+from sarvam_integration import get_sarvam
+
+@router.post("/api/sarvam/chat")
+async def sarvam_chat(request: Request):
+    """Chat using Sarvam AI"""
+    try:
+        data = await request.json()
+        messages = data.get("messages", [])
+        model = data.get("model", "sarvam-105b")
+        temperature = data.get("temperature", 0.7)
+        
+        sarvam = get_sarvam()
+        response = await sarvam.chat(messages, model, temperature)
+        
+        return {
+            "status": "success",
+            "response": response,
+            "model": model
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/api/sarvam/analyze-document")
+async def sarvam_analyze_document(request: Request):
+    """Analyze a legal document using Sarvam"""
+    try:
+        data = await request.json()
+        text = data.get("text", "")
+        language = data.get("language", "en-IN")
+        
+        sarvam = get_sarvam()
+        result = await sarvam.analyze_document(text, language)
+        
+        return {"status": "success", "data": result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/api/sarvam/reason")
+async def sarvam_reason(request: Request):
+    """Use Sarvam 105B with reasoning mode"""
+    try:
+        data = await request.json()
+        query = data.get("query", "")
+        context = data.get("context", {})
+        reasoning_effort = data.get("reasoning_effort", "medium")
+        
+        sarvam = get_sarvam()
+        response = await sarvam.chat_with_reasoning(query, context, reasoning_effort)
+        
+        return {
+            "status": "success",
+            "response": response,
+            "reasoning_effort": reasoning_effort,
+            "model": "sarvam-105b"
+        }
+    except Exception as e:
+        return {"error": str(e)}
