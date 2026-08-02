@@ -33,13 +33,6 @@ from .core import (
 )
 from .sarvam.client import sarvam_client, SarvamModel
 
-# ===== Moat v41.0 — Self-Evolving Intelligence =====
-try:
-    from .moat.integration import record_chat_learning
-    _MOAT_AVAILABLE = True
-except Exception:
-    _MOAT_AVAILABLE = False
-
 router = APIRouter()
 
 
@@ -118,19 +111,6 @@ async def uv_chat(request: dict):
     latency = (time.time() - start) * 1000
     agent.record_query(latency, success=verdict.verdict_type.value in ("approved", "approved_with_notes"))
     agent.status = "online"
-
-    # ===== Moat v41.0: Fire-and-forget evolution recording =====
-    if _MOAT_AVAILABLE:
-        import asyncio as _asyncio
-        _chat_confidence = float(verdict.score) if hasattr(verdict, 'score') else 0.5
-        _chat_outcome = 'success' if _chat_confidence >= 0.7 else ('failure' if _chat_confidence < 0.5 else 'neutral')
-        _asyncio.create_task(record_chat_learning(
-            agent_id=agent.agent_id,
-            query=message,
-            response=agent_response,
-            confidence=_chat_confidence,
-            outcome=_chat_outcome,
-        ))
 
     return {
         "response": agent_response,
