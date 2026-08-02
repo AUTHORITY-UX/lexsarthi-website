@@ -1375,4 +1375,3 @@ async def api_info():
         "rag": rag_system.stats(),
         "endpoints_total": 36,
     }
- 
