@@ -61,3 +61,10 @@ httpx==0.27.0
 
 # Monitoring (Prometheus)
 prometheus-client==0.20.0
+
+# Moat v41 dependencies
+asyncpg>=0.29.0
+sentence-transformers>=2.2.2
+torch>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moat v41.0 — Live Monitoring Dashboard</title>
+<style>
+:root{--bg:#0a0e17;--card:#121829;--border:#1e2a42;--accent:#3b82f6;--accent2:#8b5cf6;
+--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{text-align:center;padding:2rem 1rem;border-bottom:1px solid var(--border)}
+.header h1{font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--muted);margin-top:.5rem;font-size:.9rem}
+.header .pulse{display:inline-block;width:10px;height:10px;border-radius:50%;
+background:var(--green);animation:pulse 2s infinite;margin-right:.3rem}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;
+padding:1.5rem;max-width:1400px;margin:0 auto}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;
+text-align:center;transition:.3s}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.stat-card .label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05rem}
+.stat-card .value{font-size:2rem;font-weight:bold;margin:.5rem 0}
+.stat-card .sub{font-size:.7rem;color:var(--muted)}
+.stat-card.green .value{color:var(--green)}
+.stat-card.blue .value{color:var(--accent)}
+.stat-card.purple .value{color:var(--accent2)}
+.stat-card.yellow .value{color:var(--yellow)}
+.section{max-width:1400px;margin:0 auto;padding:0 1.5rem 2rem}
+.section h2{font-size:1.1rem;margin-bottom:1rem;color:var(--text)}
+.chart-container{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.chart-container h3{font-size:.9rem;color:var(--muted);margin-bottom:1rem}
+.bar-chart{display:flex;flex-direction:column;gap:.5rem}
+.bar-row{display:flex;align-items:center;gap:.5rem}
+.bar-label{width:150px;font-size:.8rem;color:var(--muted);text-align:right}
+.bar-track{flex:1;height:24px;background:var(--bg);border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;transition:width .5s;
+background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.bar-value{position:absolute;right:8px;top:4px;font-size:.7rem;color:var(--text)}
+.log-container{background:var(--card);border:1px solid var(--border);border-radius:12px;
+padding:1.5rem;max-height:400px;overflow-y:auto}
+.log-entry{font-size:.8rem;padding:.4rem 0;border-bottom:1px solid var(--border);font-family:monospace}
+.log-entry .time{color:var(--muted)}
+.log-entry .actor{color:var(--accent)}
+.log-entry .action{color:var(--accent2)}
+.refresh-info{text-align:center;color:var(--muted);font-size:.75rem;padding:1rem}
+.error-banner{background:var(--red);color:#fff;padding:.5rem;text-align:center;
+font-size:.85rem;display:none}
+.footer{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>Moat v41.0 - Live Monitoring</h1>
+<p><span class="pulse"></span> Self-Evolving Intelligence Dashboard - Unknown Verdict</p>
+</div>
+
+<div class="error-banner" id="error-banner">
+  Cannot connect to /api/moat/status - ensure the moat is deployed and the app is running.
+</div>
+
+<div class="stats-grid" id="stats-grid">
+  <div class="stat-card green"><div class="label">Total Learnings</div><div class="value" id="stat-learnings">--</div><div class="sub">Stored in vector DB</div></div>
+  <div class="stat-card blue"><div class="label">Reasoning Patterns</div><div class="value" id="stat-patterns">--</div><div class="sub">Proprietary IP (IRAC)</div></div>
+  <div class="stat-card purple"><div class="label">Judge Verdicts</div><div class="value" id="stat-verdicts">--</div><div class="sub">Evolution loop active</div></div>
+  <div class="stat-card yellow"><div class="label">Predictions</div><div class="value" id="stat-predictions">--</div><div class="sub">Outcome analyses</div></div>
+  <div class="stat-card green"><div class="label">Judgment Docs</div><div class="value" id="stat-judgments">--</div><div class="sub">Versioned RAG sources</div></div>
+  <div class="stat-card blue"><div class="label">Audit Entries</div><div class="value" id="stat-audit">--</div><div class="sub">Forensic trail</div></div>
+  <div class="stat-card purple"><div class="label">Agent Versions</div><div class="value" id="stat-versions">--</div><div class="sub">Evolution snapshots</div></div>
+  <div class="stat-card yellow"><div class="label">Strategies</div><div class="value" id="stat-strategies">--</div><div class="sub">Generated legal strategies</div></div>
+  <div class="stat-card green"><div class="label">Pricing Records</div><div class="value" id="stat-pricing">--</div><div class="sub">Outcome-based</div></div>
+  <div class="stat-card blue"><div class="label">Marketplace</div><div class="value" id="stat-marketplace">--</div><div class="sub">Active listings</div></div>
+  <div class="stat-card purple"><div class="label">Flywheel Velocity</div><div class="value" id="stat-velocity">--</div><div class="sub">Learnings / hour</div></div>
+  <div class="stat-card yellow"><div class="label">DB Status</div><div class="value" id="stat-dbstatus">--</div><div class="sub" id="stat-backend">--</div></div>
+</div>
+
+<div class="section">
+<h2>Knowledge Distribution by Agent</h2>
+<div class="chart-container">
+  <div class="bar-chart" id="agent-chart"><div class="bar-row"><div class="bar-label">Loading...</div></div></div>
+</div>
+</div>
+
+<div class="section">
+<h2>Recent Evolution Events</h2>
+<div class="log-container" id="audit-log"><div class="log-entry">Loading audit trail...</div></div>
+</div>
+
+<div class="refresh-info">
+  Auto-refreshing every 10 seconds -
+  <a href="/docs" style="color:var(--accent)">API Docs</a> -
+  <a href="/" style="color:var(--accent2)">Main Dashboard</a>
+</div>
+
+<div class="footer">THE ADVOCACY - Unknown Verdict v41.0 - Self-Evolving Legal AI Platform</div>
+
+<script>
+const API = '/api/moat';
+let lastLearningCount = 0;
+let lastFetchTime = Date.now();
+
+async function fetchJSON(url, options) {
+  try {
+    const r = await fetch(url, options);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch(e) {
+    document.getElementById('error-banner').style.display = 'block';
+    return null;
+  }
+}
+
+async function refresh() {
+  const status = await fetchJSON(API + '/status');
+  if (!status) return;
+  document.getElementById('error-banner').style.display = 'none';
+  const db = status.db || {};
+  const setStat = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = typeof val === 'number' ? val.toLocaleString() : val;
+  };
+  setStat('stat-learnings', db.moat_learnings || 0);
+  setStat('stat-patterns', db.moat_reasoning_patterns || 0);
+  setStat('stat-verdicts', db.moat_verdicts || 0);
+  setStat('stat-predictions', db.moat_predictions || 0);
+  setStat('stat-judgments', db.moat_judgment_docs || 0);
+  setStat('stat-audit', db.moat_audit_entries || 0);
+  setStat('stat-versions', db.moat_agent_versions || 0);
+  setStat('stat-strategies', db.moat_strategies || 0);
+  setStat('stat-pricing', db.moat_pricing_records || 0);
+  setStat('stat-marketplace', db.moat_marketplace_listings || 0);
+  setStat('stat-dbstatus', db.status || 'unknown');
+  setStat('stat-backend', db.backend || '--');
+
+  const currentCount = db.moat_learnings || 0;
+  const now = Date.now();
+  const elapsedHours = (now - lastFetchTime) / 3600000;
+  if (elapsedHours > 0.001 && lastLearningCount > 0) {
+    const velocity = Math.round((currentCount - lastLearningCount) / elapsedHours);
+    setStat('stat-velocity', Math.max(0, velocity));
+  }
+  lastLearningCount = currentCount;
+  lastFetchTime = now;
+
+  const audit = await fetchJSON(API + '/vault/audit?limit=20');
+  if (audit && audit.trail) {
+    const logEl = document.getElementById('audit-log');
+    logEl.innerHTML = audit.trail.map(function(entry) {
+      const time = entry.created_at ? new Date(entry.created_at).toLocaleTimeString() : '';
+      return '<div class="log-entry"><span class="time">' + time + '</span> <span class="actor">[' + (entry.actor||'') + ']</span> <span class="action">' + (entry.action||'') + '</span> -> ' + (entry.entity_type||'') + ':' + (entry.entity_id||'').substring(0,8) + '</div>';
+    }).join('');
+  }
+
+  try {
+    const meshResp = await fetch(API + '/evolution/mesh', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({query:'legal', top_k:20})
+    });
+    if (meshResp.ok) {
+      const meshData = await meshResp.json();
+      if (meshData.results && meshData.results.length > 0) {
+        const agentCounts = {};
+        meshData.results.forEach(function(r) {
+          const aid = r.agent_id || 'unknown';
+          agentCounts[aid] = (agentCounts[aid] || 0) + 1;
+        });
+        const chartEl = document.getElementById('agent-chart');
+        const maxCount = Math.max.apply(null, Object.values(agentCounts).concat([1]));
+        chartEl.innerHTML = Object.entries(agentCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,10).map(function(entry) {
+          const agent = entry[0], count = entry[1];
+          const pct = (count / maxCount * 100).toFixed(0);
+          return '<div class="bar-row"><div class="bar-label">' + agent.substring(0,20) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div><div class="bar-value">' + count + '</div></div></div>';
+        }).join('');
+      }
+    }
+  } catch(e) {}
+}
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>
