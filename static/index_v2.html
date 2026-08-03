@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unknown Verdict v41.0 — Cosmic Legal Intelligence</title>
+<style>
+:root{--bg:#050813;--bg2:#0a0e1a;--card:#0f1424;--card2:#141b30;--border:#1e2a42;--accent:#3b82f6;
+--accent2:#8b5cf6;--accent3:#06b6d4;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--pink:#ec4899;
+--text:#e2e8f0;--muted:#64748b;--glow:0 0 20px rgba(59,130,246,.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.nebula{position:fixed;top:-20%;left:50%;transform:translateX(-50%);width:800px;height:600px;
+background:radial-gradient(ellipse,rgba(139,92,246,.08) 0%,rgba(59,130,246,.04) 40%,transparent 70%);
+z-index:0;pointer-events:none;filter:blur(60px);animation:nd 20s ease-in-out infinite alternate}
+@keyframes nd{0%{transform:translateX(-50%) translateY(0)}100%{transform:translateX(-45%) translateY(30px)}}
+.header{text-align:center;padding:2rem 1rem 1rem;border-bottom:1px solid var(--border);position:relative;z-index:1}
+.third-eye{width:70px;height:70px;margin:0 auto .8rem;position:relative}
+.third-eye .eo{width:100%;height:100%;border-radius:50%;
+background:radial-gradient(circle,var(--accent2) 0%,var(--accent) 50%,transparent 80%);
+animation:ep 3s ease-in-out infinite;filter:blur(2px)}
+.third-eye .ei{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+width:35px;height:35px;border-radius:50%;background:var(--bg2);
+border:2px solid var(--accent3);box-shadow:var(--glow),inset 0 0 10px var(--accent2)}
+.third-eye .ep{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+width:10px;height:10px;border-radius:50%;background:var(--accent3);
+box-shadow:0 0 15px var(--accent3),0 0 30px var(--accent2);animation:pg 2s ease-in-out infinite}
+@keyframes ep{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
+@keyframes pg{0%,100%{box-shadow:0 0 15px var(--accent3),0 0 30px var(--accent2)}50%{box-shadow:0 0 25px var(--accent3),0 0 50px var(--accent2),0 0 70px var(--pink)}}
+.header h1{font-size:2.2rem;font-weight:800;
+background:linear-gradient(135deg,var(--accent3),var(--accent),var(--accent2),var(--pink));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.02rem}
+.header .tag{color:var(--muted);margin-top:.4rem;font-size:.85rem;letter-spacing:.05rem}
+.header .ver{display:inline-block;font-size:.6rem;padding:.15rem .6rem;border-radius:20px;
+background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;margin-left:.3rem;font-weight:600}
+.stats-bar{display:flex;justify-content:center;gap:2rem;padding:1rem;flex-wrap:wrap;position:relative;z-index:1}
+.stat{text-align:center;transition:.3s}.stat:hover{transform:translateY(-3px)}
+.stat .num{font-size:1.6rem;font-weight:bold;
+background:linear-gradient(135deg,var(--accent3),var(--accent2));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05rem}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 260px);position:relative;z-index:1}
+.sidebar{background:rgba(15,20,36,.8);backdrop-filter:blur(10px);border-right:1px solid var(--border);
+padding:.8rem;overflow-y:auto;position:sticky;top:0;height:calc(100vh - 260px)}
+.sidebar h3{color:var(--accent2);font-size:.7rem;text-transform:uppercase;letter-spacing:.08rem;
+margin:1rem .5rem .4rem;font-weight:700}
+.search-box{width:100%;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--border);
+background:var(--bg2);color:var(--text);font-size:.8rem;margin-bottom:.8rem;transition:.2s}
+.search-box:focus{outline:none;border-color:var(--accent);box-shadow:var(--glow)}
+.nav-item{display:flex;align-items:center;gap:.5rem;padding:.55rem .7rem;border-radius:10px;
+color:var(--text);font-size:.8rem;cursor:pointer;transition:.2s;margin-bottom:.1rem}
+.nav-item:hover{background:var(--border);transform:translateX(3px)}
+.nav-item.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:var(--glow)}
+.nav-item .ni{font-size:1rem;width:20px;text-align:center}
+.main{padding:1.2rem;overflow-y:auto}
+.view{display:none}.view.active{display:block}
+.section-title{font-size:1.1rem;margin-bottom:.8rem;color:var(--text);display:flex;align-items:center;gap:.5rem}
+.section-title .count{font-size:.7rem;color:var(--muted);background:var(--border);padding:.2rem .6rem;border-radius:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.8rem}
+.app-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem;
+cursor:pointer;transition:.3s;position:relative;overflow:hidden}
+.app-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+background:linear-gradient(90deg,var(--accent3),var(--accent),var(--accent2));opacity:0;transition:.3s}
+.app-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 30px rgba(59,130,246,.12)}
+.app-card:hover::before{opacity:1}
+.app-card .icon{font-size:1.8rem;margin-bottom:.5rem;display:inline-block;filter:drop-shadow(0 0 8px rgba(59,130,246,.3))}
+.app-card .title{font-size:.95rem;font-weight:600;margin-bottom:.2rem;color:var(--text)}
+.app-card .desc{font-size:.72rem;color:var(--muted);line-height:1.4}
+.app-card .badge{position:absolute;top:.7rem;right:.7rem;font-size:.55rem;padding:.15rem .45rem;
+border-radius:20px;font-weight:600}
+.app-card .badge.get{background:rgba(16,185,129,.2);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.app-card .badge.post{background:rgba(139,92,246,.2);color:var(--accent2);border:1px solid rgba(139,92,246,.3)}
+.app-card .grp{font-size:.55rem;color:var(--accent3);margin-top:.5rem;text-transform:uppercase;letter-spacing:.05rem}
+.app-card.moat-card{border-color:var(--accent2);background:linear-gradient(135deg,var(--card) 60%,rgba(139,92,246,.08))}
+.app-card.moat-card::before{background:linear-gradient(90deg,var(--accent2),var(--pink),var(--accent3))}
+
+/* Chat */
+.chat-container{background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;height:calc(100vh - 360px);min-height:400px}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.8rem}
+.chat-msg{max-width:80%;padding:.8rem 1rem;border-radius:12px;font-size:.85rem;line-height:1.5}
+.chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.chat-msg.ai{align-self:flex-start;background:var(--card2);border:1px solid var(--border)}
+.chat-msg.ai .agent-name{font-size:.7rem;color:var(--accent3);font-weight:600;margin-bottom:.3rem}
+.chat-msg.ai .verdict{font-size:.65rem;color:var(--green);margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)}
+.chat-msg.ai .verdict.rejected{color:var(--red)}
+.chat-msg.ai .verdict.needs_revision{color:var(--yellow)}
+.chat-typing{align-self:flex-start;color:var(--muted);font-size:.8rem;font-style:italic}
+.chat-input-area{padding:.8rem;border-top:1px solid var(--border);display:flex;gap:.5rem}
+.chat-input{flex:1;padding:.7rem 1rem;border-radius:10px;border:1px solid var(--border);
+background:var(--bg2);color:var(--text);font-size:.85rem;font-family:inherit}
+.chat-input:focus{outline:none;border-color:var(--accent);box-shadow:var(--glow)}
+.chat-send{padding:.7rem 1.5rem;border-radius:10px;border:none;
+background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.85rem;
+cursor:pointer;transition:.2s;font-weight:600}
+.chat-send:hover{transform:translateY(-1px);box-shadow:var(--glow)}
+.chat-send:disabled{opacity:.5;cursor:not-allowed}
+.chat-options{display:flex;gap:.5rem;align-items:center;padding:.5rem .8rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)}
+.chat-options label{display:flex;align-items:center;gap:.3rem;cursor:pointer}
+.chat-options input[type=checkbox]{accent-color:var(--accent2)}
+
+/* Tool panel (for non-chat endpoints) */
+.tool-panel{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem}
+.tool-panel h3{font-size:1rem;color:var(--accent2);margin-bottom:.8rem}
+.tool-panel .field{margin-bottom:.6rem}
+.tool-panel .field label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:.2rem}
+.tool-panel input,.tool-panel textarea,.tool-panel select{
+width:100%;padding:.65rem .9rem;border-radius:10px;border:1px solid var(--border);
+background:var(--bg2);color:var(--text);font-size:.82rem;font-family:inherit}
+.tool-panel input:focus,.tool-panel textarea:focus{outline:none;border-color:var(--accent2)}
+.tool-panel textarea{min-height:80px;resize:vertical}
+.tool-panel .btn{display:inline-block;padding:.6rem 1.4rem;border-radius:10px;border:none;
+background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.82rem;
+cursor:pointer;transition:.2s;margin-right:.4rem;margin-top:.3rem;font-weight:600}
+.tool-panel .btn:hover{transform:translateY(-1px);box-shadow:var(--glow)}
+.tool-panel .btn.alt{background:var(--card2);border:1px solid var(--border);color:var(--text)}
+.tool-panel pre{margin-top:1rem;background:var(--bg);padding:1rem;border-radius:10px;
+overflow-x:auto;font-size:.75rem;color:var(--accent3);border:1px solid var(--border);max-height:350px;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word}
+.tool-panel hr{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.result-box{margin-top:1rem;background:var(--bg);padding:1rem;border-radius:10px;
+border:1px solid var(--border);font-size:.8rem;color:var(--text);max-height:350px;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word}
+.result-box.error{border-color:var(--red);color:var(--red)}
+.result-box.success{border-color:var(--green)}
+.result-box .http-status{font-size:.7rem;color:var(--muted);margin-bottom:.5rem}
+
+.footer{text-align:center;padding:1.5rem 1rem;border-top:1px solid var(--border);color:var(--muted);
+font-size:.7rem;position:relative;z-index:1}
+.footer .trident{color:var(--accent2);font-weight:600;font-size:.75rem}
+@media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{display:none}.header h1{font-size:1.6rem}.stats-bar{gap:1rem}}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div class="nebula"></div>
+<div class="header">
+<div class="third-eye"><div class="eo"></div><div class="ei"></div><div class="ep"></div></div>
+<h1>Unknown Verdict<span class="ver">v41.0</span></h1>
+<p class="tag">Cosmic Legal Intelligence — The Third Eye Sees All Law</p>
+<div class="stats-bar">
+<div class="stat"><div class="num">250</div><div class="label">Legal Agents</div></div>
+<div class="stat"><div class="num">15</div><div class="label">Verifiers</div></div>
+<div class="stat"><div class="num">68</div><div class="label">API Endpoints</div></div>
+<div class="stat"><div class="num">12</div><div class="label">Specializations</div></div>
+<div class="stat"><div class="num">11</div><div class="label">Moat Modules</div></div>
+<div class="stat"><div class="num" id="stat-learnings">0</div><div class="label">AI Learnings</div></div>
+</div>
+</div>
+<div class="layout">
+<div class="sidebar">
+<input type="text" class="search-box" id="search" placeholder="Search the cosmos..." onkeyup="filterApps()">
+<h3>Navigation</h3>
+<div class="nav-item active" onclick="showView('apps','all')"><span class="ni">🌌</span> All Apps</div>
+<div class="nav-item" onclick="showView('chat')"><span class="ni">💬</span> AI Counsel Chat</div>
+<div class="nav-item" onclick="showView('apps','g1')"><span class="ni">⚖️</span> Core Legal</div>
+<div class="nav-item" onclick="showView('apps','g2')"><span class="ni">📈</span> Markets & Trading</div>
+<div class="nav-item" onclick="showView('apps','g3')"><span class="ni">📰</span> Reports & News</div>
+<div class="nav-item" onclick="showView('apps','g4')"><span class="ni">🏆</span> Sports & Gov</div>
+<div class="nav-item" onclick="showView('apps','g5')"><span class="ni">🤖</span> Predictive AI</div>
+<div class="nav-item" onclick="showView('apps','g6')"><span class="ni">🔒</span> Privacy & Sec</div>
+<div class="nav-item" onclick="showView('apps','g7')"><span class="ni">💼</span> Finance/HR/RE</div>
+<div class="nav-item" onclick="showView('apps','g8')"><span class="ni">⚙️</span> Additional</div>
+<h3>🔱 Moat v41.0</h3>
+<div class="nav-item" onclick="showView('moat','moat-evolution')"><span class="ni">🧬</span> Self-Evolution</div>
+<div class="nav-item" onclick="showView('moat','moat-irac')"><span class="ni">⚖️</span> IRAC Reasoning</div>
+<div class="nav-item" onclick="showView('moat','moat-rag')"><span class="ni">📚</span> Dynamic RAG</div>
+<div class="nav-item" onclick="showView('moat','moat-judge')"><span class="ni">👨‍⚖️</span> Judge Evolution</div>
+<div class="nav-item" onclick="showView('moat','moat-predict')"><span class="ni">📊</span> Predictions</div>
+<div class="nav-item" onclick="showView('moat','moat-emotion')"><span class="ni">💖</span> Emotion AI</div>
+<div class="nav-item" onclick="showView('moat','moat-strategy')"><span class="ni">♟️</span> Strategy</div>
+<div class="nav-item" onclick="showView('moat','moat-vault')"><span class="ni">🔒</span> IP Vault</div>
+<div class="nav-item" onclick="showView('moat','moat-pricing')"><span class="ni">💰</span> Pricing</div>
+<div class="nav-item" onclick="showView('moat','moat-publish')"><span class="ni">✍️</span> Publishing</div>
+<div class="nav-item" onclick="showView('moat','moat-market')"><span class="ni">🏪</span> Marketplace</div>
+<h3>System</h3>
+<div class="nav-item" onclick="callGET('/api/moat/status')"><span class="ni">🔱</span> Moat Status</div>
+<div class="nav-item" onclick="callGET('/api/infinity/status')"><span class="ni">♾️</span> Infinity Status</div>
+<div class="nav-item" onclick="callGET('/api/agents/status')"><span class="ni">🤖</span> Agents Status</div>
+<div class="nav-item" onclick="callGET('/api/sarvam/status')"><span class="ni">🧠</span> Sarvam Status</div>
+<div class="nav-item" onclick="callGET('/api/health/compliance')"><span class="ni">🏥</span> Health Check</div>
+<div class="nav-item" onclick="window.open('/docs','_blank')"><span class="ni">📖</span> API Docs</div>
+</div>
+<div class="main">
+
+<!-- CHAT VIEW -->
+<div id="view-chat" class="view">
+<div class="section-title">💬 AI Counsel Chat — Sarvam 105B Powered</div>
+<div class="chat-container">
+<div class="chat-messages" id="chat-messages">
+<div class="chat-msg ai"><div class="agent-name">Unknown Verdict</div>Welcome! I'm your AI legal counsel powered by Sarvam 105B. I have 250 specialized agents, 15 quality verifiers, and an AI Judge. Ask me anything about Indian law — property disputes, criminal defense, corporate compliance, family matters, and more.</div>
+</div>
+<div class="chat-options">
+<label><input type="checkbox" id="use-rag" checked> Use RAG knowledge base</label>
+<label><input type="checkbox" id="show-verdict" checked> Show AI Judge verdict</label>
+</div>
+<div class="chat-input-area">
+<input type="text" class="chat-input" id="chat-input" placeholder="Ask about property law, IPC sections, divorce, corporate compliance..." onkeypress="if(event.key==='Enter')sendChat()">
+<button class="chat-send" id="chat-send" onclick="sendChat()">Send</button>
+</div>
+</div>
+</div>
+
+<!-- APPS GRID VIEW -->
+<div id="view-apps" class="view active">
+<div class="section-title" id="section-title">All Applications <span class="count">43 Apps</span></div>
+<div class="grid" id="grid"></div>
+</div>
+
+<!-- TOOL VIEW (for individual endpoint forms) -->
+<div id="view-tool" class="view">
+<div id="tool-content"></div>
+</div>
+
+<!-- MOAT VIEW -->
+<div id="view-moat" class="view">
+<div id="moat-content"></div>
+</div>
+
+<!-- RESULT VIEW -->
+<div id="view-result" class="view">
+<div class="section-title" id="result-title">Result</div>
+<div id="result-content"></div>
+<button class="chat-send" style="margin-top:1rem" onclick="history.back();showView('apps')">← Back</button>
+</div>
+
+</div>
+</div>
+<div class="footer">
+<span class="trident">🔱 TRIDENT — PERMANENT ASSET</span><br>
+⚖️ THE ADVOCACY — Global Law Firm · Unknown Verdict v41.0<br>
+<span style="opacity:.6">Powered by Sarvam AI · Neon Postgres · pgvector · Self-Evolving Intelligence</span>
+</div>
+<script>
+// ===== Starfield =====
+const cv=document.getElementById('starfield'),cx=cv.getContext('2d');let st=[],W,H;
+function rc(){W=cv.width=innerWidth;H=cv.height=innerHeight;st=Array.from({length:200},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5,vy:Math.random()*.3+.05,tw:Math.random()*6.28}))}
+rc();addEventListener('resize',rc);
+function anim(){cx.clearRect(0,0,W,H);st.forEach(s=>{s.tw+=.02;s.y+=s.vy;if(s.y>H)s.y=0;cx.beginPath();cx.arc(s.x,s.y,s.r,0,6.28);cx.fillStyle='rgba(200,210,255,'+(Math.abs(Math.sin(s.tw))*.8+.2)+')';cx.fill()});requestAnimationFrame(anim)}anim();
+
+// ===== App data =====
+const apps=[
+{g:'g1',icon:'⚖️',title:'AI Counsel Chat',desc:'Chat with Sarvam 105B-powered legal AI with 250 agents, 15 verifiers & AI Judge',badge:'POST',endpoint:'/api/chat',view:'chat'},
+{g:'g1',icon:'🔍',title:'Legal Research',desc:'Deep legal research with citations from RAG knowledge base',badge:'POST',endpoint:'/api/legal/research',fields:[{name:'query',type:'textarea',label:'Research query',placeholder:'e.g. What are the grounds for divorce under Hindu Marriage Act?'}]},
+{g:'g1',icon:'📝',title:'Legal Drafting',desc:'Draft contracts, notices, pleadings with AI assistance',badge:'POST',endpoint:'/api/legal/draft',fields:[{name:'document_type',type:'select',label:'Document type',options:['Legal Notice','Contract','Pleading','Affidavit','Petition','Opinion']},{name:'title',type:'text',label:'Title',placeholder:'e.g. Legal Notice for Property Recovery'},{name:'parties',type:'text',label:'Parties',placeholder:'e.g. John Doe vs State'},{name:'jurisdiction',type:'text',label:'Jurisdiction',value:'IN'}]},
+{g:'g1',icon:'📚',title:'Case Law Search',desc:'Search and analyze case law with precedents',badge:'GET',endpoint:'/api/legal/cases'},
+{g:'g1',icon:'🗂️',title:'Case Management',desc:'Full case management system with billing & hearings',badge:'GET',endpoint:'/api/legal/manage'},
+{g:'g1',icon:'🛡️',title:'Compliance Snapshot',desc:'GDPR, DPDPA, CCPA, HIPAA dashboard with scores',badge:'GET',endpoint:'/api/compliance/snapshot'},
+{g:'g1',icon:'🔎',title:'Compliance Scanner',desc:'Website compliance scanner for data protection',badge:'POST',endpoint:'/api/compliance/scan',fields:[{name:'url',type:'text',label:'Website URL',placeholder:'https://example.com'}]},
+{g:'g1',icon:'📡',title:'Compliance Monitor',desc:'Real-time compliance monitoring across systems',badge:'GET',endpoint:'/api/compliance/monitor'},
+{g:'g2',icon:'📊',title:'Trading Indices',desc:'NIFTY, SENSEX, Nasdaq, FTSE, Dubai live data',badge:'GET',endpoint:'/api/trading/indices'},
+{g:'g2',icon:'₿',title:'Crypto Prices',desc:'BTC, ETH, SOL and more cryptocurrency data',badge:'GET',endpoint:'/api/trading/crypto'},
+{g:'g2',icon:'📈',title:'Stock Details',desc:'Individual stock data with metrics & analysis',badge:'GET',endpoint:'/api/trading/market/RELIANCE'},
+{g:'g2',icon:'🌍',title:'Global Markets',desc:'All global indices, commodities & currencies',badge:'GET',endpoint:'/api/market/global'},
+{g:'g3',icon:'📄',title:'Report Generator',desc:'AI-generated market & legal reports with charts',badge:'POST',endpoint:'/api/reports/generate',fields:[{name:'report_type',type:'select',label:'Report type',options:['market','legal','compliance','case']},{name:'title',type:'text',label:'Title',placeholder:'e.g. Q3 2025 Market Analysis'},{name:'timeframe',type:'text',label:'Timeframe',placeholder:'e.g. last 30 days'}]},
+{g:'g3',icon:'📕',title:'PDF Export',desc:'Export reports to PDF format',badge:'POST',endpoint:'/api/reports/pdf',fields:[{name:'title',type:'text',label:'Report title',placeholder:'e.g. Legal Analysis Report'},{name:'content',type:'textarea',label:'Report content',placeholder:'Paste the content to convert to PDF...'}]},
+{g:'g3',icon:'📰',title:'Legal News',desc:'Live legal news from RSS feeds',badge:'GET',endpoint:'/api/news/real'},
+{g:'g3',icon:'🎯',title:'Personalized News',desc:'AI-curated news based on your interests',badge:'POST',endpoint:'/api/news/personalized',fields:[{name:'interests',type:'text',label:'Your interests',placeholder:'e.g. corporate law, GST, Supreme Court'}]},
+{g:'g4',icon:'🏏',title:'Cricket Scores',desc:'Live cricket scores & sports law insights',badge:'GET',endpoint:'/api/sports/cricket'},
+{g:'g4',icon:'👤',title:'Player Profile',desc:'Player contracts, endorsements & legal status',badge:'GET',endpoint:'/api/sports/player/1'},
+{g:'g4',icon:'🧭',title:'AI Governance',desc:'AI ethics & governance framework',badge:'GET',endpoint:'/api/governance/framework'},
+{g:'g4',icon:'📋',title:'Policy Generator',desc:'Generate AI governance policies for organizations',badge:'POST',endpoint:'/api/governance/policy',fields:[{name:'organization',type:'text',label:'Organization name',placeholder:'e.g. Acme Corp'},{name:'industry',type:'text',label:'Industry',placeholder:'e.g. Technology'},{name:'policy_type',type:'text',label:'Policy type',placeholder:'e.g. AI Usage Policy'}]},
+{g:'g5',icon:'⚖️',title:'Case Prediction',desc:'Predict case outcomes with confidence scores',badge:'POST',endpoint:'/api/predict/case',fields:[{name:'case_type',type:'select',label:'Case type',options:['civil','criminal','commercial','family','consumer']},{name:'jurisdiction',type:'text',label:'Jurisdiction',value:'IN'},{name:'facts',type:'textarea',label:'Case facts',placeholder:'Describe the case facts...'}]},
+{g:'g5',icon:'📉',title:'Market Prediction',desc:'Market trend prediction with indicators',badge:'POST',endpoint:'/api/predict/market',fields:[{name:'symbol',type:'text',label:'Stock symbol',placeholder:'e.g. RELIANCE'},{name:'timeframe',type:'text',label:'Timeframe',placeholder:'e.g. 30 days'}]},
+{g:'g5',icon:'⚠️',title:'Risk Assessment',desc:'Regulatory risk assessment by industry',badge:'POST',endpoint:'/api/predict/risk',fields:[{name:'industry',type:'text',label:'Industry',placeholder:'e.g. Fintech'},{name:'jurisdiction',type:'text',label:'Jurisdiction',value:'IN'}]},
+{g:'g5',icon:'🌐',title:'Web Training',desc:'Autonomous web training for RAG knowledge',badge:'POST',endpoint:'/api/train/web',fields:[{name:'topics',type:'text',label:'Topics (comma separated)',placeholder:'e.g. GST law, IPC sections'},{name:'url',type:'text',label:'URL to crawl (optional)',placeholder:'https://...'},{name:'max_pages',type:'text',label:'Max pages',value:'10'}]},
+{g:'g6',icon:'🔐',title:'DSAR Processing',desc:'Data Subject Access Request under GDPR/DPDP',badge:'POST',endpoint:'/api/privacy/dsar',fields:[{name:'request_type',type:'select',label:'Request type',options:['access','deletion','correction','portability']},{name:'data_subject_name',type:'text',label:'Data subject name',placeholder:'Full name'},{name:'data_subject_email',type:'text',label:'Email',placeholder:'email@example.com'},{name:'frameworks',type:'text',label:'Frameworks',value:'GDPR,DPDPA'}]},
+{g:'g6',icon:'🌴',title:'California DROP',desc:'California Data Broker Registry check',badge:'GET',endpoint:'/api/privacy/drop/check'},
+{g:'g6',icon:'🚨',title:'Security Alerts',desc:'Breach shield & cyber threat alerts',badge:'GET',endpoint:'/api/security/alerts'},
+{g:'g6',icon:'🛡️',title:'Vulnerability Scan',desc:'Security vulnerability scanning & assessment',badge:'POST',endpoint:'/api/security/scan',fields:[{name:'target',type:'text',label:'Target URL',placeholder:'https://example.com'},{name:'scan_type',type:'select',label:'Scan type',options:['quick','full','compliance']}]},
+{g:'g7',icon:'💰',title:'Wealth Manager',desc:'Stocks, portfolio management & financial data',badge:'GET',endpoint:'/api/finance/stocks'},
+{g:'g7',icon:'👥',title:'People Ops',desc:'Employment, payroll & labour compliance',badge:'GET',endpoint:'/api/hr/tasks'},
+{g:'g7',icon:'🏠',title:'Property Pro',desc:'Real estate valuation & RERA compliance',badge:'GET',endpoint:'/api/realestate/properties'},
+{g:'g7',icon:'🌐',title:'Global Counsel',desc:'Cross-border legal & international treaties',badge:'GET',endpoint:'/api/international/treaties'},
+{g:'g8',icon:'🏥',title:'Health Compliance',desc:'HIPAA & patient privacy compliance',badge:'GET',endpoint:'/api/health/compliance'},
+{g:'g8',icon:'📎',title:'Doc Intelligence',desc:'Document analysis & entity extraction',badge:'POST',endpoint:'/api/doc/intelligence',fields:[{name:'query',type:'textarea',label:'Query about the document',placeholder:'e.g. Extract key clauses and obligations'}]},
+{g:'g8',icon:'🔬',title:'Lens Scanner',desc:'Agent search or website compliance scan',badge:'POST',endpoint:'/api/lens/agents',fields:[{name:'query',type:'text',label:'Search query',placeholder:'e.g. property law agent'},{name:'top_k',type:'text',label:'Results limit',value:'5'}]},
+{g:'g8',icon:'♾️',title:'Infinity Status',desc:'System-wide infinite operation mode',badge:'GET',endpoint:'/api/infinity/status'},
+{g:'moat',icon:'🧬',title:'Self-Evolution',desc:'Agent learning, knowledge mesh, gap detection',badge:'POST',endpoint:'moat:moat-evolution',moat:true},
+{g:'moat',icon:'⚖️',title:'IRAC Reasoning',desc:'Issue-Rule-Application-Conclusion with precedents',badge:'POST',endpoint:'moat:moat-irac',moat:true},
+{g:'moat',icon:'📚',title:'Dynamic RAG',desc:'Auto-expanding knowledge with versioned judgments',badge:'POST',endpoint:'moat:moat-rag',moat:true},
+{g:'moat',icon:'👨‍⚖️',title:'Judge Evolution',desc:'AI Judge learns from every verdict',badge:'POST',endpoint:'moat:moat-judge',moat:true},
+{g:'moat',icon:'📊',title:'Predictive Analytics',desc:'Outcome, settlement, timeline, cost predictions',badge:'POST',endpoint:'moat:moat-predict',moat:true},
+{g:'moat',icon:'💖',title:'Emotion AI',desc:'Detects client emotion, adjusts tone',badge:'POST',endpoint:'moat:moat-emotion',moat:true},
+{g:'moat',icon:'♟️',title:'Strategy Generator',desc:'Winning strategies with opposing arguments',badge:'POST',endpoint:'moat:moat-strategy',moat:true},
+{g:'moat',icon:'🔒',title:'IP Vault',desc:'Immutable audit trails & forensic verification',badge:'GET',endpoint:'moat:moat-vault',moat:true},
+{g:'moat',icon:'💰',title:'Outcome Pricing',desc:'Value-driven pricing with ROI projections',badge:'POST',endpoint:'moat:moat-pricing',moat:true},
+{g:'moat',icon:'✍️',title:'Auto-Publishing',desc:'Articles, newsletters for advocacayalawfrim.in',badge:'POST',endpoint:'moat:moat-publish',moat:true},
+{g:'moat',icon:'🏪',title:'Marketplace',desc:'Agent marketplace, templates, matching',badge:'POST',endpoint:'moat:moat-market',moat:true},
+];
+const groupNames={g1:'Core Legal',g2:'Markets & Trading',g3:'Reports & News',g4:'Sports & Governance',g5:'Predictive AI',g6:'Privacy & Security',g7:'Finance/HR/RE/Intl',g8:'Additional Core',moat:'Moat v41.0 Intelligence'};
+
+// ===== View switching =====
+function showView(view,sub){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+if(view==='apps'){
+document.getElementById('view-apps').classList.add('active');
+renderGrid(sub||'all');
+}else if(view==='chat'){
+document.getElementById('view-chat').classList.add('active');
+}else if(view==='moat'){
+document.getElementById('view-moat').classList.add('active');
+renderMoat(sub);
+}else if(view==='tool'){
+document.getElementById('view-tool').classList.add('active');
+}else if(view==='result'){
+document.getElementById('view-result').classList.add('active');
+}
+}
+
+// ===== Grid rendering =====
+function renderGrid(filter){
+const grid=document.getElementById('grid');
+const filtered=filter==='all'?apps:apps.filter(a=>a.g===filter);
+grid.innerHTML=filtered.map(a=>{
+const isMoat=a.moat?'moat-card':'';
+const bc=a.badge==='GET'?'get':'post';
+const ep=a.endpoint||'';
+return '<div class="app-card '+isMoat+'" onclick="handleAppClick(\''+ep+'\',\''+a.badge+'\',\''+escape(a.title)+'\',\''+escape(a.desc||'')+'\')"><span class="badge '+bc+'">'+a.badge+'</span><div class="icon">'+a.icon+'</div><div class="title">'+a.title+'</div><div class="desc">'+a.desc+'</div><div class="grp">'+(groupNames[a.g]||'')+'</div></div>'
+}).join('');
+document.getElementById('section-title').innerHTML=(filter==='all'?'All Applications':groupNames[filter])+' <span class="count">'+filtered.length+' Apps</span>';
+}
+function filterApps(){
+const q=document.getElementById('search').value.toLowerCase();
+const filtered=apps.filter(a=>a.title.toLowerCase().includes(q)||a.desc.toLowerCase().includes(q));
+document.getElementById('grid').innerHTML=filtered.map(a=>{
+const isMoat=a.moat?'moat-card':'';
+const bc=a.badge==='GET'?'get':'post';
+return '<div class="app-card '+isMoat+'" onclick="handleAppClick(\''+a.endpoint+'\',\''+a.badge+'\',\''+escape(a.title)+'\',\''+escape(a.desc||'')+'\')"><span class="badge '+bc+'">'+a.badge+'</span><div class="icon">'+a.icon+'</div><div class="title">'+a.title+'</div><div class="desc">'+a.desc+'</div><div class="grp">'+(groupNames[a.g]||'')+'</div></div>'
+}).join('');
+document.getElementById('section-title').innerHTML='Search Results <span class="count">'+filtered.length+' Apps</span>';
+}
+
+// ===== App click handler =====
+function handleAppClick(endpoint,method,title,desc){
+title=unescape(title);desc=unescape(desc);
+if(endpoint.startsWith('chat')){showView('chat');return}
+if(endpoint.startsWith('moat:')){showView('moat',endpoint.replace('moat:',''));return}
+// Find the app definition
+var app=apps.find(a=>a.endpoint===endpoint);
+if(app&&app.view==='chat'){showView('chat');return}
+if(method==='GET'){
+callGET(endpoint,title);
+}else if(app&&app.fields){
+showToolForm(app);
+}else{
+callPOST(endpoint,{},title);
+}
+}
+
+// ===== Tool form (for POST endpoints with fields) =====
+function showToolForm(app){
+var html='<div class="tool-panel"><h3>'+app.icon+' '+app.title+'</h3><p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">'+app.desc+'</p>';
+app.fields.forEach(function(f){
+var val=f.value?' value="'+f.value+'"':'';
+var ph=f.placeholder?' placeholder="'+f.placeholder+'"':'';
+if(f.type==='textarea'){
+html+='<div class="field"><label>'+f.label+'</label><textarea id="field_'+f.name+'"'+ph+'></textarea></div>';
+}else if(f.type==='select'){
+html+='<div class="field"><label>'+f.label+'</label><select id="field_'+f.name+'">';
+f.options.forEach(function(o){html+='<option value="'+o+'">'+o+'</option>'});
+html+='</select></div>';
+}else{
+html+='<div class="field"><label>'+f.label+'</label><input type="text" id="field_'+f.name+'"'+val+ph+'></div>';
+}
+});
+html+='<button class="btn" onclick="submitToolForm(\''+app.endpoint+'\')">▶ Execute</button>';
+html+='<button class="btn alt" onclick="showView(\'apps\')">← Back</button>';
+html+='<div id="tool-result"></div></div>';
+document.getElementById('tool-content').innerHTML=html;
+showView('tool');
+}
+function submitToolForm(endpoint){
+var app=apps.find(a=>a.endpoint===endpoint);
+if(!app)return;
+var body={};
+app.fields.forEach(function(f){
+var el=document.getElementById('field_'+f.name);
+if(el){body[f.name]=el.value}
+});
+// Special handling for train/web
+if(endpoint==='/api/train/web'&&body.topics){
+body.topics=body.topics.split(',').map(s=>s.trim()).filter(Boolean);
+}
+if(endpoint==='/api/privacy/dsar'&&body.frameworks){
+body.frameworks=body.frameworks.split(',').map(s=>s.trim());
+}
+var resultDiv=document.getElementById('tool-result');
+resultDiv.innerHTML='<div class="result-box">⏳ Loading...</div>';
+fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+.then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+.then(function(res){
+var cls=res.status>=200&&res.status<300?'success':'error';
+resultDiv.innerHTML='<div class="result-box '+cls+'"><div class="http-status">HTTP '+res.status+'</div>'+formatJSON(res.data)+'</div>';
+})
+.catch(function(e){
+resultDiv.innerHTML='<div class="result-box error"><div class="http-status">Error</div>'+e.message+'</div>';
+});
+}
+
+// ===== GET endpoint call =====
+function callGET(endpoint,title){
+var t=title||endpoint;
+showResult(t);
+fetch(endpoint)
+.then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+.then(function(res){
+displayResult(t,res.status,res.data);
+})
+.catch(function(e){displayResult(t,0,{error:e.message})});
+}
+
+// ===== POST endpoint call (no fields) =====
+function callPOST(endpoint,body,title){
+var t=title||endpoint;
+showResult(t);
+fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+.then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+.then(function(res){displayResult(t,res.status,res.data);
+})
+.catch(function(e){displayResult(t,0,{error:e.message})});
+}
+
+// ===== Result display =====
+function showResult(title){
+document.getElementById('result-title').textContent=title;
+document.getElementById('result-content').innerHTML='<div class="result-box">⏳ Loading...</div>';
+showView('result');
+}
+function displayResult(title,status,data){
+var cls=status>=200&&status<300?'success':'error';
+document.getElementById('result-title').textContent=title;
+document.getElementById('result-content').innerHTML='<div class="result-box '+cls+'"><div class="http-status">HTTP '+status+(status>=200&&status<300?' ✓':'')+'</div>'+formatJSON(data)+'</div><button class="chat-send" style="margin-top:1rem" onclick="showView(\'apps\')">← Back to Apps</button>';
+}
+function formatJSON(data){
+if(typeof data==='string')return data;
+try{return JSON.stringify(data,null,2)}catch(e){return String(data)}
+}
+
+// ===== Chat =====
+var conversationId='';
+var chatHistory=[];
+function sendChat(){
+var input=document.getElementById('chat-input');
+var msg=input.value.trim();
+if(!msg)return;
+input.value='';
+var sendBtn=document.getElementById('chat-send');
+sendBtn.disabled=true;
+var useRag=document.getElementById('use-rag').checked;
+var showVerdict=document.getElementById('show-verdict').checked;
+// Add user message
+addChatMsg('user',msg);
+// Add typing indicator
+var typing=addChatMsg('typing','Agent is thinking...');
+var body={message:msg,use_rag:useRag,history:chatHistory};
+if(conversationId)body.conversation_id=conversationId;
+fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+.then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+.then(function(res){
+typing.remove();
+if(res.status===200&&res.data.response){
+conversationId=res.data.conversation_id||conversationId;
+chatHistory.push({role:'user',content:msg});
+chatHistory.push({role:'assistant',content:res.data.response});
+var html='<div class="agent-name">'+(res.data.agent_name||'AI Agent')+(res.data.specialization?' · '+res.data.specialization:'')+'</div>';
+html+=res.data.response.replace(/\n/g,'<br>');
+if(showVerdict&&res.data.verdict){
+var v=res.data.verdict;
+var vc=v.verdict_type==='approved'?'':(v.verdict_type==='rejected'?' rejected':' needs_revision');
+html+='<div class="verdict'+vc+'">👨‍⚖️ Judge: '+v.verdict_type+' (score: '+(v.score||0).toFixed(2)+')'+(v.appeal_prediction?' · Appeal: '+v.appeal_prediction:'')+'</div>';
+}
+if(res.data.rag_sources&&res.data.rag_sources.length){
+html+='<div style="font-size:.65rem;color:var(--muted);margin-top:.3rem">📚 Sources: '+res.data.rag_sources.map(function(s){return s.title}).join(', ')+'</div>';
+}
+addChatMsg('ai',html);
+}else{
+addChatMsg('ai','<div class="agent-name">Error</div>Sorry, I encountered an error (HTTP '+res.status+'). '+(res.data.detail||res.data.error||'Please try again.')+'</div>');
+}
+})
+.catch(function(e){
+typing.remove();
+addChatMsg('ai','<div class="agent-name">Error</div>Connection failed: '+e.message+'</div>');
+})
+.finally(function(){sendBtn.disabled=false;input.focus()});
+}
+function addChatMsg(type,html){
+var container=document.getElementById('chat-messages');
+var div=document.createElement('div');
+div.className='chat-msg '+type;
+if(type==='typing'){div.className='chat-typing';div.textContent=html}
+else{div.innerHTML=html}
+container.appendChild(div);
+container.scrollTop=container.scrollHeight;
+return div;
+}
+
+// ===== Moat panels =====
+function renderMoat(panelId){
+var panels={
+'moat-evolution':'<div class="tool-panel"><h3>🧬 Record Interaction Learning</h3><div class="field"><label>User query</label><textarea id="ev-query" placeholder="User query..."></textarea></div><div class="field"><label>Agent response</label><textarea id="ev-response" placeholder="Agent response..." style="min-height:60px"></textarea></div><div class="field"><label>Agent ID</label><input type="text" id="ev-agent" value="agent-001"></div><div class="field"><label>Outcome</label><select id="ev-outcome"><option value="success">Success</option><option value="failure">Failure</option><option value="neutral">Neutral</option></select></div><button class="btn" onclick="moatPost(\'evolution/record\',{agent_id:val(\'ev-agent\'),query:val(\'ev-query\'),response:val(\'ev-response\'),outcome:val(\'ev-outcome\')})">🧬 Record Learning</button><hr><h3>Recall Past Learnings</h3><div class="field"><input type="text" id="ev-recall" placeholder="Search past learnings..."></div><button class="btn" onclick="moatPost(\'evolution/recall\',{query:val(\'ev-recall\'),top_k:5})">🔍 Recall</button><button class="btn alt" onclick="moatPost(\'evolution/mesh\',{query:val(\'ev-recall\'),top_k:8})">🌐 Mesh Knowledge</button><button class="btn alt" onclick="moatPost(\'evolution/detect-gap\',{query:val(\'ev-recall\'),agent_id:val(\'ev-agent\'),confidence:0.4})">⚠️ Detect Gap</button><div id="moat-result"></div></div>',
+'moat-irac':'<div class="tool-panel"><h3>⚖️ IRAC Legal Reasoning</h3><div class="field"><label>Case summary</label><textarea id="irac-case" placeholder="Enter case summary..." style="min-height:100px"></textarea></div><div class="field"><label>Jurisdiction</label><input type="text" id="irac-jur" value="IN"></div><button class="btn" onclick="moatPost(\'irac/reason\',{case_summary:val(\'irac-case\'),jurisdiction:val(\'irac-jur\')})">⚖️ Generate IRAC</button><button class="btn alt" onclick="moatPost(\'irac/cross-jurisdiction\',{case_summary:val(\'irac-case\'),jurisdictions:[\'IN\',\'US\',\'UK\']})">🌍 Cross-Jurisdiction</button><button class="btn alt" onclick="moatPost(\'irac/search\',{query:val(\'irac-case\'),top_k:10})">🔍 Search Patterns</button><div id="moat-result"></div></div>',
+'moat-rag':'<div class="tool-panel"><h3>📚 Dynamic RAG</h3><div class="field"><label>Document text</label><textarea id="rag-content" placeholder="Paste legal document text..." style="min-height:120px"></textarea></div><div class="field"><label>Document title</label><input type="text" id="rag-title"></div><div class="field"><label>Citation (optional)</label><input type="text" id="rag-citation"></div><button class="btn" onclick="moatPost(\'rag/add\',{content:val(\'rag-content\'),title:val(\'rag-title\'),citation:val(\'rag-citation\')})">📚 Index Document</button><hr><h3>Search Knowledge Base</h3><div class="field"><input type="text" id="rag-search" placeholder="Search legal knowledge..."></div><button class="btn alt" onclick="moatPost(\'rag/search\',{query:val(\'rag-search\'),top_k:8})">🔍 Search</button><button class="btn alt" onclick="moatGet(\'rag/crawl\')">🌐 Auto-Crawl</button><div id="moat-result"></div></div>',
+'moat-judge':'<div class="tool-panel"><h3>👨‍⚖️ AI Judge</h3><div class="field"><label>Case summary</label><textarea id="jd-case" placeholder="Case summary..." style="min-height:80px"></textarea></div><div class="field"><label>Agent response to evaluate</label><textarea id="jd-response" placeholder="Agent response..." style="min-height:80px"></textarea></div><button class="btn" onclick="moatPost(\'judge/verdict\',{case_summary:val(\'jd-case\'),agent_response:val(\'jd-response\')})">👨‍⚖️ Deliver Verdict</button><hr><button class="btn alt" onclick="moatGet(\'judge/stats\')">📊 Judge Evolution Stats</button><div id="moat-result"></div></div>',
+'moat-predict':'<div class="tool-panel"><h3>📊 Predictive Analytics</h3><div class="field"><label>Case summary</label><textarea id="pr-case" placeholder="Case summary..." style="min-height:80px"></textarea></div><div class="field"><label>Case type</label><select id="pr-type"><option value="civil">Civil</option><option value="criminal">Criminal</option><option value="commercial">Commercial</option><option value="family">Family</option><option value="consumer">Consumer</option></select></div><button class="btn" onclick="moatPost(\'predict/outcome\',{case_summary:val(\'pr-case\'),case_type:val(\'pr-type\')})">📊 Predict Outcome</button><button class="btn alt" onclick="moatPost(\'predict/settlement\',{case_summary:val(\'pr-case\'),text:val(\'pr-case\')})">🤝 Settlement</button><button class="btn alt" onclick="moatPost(\'predict/timeline\',{case_summary:val(\'pr-case\'),case_type:val(\'pr-type\')})">⏱️ Timeline</button><button class="btn alt" onclick="moatPost(\'predict/cost\',{case_summary:val(\'pr-case\'),case_type:val(\'pr-type\')})">💰 Cost</button><div id="moat-result"></div></div>',
+'moat-emotion':'<div class="tool-panel"><h3>💖 Emotion AI</h3><div class="field"><label>Client message</label><textarea id="em-text" placeholder="e.g. I am very worried about my court case tomorrow..." style="min-height:100px"></textarea></div><button class="btn" onclick="moatPost(\'emotion/analyze\',{client_text:val(\'em-text\')})">💖 Analyze & Respond</button><div id="moat-result"></div></div>',
+'moat-strategy':'<div class="tool-panel"><h3>♟️ Strategy Generator</h3><div class="field"><label>Case summary</label><textarea id="st-case" placeholder="Case summary..." style="min-height:100px"></textarea></div><button class="btn" onclick="moatPost(\'strategy/generate\',{case_summary:val(\'st-case\')})">♟️ Generate Strategy</button><div id="moat-result"></div></div>',
+'moat-vault':'<div class="tool-panel"><h3>🔒 IP Vault</h3><button class="btn" onclick="moatGet(\'vault/audit\')">📋 View Audit Trail</button><button class="btn alt" onclick="moatGet(\'vault/inventory\')">💎 IP Inventory</button><div id="moat-result"></div></div>',
+'moat-pricing':'<div class="tool-panel"><h3>💰 Pricing Engine</h3><div class="field"><label>Case summary</label><textarea id="pc-case" placeholder="Case summary..." style="min-height:80px"></textarea></div><button class="btn" onclick="moatPost(\'pricing/case\',{case_summary:val(\'pc-case\')})">💰 Generate Pricing</button><button class="btn alt" onclick="moatPost(\'pricing/value-report\',{case_summary:val(\'pc-case\'),text:val(\'pc-case\')})">📊 Value Report</button><div id="moat-result"></div></div>',
+'moat-publish':'<div class="tool-panel"><h3>✍️ Auto-Publishing</h3><div class="field"><label>Article topic</label><input type="text" id="pu-topic" placeholder="e.g. DPDP Act 2023 compliance"></div><button class="btn" onclick="moatPost(\'publishing/article\',{topic:val(\'pu-topic\'),keywords:[]})">✍️ Generate Article</button><hr><div class="field"><label>Newsletter topics (comma separated)</label><input type="text" id="pu-topics"></div><button class="btn alt" onclick="moatNewsletter()">📰 Generate Newsletter</button><hr><button class="btn alt" onclick="moatGet(\'publishing/drafts\')">📂 List Drafts</button><div id="moat-result"></div></div>',
+'moat-market':'<div class="tool-panel"><h3>🏪 Marketplace</h3><button class="btn" onclick="moatGet(\'marketplace/agents\')">🤖 Agent Marketplace</button><button class="btn alt" onclick="moatGet(\'marketplace/templates\')">📄 Legal Templates</button><hr><div class="field"><label>Case type</label><input type="text" id="mp-type" placeholder="e.g. property"></div><button class="btn" onclick="moatPost(\'marketplace/match\',{case_type:val(\'mp-type\')})">🎯 Find Match</button><div id="moat-result"></div></div>'
+};
+document.getElementById('moat-content').innerHTML=panels[panelId]||'<p>Panel not found</p>';
+}
+function val(id){var el=document.getElementById(id);return el?el.value:''}
+function moatPost(path,body){
+var rd=document.getElementById('moat-result');
+if(!rd)rd=document.getElementById('tool-result');
+if(!rd)return;
+rd.innerHTML='<div class="result-box">⏳ Loading...</div>';
+fetch('/api/moat/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+.then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+.then(function(res){var cls=res.status>=200&&res.status<300?'success':'error';rd.innerHTML='<div class="result-box '+cls+'"><div class="http-status">HTTP '+res.status+'</div>'+formatJSON(res.data)+'</div>'})
+.catch(function(e){rd.innerHTML='<div class="result-box error">'+e.message+'</div>'});
+}
+function moatGet(path){
+var rd=document.getElementById('moat-result');
+if(!rd)rd=document.getElementById('tool-result');
+if(!rd)return;
+rd.innerHTML='<div class="result-box">⏳ Loading...</div>';
+fetch('/api/moat/'+path)
+.then(function(r){return r.json().then(function(d){return{status:r.status,data:d}})})
+.then(function(res){var cls=res.status>=200&&res.status<300?'success':'error';rd.innerHTML='<div class="result-box '+cls+'"><div class="http-status">HTTP '+res.status+'</div>'+formatJSON(res.data)+'</div>'})
+.catch(function(e){rd.innerHTML='<div class="result-box error">'+e.message+'</div>'});
+}
+function moatNewsletter(){
+var topics=val('pu-topics').split(',').map(function(s){return s.trim()}).filter(Boolean);
+moatPost('publishing/newsletter',{topics:topics.length?topics:['DPDP Act 2023','Supreme Court rulings']});
+}
+
+// ===== Init =====
+function loadMoatStatus(){
+fetch('/api/moat/status').then(function(r){return r.json()}).then(function(d){
+if(d&&d.db){document.getElementById('stat-learnings').textContent=(d.db.moat_learnings||0).toLocaleString();}
+}).catch(function(){document.getElementById('stat-learnings').textContent='—';});
+}
+loadMoatStatus();setInterval(loadMoatStatus,15000);renderGrid('all');
+</script>
+</body>
+</html>
