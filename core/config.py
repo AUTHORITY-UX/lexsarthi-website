@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import os
 from functools import lru_cache
-from typing import List, Optional
+from typing import List
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -72,9 +72,8 @@ class Settings(BaseSettings):
     # ── Admin / JWT ──
     ADMIN_SECRET: str = ""
     ADMIN_KEY: str = ""
-    JWT_SECRET: str = "change-me-in-production"
+    JWT_SECRET: str = ""
     JWR_SECRET: str = ""
-    SECRET_KEY: str = "change-me-in-production"  # Added this
 
     # ── LLM API keys (6 providers) ──
     SARVAM_API_KEY: str = ""
@@ -154,8 +153,16 @@ class Settings(BaseSettings):
 
     @property
     def jwt_signing_key(self) -> str:
-        """JWT signing key - fallback chain"""
-        return self.JWT_SECRET or self.JWR_SECRET or self.SECRET_KEY or "change-me-in-production"
+        """JWT signing key - uses ADMIN_SECRET as fallback since you already have it"""
+        # Use ADMIN_SECRET as the primary JWT signing key since it exists
+        if self.ADMIN_SECRET:
+            return self.ADMIN_SECRET
+        if self.JWT_SECRET:
+            return self.JWT_SECRET
+        if self.JWR_SECRET:
+            return self.JWR_SECRET
+        # Ultimate fallback - but shouldn't happen since you have ADMIN_SECRET
+        return "change-me-in-production"
 
 
 @lru_cache(maxsize=1)
@@ -169,7 +176,7 @@ def get_settings() -> Settings:
         return Settings(
             DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict"),
             REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
-            SECRET_KEY=os.getenv("SECRET_KEY", "fallback-secret-key"),
+            ADMIN_SECRET=os.getenv("ADMIN_SECRET", "fallback-secret"),
             TARGETED_SEARCH_DOMAINS=["https://www.indiacode.nic.in"],
         )
 
