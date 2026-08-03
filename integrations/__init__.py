@@ -248,3 +248,4 @@ async def capture_interaction(
     except Exception as e:
         log.debug(f"capture_interaction error: {e}")
         return None
+ 
