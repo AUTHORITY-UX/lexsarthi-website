@@ -556,7 +556,26 @@ class VerifierRegistry:
 
     def verify_response(self, response: str, context: Optional[dict] = None) -> List[VerificationResult]:
         """Run all enabled verifiers on a response."""
+        # Guard against None/empty responses — don't crash the pipeline
+        if response is None:
+            response = ""
+        if not isinstance(response, str):
+            response = str(response) if response else ""
         results: List[VerificationResult] = []
+        # If response is empty, skip verification — all verifiers will fail on .lower() anyway
+        if not response.strip():
+            for verifier in self.verifiers.values():
+                if verifier.enabled:
+                    results.append(VerificationResult(
+                        verifier_id=verifier.verifier_id,
+                        verifier_name=verifier.name,
+                        verifier_type=verifier.verifier_type,
+                        passed=False,
+                        score=0.0,
+                        details="Skipped: empty response",
+                        issues=["Response was empty — verification skipped"],
+                    ))
+            return results
         for verifier in self.verifiers.values():
             if verifier.enabled:
                 try:
