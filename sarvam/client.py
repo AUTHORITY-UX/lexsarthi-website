@@ -16,7 +16,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional
 
 import httpx
 
-from unknown_verdict.config import settings
+from ..config import settings
 
 
 class SarvamModel(str, Enum):
@@ -156,14 +156,21 @@ class SarvamClient:
                     data = resp.json()
                     content = ""
                     if "choices" in data and data["choices"]:
-                        content = data["choices"][0].get("message", {}).get("content", "")
+                        msg = data["choices"][0].get("message", {})
+                        content = msg.get("content", "") or ""
+                    # Sarvam sometimes returns null content on timeout — convert to empty string
+                    if content is None:
+                        content = ""
                     usage = data.get("usage", {})
+                    # If content is empty, treat as a soft failure
+                    is_success = bool(content and content.strip())
                     response = SarvamResponse(
-                        content=content,
+                        content=content or "",
                         model=request.model.value,
                         usage=usage,
                         latency_ms=latency,
-                        success=True,
+                        success=is_success,
+                        error=None if is_success else "Empty response from Sarvam API",
                         raw=data,
                     )
                     self.usage.record(response)
