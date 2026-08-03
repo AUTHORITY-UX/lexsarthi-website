@@ -1,2 +1,3 @@
-"""unknown_verdict package root."""
+"""Unknown Verdict v41.0"""
+
 
