@@ -5,8 +5,10 @@ Central configuration for Unknown Verdict v41.0.
 """
 from __future__ import annotations
 
+import json
+import os
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,12 +22,30 @@ def _as_bool(v: object) -> bool:
     return str(v).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _as_list(v: object) -> List[str]:
+def _safe_json_parse(v: object) -> List[str]:
+    """Safely parse JSON or return empty list"""
     if not v:
         return []
-    if isinstance(v, (list, tuple)):
+    if isinstance(v, list):
         return [str(x).strip() for x in v if str(x).strip()]
-    return [x.strip() for x in str(v).split(",") if x.strip()]
+    if isinstance(v, str):
+        v = v.strip()
+        if not v:
+            return []
+        # Try JSON parse
+        try:
+            parsed = json.loads(v)
+            if isinstance(parsed, list):
+                return [str(x).strip() for x in parsed if str(x).strip()]
+            if isinstance(parsed, str):
+                return [parsed.strip()]
+        except json.JSONDecodeError:
+            # Try comma-separated
+            if "," in v:
+                return [x.strip() for x in v.split(",") if x.strip()]
+            # Single value
+            return [v]
+    return []
 
 
 class Settings(BaseSettings):
@@ -54,6 +74,7 @@ class Settings(BaseSettings):
     ADMIN_KEY: str = ""
     JWT_SECRET: str = "change-me-in-production"
     JWR_SECRET: str = ""
+    SECRET_KEY: str = "change-me-in-production"  # Added this
 
     # ── LLM API keys (6 providers) ──
     SARVAM_API_KEY: str = ""
@@ -108,7 +129,7 @@ class Settings(BaseSettings):
     @field_validator("TARGETED_SEARCH_DOMAINS", mode="before")
     @classmethod
     def _coerce_list(cls, v):
-        return _as_list(v)
+        return _safe_json_parse(v)
 
     # ── Convenience properties ──
     @property
@@ -134,12 +155,23 @@ class Settings(BaseSettings):
     @property
     def jwt_signing_key(self) -> str:
         """JWT signing key - fallback chain"""
-        return self.JWT_SECRET or self.JWR_SECRET or "change-me-in-production"
+        return self.JWT_SECRET or self.JWR_SECRET or self.SECRET_KEY or "change-me-in-production"
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except Exception as e:
+        # If settings fail, create with environment variables directly
+        import logging
+        logging.warning(f"Settings loading failed: {e}. Using fallback.")
+        return Settings(
+            DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict"),
+            REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
+            SECRET_KEY=os.getenv("SECRET_KEY", "fallback-secret-key"),
+            TARGETED_SEARCH_DOMAINS=["https://www.indiacode.nic.in"],
+        )
 
 
 settings = get_settings()
