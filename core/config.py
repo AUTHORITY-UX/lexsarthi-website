@@ -1,156 +1,153 @@
-"""
-core/config.py
-==============
-Central configuration for Unknown Verdict v41.0.
-
-All 25 HF Space secrets are read from the environment via pydantic-settings.
-Missing non-critical secrets degrade gracefully instead of crashing on import.
-
-Secrets wired:
-  DATABASE_URL, REDIS_URL, ENABLE_WEB_SEARCH, ENABLE_TARGETED_SEARCH,
-  TARGETED_SEARCH_DOMAINS, ADMIN_SECRET, USE_VERDICT_ENGINE, VERDICT_ENGINE_MODE,
-  OPENAI_API_KEY, LLAMA_CLOUD_API_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET,
-  GROQ_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY, ADMIN_KEY,
-  JWR_SECRET, JWT_SECRET, SERPAPI_KEY, LINKEDIN_ACCESS_TOKEN,
-  LINKEDIN_USER_ID, DEEPSEEK_API_KEY, GITHUB_TOKEN, SARVAM_API_KEY
-"""
-
-from __future__ import annotations
-
-from functools import lru_cache
-from typing import List
-
+# core/config.py - Fixed version
+import os
+import json
+from typing import List, Optional, Dict, Any
+from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-def _as_bool(v: object) -> bool:
-    if isinstance(v, bool):
-        return v
-    if v is None:
-        return False
-    return str(v).strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _as_list(v: object) -> List[str]:
-    if not v:
-        return []
-    if isinstance(v, (list, tuple)):
-        return [str(x).strip() for x in v if str(x).strip()]
-    return [x.strip() for x in str(v).split(",") if x.strip()]
-
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
+    # App
+    APP_NAME: str = "Unknown Verdict v41.0"
+    APP_VERSION: str = "41.0"
+    DEBUG: bool = False
+    ENVIRONMENT: str = "production"
+
+    # Database
+    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    REDIS_URL: str = Field(..., env="REDIS_URL")
+
+    # Secrets
+    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    # LLM Providers
+    SARVAM_API_KEY: Optional[str] = Field(None, env="SARVAM_API_KEY")
+    SARVAM_BASE_URL: str = "https://api.sarvam.ai"
+    SARVAM_MODEL_105B: str = "sarvam-105b"
+    SARVAM_MODEL_30B: str = "sarvam-30b"
+
+    OPENAI_API_KEY: Optional[str] = Field(None, env="OPENAI_API_KEY")
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4"
+
+    GEMINI_API_KEY: Optional[str] = Field(None, env="GEMINI_API_KEY")
+    GEMINI_MODEL: str = "gemini-pro"
+
+    GROQ_API_KEY: Optional[str] = Field(None, env="GROQ_API_KEY")
+    GROQ_MODEL: str = "llama2-70b"
+
+    DEEPSEEK_API_KEY: Optional[str] = Field(None, env="DEEPSEEK_API_KEY")
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+
+    OPENROUTER_API_KEY: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_MODEL: str = "meta-llama/llama-3-70b-instruct"
+
+    # Moat configuration
+    MOAT_ENABLED: bool = True
+    MOAT_UPDATE_INTERVAL: int = 3600
+
+    # Rate Limiting
+    RATE_LIMIT_REQUESTS: int = 100
+    RATE_LIMIT_PERIOD: int = 60
+
+    # Features
+    ENABLE_STREAMING: bool = True
+    ENABLE_CACHING: bool = True
+    ENABLE_AUTH: bool = True
+
+    # JSON fields - handle gracefully if not set
+    TARGETED_SEARCH_DOMAINS: List[str] = Field(
+        default_factory=lambda: [
+            "https://www.indiacode.nic.in",
+            "https://www.sci.gov.in",
+            "https://legalaffairs.gov.in"
+        ],
+        env="TARGETED_SEARCH_DOMAINS"
     )
 
-    # ── Core infrastructure ──
-    DATABASE_URL: str = "postgresql://user:pass@localhost:5432/unknown_verdict"
-    REDIS_URL: str = "redis://localhost:6379/0"
+    ALLOWED_ORIGINS: List[str] = Field(
+        default_factory=lambda: ["*"],
+        env="ALLOWED_ORIGINS"
+    )
 
-    # ── Feature toggles ──
-    ENABLE_WEB_SEARCH: bool = False
-    ENABLE_TARGETED_SEARCH: bool = False
-    TARGETED_SEARCH_DOMAINS: List[str] = Field(default_factory=list)
-
-    # ── Verdict engine ──
-    USE_VERDICT_ENGINE: bool = False
-    VERDICT_ENGINE_MODE: str = "balanced"  # strict | balanced | lenient
-
-    # ── Admin / JWT ──
-    ADMIN_SECRET: str = ""
-    ADMIN_KEY: str = ""
-    JWT_SECRET: str = "change-me-in-production"
-    JWR_SECRET: str = ""
-
-    # ── LLM API keys (6 providers) ──
-    SARVAM_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
-    GROQ_API_KEY: str = ""
-    DEEPSEEK_API_KEY: str = ""
-    OPENROUTER_API_KEY: str = ""
-
-    # ── Search / parsing ──
-    SERPAPI_KEY: str = ""
-    LLAMA_CLOUD_API_KEY: str = ""
-
-    # ── Payments ──
-    RAZORPAY_KEY_ID: str = ""
-    RAZORPAY_KEY_SECRET: str = ""
-
-    # ── Integrations ──
-    GITHUB_TOKEN: str = ""
-    LINKEDIN_ACCESS_TOKEN: str = ""
-    LINKEDIN_USER_ID: str = ""
-
-    # ── Runtime tuning ──
-    APP_NAME: str = "Unknown Verdict"
-    APP_VERSION: str = "41.0"
-    ENVIRONMENT: str = "production"
-    LOG_LEVEL: str = "INFO"
-
-    # LLM defaults — tuned to kill the 100s latency
-    LLM_TIMEOUT_SECONDS: int = 30
-    LLM_MAX_TOKENS_DEFAULT: int = 1024
-    LLM_MAX_TOKENS_CHAT: int = 512
-    LLM_MAX_TOKENS_COMPLEX: int = 2048
-    LLM_TEMPERATURE: float = 0.3
-    LLM_STREAM_ENABLED: bool = True
-
-    # Cache
-    CACHE_TTL_SECONDS: int = 3600
-    CACHE_PREFIX: str = "uv:cache:"
-
-    # Rate limiting
-    RATE_LIMIT_REQUESTS: int = 100
-    RATE_LIMIT_WINDOW_SECONDS: int = 60
-
-    # ── Validators ──
-    @field_validator("ENABLE_WEB_SEARCH", "ENABLE_TARGETED_SEARCH",
-                     "USE_VERDICT_ENGINE", mode="before")
-    @classmethod
-    def _coerce_bool(cls, v):
-        return _as_bool(v)
-
+    # For backward compatibility with old JSON parsing
     @field_validator("TARGETED_SEARCH_DOMAINS", mode="before")
     @classmethod
-    def _coerce_list(cls, v):
-        return _as_list(v)
+    def parse_json_field(cls, v):
+        """Parse JSON string or return default if invalid"""
+        if v is None:
+            return cls.model_fields["TARGETED_SEARCH_DOMAINS"].default
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+                # If it's a single string, wrap in list
+                if isinstance(parsed, str):
+                    return [parsed]
+            except json.JSONDecodeError:
+                # If it's a comma-separated string, split it
+                if "," in v:
+                    return [item.strip() for item in v.split(",")]
+                # Otherwise, return as single-item list
+                return [v]
+        return v
 
-    # ── Convenience properties ──
-    @property
-    def available_llm_providers(self) -> List[str]:
-        mapping = [
-            ("sarvam", self.SARVAM_API_KEY),
-            ("openai", self.OPENAI_API_KEY),
-            ("gemini", self.GEMINI_API_KEY),
-            ("groq", self.GROQ_API_KEY),
-            ("deepseek", self.DEEPSEEK_API_KEY),
-            ("openrouter", self.OPENROUTER_API_KEY),
-        ]
-        return [name for name, key in mapping if key]
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_json_field_origins(cls, v):
+        """Parse JSON string or return default if invalid"""
+        if v is None:
+            return ["*"]
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+                if isinstance(parsed, str):
+                    return [parsed]
+            except json.JSONDecodeError:
+                if "," in v:
+                    return [item.strip() for item in v.split(",")]
+                return [v]
+        return v
 
-    @property
-    def is_production(self) -> bool:
-        return self.ENVIRONMENT.lower() == "production"
-
-    @property
-    def admin_keys(self) -> List[str]:
-        return [k for k in (self.ADMIN_KEY, self.ADMIN_SECRET) if k]
-
-    @property
-    def jwt_signing_key(self) -> str:
-        return self.JWT_SECRET or self.JWR_SECRET or "change-me-in-production"
-
-
-@lru_cache(maxsize=1)
-def get_settings() -> Settings:
-    return Settings()
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = True
 
 
+# Singleton settings instance
+_settings_instance: Optional[Settings] = None
+
+
+def get_settings():
+    """Get settings singleton with fallback defaults"""
+    global _settings_instance
+    if _settings_instance is None:
+        try:
+            _settings_instance = Settings()
+        except Exception as e:
+            # Fallback to using environment variables directly
+            import logging
+            logging.warning(f"Failed to load settings: {e}. Using fallback.")
+            _settings_instance = create_fallback_settings()
+    return _settings_instance
+
+
+def create_fallback_settings():
+    """Create settings with fallback values when env fails"""
+    return Settings(
+        DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/db"),
+        REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
+        SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret-key-change-me"),
+        TARGETED_SEARCH_DOMAINS=["https://www.indiacode.nic.in"],
+        ALLOWED_ORIGINS=["*"]
+    )
+
+
+# Export settings instance
 settings = get_settings()
