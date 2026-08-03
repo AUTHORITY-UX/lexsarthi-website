@@ -1,7 +1,6 @@
 # Unknown Verdict v40.0 - Phase 2 Production Requirements
 
 # Web Framework
-fastapi==0.115.0
 uvicorn[standard]==0.30.0
 starlette==0.38.0
 python-multipart==0.0.9
