@@ -29,7 +29,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
 from core.db import get_db
-from core.llm import get_router
+from core.llm.router import get_router
 from core.auth import check_rate_limit
 from routes import router, moat_router
 
