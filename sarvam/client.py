@@ -25,3 +25,4 @@ def is_sarvam_available() -> bool:
         return sarvam_client.is_configured
     except Exception:
         return False
+ 
