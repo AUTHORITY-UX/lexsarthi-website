@@ -1,46 +1,22 @@
 """
-unknown_verdict.core.config
-============================
+core/config.py
+==============
 Central configuration for Unknown Verdict v41.0.
 
-Every secret is read from the environment (HF Spaces injects them automatically
-as long as the variable name matches the Space secret name). We use
-pydantic-settings so missing non-critical secrets degrade gracefully instead of
-crashing the whole app on import.
+All 25 HF Space secrets are read from the environment via pydantic-settings.
+Missing non-critical secrets degrade gracefully instead of crashing on import.
 
-All 25 HF Space secrets are wired here:
-
-  DATABASE_URL            Neon PostgreSQL (with pgvector)
-  REDIS_URL               Redis cache + rate-limit store
-  ENABLE_WEB_SEARCH       "true"/"false" — toggle SerpAPI web search
-  ENABLE_TARGETED_SEARCH  "true"/"false" — toggle domain-restricted search
-  TARGETED_SEARCH_DOMAINS Comma-separated domain whitelist
-  ADMIN_SECRET            Admin backdoor token (legacy)
-  Token                   HF Spaces reserved (ignore)
-  USE_VERDICT_ENGINE      "true"/"false" — toggle the verdict engine
-  VERDICT_ENGINE_MODE     "strict" | "balanced" | "lenient"
-
-  OPENAI_API_KEY          OpenAI (GPT-4o family)
-  LLAMA_CLOUD_API_KEY     LlamaCloud / LlamaParse (doc parsing)
-  RAZORPAY_KEY_ID         Razorpay payments
-  RAZORPAY_KEY_SECRET     Razorpay payments
-  GROQ_API_KEY            Groq (Llama 3 family, ultra-low latency)
-  GEMINI_API_KEY          Google Gemini (1.5/2.0)
-  OPENROUTER_API_KEY      OpenRouter (Mistral, Qwen, etc.)
-  ADMIN_KEY               Admin API key (new)
-  JWR_SECRET              (Legacy JWT secret alias)
-  JWT_SECRET              JWT signing secret
-  SERPAPI_KEY             SerpAPI for web search
-  LINKEDIN_ACCESS_TOKEN   LinkedIn integration
-  LINKEDIN_USER_ID        LinkedIn user
-  DEEPSEEK_API_KEY        DeepSeek (reasoning)
-  GITHUB_TOKEN            GitHub API (repo ops)
-  SARVAM_API_KEY          Sarvam 105B/30B (primary legal LLM)
+Secrets wired:
+  DATABASE_URL, REDIS_URL, ENABLE_WEB_SEARCH, ENABLE_TARGETED_SEARCH,
+  TARGETED_SEARCH_DOMAINS, ADMIN_SECRET, USE_VERDICT_ENGINE, VERDICT_ENGINE_MODE,
+  OPENAI_API_KEY, LLAMA_CLOUD_API_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET,
+  GROQ_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY, ADMIN_KEY,
+  JWR_SECRET, JWT_SECRET, SERPAPI_KEY, LINKEDIN_ACCESS_TOKEN,
+  LINKEDIN_USER_ID, DEEPSEEK_API_KEY, GITHUB_TOKEN, SARVAM_API_KEY
 """
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
 from typing import List
 
@@ -65,8 +41,6 @@ def _as_list(v: object) -> List[str]:
 
 
 class Settings(BaseSettings):
-    """Strongly-typed settings loaded from environment / HF Space secrets."""
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -74,32 +48,26 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ── Core infrastructure ────────────────────────────────────────────────
-    DATABASE_URL: str = Field(
-        default="postgresql://user:pass@localhost:5432/unknown_verdict",
-        description="Neon PostgreSQL connection string (pgvector enabled).",
-    )
-    REDIS_URL: str = Field(
-        default="redis://localhost:6379/0",
-        description="Redis URL for caching + rate limiting.",
-    )
+    # ── Core infrastructure ──
+    DATABASE_URL: str = "postgresql://user:pass@localhost:5432/unknown_verdict"
+    REDIS_URL: str = "redis://localhost:6379/0"
 
-    # ── Feature toggles ───────────────────────────────────────────────────
+    # ── Feature toggles ──
     ENABLE_WEB_SEARCH: bool = False
     ENABLE_TARGETED_SEARCH: bool = False
     TARGETED_SEARCH_DOMAINS: List[str] = Field(default_factory=list)
 
-    # ── Verdict engine ────────────────────────────────────────────────────
+    # ── Verdict engine ──
     USE_VERDICT_ENGINE: bool = False
     VERDICT_ENGINE_MODE: str = "balanced"  # strict | balanced | lenient
 
-    # ── Admin / JWT ───────────────────────────────────────────────────────
+    # ── Admin / JWT ──
     ADMIN_SECRET: str = ""
     ADMIN_KEY: str = ""
-    JWT_SECRET: str = Field(default="change-me-in-production", alias="JWT_SECRET")
+    JWT_SECRET: str = "change-me-in-production"
     JWR_SECRET: str = ""
 
-    # ── LLM API keys ──────────────────────────────────────────────────────
+    # ── LLM API keys (6 providers) ──
     SARVAM_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
@@ -107,33 +75,31 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
 
-    # ── Search / parsing ──────────────────────────────────────────────────
+    # ── Search / parsing ──
     SERPAPI_KEY: str = ""
     LLAMA_CLOUD_API_KEY: str = ""
 
-    # ── Payments ──────────────────────────────────────────────────────────
+    # ── Payments ──
     RAZORPAY_KEY_ID: str = ""
     RAZORPAY_KEY_SECRET: str = ""
 
-    # ── Integrations ──────────────────────────────────────────────────────
+    # ── Integrations ──
     GITHUB_TOKEN: str = ""
     LINKEDIN_ACCESS_TOKEN: str = ""
     LINKEDIN_USER_ID: str = ""
 
-    # ── Runtime tuning (not secrets, but env-tunable) ─────────────────────
+    # ── Runtime tuning ──
     APP_NAME: str = "Unknown Verdict"
     APP_VERSION: str = "41.0"
-    ENVIRONMENT: str = "production"  # production | staging | development
+    ENVIRONMENT: str = "production"
     LOG_LEVEL: str = "INFO"
 
-    # LLM defaults — tuned to kill the 100-second latency
+    # LLM defaults — tuned to kill the 100s latency
     LLM_TIMEOUT_SECONDS: int = 30
     LLM_MAX_TOKENS_DEFAULT: int = 1024
     LLM_MAX_TOKENS_CHAT: int = 512
     LLM_MAX_TOKENS_COMPLEX: int = 2048
     LLM_TEMPERATURE: float = 0.3
-
-    # Streaming
     LLM_STREAM_ENABLED: bool = True
 
     # Cache
@@ -144,7 +110,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
-    # ── Validators ────────────────────────────────────────────────────────
+    # ── Validators ──
     @field_validator("ENABLE_WEB_SEARCH", "ENABLE_TARGETED_SEARCH",
                      "USE_VERDICT_ENGINE", mode="before")
     @classmethod
@@ -156,10 +122,9 @@ class Settings(BaseSettings):
     def _coerce_list(cls, v):
         return _as_list(v)
 
-    # ── Convenience properties ───────────────────────────────────────────
+    # ── Convenience properties ──
     @property
     def available_llm_providers(self) -> List[str]:
-        """Return provider names that have an API key configured."""
         mapping = [
             ("sarvam", self.SARVAM_API_KEY),
             ("openai", self.OPENAI_API_KEY),
@@ -176,20 +141,16 @@ class Settings(BaseSettings):
 
     @property
     def admin_keys(self) -> List[str]:
-        """All valid admin tokens (both legacy and new)."""
         return [k for k in (self.ADMIN_KEY, self.ADMIN_SECRET) if k]
 
     @property
     def jwt_signing_key(self) -> str:
-        """Prefer JWT_SECRET, fall back to JWR_SECRET for backward compat."""
         return self.JWT_SECRET or self.JWR_SECRET or "change-me-in-production"
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Cached singleton — call this everywhere, never instantiate directly."""
     return Settings()
 
 
-# Eager singleton for convenience imports
 settings = get_settings()
