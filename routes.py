@@ -27,7 +27,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from loguru import logger as log
 
-from unknown_verdict.config import settings
+from .config import settings
 from core import (
     core, agent_registry, verifier_registry, ai_judge, rag_system,
 )
@@ -85,9 +85,23 @@ async def uv_chat(request: dict):
     if sarvam_client.is_configured:
         try:
             resp = await sarvam_client.chat(messages=messages, model=model, temperature=0.3, max_tokens=4096)
-            agent_response = resp.content if resp.success else f"Error: {resp.error}"
+            agent_response = resp.content if resp.success and resp.content else ""
+            if not agent_response:
+                # Sarvam returned empty — use fallback with RAG context
+                agent_response = (
+                    f"[{agent.name} - {agent.specialization}]\n\n"
+                    f"Based on your query regarding \"{message[:200]}\":\n\n"
+                )
+                if rag_context:
+                    agent_response += f"Relevant legal context from knowledge base:\n{rag_context[:2000]}\n\n"
+                agent_response += (
+                    f"⚠️ The Sarvam AI model returned an empty response (possibly due to timeout or rate limiting). "
+                    f"Above is the relevant legal context retrieved from the knowledge base. "
+                    f"Please try rephrasing your question or try again in a moment.\n\n"
+                    f"⚠️ This does not constitute legal advice. Consult a qualified legal professional."
+                )
         except Exception as e:
-            agent_response = f"I encountered an error: {e}"
+            agent_response = f"I encountered an error processing your request: {e}. Please try again."
     else:
         agent_response = (
             f"[{agent.name} - {agent.specialization}]\n\n"
@@ -1375,4 +1389,3 @@ async def api_info():
         "rag": rag_system.stats(),
         "endpoints_total": 36,
     }
- 
