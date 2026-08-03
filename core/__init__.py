@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from loguru import logger as log
 
-from ..config import settings
+from unknown_verdict.config import settings
 from .agents import agent_registry, AgentRegistry, LegalAgent, AgentStatus, AgentTier
 from .verifiers import verifier_registry, VerifierRegistry, Verifier, VerificationResult
 from .judge import ai_judge, AIJudge, JudgeVerdict, VerdictType
