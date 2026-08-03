@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import os
 from functools import lru_cache
-from typing import List, Optional
+from typing import List
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # ── Feature toggles ──
     ENABLE_WEB_SEARCH: bool = False
     ENABLE_TARGETED_SEARCH: bool = False
-    # Use string type instead of list to avoid JSON parsing
+    # Store as string to avoid JSON parsing issues
     TARGETED_SEARCH_DOMAINS_RAW: str = ""
 
     # ── Verdict engine ──
@@ -134,28 +134,41 @@ class Settings(BaseSettings):
 
     @property
     def TARGETED_SEARCH_DOMAINS(self) -> List[str]:
-        """Parse TARGETED_SEARCH_DOMAINS_RAW safely"""
+        """Parse TARGETED_SEARCH_DOMAINS_RAW safely - handles comma-separated, JSON, or single values"""
         raw = self.TARGETED_SEARCH_DOMAINS_RAW
         if not raw:
-            return ["https://www.indiacode.nic.in", "https://www.sci.gov.in"]
+            # Default domains if nothing is set
+            return [
+                "https://www.indiacode.nic.in",
+                "https://www.sci.gov.in",
+                "https://legalaffairs.gov.in"
+            ]
         
+        # Try JSON parse first
         try:
-            # Try JSON parse
             parsed = json.loads(raw)
             if isinstance(parsed, list):
                 return [str(x).strip() for x in parsed if str(x).strip()]
             if isinstance(parsed, str):
                 return [parsed.strip()]
         except json.JSONDecodeError:
-            # Try comma-separated
-            if "," in raw:
-                return [x.strip() for x in raw.split(",") if x.strip()]
-            # Single value
-            if raw.strip():
-                return [raw.strip()]
+            pass
         
-        # Default fallback
-        return ["https://www.indiacode.nic.in", "https://www.sci.gov.in"]
+        # Try comma-separated (your format)
+        if "," in raw:
+            domains = [x.strip() for x in raw.split(",") if x.strip()]
+            if domains:
+                return domains
+        
+        # Single value
+        if raw.strip():
+            return [raw.strip()]
+        
+        # Fallback
+        return [
+            "https://www.indiacode.nic.in",
+            "https://www.sci.gov.in",
+        ]
 
 
 @lru_cache(maxsize=1)
@@ -165,12 +178,11 @@ def get_settings() -> Settings:
     except Exception as e:
         import logging
         logging.warning(f"Settings loading failed: {e}. Using fallback.")
-        # Create settings with hardcoded values
         return Settings(
             DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict"),
             REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
             ADMIN_SECRET=os.getenv("ADMIN_SECRET", "fallback-secret"),
-            TARGETED_SEARCH_DOMAINS_RAW="https://www.indiacode.nic.in,https://www.sci.gov.in",
+            TARGETED_SEARCH_DOMAINS_RAW=os.getenv("TARGETED_SEARCH_DOMAINS", ""),
         )
 
 
