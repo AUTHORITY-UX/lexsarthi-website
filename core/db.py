@@ -1,14 +1,11 @@
 """
-unknown_verdict.core.db
-========================
+core/db.py
+==========
 Neon PostgreSQL (with pgvector) + Redis connection layer.
 
-Fixes the original bug where db.init() only ran `SELECT 1` and never
-created tables. Now _migrate() runs all CREATE TABLE IF NOT EXISTS on
-startup — all 12 moat_* tables + core tables are created automatically.
-
-Uses psycopg2 with a thread-safe connection pool (Neon supports up to
-100 concurrent connections on the free tier; we use 10).
+Fixes the original bug where db.init() only ran SELECT 1 and never
+created tables. Now _migrate() runs all CREATE TABLE IF NOT EXISTS
+on startup — all 12 moat_* tables + core tables created automatically.
 """
 
 from __future__ import annotations
@@ -17,17 +14,13 @@ import asyncio
 import logging
 from typing import Any, Optional
 
-from unknown_verdict.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# ─── SQL migration ─────────────────────────────────────────────────────────
-
 MIGRATION_SQL = """
--- Enable pgvector extension (idempotent)
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Core tables
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE,
@@ -80,7 +73,6 @@ CREATE TABLE IF NOT EXISTS api_keys (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Moat tables (all 12)
 CREATE TABLE IF NOT EXISTS moat_intelligence (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     module VARCHAR(100) NOT NULL,
@@ -191,7 +183,6 @@ CREATE TABLE IF NOT EXISTS moat_cache_meta (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_legal_docs_juris ON legal_documents(jurisdiction);
 CREATE INDEX IF NOT EXISTS idx_legal_docs_type ON legal_documents(doc_type);
 CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);
@@ -201,17 +192,7 @@ CREATE INDEX IF NOT EXISTS idx_moat_verifiers_active ON moat_verifiers(is_active
 """
 
 
-# ─── Database manager ──────────────────────────────────────────────────────
-
 class Database:
-    """
-    Async database manager for Neon PostgreSQL.
-
-    Uses psycopg2 with a thread-safe connection pool — async-safe via
-    run_in_executor. This avoids the need for asyncpg (which doesn't
-    support pgvector natively without patches).
-    """
-
     def __init__(self):
         self._pool = None
         self._redis = None
@@ -219,35 +200,16 @@ class Database:
         self._redis_connected = False
 
     async def init(self):
-        """Initialise DB pool + Redis, then run migrations."""
         await self._init_postgres()
         await self._init_redis()
 
     async def _init_postgres(self):
         try:
-            import psycopg2
             from psycopg2 import pool as pgpool
-
-            # Neon requires sslmode=require
-            conn_kwargs = {
-                "minconn": 2,
-                "maxconn": 10,
-                "dsn": settings.DATABASE_URL,
-            }
-            # Ensure SSL for Neon
-            if "neon" in settings.DATABASE_URL or "sslmode" not in settings.DATABASE_URL:
-                dsn = settings.DATABASE_URL
-                if "sslmode" not in dsn:
-                    dsn += "?sslmode=require" if "?" not in dsn else "&sslmode=require"
-                conn_kwargs["dsn"] = dsn
-
-            self._pool = pgpool.ThreadedConnectionPool(
-                minconn=conn_kwargs["minconn"],
-                maxconn=conn_kwargs["maxconn"],
-                dsn=conn_kwargs["dsn"],
-            )
-
-            # Test connection
+            dsn = settings.DATABASE_URL
+            if "sslmode" not in dsn:
+                dsn += "?sslmode=require" if "?" not in dsn else "&sslmode=require"
+            self._pool = pgpool.ThreadedConnectionPool(minconn=2, maxconn=10, dsn=dsn)
             conn = self._pool.getconn()
             try:
                 cur = conn.cursor()
@@ -257,26 +219,17 @@ class Database:
                 logger.info("✅ Neon PostgreSQL connected")
             finally:
                 self._pool.putconn(conn)
-
-            # Run migrations
             await self._migrate()
-
         except Exception as exc:
             logger.error("❌ PostgreSQL connection failed: %s", exc)
             self._connected = False
-            # Don't crash — app can still serve without DB (degraded mode)
 
     async def _init_redis(self):
         try:
             import redis.asyncio as aioredis
-
             self._redis = aioredis.from_url(
-                settings.REDIS_URL,
-                encoding="utf-8",
-                decode_responses=True,
-                socket_timeout=5,
-                socket_connect_timeout=5,
-                retry_on_timeout=True,
+                settings.REDIS_URL, encoding="utf-8", decode_responses=True,
+                socket_timeout=5, socket_connect_timeout=5, retry_on_timeout=True,
             )
             await self._redis.ping()
             self._redis_connected = True
@@ -287,13 +240,10 @@ class Database:
             self._redis = None
 
     async def _migrate(self):
-        """Run all CREATE TABLE IF NOT EXISTS — the fix for 'tables never created'."""
         if not self._pool:
             return
-
         loop = asyncio.get_event_loop()
-
-        def _run_migrate():
+        def _run():
             conn = self._pool.getconn()
             try:
                 cur = conn.cursor()
@@ -302,20 +252,16 @@ class Database:
                 cur.close()
             finally:
                 self._pool.putconn(conn)
-
         try:
-            await loop.run_in_executor(None, _run_migrate)
+            await loop.run_in_executor(None, _run)
             logger.info("✅ Database migrations complete (all tables ensured)")
         except Exception as exc:
             logger.error("❌ Migration failed: %s", exc)
 
-    async def execute(self, query: str, params: tuple = ()) -> Optional[Any]:
-        """Execute a write query (INSERT/UPDATE/DELETE). Returns lastrowid."""
+    async def execute(self, query, params=()):
         if not self._connected or not self._pool:
-            logger.warning("DB not connected, skipping execute")
             return None
         loop = asyncio.get_event_loop()
-
         def _exec():
             conn = self._pool.getconn()
             try:
@@ -330,15 +276,12 @@ class Database:
                 raise
             finally:
                 self._pool.putconn(conn)
-
         return await loop.run_in_executor(None, _exec)
 
-    async def fetchone(self, query: str, params: tuple = ()) -> Optional[dict]:
-        """Fetch a single row as a dict."""
+    async def fetchone(self, query, params=()):
         if not self._connected or not self._pool:
             return None
         loop = asyncio.get_event_loop()
-
         def _fetch():
             conn = self._pool.getconn()
             try:
@@ -352,15 +295,12 @@ class Database:
                 return None
             finally:
                 self._pool.putconn(conn)
-
         return await loop.run_in_executor(None, _fetch)
 
-    async def fetchall(self, query: str, params: tuple = ()) -> list[dict]:
-        """Fetch all rows as a list of dicts."""
+    async def fetchall(self, query, params=()):
         if not self._connected or not self._pool:
             return []
         loop = asyncio.get_event_loop()
-
         def _fetch():
             conn = self._pool.getconn()
             try:
@@ -374,7 +314,6 @@ class Database:
                 return []
             finally:
                 self._pool.putconn(conn)
-
         return await loop.run_in_executor(None, _fetch)
 
     @property
@@ -382,11 +321,11 @@ class Database:
         return self._redis if self._redis_connected else None
 
     @property
-    def is_db_connected(self) -> bool:
+    def is_db_connected(self):
         return self._connected
 
     @property
-    def is_redis_connected(self) -> bool:
+    def is_redis_connected(self):
         return self._redis_connected
 
     async def close(self):
@@ -396,10 +335,7 @@ class Database:
             self._pool.closeall()
 
 
-# ─── Singleton ─────────────────────────────────────────────────────────────
-
 _db: Optional[Database] = None
-
 
 def get_db() -> Database:
     global _db
