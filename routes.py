@@ -27,11 +27,11 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from loguru import logger as log
 
-from .config import settings
-from .core import (
+from unknown_verdict.config import settings
+from core import (
     core, agent_registry, verifier_registry, ai_judge, rag_system,
 )
-from .sarvam.client import sarvam_client, SarvamModel
+from sarvam.client import sarvam_client, SarvamModel
 
 router = APIRouter()
 
