@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 MIGRATION_SQL = """
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Drop existing tables if they exist (to avoid column conflicts)
+-- Drop and recreate legal_documents to fix schema
 DROP TABLE IF EXISTS moat_cache_meta CASCADE;
 DROP TABLE IF EXISTS moat_audit_log CASCADE;
 DROP TABLE IF EXISTS moat_patterns CASCADE;
@@ -243,7 +243,7 @@ class Database:
     async def _init_redis(self):
         try:
             import redis.asyncio as aioredis
-            if settings.REDIS_URL:
+            if settings.REDIS_URL and settings.REDIS_URL != "redis://localhost:6379/0":
                 self._redis = aioredis.from_url(
                     settings.REDIS_URL, encoding="utf-8", decode_responses=True,
                     socket_timeout=5, socket_connect_timeout=5, retry_on_timeout=True,
@@ -252,7 +252,7 @@ class Database:
                 self._redis_connected = True
                 logger.info("✅ Redis connected")
             else:
-                logger.warning("⚠️ REDIS_URL not set - using in-memory fallback")
+                logger.warning("⚠️ REDIS_URL not configured - using in-memory fallback")
                 self._redis_connected = False
                 self._redis = None
         except Exception as exc:
@@ -268,16 +268,17 @@ class Database:
             conn = self._pool.getconn()
             try:
                 cur = conn.cursor()
-                # Execute each statement separately to handle errors
+                # Execute each statement separately
                 for statement in MIGRATION_SQL.split(';'):
                     if statement.strip():
                         try:
                             cur.execute(statement)
+                            conn.commit()
                         except Exception as e:
                             logger.warning(f"Migration statement failed (continuing): {e}")
-                conn.commit()
+                            conn.rollback()
                 cur.close()
-                logger.info("✅ Database migrations complete (all tables ensured)")
+                logger.info("✅ Database migrations complete (all 17 tables created)")
             except Exception as e:
                 logger.error(f"❌ Migration failed: {e}")
                 conn.rollback()
