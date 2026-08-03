@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ..config import settings
+from unknown_verdict.config import settings
 
 
 class VerifierType(str, Enum):
