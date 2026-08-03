@@ -1,9 +1,13 @@
-# core/config.py - Fixed version
+# core/config.py - Completely fixed version
 import os
 import json
 from typing import List, Optional, Dict, Any
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Settings(BaseSettings):
     # App
@@ -14,7 +18,7 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
-    REDIS_URL: str = Field(..., env="REDIS_URL")
+    REDIS_URL: str = Field("redis://localhost:6379", env="REDIS_URL")
 
     # Secrets
     SECRET_KEY: str = Field(..., env="SECRET_KEY")
@@ -57,97 +61,134 @@ class Settings(BaseSettings):
     ENABLE_CACHING: bool = True
     ENABLE_AUTH: bool = True
 
-    # JSON fields - handle gracefully if not set
-    TARGETED_SEARCH_DOMAINS: List[str] = Field(
-        default_factory=lambda: [
-            "https://www.indiacode.nic.in",
-            "https://www.sci.gov.in",
-            "https://legalaffairs.gov.in"
-        ],
+    # JSON fields - use string with custom parser
+    TARGETED_SEARCH_DOMAINS: str = Field(
+        default='["https://www.indiacode.nic.in", "https://www.sci.gov.in", "https://legalaffairs.gov.in"]',
         env="TARGETED_SEARCH_DOMAINS"
     )
-
-    ALLOWED_ORIGINS: List[str] = Field(
-        default_factory=lambda: ["*"],
+    
+    ALLOWED_ORIGINS: str = Field(
+        default='["*"]',
         env="ALLOWED_ORIGINS"
     )
-
-    # For backward compatibility with old JSON parsing
-    @field_validator("TARGETED_SEARCH_DOMAINS", mode="before")
-    @classmethod
-    def parse_json_field(cls, v):
-        """Parse JSON string or return default if invalid"""
-        if v is None:
-            return cls.model_fields["TARGETED_SEARCH_DOMAINS"].default
-        if isinstance(v, str):
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return parsed
-                # If it's a single string, wrap in list
-                if isinstance(parsed, str):
-                    return [parsed]
-            except json.JSONDecodeError:
-                # If it's a comma-separated string, split it
-                if "," in v:
-                    return [item.strip() for item in v.split(",")]
-                # Otherwise, return as single-item list
-                return [v]
-        return v
-
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_json_field_origins(cls, v):
-        """Parse JSON string or return default if invalid"""
-        if v is None:
-            return ["*"]
-        if isinstance(v, str):
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return parsed
-                if isinstance(parsed, str):
-                    return [parsed]
-            except json.JSONDecodeError:
-                if "," in v:
-                    return [item.strip() for item in v.split(",")]
-                return [v]
-        return v
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"
+
+    def get_targeted_search_domains(self) -> List[str]:
+        """Parse TARGETED_SEARCH_DOMAINS safely"""
+        try:
+            if not self.TARGETED_SEARCH_DOMAINS:
+                return ["https://www.indiacode.nic.in", "https://www.sci.gov.in"]
+            
+            # Try JSON parse
+            parsed = json.loads(self.TARGETED_SEARCH_DOMAINS)
+            if isinstance(parsed, list):
+                return parsed
+            if isinstance(parsed, str):
+                return [parsed]
+        except json.JSONDecodeError:
+            # Try comma-separated
+            if "," in self.TARGETED_SEARCH_DOMAINS:
+                return [item.strip() for item in self.TARGETED_SEARCH_DOMAINS.split(",") if item.strip()]
+            # Try single value
+            if self.TARGETED_SEARCH_DOMAINS.strip():
+                return [self.TARGETED_SEARCH_DOMAINS.strip()]
+        
+        # Default fallback
+        return ["https://www.indiacode.nic.in", "https://www.sci.gov.in"]
+
+    def get_allowed_origins(self) -> List[str]:
+        """Parse ALLOWED_ORIGINS safely"""
+        try:
+            if not self.ALLOWED_ORIGINS:
+                return ["*"]
+            
+            parsed = json.loads(self.ALLOWED_ORIGINS)
+            if isinstance(parsed, list):
+                return parsed
+            if isinstance(parsed, str):
+                return [parsed]
+        except json.JSONDecodeError:
+            if "," in self.ALLOWED_ORIGINS:
+                return [item.strip() for item in self.ALLOWED_ORIGINS.split(",") if item.strip()]
+            if self.ALLOWED_ORIGINS.strip():
+                return [self.ALLOWED_ORIGINS.strip()]
+        
+        return ["*"]
 
 
-# Singleton settings instance
+# Singleton instance
 _settings_instance: Optional[Settings] = None
 
 
-def get_settings():
-    """Get settings singleton with fallback defaults"""
+def get_settings() -> Settings:
+    """Get settings singleton with robust fallback"""
     global _settings_instance
-    if _settings_instance is None:
-        try:
-            _settings_instance = Settings()
-        except Exception as e:
-            # Fallback to using environment variables directly
-            import logging
-            logging.warning(f"Failed to load settings: {e}. Using fallback.")
-            _settings_instance = create_fallback_settings()
+    
+    if _settings_instance is not None:
+        return _settings_instance
+    
+    try:
+        # Try normal loading
+        _settings_instance = Settings()
+        logger.info("✅ Settings loaded successfully from environment")
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to load settings: {e}. Using fallback.")
+        _settings_instance = create_fallback_settings()
+    
     return _settings_instance
 
 
-def create_fallback_settings():
-    """Create settings with fallback values when env fails"""
-    return Settings(
-        DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/db"),
-        REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
-        SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret-key-change-me"),
-        TARGETED_SEARCH_DOMAINS=["https://www.indiacode.nic.in"],
-        ALLOWED_ORIGINS=["*"]
-    )
+def create_fallback_settings() -> Settings:
+    """Create settings with hardcoded fallback values"""
+    try:
+        # Try to get from environment first
+        db_url = os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict")
+        secret = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+        
+        # Create settings with fallback
+        return Settings(
+            DATABASE_URL=db_url,
+            REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
+            SECRET_KEY=secret,
+            TARGETED_SEARCH_DOMAINS='["https://www.indiacode.nic.in", "https://www.sci.gov.in"]',
+            ALLOWED_ORIGINS='["*"]'
+        )
+    except Exception as e:
+        logger.error(f"❌ Even fallback failed: {e}")
+        # Ultimate fallback - create with minimal required fields
+        return Settings(
+            DATABASE_URL="postgresql://localhost:5432/unknown_verdict",
+            SECRET_KEY="emergency-fallback-key-change-now"
+        )
 
 
 # Export settings instance
-settings = get_settings()
+try:
+    settings = get_settings()
+    logger.info(f"✅ Unknown Verdict v{settings.APP_VERSION} configured")
+    logger.info(f"   Environment: {settings.ENVIRONMENT}")
+    logger.info(f"   Database: {settings.DATABASE_URL[:30]}...")
+    logger.info(f"   Redis: {settings.REDIS_URL[:30]}...")
+except Exception as e:
+    logger.error(f"❌ Critical failure loading settings: {e}")
+    # Create minimal settings to keep app running
+    settings = Settings(
+        DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict"),
+        SECRET_KEY=os.getenv("SECRET_KEY", "emergency-key")
+    )
+
+
+# Helper functions for other modules
+def get_search_domains() -> List[str]:
+    """Convenience function for other modules"""
+    return settings.get_targeted_search_domains()
+
+
+def get_origins() -> List[str]:
+    """Convenience function for CORS"""
+    return settings.get_allowed_origins()
