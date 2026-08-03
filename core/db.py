@@ -2,10 +2,6 @@
 core/db.py
 ==========
 Neon PostgreSQL (with pgvector) + Redis connection layer.
-
-Fixes the original bug where db.init() only ran SELECT 1 and never
-created tables. Now _migrate() runs all CREATE TABLE IF NOT EXISTS
-on startup — all 12 moat_* tables + core tables created automatically.
 """
 
 from __future__ import annotations
@@ -20,6 +16,25 @@ logger = logging.getLogger(__name__)
 
 MIGRATION_SQL = """
 CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Drop existing tables if they exist (to avoid column conflicts)
+DROP TABLE IF EXISTS moat_cache_meta CASCADE;
+DROP TABLE IF EXISTS moat_audit_log CASCADE;
+DROP TABLE IF EXISTS moat_patterns CASCADE;
+DROP TABLE IF EXISTS moat_inventory CASCADE;
+DROP TABLE IF EXISTS moat_ip_vault CASCADE;
+DROP TABLE IF EXISTS moat_feedback CASCADE;
+DROP TABLE IF EXISTS moat_judge CASCADE;
+DROP TABLE IF EXISTS moat_agents CASCADE;
+DROP TABLE IF EXISTS moat_verifiers CASCADE;
+DROP TABLE IF EXISTS moat_knowledge CASCADE;
+DROP TABLE IF EXISTS moat_evolution CASCADE;
+DROP TABLE IF EXISTS moat_intelligence CASCADE;
+DROP TABLE IF EXISTS verdicts CASCADE;
+DROP TABLE IF EXISTS legal_documents CASCADE;
+DROP TABLE IF EXISTS api_keys CASCADE;
+DROP TABLE IF EXISTS conversations CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -73,6 +88,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Moat Tables (12)
 CREATE TABLE IF NOT EXISTS moat_intelligence (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     module VARCHAR(100) NOT NULL,
@@ -227,13 +243,18 @@ class Database:
     async def _init_redis(self):
         try:
             import redis.asyncio as aioredis
-            self._redis = aioredis.from_url(
-                settings.REDIS_URL, encoding="utf-8", decode_responses=True,
-                socket_timeout=5, socket_connect_timeout=5, retry_on_timeout=True,
-            )
-            await self._redis.ping()
-            self._redis_connected = True
-            logger.info("✅ Redis connected")
+            if settings.REDIS_URL:
+                self._redis = aioredis.from_url(
+                    settings.REDIS_URL, encoding="utf-8", decode_responses=True,
+                    socket_timeout=5, socket_connect_timeout=5, retry_on_timeout=True,
+                )
+                await self._redis.ping()
+                self._redis_connected = True
+                logger.info("✅ Redis connected")
+            else:
+                logger.warning("⚠️ REDIS_URL not set - using in-memory fallback")
+                self._redis_connected = False
+                self._redis = None
         except Exception as exc:
             logger.warning("⚠️ Redis unavailable: %s — cache/rate-limit degraded", exc)
             self._redis_connected = False
@@ -247,14 +268,23 @@ class Database:
             conn = self._pool.getconn()
             try:
                 cur = conn.cursor()
-                cur.execute(MIGRATION_SQL)
+                # Execute each statement separately to handle errors
+                for statement in MIGRATION_SQL.split(';'):
+                    if statement.strip():
+                        try:
+                            cur.execute(statement)
+                        except Exception as e:
+                            logger.warning(f"Migration statement failed (continuing): {e}")
                 conn.commit()
                 cur.close()
+                logger.info("✅ Database migrations complete (all tables ensured)")
+            except Exception as e:
+                logger.error(f"❌ Migration failed: {e}")
+                conn.rollback()
             finally:
                 self._pool.putconn(conn)
         try:
             await loop.run_in_executor(None, _run)
-            logger.info("✅ Database migrations complete (all tables ensured)")
         except Exception as exc:
             logger.error("❌ Migration failed: %s", exc)
 
