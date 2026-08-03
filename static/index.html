@@ -408,7 +408,35 @@ document.getElementById('section-title').innerHTML='Search Results <span class="
 }
 function fetchAPI(endpoint,method){
 const url=endpoint.replace('{symbol}','RELIANCE').replace('{player_id}','1').replace('{id}','1');
-if(method==='GET'){window.open(url,'_blank')}else{window.open('/docs','_blank')}
+if(method==='GET'){callGET(url)}else{callPOST(url)}
+}
+async function callGET(url){
+showModal('GET',url,null);
+try{const r=await fetch(url);const d=await r.json();modalResult(r.status,d)}
+catch(e){modalResult(0,{error:e.message})}
+}
+async function callPOST(url){
+showModal('POST',url,null);
+try{
+const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+const d=await r.json();modalResult(r.status,d)
+}catch(e){modalResult(0,{error:e.message})}
+}
+function showModal(method,url,body){
+var m=document.getElementById('api-modal');if(!m){
+m=document.createElement('div');m.id='api-modal';
+m.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem';
+m.innerHTML='<div style="background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:2rem;max-width:700px;width:100%;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span style="color:var(--accent3);font-weight:600;font-size:.85rem">'+method+' '+url+'</span><button onclick="document.getElementById(\'api-modal\').remove()" style="background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer">×</button></div><pre id="api-modal-result" style="background:var(--bg);padding:1rem;border-radius:10px;overflow-x:auto;font-size:.8rem;color:var(--accent3);border:1px solid var(--border);min-height:60px">Loading...</pre></div>';
+document.body.appendChild(m)
+}
+var pre=m.querySelector('#api-modal-result');if(pre)pre.textContent='Loading...'
+}
+function modalResult(status,data){
+var m=document.getElementById('api-modal');if(!m)return;
+var pre=m.querySelector('#api-modal-result');if(!pre)return;
+var color=status>=200&&status<300?'var(--green)':status>=400?'var(--red)':'var(--yellow)';
+pre.style.color=color;
+pre.textContent='HTTP '+status+'\n\n'+JSON.stringify(data,null,2)
 }
 async function moatPost(path,body){
 const panel=document.querySelector('.panel.active .moat-panel')||document.querySelector('.moat-panel');
