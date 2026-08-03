@@ -8,45 +8,49 @@ sdk_version: "1.0"
 app_file: unknown_verdict/app.py
 pinned: true
 ---
+# Unknown Verdict v41.0
 
-# ⚖️ LEX v41.0 - Unknown Verdict
+AI legal platform with multi-LLM routing, 250+ legal agents, 15 verifiers, AI Judge, and a self-evolving intelligence layer (Moat).
 
-**AI-Powered Legal Platform with Self-Evolving Moat**
+**Live:** https://upamnyu12-lex.hf.space  
+**Docs:** https://upamnyu12-lex.hf.space/docs  
+**HF Repo:** https://huggingface.co/spaces/upamnyu12/LEX
 
-This Space runs the **Unknown Verdict v41.0** application, powered by Sarvam AI, with 250 specialized legal agents, 15 verifiers, and an AI Judge.
+## What's New in v41
 
-## 🚀 Quick Start
+- **Multi-LLM routing** — 6 providers: Sarvam, OpenAI, Gemini, Groq, DeepSeek, OpenRouter
+- **Intelligent fallback** — if one provider fails, the next takes over automatically
+- **Complexity classification** — simple → Groq (<2s), complex → Sarvam 105B
+- **Redis caching** — 80% cost reduction for repeated queries
+- **SSE streaming** — first token in <1s
+- **Null-response fix** — the null cascade that crashed verifiers and judge is gone
+- **JWT auth + rate limiting** — enforced on all protected endpoints
+- **68 endpoints** — 36 base + 32 moat
 
-The application is automatically built and served using the `Dockerfile` in this repository.
+## Quick Start
 
-## 🔑 Environment Variables
+```bash
+# Install
+pip install -r requirements.txt
 
-This Space requires the following secrets to be set in the repository settings:
+# Run locally (needs .env with secrets)
+python -m unknown_verdict.app
 
-- `SARVAM_API_KEY`
-- `DATABASE_URL` (Neon PostgreSQL with pgvector)
-- `JWT_SECRET`
-- `ADMIN_SECRET`
-- Other optional API keys (e.g., for external integrations)
+# Or via Docker
+docker build -t unknown-verdict .
+docker run -p 7860:7860 --env-file .env unknown-verdict
+```
 
-## 📡 API Endpoints
+## Health Check
 
-Access the full API documentation at the `/docs` endpoint after the Space is running.
+```bash
+python health_check.py https://upamnyu12-lex.hf.space
+```
 
-## 🧠 Moat v41 Features
+## Architecture
 
-- Self-evolving agents with knowledge mesh
-- IRAC reasoning engine with proprietary patterns
-- Dynamic RAG with auto-expansion
-- AI Judge evolution system
-- Predictive analytics engine
-- Emotion-aware legal analysis
-- Legal strategy generator
-- IP Vault with forensic trails
-- Outcome-based pricing engine
-- Auto-publishing & thought leadership
-- Agent marketplace
+See [DEPLOY.md](DEPLOY.md) for full deployment guide and secret mapping.
 
----
-**🔱 TRIDENT - PERMANENT ASSET - NEVER REMOVE**  
-**⚖️ THE ADVOCACY – Global Law Firm**
+## License
+
+Proprietary. © Unknown Verdict.
