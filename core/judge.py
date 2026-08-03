@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ..config import settings
-from ..sarvam.client import SarvamModel, sarvam_client, SarvamMessage
+from unknown_verdict.config import settings
+from sarvam.client import SarvamModel, sarvam_client, SarvamMessage
 from .verifiers import VerificationResult, verifier_registry
 
 
