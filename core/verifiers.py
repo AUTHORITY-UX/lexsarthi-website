@@ -1,309 +1,201 @@
 """
-AI Judge - Final decision maker using Sarvam 105B.
-The Judge reviews agent responses and verifier results to deliver the final verdict.
+core/verifiers.py
+==================
+15 legal verifiers — each checks a different dimension of LLM output.
+
+Critical fix: every verifier checks for empty/null BEFORE calling .lower().
+Previously a null Sarvam response crashed all 15 verifiers on .lower().
 """
+
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Dict, List, Optional
+import re
+import logging
+from dataclasses import dataclass
+from typing import List
 
-from unknown_verdict.config import settings
-from sarvam.client import SarvamModel, sarvam_client, SarvamMessage
-from .verifiers import VerificationResult, verifier_registry
-
-
-class VerdictType(str, Enum):
-    """Types of AI Judge verdicts."""
-    APPROVED = "approved"
-    APPROVED_WITH_NOTES = "approved_with_notes"
-    NEEDS_REVISION = "needs_revision"
-    REJECTED = "rejected"
-    ESCALATED = "escalated"
+logger = logging.getLogger(__name__)
 
 
 @dataclass
-class JudgeVerdict:
-    """A verdict from the AI Judge."""
-    verdict_id: str
-    verdict_type: VerdictType
-    score: float  # 0.0 to 1.0
-    reasoning: str
-    recommendations: List[str] = field(default_factory=list)
-    issues: List[str] = field(default_factory=list)
-    verification_summary: Optional[dict] = None
-    judge_model: str = settings.SARVAM_105B_MODEL
-    judge_reasoning: str = ""  # Sarvam 105B's detailed reasoning
-    timestamp: str = ""
-    latency_ms: float = 0.0
-
-    def __post_init__(self) -> None:
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
-
-    def to_dict(self) -> dict:
-        return {
-            "verdict_id": self.verdict_id,
-            "verdict_type": self.verdict_type.value,
-            "score": round(self.score, 4),
-            "reasoning": self.reasoning,
-            "recommendations": self.recommendations,
-            "issues": self.issues,
-            "verification_summary": self.verification_summary,
-            "judge_model": self.judge_model,
-            "judge_reasoning": self.judge_reasoning,
-            "timestamp": self.timestamp,
-            "latency_ms": round(self.latency_ms, 2),
-        }
+class VerificationResult:
+    name: str
+    passed: bool
+    score: float  # 0.0 - 1.0
+    notes: str = ""
 
 
-# Judge system prompt
-JUDGE_SYSTEM_PROMPT = """You are the AI Judge of Unknown Verdict, the supreme legal AI arbiter.
-
-Your role:
-1. Review the legal response provided by a specialist agent.
-2. Evaluate it against the verification results.
-3. Deliver a final verdict on whether the response is legally sound.
-
-You must:
-- Be impartial and rigorous in your analysis.
-- Identify any legal errors, missing citations, or logical fallacies.
-- Provide a clear verdict: APPROVED, APPROVED_WITH_NOTES, NEEDS_REVISION, or REJECTED.
-- Score the response from 0.0 to 1.0 based on legal accuracy and completeness.
-- Recommend specific improvements if needed.
-
-Your analysis should reference:
-- Applicable statutes and case law
-- Procedural requirements
-- Jurisdictional considerations
-- Ethical obligations
-
-Format your verdict as structured legal reasoning."""
-
-# Counter for verdict IDs
-_verdict_counter = 0
+def _safe_text(text) -> str:
+    """Convert null/empty to safe empty string — the core fix."""
+    if text is None:
+        return ""
+    return str(text)
 
 
-def _next_verdict_id() -> str:
-    global _verdict_counter
-    _verdict_counter += 1
-    return f"VRD-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{_verdict_counter:04d}"
+class BaseVerifier:
+    name: str = "base"
+
+    def verify(self, query: str, response) -> VerificationResult:
+        response = _safe_text(response)
+        if not response.strip():
+            return VerificationResult(self.name, False, 0.0, "skipped: empty response")
+        return self._check(query, response)
+
+    def _check(self, query: str, response: str) -> VerificationResult:
+        raise NotImplementedError
 
 
-class AIJudge:
-    """
-    The AI Judge uses Sarvam 105B to make final decisions on all legal queries.
-    It reviews agent responses, verification results, and delivers a verdict.
-    """
-
-    def __init__(self) -> None:
-        self.model = settings.SARVAM_105B_MODEL
-        self.version = "40.0"
-        self.total_verdicts: int = 0
-        self.approved: int = 0
-        self.rejected: int = 0
-        self.escalated: int = 0
-        self.avg_score: float = 0.0
-        self.avg_latency_ms: float = 0.0
-
-    async def evaluate(
-        self,
-        query: str,
-        agent_response: str,
-        agent_name: str,
-        agent_specialization: str,
-        verification_results: List[VerificationResult],
-        context: Optional[dict] = None,
-    ) -> JudgeVerdict:
-        """Evaluate an agent's response and deliver a verdict."""
-        start = time.time()
-        self.total_verdicts += 1
-        
-        # Guard against None/empty response — don't crash on .lower()
-        if agent_response is None:
-            agent_response = ""
-        if not isinstance(agent_response, str):
-            agent_response = str(agent_response) if agent_response else ""
-
-        # Get verification summary
-        verification_summary = verifier_registry.get_verification_summary(verification_results)
-        overall_score = verification_summary["overall_score"]
-
-        # Build the judge prompt
-        verification_details = "\n".join(
-            f"  - {r.verifier_name} ({r.verifier_type.value}): {'PASS' if r.passed else 'FAIL'} "
-            f"score={r.score:.2f} {'— ' + r.details if r.details else ''}"
-            + (f" issues: {'; '.join(r.issues)}" if r.issues else "")
-            for r in verification_results
-        )
-
-        judge_prompt = f"""LEGAL QUERY:
-{query}
-
-AGENT: {agent_name} (Specialization: {agent_specialization})
-
-AGENT RESPONSE:
-{agent_response}
-
-VERIFICATION RESULTS:
-{verification_summary['verifiers_passed']}/{verification_summary['verifiers_total']} verifiers passed.
-Overall verification score: {verification_summary['overall_score']:.2%}
-Issues found: {verification_summary['issue_count']}
-
-Detailed verifier results:
-{verification_details}
-
-As the AI Judge, analyze the agent's response for legal accuracy, completeness, and soundness.
-Provide:
-1. Your assessment of the response's legal soundness.
-2. Any errors or omissions you identify.
-3. Your verdict (APPROVED / APPROVED_WITH_NOTES / NEEDS_REVISION / REJECTED).
-4. A score from 0.0 to 1.0.
-5. Specific recommendations for improvement.
-"""
-
-        judge_reasoning = ""
-        # Try to get Sarvam 105B's analysis
-        if sarvam_client.is_configured:
-            try:
-                response = await sarvam_client.reason(
-                    prompt=judge_prompt,
-                    system_prompt=JUDGE_SYSTEM_PROMPT,
-                    temperature=0.2,
-                    max_tokens=4096,
-                )
-                if response.success:
-                    judge_reasoning = response.content
-                    # Parse verdict from response (simplified)
-                    content_lower = response.content.lower()
-                    if "approved_with_notes" in content_lower or "approved with notes" in content_lower:
-                        verdict_type = VerdictType.APPROVED_WITH_NOTES
-                    elif "needs_revision" in content_lower or "needs revision" in content_lower:
-                        verdict_type = VerdictType.NEEDS_REVISION
-                    elif "rejected" in content_lower:
-                        verdict_type = VerdictType.REJECTED
-                    elif "approved" in content_lower:
-                        verdict_type = VerdictType.APPROVED
-                    else:
-                        # Fall back to verification-based verdict
-                        if overall_score >= 0.85:
-                            verdict_type = VerdictType.APPROVED
-                        elif overall_score >= 0.7:
-                            verdict_type = VerdictType.APPROVED_WITH_NOTES
-                        elif overall_score >= 0.5:
-                            verdict_type = VerdictType.NEEDS_REVISION
-                        else:
-                            verdict_type = VerdictType.REJECTED
-                else:
-                    verdict_type = self._verdict_from_score(overall_score)
-                    judge_reasoning = f"Sarvam 105B unavailable: {response.error}. Verdict based on verification scores."
-            except Exception as e:
-                verdict_type = self._verdict_from_score(overall_score)
-                judge_reasoning = f"Judge LLM error: {e}. Verdict based on verification scores."
-        else:
-            # Sarvam not configured - use verification-based scoring
-            verdict_type = self._verdict_from_score(overall_score)
-            judge_reasoning = (
-                "Sarvam 105B not configured. Verdict determined by automated verification system. "
-                f"Verification score: {overall_score:.2%}. "
-                f"Pass rate: {verification_summary['pass_rate']:.1f}%."
-            )
-
-        latency = (time.time() - start) * 1000
-
-        # Update stats
-        self.avg_latency_ms = ((self.avg_latency_ms * (self.total_verdicts - 1)) + latency) / self.total_verdicts
-        self.avg_score = ((self.avg_score * (self.total_verdicts - 1)) + overall_score) / self.total_verdicts
-        if verdict_type in (VerdictType.APPROVED, VerdictType.APPROVED_WITH_NOTES):
-            self.approved += 1
-        elif verdict_type == VerdictType.REJECTED:
-            self.rejected += 1
-
-        # Build reasoning
-        reasoning = self._build_reasoning(
-            verdict_type, overall_score, verification_summary, judge_reasoning
-        )
-
-        recommendations = self._build_recommendations(verification_results, verdict_type)
-
-        return JudgeVerdict(
-            verdict_id=_next_verdict_id(),
-            verdict_type=verdict_type,
-            score=overall_score,
-            reasoning=reasoning,
-            recommendations=recommendations,
-            issues=verification_summary.get("issues_found", []),
-            verification_summary=verification_summary,
-            judge_reasoning=judge_reasoning,
-            latency_ms=latency,
-        )
-
-    def _verdict_from_score(self, score: float) -> VerdictType:
-        if score >= 0.85:
-            return VerdictType.APPROVED
-        elif score >= 0.7:
-            return VerdictType.APPROVED_WITH_NOTES
-        elif score >= 0.5:
-            return VerdictType.NEEDS_REVISION
-        else:
-            return VerdictType.REJECTED
-
-    def _build_reasoning(
-        self, verdict_type: VerdictType, score: float,
-        verification_summary: dict, judge_reasoning: str
-    ) -> str:
-        base = (
-            f"The AI Judge has reviewed the response and verdict is: {verdict_type.value.upper()}. "
-            f"Overall verification score: {score:.2%}. "
-            f"{verification_summary['verifiers_passed']}/{verification_summary['verifiers_total']} "
-            f"verifiers passed ({verification_summary['pass_rate']:.1f}% pass rate). "
-        )
-        if judge_reasoning:
-            base += f"\n\nJudge Analysis:\n{judge_reasoning}"
-        return base
-
-    def _build_recommendations(self, results: List[VerificationResult], verdict_type: VerdictType) -> List[str]:
-        recs: List[str] = []
-        for r in results:
-            if not r.passed:
-                for issue in r.issues:
-                    recs.append(f"[{r.verifier_name}] {issue}")
-        if verdict_type == VerdictType.APPROVED:
-            recs.insert(0, "Response meets quality standards. No changes required.")
-        elif verdict_type == VerdictType.APPROVED_WITH_NOTES:
-            recs.insert(0, "Response is acceptable but has minor issues to address.")
-        elif verdict_type == VerdictType.NEEDS_REVISION:
-            recs.insert(0, "Response requires revision before final delivery.")
-        elif verdict_type == VerdictType.REJECTED:
-            recs.insert(0, "Response does not meet legal quality standards. Regenerate.")
-        return recs
-
-    def stats(self) -> dict:
-        return {
-            "version": self.version,
-            "model": self.model,
-            "total_verdicts": self.total_verdicts,
-            "approved": self.approved,
-            "rejected": self.rejected,
-            "escalated": self.escalated,
-            "approval_rate": round(self.approved / self.total_verdicts * 100, 1) if self.total_verdicts else 0.0,
-            "avg_score": round(self.avg_score, 4),
-            "avg_latency_ms": round(self.avg_latency_ms, 2),
-            "status": "operational",
-        }
-
-    def to_dict(self) -> dict:
-        return {
-            "name": "AI Judge",
-            "version": self.version,
-            "model": self.model,
-            "role": "Final decision maker",
-            "status": "operational",
-            "stats": self.stats(),
-        }
+class RelevanceVerifier(BaseVerifier):
+    name = "relevance"
+    def _check(self, q, r):
+        qw, rw = set(q.lower().split()), set(r.lower().split())
+        overlap = len(qw & rw) / max(len(qw), 1)
+        return VerificationResult(self.name, overlap > 0.15, overlap, f"overlap: {overlap:.2%}")
 
 
-# Singleton
-ai_judge = AIJudge()
+class CoherenceVerifier(BaseVerifier):
+    name = "coherence"
+    def _check(self, q, r):
+        sents = [s for s in r.split(".") if len(s.strip()) > 10]
+        avg = sum(len(s.split()) for s in sents) / max(len(sents), 1)
+        score = 1.0 if 5 <= avg <= 40 else 0.5
+        return VerificationResult(self.name, score > 0.5, score, f"avg sentence: {avg:.0f}w")
+
+
+class CitationVerifier(BaseVerifier):
+    name = "citations"
+    def _check(self, q, r):
+        patterns = [r"Section\s+\d+", r"Sec\.\s*\d+", r"Art\.\s*\d+", r"v\.\s+[A-Z]",
+                    r"AIR\s+\d{4}", r"\(\d{4}\)", r"Act,?\s+\d{4}", r"SCC", r"SC"]
+        found = sum(1 for p in patterns if re.search(p, r))
+        score = min(found / 3, 1.0)
+        return VerificationResult(self.name, found > 0, score, f"citations: {found}")
+
+
+class FactualConsistencyVerifier(BaseVerifier):
+    name = "factual_consistency"
+    def _check(self, q, r):
+        hedging = ["might be", "could be", "possibly", "perhaps", "may be", "seems like", "likely"]
+        hc = sum(1 for h in hedging if h in r.lower())
+        score = 1.0 - min(hc / 5, 0.5)
+        return VerificationResult(self.name, score > 0.5, score, f"hedge count: {hc}")
+
+
+class CompletenessVerifier(BaseVerifier):
+    name = "completeness"
+    def _check(self, q, r):
+        wc = len(r.split())
+        score = 0.3 if wc < 50 else (0.6 if wc < 150 else 1.0)
+        return VerificationResult(self.name, score > 0.5, score, f"words: {wc}")
+
+
+class BiasVerifier(BaseVerifier):
+    name = "bias"
+    def _check(self, q, r):
+        bias = ["obviously", "clearly", "undoubtedly", "must be"]
+        bc = sum(1 for b in bias if b in r.lower())
+        score = 1.0 - min(bc / 3, 1.0)
+        return VerificationResult(self.name, score > 0.5, score, f"bias terms: {bc}")
+
+
+class LegalAccuracyVerifier(BaseVerifier):
+    name = "legal_accuracy"
+    def _check(self, q, r):
+        terms = ["statute", "precedent", "jurisdiction", "liability", "obligation",
+                 "contract", "tort", "remedy", "court"]
+        found = sum(1 for t in terms if t.lower() in r.lower())
+        score = min(found / 3, 1.0)
+        return VerificationResult(self.name, found >= 2, score, f"legal terms: {found}")
+
+
+class ClarityVerifier(BaseVerifier):
+    name = "clarity"
+    def _check(self, q, r):
+        awl = sum(len(w) for w in r.split()) / max(len(r.split()), 1)
+        score = 1.0 if 4 <= awl <= 8 else 0.5
+        return VerificationResult(self.name, score > 0.5, score, f"avg word len: {awl:.1f}")
+
+
+class ToneVerifier(BaseVerifier):
+    name = "tone"
+    def _check(self, q, r):
+        informal = ["yeah", "ok", "gonna", "wanna", "kinda", "lol", "btw"]
+        found = sum(1 for i in informal if i in r.lower())
+        score = 1.0 if found == 0 else 0.3
+        return VerificationResult(self.name, score > 0.5, score, f"informal: {found}")
+
+
+class StructureVerifier(BaseVerifier):
+    name = "structure"
+    def _check(self, q, r):
+        structural = [r"^\d+\.", r"^-", r"^\*", r"^##", r"^###", r"\n\d+\."]
+        found = sum(1 for p in structural if re.search(p, r, re.MULTILINE))
+        score = min(found / 2, 1.0)
+        return VerificationResult(self.name, found > 0, score, f"structure: {found}")
+
+
+class SafetyVerifier(BaseVerifier):
+    name = "safety"
+    def _check(self, q, r):
+        safety = ["consult", "legal advice", "professional", "attorney", "lawyer", "qualified", "disclaimer"]
+        found = sum(1 for s in safety if s.lower() in r.lower())
+        score = min(found / 2, 1.0)
+        return VerificationResult(self.name, found > 0, score, f"safety: {found}")
+
+
+class JurisdictionVerifier(BaseVerifier):
+    name = "jurisdiction"
+    def _check(self, q, r):
+        terms = ["India", "Indian", "Supreme Court", "High Court", "Constitution", "IPC", "CrPC", "CPC", "BNSS", "BNS"]
+        found = sum(1 for t in terms if t.lower() in r.lower())
+        score = min(found / 2, 1.0)
+        return VerificationResult(self.name, found > 0, score, f"jurisdiction: {found}")
+
+
+class HallucinationVerifier(BaseVerifier):
+    name = "hallucination"
+    def _check(self, q, r):
+        suspicious = re.findall(r"\b\d{4,}\b", r)
+        score = 1.0 if len(suspicious) < 5 else 0.5
+        return VerificationResult(self.name, score > 0.5, score, f"suspicious numbers: {len(suspicious)}")
+
+
+class LanguageVerifier(BaseVerifier):
+    name = "language"
+    def _check(self, q, r):
+        non_ascii = sum(1 for c in r if ord(c) > 127)
+        score = 1.0 if non_ascii < len(r) * 0.1 else 0.5
+        return VerificationResult(self.name, score > 0.5, score, f"non-ascii: {non_ascii}")
+
+
+class ConfidenceVerifier(BaseVerifier):
+    name = "confidence"
+    def _check(self, q, r):
+        confident = ["based on", "according to", "under", "pursuant to", "in accordance"]
+        found = sum(1 for c in confident if c.lower() in r.lower())
+        score = min(found / 2 + 0.3, 1.0)
+        return VerificationResult(self.name, score > 0.5, score, f"confidence markers: {found}")
+
+
+ALL_VERIFIERS: List[BaseVerifier] = [
+    RelevanceVerifier(), CoherenceVerifier(), CitationVerifier(),
+    FactualConsistencyVerifier(), CompletenessVerifier(), BiasVerifier(),
+    LegalAccuracyVerifier(), ClarityVerifier(), ToneVerifier(),
+    StructureVerifier(), SafetyVerifier(), JurisdictionVerifier(),
+    HallucinationVerifier(), LanguageVerifier(), ConfidenceVerifier(),
+]
+
+
+def verify_all(query: str, response) -> List[VerificationResult]:
+    return [v.verify(query, response) for v in ALL_VERIFIERS]
+
+
+def verify_summary(query: str, response) -> dict:
+    results = verify_all(query, response)
+    passed = sum(1 for r in results if r.passed)
+    avg_score = sum(r.score for r in results) / max(len(results), 1)
+    return {
+        "total": len(results), "passed": passed, "failed": len(results) - passed,
+        "avg_score": round(avg_score, 3),
+        "verifiers": [{"name": r.name, "passed": r.passed, "score": r.score, "notes": r.notes} for r in results],
+    }
