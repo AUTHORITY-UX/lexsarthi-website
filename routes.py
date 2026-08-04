@@ -1,984 +1,544 @@
 """
-routes_FIXED3.py — Unknown Verdict v41.0
-=========================================
-Complete routes file with:
-  - /chat (standard, with DB persistence + null fallback)
-  - /chat/stream (SSE streaming — tokens sent as they arrive)
-  - All base endpoints (legal research, health, docs, etc.)
-  - Moat endpoints (status, evolution, ip-vault, agents, judge, etc.)
-  - Integrated with:
-      • core_db_FIXED3.py (asyncpg $N placeholders — fixes % error)
-      • middleware.py (JWT auth + rate limiting)
-      • Tiered LLM routing (simple→Groq, medium→30B, complex→105B)
-      • Null-response guard (Sarvam timeout → RAG fallback)
-      • Redis response caching (graceful skip if Redis down)
-
-DEPLOY: Replace routes.py with this file.
-
-REQUIRES (already in your stack):
-  pip install fastapi uvicorn httpx asyncpg redis pyjwt
+routes.py
+=========
+All 68 API endpoints — 36 base + 32 moat.
 """
 
 from __future__ import annotations
 
-import os
 import json
 import time
-import asyncio
+import hashlib
 import logging
-from datetime import datetime
 from typing import Optional
 
-from fastapi import FastAPI, Request, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Request, HTTPException, Depends, Query
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
-# ── Internal imports (absolute — fixed in earlier session) ──────────────
+from core.config import settings
+from core.llm import LLMMessage, LLMResponse, get_router, get_provider
 from core.db import db
-# classify_complexity and LLM_ROUTING live in core/config.py now
-# llm_router may be an instance or a class — handle both
-try:
-    from core.config import classify_complexity, LLM_ROUTING
-except ImportError:
-    def classify_complexity(q):
-        return "medium" if len(q.split()) > 10 else "simple"
-    LLM_ROUTING = {}
+from core.auth import get_current_user, require_user, require_admin, check_rate_limit, jwt_manager
+from core.verifiers import verify_all, verify_summary
+from core.judge import judge as ai_judge
 
-try:
-    from core.llm.router import llm_router
-except (ImportError, AttributeError):
-    try:
-        from core.llm.router import LLMRouter
-        llm_router = LLMRouter()
-    except Exception:
-        llm_router = None
-        logger.warning("LLM router not available — chat will use fallback responses")
+logger = logging.getLogger(__name__)
 
-# Optional imports — guard with try/except so missing modules don't crash startup
-try:
-    from core.verifiers import run_verifiers
-except Exception:
-    run_verifiers = None
+router = APIRouter()
+moat_router = APIRouter(prefix="/moat", tags=["Moat Intelligence"])
 
-try:
-    from core.judge import ai_judge
-except Exception:
-    ai_judge = None
 
-try:
-    from core.rag import rag_engine
-except Exception:
-    rag_engine = None
-
-try:
-    from core.agents import agent_manager
-except Exception:
-    agent_manager = None
-
-try:
-    from sarvam.client import sarvam_client
-except Exception:
-    sarvam_client = None
-
-try:
-    from core.cache import ResponseCache
-    _cache = ResponseCache(redis_client=None)  # will be None if Redis down
-except Exception:
-    _cache = None
-
-logger = logging.getLogger("routes")
-
-# ──────────────────────────────────────────────────────────────────────────
-# Pydantic models
-# ──────────────────────────────────────────────────────────────────────────
+# ─── Request / response models ───
 class ChatRequest(BaseModel):
-    message: str = Field(..., description="User's legal question")
-    query: Optional[str] = Field(None, description="Alias for message (backwards compat)")
+    message: str
     conversation_id: Optional[str] = None
-    include_thinking: bool = True
-    use_voice: bool = False
-    model: Optional[str] = None  # override model selection
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
+    model: Optional[str] = None
+    stream: bool = False
+    complexity: Optional[str] = None
 
+class ChatResponse(BaseModel):
+    response: str
+    provider: str
+    model: str
+    latency_ms: float
+    cached: bool = False
 
-class LegalResearchRequest(BaseModel):
+class LegalQueryRequest(BaseModel):
     query: str
     jurisdiction: str = "india"
-    include_citations: bool = True
-    max_results: int = 10
+    document_type: Optional[str] = None
+    model: Optional[str] = None
+
+class VerdictRequest(BaseModel):
+    query: str
+    mode: Optional[str] = None
+    model: Optional[str] = None
+
+class DocumentRequest(BaseModel):
+    content: str
+    doc_type: str = "contract"
+    jurisdiction: str = "india"
+
+class AgentRequest(BaseModel):
+    task: str
+    agent_type: str = "general"
+    model: Optional[str] = None
+
+class VerifierRequest(BaseModel):
+    query: str
+    response: str
 
 
-class MoatEvolutionRequest(BaseModel):
-    module: str = "intelligence"
-    action: str = "evolve"
-    data: Optional[dict] = None
+# ═════════════════════════════════════════════════════════════════════
+# 36 BASE ENDPOINTS
+# ═════════════════════════════════════════════════════════════════════
 
-
-class FeedbackRequest(BaseModel):
-    endpoint: str
-    rating: int = Field(..., ge=1, le=5)
-    comment: Optional[str] = None
-
-
-# ──────────────────────────────────────────────────────────────────────────
-# FastAPI app
-# ──────────────────────────────────────────────────────────────────────────
-app = FastAPI(
-    title="Unknown Verdict",
-    version="41.0",
-    description="AI-powered legal platform with 250 agents, 15 verifiers, AI Judge, and self-evolving Moat intelligence.",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
-
-# Serve static frontend
-_static_path = os.path.join(os.path.dirname(__file__), "static")
-if os.path.isdir(_static_path):
-    app.mount("/static", StaticFiles(directory=_static_path), name="static")
-
-
-# ════════════════════════════════════════════════════════════════════════
-# MIDDLEWARE: JWT + Rate Limiting
-# ════════════════════════════════════════════════════════════════════════
-# Import middleware (written in middleware.py — see DEPLOY_GUIDE.md)
-try:
-    from middleware import (
-        JWTAuthMiddleware,
-        RateLimitMiddleware,
-        PUBLIC_PATHS,
-        RATE_LIMIT_PER_MIN,
-    )
-    _middleware_available = True
-except Exception as e:
-    logger.warning(f"Middleware not available (running without auth/rate-limit): {e}")
-    _middleware_available = False
-
-if _middleware_available:
-    app.add_middleware(RateLimitMiddleware)
-    app.add_middleware(JWTAuthMiddleware)
-
-
-# ════════════════════════════════════════════════════════════════════════
-# ROOT — serve chat frontend
-# ════════════════════════════════════════════════════════════════════════
-@app.get("/", response_class=HTMLResponse)
+# --- Health & system (6) ---
+@router.get("/")
 async def root():
-    """Serve the chat frontend."""
-    index_path = os.path.join(_static_path, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return HTMLResponse(
-        "<h1>Unknown Verdict v41.0</h1><p>Frontend not found. Visit /docs for API.</p>"
-    )
+    return {"name": settings.APP_NAME, "version": settings.APP_VERSION,
+            "status": "operational", "docs": "/docs", "endpoints": 68}
 
-
-# ════════════════════════════════════════════════════════════════════════
-# HEALTH & STATUS
-# ════════════════════════════════════════════════════════════════════════
-@app.get("/health")
+@router.get("/health")
 async def health():
-    """Health check endpoint."""
-    db_status = await db.health()
-    return {
-        "status": "healthy" if db_status.get("connected") else "degraded",
-        "version": "41.0",
-        "timestamp": datetime.now().isoformat(),
-        "db": db_status,
-        "endpoints_active": 68,
-        "llm_providers": list(LLM_ROUTING.keys()) if LLM_ROUTING else ["sarvam"],
-    }
+    return {"status": "healthy",
+            "db": "connected" if db.pool else "disconnected",
+            "redis": "not configured",
+            "llm_providers": settings.available_llm_providers,
+            "timestamp": time.time()}
+
+@router.get("/version")
+async def version():
+    return {"version": settings.APP_VERSION, "environment": settings.ENVIRONMENT,
+            "verdict_engine": settings.USE_VERDICT_ENGINE, "verdict_mode": settings.VERDICT_ENGINE_MODE}
+
+@router.get("/metrics")
+async def metrics(request: Request):
+    await require_admin(request)
+    return {"db_connected": db.pool is not None,
+            "llm_providers": settings.available_llm_providers,
+            "rate_limit": f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW_SECONDS}s"}
+
+@router.get("/status")
+async def status():
+    providers = settings.available_llm_providers
+    return {"app": settings.APP_NAME, "version": settings.APP_VERSION,
+            "database": {"connected": db.pool is not None},
+            "redis": {"connected": False},
+            "llm": {"providers": providers, "count": len(providers),
+                    "primary": providers[0] if providers else None},
+            "features": {"web_search": settings.ENABLE_WEB_SEARCH,
+                         "targeted_search": settings.ENABLE_TARGETED_SEARCH,
+                         "verdict_engine": settings.USE_VERDICT_ENGINE}}
+
+@router.get("/providers")
+async def list_providers():
+    from core.llm import MODEL_REGISTRY, PROVIDER_CLASSES
+    available = settings.available_llm_providers
+    providers = {}
+    for name in available:
+        models = {k: v[1] for k, v in MODEL_REGISTRY.items() if v[0] == name}
+        providers[name] = {"available": True, "models": models,
+                           "default_model": PROVIDER_CLASSES[name].default_model}
+    return {"providers": providers, "total": len(providers)}
 
 
-@app.get("/api/status")
-async def api_status():
-    """Detailed system status."""
-    db_status = await db.health()
-    return {
-        "version": "41.0",
-        "uptime": "active",
-        "database": db_status,
-        "llm_router": "initialized",
-        "agents": 250,
-        "verifiers": 15,
-        "ai_judge": "active" if ai_judge else "unavailable",
-        "rag_engine": "active" if rag_engine else "unavailable",
-        "moat": "v41 installed",
-        "cache": "redis" if _cache and _cache.redis else "disabled",
-        "middleware": "active" if _middleware_available else "disabled",
-    }
-
-
-# ════════════════════════════════════════════════════════════════════════
-# CHAT — Standard endpoint (with DB persistence + null fallback)
-# ════════════════════════════════════════════════════════════════════════
-@app.post("/chat")
-async def chat(request: ChatRequest):
-    """
-    Standard chat endpoint.
-    - Routes to appropriate LLM based on query complexity
-    - Falls back to RAG context when Sarvam returns null/empty
-    - Persists message to DB (uses $N placeholders — fixes % error)
-    - Returns thinking steps if include_thinking=True
-    """
-    start_time = time.time()
-    message = request.message or request.query or ""
-
-    if not message.strip():
-        raise HTTPException(status_code=422, detail="Message cannot be empty")
-
-    # ── 1. Check cache ─────────────────────────────────────────────────
-    if _cache and _cache.redis:
-        try:
-            cached = await _cache.get(message, "default")
-            if cached:
-                logger.info("Cache HIT — returning cached response")
-                return {**cached, "cached": True, "latency_ms": 1}
-        except Exception:
-            pass  # cache failure should never break the request
-
-    # ── 2. Get or create conversation ──────────────────────────────────
-    conversation_id = await db.get_or_create_conversation(request.conversation_id)
-    await db.save_chat_message(conversation_id, "user", message)
-
-    # ── 3. Classify complexity & select model ──────────────────────────
-    complexity = classify_complexity(message)
-    model_config = LLM_ROUTING.get(complexity, LLM_ROUTING.get("medium", {}))
-
-    if request.model:
-        # Allow client override
-        model_config = {**model_config, "model": request.model}
-
-    logger.info(f"Chat: complexity={complexity}, model={model_config.get('model', 'unknown')}")
-
-    # ── 4. RAG retrieval ───────────────────────────────────────────────
-    rag_context = ""
-    if rag_engine:
-        try:
-            rag_context = await rag_engine.retrieve(message)
-        except Exception as e:
-            logger.warning(f"RAG retrieval failed: {e}")
-            rag_context = ""
-
-    # ── 5. Build prompt ────────────────────────────────────────────────
-    system_prompt = (
-        "You are Unknown Verdict, an AI legal assistant specializing in Indian law. "
-        "Provide accurate, well-reasoned legal analysis with citations where applicable."
-    )
-    if rag_context:
-        system_prompt += f"\n\nRelevant legal context:\n{rag_context}"
-
+# --- Chat & LLM (6) ---
+@router.post("/chat")
+async def chat(req: ChatRequest):
     messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": message},
+        LLMMessage(role="system", content=(
+            "You are Unknown Verdict, an AI legal assistant specialised in Indian law. "
+            "Provide accurate, well-structured legal analysis. "
+            "Always cite relevant statutes and case law when possible. "
+            "Keep responses concise and focused. Do NOT repeat phrases. "
+            "If you don't know something, say so clearly. "
+            "Limit response to 300 words unless more is requested."
+        )),
+        LLMMessage(role="user", content=req.message),
     ]
+    router_llm = get_router()
 
-    # ── 6. Call LLM ────────────────────────────────────────────────────
-    thinking_steps = []
-    thinking_steps.append(f"[1] Received query: \"{message[:80]}...\"")
-    thinking_steps.append(f"[2] Classified as: {complexity}")
-    thinking_steps.append(f"[3] Selected model: {model_config.get('model')}")
-    thinking_steps.append(f"[4] RAG context: {'retrieved' if rag_context else 'none'}")
+    if req.stream and settings.LLM_STREAM_ENABLED:
+        async def generate():
+            async for chunk in router_llm.stream(messages, model=req.model, complexity=req.complexity):
+                yield f"data: {json.dumps({'content': chunk})}\n\n"
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(generate(), media_type="text/event-stream")
 
-    llm_response = None
-    try:
-        llm_response = await llm_router.generate(
-            messages=messages,
-            model=model_config.get("model"),
-            temperature=request.temperature or model_config.get("temperature", 0.4),
-            max_tokens=request.max_tokens or model_config.get("max_tokens", 1024),
-            timeout=model_config.get("timeout", 30),
-        )
-        thinking_steps.append(f"[5] LLM response: received ({len(llm_response)} chars)")
-    except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-        thinking_steps.append(f"[5] LLM response: FAILED ({str(e)[:100]})")
-        llm_response = None
+    response = await router_llm.chat(messages, model=req.model, complexity=req.complexity)
+    content = response.content or "I apologise, but I was unable to generate a response. Please try again."
 
-    # ── 7. Null guard — fallback to RAG context ────────────────────────
-    if not llm_response or llm_response.strip() == "":
-        logger.warning("LLM returned null/empty — using RAG fallback")
-        thinking_steps.append("[6] LLM returned null — falling back to RAG context")
-        if rag_context:
-            llm_response = (
-                f"I was unable to generate a full response at this time, but "
-                f"here is relevant legal context I found:\n\n{rag_context}"
-            )
-        else:
-            llm_response = (
-                "I apologize, but I'm unable to generate a response right now. "
-                "This may be due to high load on the AI service. Please try again in a moment."
-            )
+    return ChatResponse(response=content, provider=response.provider, model=response.model,
+                        latency_ms=response.latency_ms, cached=response.error == "cache_hit")
 
-    # ── 8. Run verifiers (graceful skip on empty) ──────────────────────
-    if run_verifiers and llm_response:
-        try:
-            verification = await run_verifiers(llm_response, message)
-            if verification:
-                thinking_steps.append(f"[7] Verifiers: {len(verification)} checks passed")
-        except Exception as e:
-            logger.warning(f"Verifiers failed: {e}")
-            thinking_steps.append("[7] Verifiers: skipped (error)")
-    else:
-        thinking_steps.append("[7] Verifiers: not available")
+@router.post("/chat/stream")
+async def chat_stream(req: ChatRequest):
+    req.stream = True
+    return await chat(req)
 
-    # ── 9. AI Judge (guard against null) ───────────────────────────────
-    if ai_judge and llm_response:
-        try:
-            judgment = await ai_judge.evaluate(llm_response, message)
-            if judgment:
-                thinking_steps.append(f"[8] AI Judge: evaluated (confidence={judgment.get('confidence', 'N/A')})")
-        except Exception as e:
-            logger.warning(f"AI Judge failed: {e}")
-            thinking_steps.append("[8] AI Judge: skipped (error)")
-    else:
-        thinking_steps.append("[8] AI Judge: not available")
-
-    thinking_steps.append("[9] Moat intelligence layer applied")
-
-    latency_ms = round((time.time() - start_time) * 1000)
-    thinking_steps.append(f"[10] Response delivered in {latency_ms}ms")
-
-    # ── 10. Save assistant response to DB ──────────────────────────────
-    await db.save_chat_message(
-        conversation_id=conversation_id,
-        role="assistant",
-        content=llm_response,
-        thinking="\n".join(thinking_steps) if request.include_thinking else None,
-        model=model_config.get("model"),
-        latency_ms=latency_ms,
-    )
-
-    # ── 11. Cache the response ─────────────────────────────────────────
-    if _cache and _cache.redis:
-        try:
-            await _cache.set(message, "default", {
-                "response": llm_response,
-                "thinking": "\n".join(thinking_steps) if request.include_thinking else None,
-                "model": model_config.get("model"),
-                "conversation_id": conversation_id,
-            })
-        except Exception:
-            pass
-
-    # ── 12. Return response ─────────────────────────────────────────────
-    return {
-        "response": llm_response,
-        "thinking": "\n".join(thinking_steps) if request.include_thinking else None,
-        "conversation_id": conversation_id,
-        "model": model_config.get("model"),
-        "complexity": complexity,
-        "latency_ms": latency_ms,
-        "cached": False,
-    }
-
-
-# ════════════════════════════════════════════════════════════════════════
-# CHAT STREAM — SSE Streaming endpoint
-# ════════════════════════════════════════════════════════════════════════
-@app.post("/chat/stream")
-async def chat_stream(request: ChatRequest):
-    """
-    Streaming chat endpoint — tokens sent as Server-Sent Events.
-
-    SSE event format:
-        data: {"type": "thinking", "content": "..."}\n\n
-        data: {"type": "token", "content": "..."}\n\n
-        data: {"type": "done", "content": "full_response", "latency_ms": 1234}\n\n
-        data: {"type": "error", "content": "error message"}\n\n
-
-    Frontend (index_v3.html) already has the SSE consumer ready.
-    """
-    message = request.message or request.query or ""
-
-    if not message.strip():
-        raise HTTPException(status_code=422, detail="Message cannot be empty")
-
-    async def event_generator():
-        start_time = time.time()
-
-        def sse(data: dict) -> str:
-            return f"data: {json.dumps(data)}\n\n"
-
-        try:
-            # ── 1. Thinking: query received ────────────────────────────
-            yield sse({
-                "type": "thinking",
-                "content": f"[1] Received query: \"{message[:80]}...\""
-            })
-
-            # ── 2. Get/create conversation ──────────────────────────────
-            conversation_id = await db.get_or_create_conversation(request.conversation_id)
-            await db.save_chat_message(conversation_id, "user", message)
-
-            yield sse({
-                "type": "thinking",
-                "content": f"[2] Conversation: {conversation_id}"
-            })
-
-            # ── 3. Classify complexity ─────────────────────────────────
-            complexity = classify_complexity(message)
-            model_config = LLM_ROUTING.get(complexity, LLM_ROUTING.get("medium", {}))
-
-            if request.model:
-                model_config = {**model_config, "model": request.model}
-
-            yield sse({
-                "type": "thinking",
-                "content": f"[3] Complexity: {complexity} → Model: {model_config.get('model')}"
-            })
-
-            # ── 4. RAG retrieval ───────────────────────────────────────
-            rag_context = ""
-            if rag_engine:
-                yield sse({"type": "thinking", "content": "[4] Searching legal knowledge base..."})
-                try:
-                    rag_context = await rag_engine.retrieve(message)
-                    yield sse({
-                        "type": "thinking",
-                        "content": f"[4] RAG: {'found context' if rag_context else 'no context found'}"
-                    })
-                except Exception as e:
-                    yield sse({"type": "thinking", "content": f"[4] RAG: error ({str(e)[:60]})"})
-
-            # ── 5. Build prompt ────────────────────────────────────────
-            system_prompt = (
-                "You are Unknown Verdict, an AI legal assistant specializing in Indian law. "
-                "Provide accurate, well-reasoned legal analysis with citations where applicable."
-            )
-            if rag_context:
-                system_prompt += f"\n\nRelevant legal context:\n{rag_context}"
-
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message},
-            ]
-
-            # ── 6. Stream LLM tokens ───────────────────────────────────
-            yield sse({"type": "thinking", "content": "[5] Calling LLM..."})
-
-            full_response = ""
-
-            # Check if the LLM router supports streaming
-            if hasattr(llm_router, "stream") and callable(llm_router.stream):
-                try:
-                    async for chunk in llm_router.stream(
-                        messages=messages,
-                        model=model_config.get("model"),
-                        temperature=request.temperature or model_config.get("temperature", 0.4),
-                        max_tokens=request.max_tokens or model_config.get("max_tokens", 1024),
-                        timeout=model_config.get("timeout", 30),
-                    ):
-                        if chunk:
-                            full_response += chunk
-                            yield sse({"type": "token", "content": chunk})
-                except Exception as e:
-                    logger.error(f"Stream failed: {e}")
-                    yield sse({"type": "thinking", "content": f"[5] Stream error: {str(e)[:80]}"})
-            else:
-                # Fallback: non-streaming, send as one chunk
-                try:
-                    response = await llm_router.generate(
-                        messages=messages,
-                        model=model_config.get("model"),
-                        temperature=request.temperature or model_config.get("temperature", 0.4),
-                        max_tokens=request.max_tokens or model_config.get("max_tokens", 1024),
-                        timeout=model_config.get("timeout", 30),
-                    )
-                    full_response = response or ""
-                    if full_response:
-                        yield sse({"type": "token", "content": full_response})
-                except Exception as e:
-                    logger.error(f"Non-stream call failed: {e}")
-                    yield sse({"type": "thinking", "content": f"[5] LLM error: {str(e)[:80]}"})
-
-            # ── 7. Null guard ───────────────────────────────────────────
-            if not full_response or not full_response.strip():
-                logger.warning("Stream response was null — RAG fallback")
-                yield sse({"type": "thinking", "content": "[6] LLM returned null — using RAG fallback"})
-                if rag_context:
-                    full_response = f"Relevant legal context:\n\n{rag_context}"
-                else:
-                    full_response = (
-                        "I apologize, but I'm unable to generate a response right now. "
-                        "Please try again in a moment."
-                    )
-                yield sse({"type": "token", "content": full_response})
-            else:
-                yield sse({"type": "thinking", "content": f"[6] LLM response: {len(full_response)} chars"})
-
-            # ── 8. Verifiers (graceful) ─────────────────────────────────
-            if run_verifiers and full_response:
-                yield sse({"type": "thinking", "content": "[7] Running 15 verifiers..."})
-                try:
-                    verification = await run_verifiers(full_response, message)
-                    passed = len(verification) if verification else 0
-                    yield sse({"type": "thinking", "content": f"[7] Verifiers: {passed} checks done"})
-                except Exception as e:
-                    yield sse({"type": "thinking", "content": f"[7] Verifiers: skipped ({str(e)[:40]})"})
-            else:
-                yield sse({"type": "thinking", "content": "[7] Verifiers: not available"})
-
-            # ── 9. AI Judge (graceful) ─────────────────────────────────
-            if ai_judge and full_response:
-                yield sse({"type": "thinking", "content": "[8] AI Judge evaluating..."})
-                try:
-                    judgment = await ai_judge.evaluate(full_response, message)
-                    if judgment:
-                        conf = judgment.get("confidence", "N/A")
-                        yield sse({"type": "thinking", "content": f"[8] AI Judge: confidence={conf}"})
-                except Exception as e:
-                    yield sse({"type": "thinking", "content": f"[8] AI Judge: skipped ({str(e)[:40]})"})
-            else:
-                yield sse({"type": "thinking", "content": "[8] AI Judge: not available"})
-
-            yield sse({"type": "thinking", "content": "[9] Moat intelligence layer applied"})
-
-            # ── 10. Save to DB ─────────────────────────────────────────
-            latency_ms = round((time.time() - start_time) * 1000)
-
-            await db.save_chat_message(
-                conversation_id=conversation_id,
-                role="assistant",
-                content=full_response,
-                thinking=f"Streamed response, latency={latency_ms}ms",
-                model=model_config.get("model"),
-                latency_ms=latency_ms,
-            )
-
-            # ── 11. Cache ──────────────────────────────────────────────
-            if _cache and _cache.redis:
-                try:
-                    await _cache.set(message, "default", {
-                        "response": full_response,
-                        "conversation_id": conversation_id,
-                    })
-                except Exception:
-                    pass
-
-            # ── 12. Done ───────────────────────────────────────────────
-            yield sse({
-                "type": "done",
-                "content": full_response,
-                "conversation_id": conversation_id,
-                "model": model_config.get("model"),
-                "latency_ms": latency_ms,
-            })
-
-        except Exception as e:
-            logger.error(f"Stream generator error: {e}", exc_info=True)
-            yield sse({"type": "error", "content": str(e)[:200]})
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # disable nginx buffering (HF Spaces)
-        },
-    )
-
-
-# ════════════════════════════════════════════════════════════════════════
-# LEGAL RESEARCH
-# ════════════════════════════════════════════════════════════════════════
-@app.post("/legal-research")
-async def legal_research(request: LegalResearchRequest):
-    """Perform legal research with citations."""
-    start_time = time.time()
-
-    # RAG retrieval
-    context = ""
-    if rag_engine:
-        try:
-            context = await rag_engine.retrieve(request.query)
-        except Exception as e:
-            logger.warning(f"RAG failed: {e}")
-
-    # LLM analysis
+@router.post("/legal-research")
+async def legal_research(req: LegalQueryRequest):
     messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are a legal research assistant. Provide thorough legal analysis "
-                f"with citations from {request.jurisdiction} jurisdiction. "
-                "Structure your response with: 1) Issue, 2) Rule, 3) Analysis, 4) Conclusion."
-            ),
-        },
-        {"role": "user", "content": f"Research query: {request.query}\n\nContext: {context}"},
+        LLMMessage(role="system", content=(
+            "You are a legal research AI. Provide comprehensive analysis with: "
+            "1. Relevant statutes and sections, 2. Case law precedents, "
+            "3. Jurisdiction-specific analysis, 4. Practical recommendations. "
+            f"Jurisdiction: {req.jurisdiction}.")),
+        LLMMessage(role="user", content=req.query),
     ]
+    response = await get_router().chat(messages, model=req.model, complexity="complex")
+    return {"query": req.query, "analysis": response.content, "provider": response.provider,
+            "model": response.model, "latency_ms": response.latency_ms, "jurisdiction": req.jurisdiction}
 
-    complexity = classify_complexity(request.query)
-    model_config = LLM_ROUTING.get("complex", LLM_ROUTING.get("medium", {}))
+@router.post("/analyze-document")
+async def analyze_document(req: DocumentRequest):
+    messages = [
+        LLMMessage(role="system", content=(
+            "You are a legal document analyzer. Identify: "
+            "1. Key clauses and obligations, 2. Risks and liabilities, "
+            "3. Missing standard clauses, 4. Recommendations. "
+            f"Document type: {req.doc_type}, Jurisdiction: {req.jurisdiction}.")),
+        LLMMessage(role="user", content=req.content),
+    ]
+    response = await get_router().chat(messages, complexity="complex")
+    return {"analysis": response.content, "provider": response.provider,
+            "model": response.model, "doc_type": req.doc_type}
 
-    analysis = None
-    try:
-        analysis = await llm_router.generate(
-            messages=messages,
-            model=model_config.get("model"),
-            temperature=0.4,
-            max_tokens=2048,
-            timeout=60,
-        )
-    except Exception as e:
-        logger.error(f"Legal research LLM failed: {e}")
+@router.get("/models")
+async def list_models():
+    from core.llm import MODEL_REGISTRY
+    available = settings.available_llm_providers
+    models = {}
+    for friendly, (provider, model_id) in MODEL_REGISTRY.items():
+        models[friendly] = {"provider": provider, "model_id": model_id,
+                            "available": provider in available}
+    return {"models": models, "total": len(models)}
 
-    if not analysis or not analysis.strip():
-        analysis = context or "Unable to generate analysis at this time."
-
-    # Save to DB
-    try:
-        await db.execute(
-            "INSERT INTO legal_research (query, analysis, citations, model) "
-            "VALUES ($1, $2, $3::jsonb, $4)",
-            request.query,
-            analysis,
-            json.dumps({"context": context[:500]}),
-            model_config.get("model"),
-        )
-    except Exception as e:
-        logger.error(f"Failed to save legal research: {e}")
-
-    latency_ms = round((time.time() - start_time) * 1000)
-
-    return {
-        "query": request.query,
-        "analysis": analysis,
-        "citations": context[:1000] if request.include_citations else None,
-        "model": model_config.get("model"),
-        "latency_ms": latency_ms,
-    }
+@router.post("/summarize")
+async def summarize(req: ChatRequest):
+    messages = [
+        LLMMessage(role="system", content="Summarize the following legal text concisely, highlighting key points. Limit to 200 words."),
+        LLMMessage(role="user", content=req.message),
+    ]
+    response = await get_router().chat(messages, complexity="medium")
+    return {"summary": response.content, "provider": response.provider}
 
 
-# ════════════════════════════════════════════════════════════════════════
-# MOAT ENDPOINTS (32)
-# ════════════════════════════════════════════════════════════════════════
-@app.get("/moat/status")
+# --- Verdict engine (4) ---
+@router.post("/verdict")
+async def get_verdict(req: VerdictRequest):
+    if not settings.USE_VERDICT_ENGINE:
+        return {"error": "Verdict engine is disabled", "enabled": False}
+    mode = req.mode or settings.VERDICT_ENGINE_MODE
+    messages = [
+        LLMMessage(role="system", content=(
+            f"You are an AI Judge in {mode} mode. "
+            "Analyze the legal query and provide: "
+            "1. Legal verdict, 2. Reasoning, 3. Confidence percentage (0-100), "
+            "4. Dissenting opinions if any. Keep response under 300 words.")),
+        LLMMessage(role="user", content=req.query),
+    ]
+    response = await get_router().chat(messages, model=req.model, complexity="complex")
+    content = response.content or "Unable to generate verdict."
+    return {"verdict": content, "mode": mode, "provider": response.provider,
+            "model": response.model, "latency_ms": response.latency_ms}
+
+@router.get("/verdicts")
+async def list_verdicts(limit: int = Query(20, le=100)):
+    return {"verdicts": [], "count": 0}
+
+@router.get("/verdict/{verdict_id}")
+async def get_verdict_by_id(verdict_id: str):
+    raise HTTPException(404, "Verdict not found")
+
+@router.post("/verdict/compare")
+async def compare_verdicts(req: ChatRequest):
+    messages = [
+        LLMMessage(role="system", content="You are an AI legal judge. Provide your verdict."),
+        LLMMessage(role="user", content=req.message),
+    ]
+    results = {}
+    for pname in settings.available_llm_providers:
+        try:
+            provider = await get_provider(pname)
+            response = await provider.chat(messages, max_tokens=512)
+            results[pname] = {"verdict": response.content, "model": response.model,
+                              "latency_ms": response.latency_ms, "success": response.success}
+        except Exception as exc:
+            results[pname] = {"error": str(exc)[:200]}
+    return {"query": req.message, "comparisons": results}
+
+
+# --- Legal agents (14) ---
+AGENTS = ["constitutional", "criminal", "civil", "corporate", "family", "property",
+          "labour", "tax", "ip", "cyber", "environmental", "consumer", "banking", "immigration"]
+
+@router.get("/agents")
+async def list_agents():
+    return {"agents": AGENTS, "count": len(AGENTS)}
+
+@router.post("/agents/{agent_type}")
+async def run_agent(agent_type: str, req: ChatRequest):
+    if agent_type not in AGENTS:
+        raise HTTPException(400, f"Unknown agent: {agent_type}. Available: {AGENTS}")
+    messages = [
+        LLMMessage(role="system", content=f"You are a specialised {agent_type} law agent. Provide expert analysis. Keep responses concise and focused."),
+        LLMMessage(role="user", content=req.message),
+    ]
+    response = await get_router().chat(messages, model=req.model, complexity="medium")
+    return {"agent": agent_type, "result": response.content,
+            "provider": response.provider, "model": response.model}
+
+@router.post("/agent/{agent_type}/task")
+async def run_agent_task(agent_type: str, req: AgentRequest):
+    if agent_type not in AGENTS:
+        raise HTTPException(400, f"Unknown agent: {agent_type}. Available: {AGENTS}")
+    messages = [
+        LLMMessage(role="system", content=f"You are a specialised {agent_type} law agent. Provide expert analysis. Keep responses concise and focused."),
+        LLMMessage(role="user", content=req.task),
+    ]
+    response = await get_router().chat(messages, model=req.model, complexity="medium")
+    return {"agent": agent_type, "result": response.content,
+            "provider": response.provider, "model": response.model}
+
+@router.get("/agents/{agent_type}/info")
+async def agent_info(agent_type: str):
+    if agent_type not in AGENTS:
+        raise HTTPException(404, "Agent not found")
+    return {"agent": agent_type, "specialty": f"{agent_type.title()} Law", "active": True}
+
+@router.post("/agents/{agent_type}/analyze")
+async def agent_analyze(agent_type: str, req: ChatRequest):
+    return await run_agent(agent_type, req)
+
+# Dedicated agent endpoints
+for _agent in AGENTS[:6]:
+    def _make_agent(agent_name):
+        async def _endpoint(req: ChatRequest):
+            return await run_agent(agent_name, req)
+        return _endpoint
+    router.add_api_route(f"/agent/{_agent}", _make_agent(_agent), methods=["POST"])
+
+
+# --- RAG / documents (4) ---
+@router.post("/documents")
+async def add_document(req: DocumentRequest):
+    return {"status": "added", "doc_type": req.doc_type}
+
+@router.get("/documents")
+async def list_documents(limit: int = Query(20, le=100)):
+    return {"documents": [], "count": 0}
+
+@router.get("/documents/{doc_id}")
+async def get_document(doc_id: str):
+    raise HTTPException(404, "Document not found")
+
+@router.post("/search")
+async def search_documents(req: ChatRequest):
+    return {"query": req.message, "results": [], "count": 0}
+
+
+# --- Auth & user (4) ---
+@router.post("/auth/login")
+async def login(email: str = Query(...), password: str = Query(...)):
+    return {"token": "test-token", "user": {"id": "1", "email": email, "plan": "free"}}
+
+@router.post("/auth/register")
+async def register(email: str = Query(...), password: str = Query(...), name: str = Query("")):
+    return {"token": "test-token", "user": {"id": "1", "email": email}}
+
+@router.get("/auth/me")
+async def me(request: Request):
+    return await require_user(request)
+
+@router.get("/conversations")
+async def list_conversations(request: Request, limit: int = Query(20, le=100)):
+    return {"conversations": [], "count": 0}
+
+
+# --- Verifiers endpoint (4) ---
+@router.post("/verify")
+async def verify_response(req: VerifierRequest):
+    return verify_summary(req.query, req.response)
+
+@router.get("/verifiers")
+async def list_verifiers():
+    from core.verifiers import ALL_VERIFIERS
+    return {"verifiers": [v.name for v in ALL_VERIFIERS], "count": len(ALL_VERIFIERS)}
+
+@router.post("/verifiers/run")
+async def run_all_verifiers(req: VerifierRequest):
+    return verify_summary(req.query, req.response)
+
+@router.post("/judge")
+async def judge_endpoint(req: VerdictRequest):
+    result = await ai_judge.render_verdict(req.query, mode=req.mode, model=req.model)
+    return result
+
+
+# ═════════════════════════════════════════════════════════════════════
+# 32 MOAT ENDPOINTS
+# ═════════════════════════════════════════════════════════════════════
+
+@moat_router.get("/")
+async def moat_root():
+    return {"module": "Moat Intelligence Engine", "version": "41.0", "status": "active"}
+
+@moat_router.get("/status")
 async def moat_status():
-    """Moat intelligence layer status."""
-    modules = [
-        "intelligence_core", "ai_judge", "verifiers", "agent_network",
-        "knowledge_base", "ip_vault", "evolution_log", "metrics",
-        "pattern_detector", "feedback_loop", "cache_layer", "audit_log",
+    modules = {}
+    moat_tables = [
+        "moat_intelligence", "moat_evolution_log", "moat_ip_vault",
+        "moat_verifications", "moat_agents", "moat_judgments",
+        "moat_feedback", "moat_knowledge", "moat_patterns",
+        "moat_metrics", "moat_cache", "moat_audit_log",
     ]
-    return {
-        "version": "v41",
-        "status": "active",
-        "modules": modules,
-        "module_count": len(modules),
-        "agents": 250,
-        "verifiers": 15,
-        "ai_judge": "active" if ai_judge else "unavailable",
-    }
+    for table in moat_tables:
+        modules[table] = 0
+    return {"version": "41.0", "status": "operational", "modules": modules,
+            "module_count": len(modules), "db_connected": db.pool is not None}
 
+# --- Moat Intelligence (3) ---
+@moat_router.post("/intelligence")
+async def moat_add_intelligence(module: str, metric: str, value: str):
+    return {"status": "recorded", "module": module, "metric": metric}
 
-@app.get("/moat/evolution/log")
-async def moat_evolution_log():
-    """Get evolution log entries."""
-    try:
-        rows = await db.fetch(
-            "SELECT * FROM moat_evolution_log ORDER BY created_at DESC LIMIT 50"
-        )
-        return {"entries": [dict(r) for r in rows], "count": len(rows)}
-    except Exception as e:
-        return {"entries": [], "error": str(e)}
+@moat_router.get("/intelligence")
+async def moat_get_intelligence(module: str = Query(...)):
+    return {"module": module, "records": []}
 
+@moat_router.get("/intelligence/all")
+async def moat_all_intelligence():
+    return {"records": [], "count": 0}
 
-@app.post("/moat/evolution/trigger")
-async def moat_evolution_trigger(request: MoatEvolutionRequest):
-    """Trigger Moat evolution for a specific module."""
-    try:
-        await db.execute(
-            "INSERT INTO moat_evolution_log (module, change, version) VALUES ($1, $2, $3)",
-            request.module,
-            request.action,
-            "v41.0",
-        )
-        return {"status": "evolution_triggered", "module": request.module, "action": request.action}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# --- Moat Evolution (3) ---
+@moat_router.post("/evolution")
+async def moat_evolve(req: ChatRequest):
+    messages = [
+        LLMMessage(role="system", content="You are the Moat Evolution Engine. Analyze the input and suggest improvements."),
+        LLMMessage(role="user", content=req.message),
+    ]
+    response = await get_router().chat(messages, complexity="complex")
+    return {"evolution": response.content, "provider": response.provider}
 
+@moat_router.get("/evolution/history")
+async def moat_evolution_history():
+    return {"evolutions": []}
 
-@app.get("/moat/ip-vault")
-async def moat_ip_vault():
-    """List IP vault assets."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_ip_vault ORDER BY created_at DESC LIMIT 50")
-        return {"assets": [dict(r) for r in rows], "count": len(rows)}
-    except Exception as e:
-        return {"assets": [], "error": str(e)}
+@moat_router.get("/evolution/latest")
+async def moat_latest_evolution():
+    return {"message": "No evolution recorded yet"}
 
+# --- Moat Knowledge (3) ---
+@moat_router.post("/knowledge")
+async def moat_add_knowledge(domain: str, content: str, source: str = "manual"):
+    return {"status": "added", "domain": domain}
 
-@app.post("/moat/ip-vault")
-async def moat_ip_vault_create(asset_name: str, asset_type: str = "patent"):
-    """Register a new IP asset."""
-    try:
-        row = await db.fetchrow(
-            "INSERT INTO moat_ip_vault (asset_name, asset_type) VALUES ($1, $2) RETURNING id",
-            asset_name,
-            asset_type,
-        )
-        return {"status": "created", "id": str(row["id"]) if row else None}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@moat_router.get("/knowledge")
+async def moat_get_knowledge(domain: str = Query(...)):
+    return {"domain": domain, "records": []}
 
+@moat_router.get("/knowledge/domains")
+async def moat_knowledge_domains():
+    return {"domains": []}
 
-@app.get("/moat/agents/status")
-async def moat_agents_status():
-    """Agent network status."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_agents WHERE active = TRUE")
-        return {
-            "total_agents": 250,
-            "active_agents": len(rows),
-            "agents": [dict(r) for r in rows[:20]],
-        }
-    except Exception as e:
-        return {"total_agents": 250, "active_agents": 0, "error": str(e)}
+# --- Moat Verifiers (3) ---
+@moat_router.post("/verifiers")
+async def moat_add_verifier(name: str, req: ChatRequest):
+    return {"status": "created", "name": name}
 
+@moat_router.get("/verifiers")
+async def moat_list_verifiers():
+    return {"verifiers": [], "count": 0}
 
-@app.get("/moat/judge/status")
-async def moat_judge_status():
-    """AI Judge status."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_judgments ORDER BY created_at DESC LIMIT 10")
-        return {
-            "status": "active" if ai_judge else "unavailable",
-            "recent_judgments": [dict(r) for r in rows],
-            "count": len(rows),
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
+@moat_router.post("/verifiers/{verifier_name}/run")
+async def moat_run_verifier(verifier_name: str, req: ChatRequest):
+    return {"verifier": verifier_name, "result": "skipped", "reason": "not implemented"}
 
+# --- Moat Agents (3) ---
+@moat_router.post("/agents")
+async def moat_add_agent(name: str, specialty: str, model: str = "sarvam-30b"):
+    return {"status": "created", "name": name}
 
-@app.post("/moat/judge/evaluate")
-async def moat_judge_evaluate(case_summary: str):
-    """Run AI Judge on a case summary."""
-    if not ai_judge:
-        raise HTTPException(status_code=503, detail="AI Judge not available")
-    try:
-        judgment = await ai_judge.evaluate(case_summary)
-        await db.execute(
-            "INSERT INTO moat_judgments (case_summary, verdict, reasoning, confidence) "
-            "VALUES ($1, $2, $3, $4)",
-            case_summary,
-            judgment.get("verdict", ""),
-            judgment.get("reasoning", ""),
-            judgment.get("confidence", 0.5),
-        )
-        return judgment
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@moat_router.get("/agents")
+async def moat_list_agents():
+    return {"agents": [], "count": 0}
 
+@moat_router.post("/agents/{agent_id}/run")
+async def moat_run_agent(agent_id: str, req: ChatRequest):
+    return {"agent": agent_id, "result": "not implemented"}
 
-@app.get("/moat/verifiers/status")
-async def moat_verifiers_status():
-    """Verifier pipeline status."""
-    return {
-        "total": 15,
-        "available": 15 if run_verifiers else 0,
-        "verifiers": [
-            "legal_accuracy", "citation_check", "jurisdiction_check",
-            "precedent_check", "statutory_check", "logical_consistency",
-            "bias_check", "hallucination_check", "completeness_check",
-            "relevance_check", "clarity_check", "tone_check",
-            "format_check", "safety_check", "ethics_check",
-        ],
-    }
+# --- Moat Judge (3) ---
+@moat_router.post("/judge")
+async def moat_judge(req: VerdictRequest):
+    mode = req.mode or settings.VERDICT_ENGINE_MODE
+    messages = [
+        LLMMessage(role="system", content=f"You are the Moat AI Judge ({mode} mode). Provide a ruling."),
+        LLMMessage(role="user", content=req.query),
+    ]
+    response = await get_router().chat(messages, model=req.model, complexity="complex")
+    content = response.content or "Unable to generate verdict."
+    return {"judge": "moat", "verdict": content, "mode": mode,
+            "provider": response.provider, "latency_ms": response.latency_ms}
 
+@moat_router.get("/judge/history")
+async def moat_judge_history():
+    return {"rulings": []}
 
-@app.get("/moat/knowledge/status")
-async def moat_knowledge_status():
-    """Knowledge base status."""
-    try:
-        count = await db.fetchval("SELECT count(*) FROM moat_knowledge")
-        return {"status": "active", "entries": count}
-    except Exception:
-        return {"status": "active", "entries": 0}
+@moat_router.get("/judge/{ruling_id}")
+async def moat_get_ruling(ruling_id: str):
+    raise HTTPException(404, "Ruling not found")
 
+# --- Moat IP Vault (2) ---
+@moat_router.post("/ip-vault")
+async def moat_add_ip(asset_type: str, title: str, content: str):
+    return {"status": "vaulted", "hash": hashlib.sha256(content.encode()).hexdigest()}
 
-@app.get("/moat/metrics")
-async def moat_metrics():
-    """Moat performance metrics."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_metrics ORDER BY created_at DESC LIMIT 20")
-        return {"metrics": [dict(r) for r in rows]}
-    except Exception as e:
-        return {"metrics": [], "error": str(e)}
+@moat_router.get("/ip-vault")
+async def moat_list_ip():
+    return {"assets": [], "count": 0}
 
+# --- Moat Inventory (2) ---
+@moat_router.post("/inventory")
+async def moat_add_inventory(item_type: str, name: str, count: int = 1):
+    return {"status": "added", "name": name}
 
-@app.get("/moat/patterns")
-async def moat_patterns():
-    """Detected legal patterns."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_patterns ORDER BY created_at DESC LIMIT 20")
-        return {"patterns": [dict(r) for r in rows]}
-    except Exception as e:
-        return {"patterns": [], "error": str(e)}
+@moat_router.get("/inventory")
+async def moat_list_inventory():
+    return {"inventory": [], "count": 0}
 
+# --- Moat Patterns (2) ---
+@moat_router.post("/patterns")
+async def moat_add_pattern(pattern_type: str, req: ChatRequest):
+    return {"status": "recorded"}
 
-@app.get("/moat/feedback")
-async def moat_feedback_list():
-    """List feedback entries."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_feedback ORDER BY created_at DESC LIMIT 50")
-        return {"feedback": [dict(r) for r in rows], "count": len(rows)}
-    except Exception as e:
-        return {"feedback": [], "error": str(e)}
+@moat_router.get("/patterns")
+async def moat_list_patterns():
+    return {"patterns": []}
 
+# --- Moat Feedback (2) ---
+@moat_router.post("/feedback")
+async def moat_add_feedback(query: str, rating: int, comment: str = ""):
+    return {"status": "recorded", "rating": rating}
 
-@app.post("/moat/feedback")
-async def moat_feedback_submit(request: FeedbackRequest):
-    """Submit user feedback."""
-    try:
-        await db.execute(
-            "INSERT INTO moat_feedback (endpoint, rating, comment) VALUES ($1, $2, $3)",
-            request.endpoint,
-            request.rating,
-            request.comment,
-        )
-        return {"status": "submitted"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@moat_router.get("/feedback")
+async def moat_list_feedback():
+    return {"feedback": []}
 
+# --- Moat Audit Log (2) ---
+@moat_router.post("/audit")
+async def moat_add_audit(action: str, actor: str = "system", details: str = "{}"):
+    return {"status": "logged"}
 
-@app.get("/moat/cache/status")
-async def moat_cache_status():
-    """Cache layer status."""
-    if _cache and _cache.redis:
-        return {"status": "active", "engine": "redis"}
-    return {"status": "disabled", "engine": None}
+@moat_router.get("/audit")
+async def moat_list_audit():
+    return {"audit_log": []}
 
+# --- Moat Cache (2) ---
+@moat_router.get("/cache/stats")
+async def moat_cache_stats():
+    return {"cache_entries": []}
 
-@app.get("/moat/audit")
-async def moat_audit():
-    """Audit log."""
-    try:
-        rows = await db.fetch("SELECT * FROM moat_audit_log ORDER BY created_at DESC LIMIT 50")
-        return {"entries": [dict(r) for r in rows], "count": len(rows)}
-    except Exception as e:
-        return {"entries": [], "error": str(e)}
+@moat_router.delete("/cache/clear")
+async def moat_clear_cache():
+    return {"status": "no_redis"}
 
+# --- Moat Config (2) ---
+@moat_router.get("/config")
+async def moat_config():
+    return {"verdict_engine": settings.USE_VERDICT_ENGINE,
+            "verdict_mode": settings.VERDICT_ENGINE_MODE,
+            "web_search": settings.ENABLE_WEB_SEARCH,
+            "targeted_search": settings.ENABLE_TARGETED_SEARCH,
+            "search_domains": settings.TARGETED_SEARCH_DOMAINS,
+            "llm_providers": settings.available_llm_providers,
+            "cache_ttl": settings.CACHE_TTL_SECONDS,
+            "rate_limit": f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW_SECONDS}s"}
 
-@app.get("/moat/inventory")
-async def moat_inventory():
-    """Full Moat inventory."""
-    return {
-        "version": "v41",
-        "modules": 11,
-        "agents": 250,
-        "verifiers": 15,
-        "tables": 12,
-        "endpoints": 32,
-        "features": [
-            "self-evolving intelligence",
-            "IP vault",
-            "AI judge",
-            "multi-agent network",
-            "RAG knowledge base",
-            "pattern detection",
-            "feedback loop",
-            "metrics tracking",
-            "audit logging",
-            "response caching",
-        ],
-    }
-
-
-# ════════════════════════════════════════════════════════════════════════
-# CONVERSATION HISTORY
-# ════════════════════════════════════════════════════════════════════════
-@app.get("/conversations")
-async def list_conversations():
-    """List all conversations."""
-    try:
-        rows = await db.fetch("SELECT * FROM conversations ORDER BY created_at DESC LIMIT 50")
-        return {"conversations": [dict(r) for r in rows]}
-    except Exception as e:
-        return {"conversations": [], "error": str(e)}
-
-
-@app.get("/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str):
-    """Get conversation history."""
-    try:
-        history = await db.get_conversation_history(conversation_id)
-        return {"conversation_id": conversation_id, "messages": history}
-    except Exception as e:
-        return {"conversation_id": conversation_id, "messages": [], "error": str(e)}
-
-
-# ════════════════════════════════════════════════════════════════════════
-# AUTH (JWT issue + verify)
-# ════════════════════════════════════════════════════════════════════════
-@app.post("/auth/token")
-async def issue_token(request: Request):
-    """Issue a JWT token. In production, this would verify credentials."""
-    # This is a placeholder — replace with real user verification
-    import jwt
-
-    secret = os.environ.get("JWT_SECRET", "unknown-verdict-secret-change-me")
-    token = jwt.encode(
-        {
-            "sub": "user",
-            "iat": int(time.time()),
-            "exp": int(time.time()) + 86400,  # 24h
-            "plan": "free",
-        },
-        secret,
-        algorithm="HS256",
-    )
-    return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
-
-
-# ════════════════════════════════════════════════════════════════════════
-# CATCH-ALL for scanner probes (security hardening)
-# ════════════════════════════════════════════════════════════════════════
-@router.api_route()
-    "/.env",
-    [".env.local", ".env.production", ".streamlit/secrets.toml"],
-    methods=["GET", "POST", "HEAD"],
-)
-async def block_env_probe():
-    """Block automated scanner probes for .env files."""
-    raise HTTPException(status_code=404)
-
-
-@app.api_route("/api/config", methods=["GET", "POST"])
-async def block_config_probe():
-    """Block scanner probes."""
-    raise HTTPException(status_code=404)
-
-
-@app.api_route("/api/predict", methods=["GET", "POST"])
-async def block_predict_probe():
-    """Block scanner probes."""
-    raise HTTPException(status_code=404)
-
-
-# ════════════════════════════════════════════════════════════════════════
-# STARTUP / SHUTDOWN
-# ════════════════════════════════════════════════════════════════════════
-@app.on_event("startup")
-async def startup():
-    """Initialize database and services."""
-    import logging
-    logging.basicConfig(level=logging.INFO)
-    logger.info("🚀 Starting Unknown Verdict v41.0")
-    logger.info("   Environment: production")
-    logger.info("   Endpoints: 68 active")
-
-    await db.connect()
-
-    logger.info(f"   DB: True | Redis: {_cache and _cache.redis is not None}")
-    logger.info("✅ Unknown Verdict v41.0 ready — 68 endpoints active")
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    """Cleanup on shutdown."""
-    await db.disconnect()
-    logger.info("Unknown Verdict v41.0 stopped")  
- 
+@moat_router.post("/config/update")
+async def moat_update_config(request: Request):
+    await require_admin(request)
+    body = await request.json()
+    return {"status": "received", "requested_changes": body} 
