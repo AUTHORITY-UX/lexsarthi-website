@@ -17,7 +17,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
-from core.db import get_db
+from core.db import db  # Changed from get_db
 from core.llm.router import get_router
 from core.auth import check_rate_limit
 from routes import router, moat_router
@@ -57,12 +57,12 @@ async def lifespan(app: FastAPI):
     logger.info("   Environment: %s", settings.ENVIRONMENT)
     logger.info("   LLM providers: %s", settings.available_llm_providers)
 
-    db = get_db()
-    await db.init()
-    logger.info("   DB: %s | Redis: %s", db.is_db_connected, db.is_redis_connected)
+    # Connect to database using your db object
+    await db.connect()
+    logger.info("   DB: %s", db.pool is not None)
 
     router_llm = get_router()
-    await router_llm.init(redis_client=db.redis)
+    await router_llm.init(redis_client=None)  # Redis optional
     logger.info("   LLM router initialized")
 
     logger.info("✅ %s v%s ready — 68 endpoints active", settings.APP_NAME, settings.APP_VERSION)
@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
     # Shutdown cleanup
     logger.info("🛑 Shutting down %s", settings.APP_NAME)
     await router_llm.close()
-    await db.close()
+    await db.disconnect()
     logger.info("✅ Shutdown complete")
 
 
