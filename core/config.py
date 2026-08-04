@@ -1,67 +1,189 @@
 """
-config_updates.py — Unknown Verdict v41.0
-==========================================
-Centralised configuration for the new v41 additions:
-  - JWT auth settings
-  - Rate limiting settings
-  - Streaming/SSE settings
-  - LLM routing table (tiered: simple→Groq, medium→30B, complex→105B)
-  - Redis/cache settings
-  - Feature flags
+core/config.py — Unknown Verdict v41.0
+=======================================
+FIX: This file was missing the `settings` object that app.py and other
+modules import via `from core.config import settings`.
 
-DEPLOY: Merge these into your existing config.py or unknown_verdict/config.py,
-or import this file directly:  from config_updates import LLM_ROUTING, ...
+This file provides:
+  1. `settings` — a Pydantic BaseSettings instance with ALL config fields
+     (backward compatible with existing app.py imports)
+  2. `LLM_ROUTING` — tiered routing table (simple→Groq, medium→30B, complex→105B)
+  3. `classify_complexity()` — query complexity classifier
+  4. All JWT, rate-limiting, Redis, and feature-flag config
 
-ENVIRONMENT VARIABLES (set in HF Spaces Secrets):
-  JWT_SECRET=<your-secret-key>          # CHANGE THIS! minimum 32 chars
-  ENFORCE_AUTH=false                     # set to true to require JWT
-  RATE_LIMIT_PER_MIN=100                 # requests per minute per IP
-  REDIS_URL=redis://...                  # optional, rate limiting + cache
-  SARVAM_API_KEY=<your-key>
-  GROQ_API_KEY=<your-key>
-  DATABASE_URL=postgresql://...          # Neon connection string
+DEPLOY: Replace core/config.py with this file.
+       This supersedes config_updates.py — it includes everything from that file
+       PLUS the `settings` object.
+
+REQUIRES: pip install pydantic pydantic-settings
 """
 
 from __future__ import annotations
 
 import os
+import logging
+from typing import Optional
 
-# ════════════════════════════════════════════════════════════════════════
-# JWT AUTHENTICATION
-# ════════════════════════════════════════════════════════════════════════
-JWT_SECRET = os.environ.get(
-    "JWT_SECRET",
-    # DO NOT use this default in production — set JWT_SECRET in HF Secrets!
-    "unknown-verdict-dev-secret-change-in-production-please-set-a-real-key",
-)
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_HOURS = 24
-ENFORCE_AUTH = os.environ.get("ENFORCE_AUTH", "false").lower() == "true"
+try:
+    from pydantic_settings import BaseSettings, SettingsConfigDict
+except ImportError:
+    # Fallback for older pydantic
+    try:
+        from pydantic.v1 import BaseSettings
+        SettingsConfigDict = dict
+    except ImportError:
+        # Last resort: use a plain class
+        BaseSettings = object
+        SettingsConfigDict = dict
 
-# Paths that don't require authentication
-PUBLIC_PATHS = {
-    "/",
-    "/docs",
-    "/redoc",
-    "/openapi.json",
-    "/health",
-    "/api/status",
-    "/auth/token",
-}
-
-PUBLIC_PREFIXES = (
-    "/static/",
-    "/docs/",
-    "/redoc/",
-)
+logger = logging.getLogger("core.config")
 
 
 # ════════════════════════════════════════════════════════════════════════
-# RATE LIMITING
+# SETTINGS — the main config object (imported as `from core.config import settings`)
 # ════════════════════════════════════════════════════════════════════════
-RATE_LIMIT_PER_MIN = int(os.environ.get("RATE_LIMIT_PER_MIN", "100"))
-RATE_LIMIT_WINDOW = 60  # seconds
-REDIS_URL = os.environ.get("REDIS_URL", os.environ.get("UPSTASH_REDIS_URL", ""))
+class Settings(BaseSettings):
+    """Central configuration for Unknown Verdict v41.0."""
+
+    if SettingsConfigDict is not dict:
+        model_config = SettingsConfigDict(
+            env_file=".env",
+            env_file_encoding="utf-8",
+            extra="ignore",
+            case_sensitive=False,
+        )
+
+    # ── App ──────────────────────────────────────────────────────
+    app_name: str = "Unknown Verdict"
+    version: str = "41.0"
+    environment: str = "production"
+    debug: bool = False
+    host: str = "0.0.0.0"
+    port: int = 7860
+
+    # ── Database (Neon PostgreSQL) ───────────────────────────────
+    database_url: str = ""
+    neon_database_url: str = ""
+    db_pool_min: int = 2
+    db_pool_max: int = 10
+    db_command_timeout: int = 30
+
+    # ── Redis ────────────────────────────────────────────────────
+    redis_url: str = ""
+    upstash_redis_url: str = ""
+    cache_enabled: bool = True
+    cache_ttl_hours: int = 24
+
+    # ── JWT Auth ─────────────────────────────────────────────────
+    jwt_secret: str = "unknown-verdict-dev-secret-change-in-production-please-set-a-real-key"
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_hours: int = 24
+    enforce_auth: bool = False
+
+    # ── Rate Limiting ────────────────────────────────────────────
+    rate_limit_per_min: int = 100
+    rate_limit_window: int = 60
+
+    # ── LLM Providers ───────────────────────────────────────────
+    sarvam_api_key: str = ""
+    groq_api_key: str = ""
+    openai_api_key: str = ""
+    gemini_api_key: str = ""
+    deepseek_api_key: str = ""
+    openrouter_api_key: str = ""
+    llm_providers: list[str] = ["sarvam", "openai", "gemini", "groq", "deepseek", "openrouter"]
+
+    # ── Streaming / SSE ─────────────────────────────────────────
+    enable_streaming: bool = True
+    sse_heartbeat_interval: int = 15
+
+    # ── Moat ─────────────────────────────────────────────────────
+    moat_enabled: bool = True
+    moat_version: str = "v41"
+
+    # ── Agents ───────────────────────────────────────────────────
+    agent_count: int = 250
+    verifier_count: int = 15
+
+    # ── RAG ──────────────────────────────────────────────────────
+    rag_enabled: bool = True
+    rag_embedding_model: str = "text-embedding-3-small"
+    rag_embedding_dim: int = 1536
+    rag_max_results: int = 10
+
+    # ── Feature Flags ───────────────────────────────────────────
+    enable_voice_input: bool = True
+    enable_voice_output: bool = True
+    enable_thinking_panel: bool = True
+
+    # ── CORS ─────────────────────────────────────────────────────
+    cors_origins: list[str] = ["*"]
+
+    # ── Paths ────────────────────────────────────────────────────
+    static_dir: str = "static"
+    templates_dir: str = "templates"
+
+    @property
+    def database_url_resolved(self) -> str:
+        """Return the first available database URL."""
+        return self.database_url or self.neon_database_url or ""
+
+    @property
+    def redis_url_resolved(self) -> str:
+        """Return the first available Redis URL."""
+        return self.redis_url or self.upstash_redis_url or ""
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+    @property
+    def is_development(self) -> bool:
+        return self.environment == "development"
+
+
+# Create the singleton instance — THIS is what `from core.config import settings` imports
+settings = Settings()
+
+# Override with environment variables (in case BaseSettings didn't pick them up)
+# This handles the case where pydantic-settings isn't installed
+if not settings.database_url:
+    settings.database_url = os.environ.get("DATABASE_URL", "")
+if not settings.neon_database_url:
+    settings.neon_database_url = os.environ.get("NEON_DATABASE_URL", "")
+if not settings.redis_url:
+    settings.redis_url = os.environ.get("REDIS_URL", "")
+if not settings.upstash_redis_url:
+    settings.upstash_redis_url = os.environ.get("UPSTASH_REDIS_URL", "")
+if not settings.sarvam_api_key:
+    settings.sarvam_api_key = os.environ.get("SARVAM_API_KEY", "")
+if not settings.groq_api_key:
+    settings.groq_api_key = os.environ.get("GROQ_API_KEY", "")
+if not settings.openai_api_key:
+    settings.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+if not settings.gemini_api_key:
+    settings.gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
+if not settings.deepseek_api_key:
+    settings.deepseek_api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+if not settings.openrouter_api_key:
+    settings.openrouter_api_key = os.environ.get("OPENROUTER_API_KEY", "")
+
+# JWT secret from env (override default if set)
+_env_jwt = os.environ.get("JWT_SECRET", "")
+if _env_jwt:
+    settings.jwt_secret = _env_jwt
+
+# Auth enforcement from env
+_env_enforce = os.environ.get("ENFORCE_AUTH", "false").lower()
+settings.enforce_auth = _env_enforce == "true"
+
+# Rate limit from env
+_env_rate = os.environ.get("RATE_LIMIT_PER_MIN", "")
+if _env_rate:
+    try:
+        settings.rate_limit_per_min = int(_env_rate)
+    except ValueError:
+        pass
 
 
 # ════════════════════════════════════════════════════════════════════════
@@ -137,53 +259,83 @@ def classify_complexity(query: str) -> str:
 
 
 # ════════════════════════════════════════════════════════════════════════
-# STREAMING / SSE
+# PUBLIC PATHS — exempt from JWT auth
 # ════════════════════════════════════════════════════════════════════════
-ENABLE_STREAMING = True
-SSE_HEARTBEAT_INTERVAL = 15  # seconds — send keepalive comment to prevent proxy timeout
-SSE_BUFFER_SIZE = 1024  # max bytes per SSE event
+PUBLIC_PATHS = {
+    "/",
+    "/docs",
+    "/redoc",
+    "/openapi.json",
+    "/health",
+    "/api/status",
+    "/auth/token",
+}
 
-
-# ════════════════════════════════════════════════════════════════════════
-# REDIS CACHE
-# ════════════════════════════════════════════════════════════════════════
-CACHE_ENABLED = os.environ.get("CACHE_ENABLED", "true").lower() == "true"
-CACHE_TTL_HOURS = int(os.environ.get("CACHE_TTL_HOURS", "24"))  # cache LLM responses for 24h
-
-
-# ════════════════════════════════════════════════════════════════════════
-# DATABASE
-# ════════════════════════════════════════════════════════════════════════
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    os.environ.get("NEON_DATABASE_URL", ""),
+PUBLIC_PREFIXES = (
+    "/static/",
+    "/docs/",
+    "/redoc/",
 )
-DB_POOL_MIN = 2
-DB_POOL_MAX = 10
-DB_COMMAND_TIMEOUT = 30
+
+
+# ════════════════════════════════════════════════════════════════════════
+# LLM PROVIDER CONFIG (detailed, with base URLs)
+# ════════════════════════════════════════════════════════════════════════
+LLM_PROVIDERS = {
+    "sarvam": {
+        "api_key": settings.sarvam_api_key,
+        "base_url": "https://api.sarvam.ai/v1",
+        "models": ["sarvam-105b", "sarvam-30b"],
+    },
+    "groq": {
+        "api_key": settings.groq_api_key,
+        "base_url": "https://api.groq.com/openai/v1",
+        "models": ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
+    },
+    "openai": {
+        "api_key": settings.openai_api_key,
+        "base_url": "https://api.openai.com/v1",
+        "models": ["gpt-4o", "gpt-4o-mini"],
+    },
+    "gemini": {
+        "api_key": settings.gemini_api_key,
+        "base_url": "https://generativelanguage.googleapis.com/v1",
+        "models": ["gemini-2.0-flash", "gemini-pro"],
+    },
+    "deepseek": {
+        "api_key": settings.deepseek_api_key,
+        "base_url": "https://api.deepseek.com/v1",
+        "models": ["deepseek-chat", "deepseek-reasoner"],
+    },
+    "openrouter": {
+        "api_key": settings.openrouter_api_key,
+        "base_url": "https://openrouter.ai/api/v1",
+        "models": ["auto", "anthropic/claude-3.5-sonnet"],
+    },
+}
 
 
 # ════════════════════════════════════════════════════════════════════════
 # FEATURE FLAGS
 # ════════════════════════════════════════════════════════════════════════
 FEATURE_FLAGS = {
-    "voice_input": True,
-    "voice_output": True,
-    "thinking_panel": True,
-    "streaming_chat": True,
-    "redis_cache": bool(REDIS_URL),
+    "voice_input": settings.enable_voice_input,
+    "voice_output": settings.enable_voice_output,
+    "thinking_panel": settings.enable_thinking_panel,
+    "streaming_chat": settings.enable_streaming,
+    "redis_cache": bool(settings.redis_url_resolved),
     "rate_limiting": True,
-    "jwt_auth": ENFORCE_AUTH,
-    "moat_evolution": True,
+    "jwt_auth": settings.enforce_auth,
+    "moat_evolution": settings.moat_enabled,
     "agent_network": True,
     "ai_judge": True,
     "verifiers": True,
-    "rag_engine": True,
+    "rag_engine": settings.rag_enabled,
 }
 
 
 # ════════════════════════════════════════════════════════════════════════
-# SCAN ATTEMPTS — paths blocked by the catch-all route
+# BLOCKED SCANNER PATHS
 # ════════════════════════════════════════════════════════════════════════
 BLOCKED_SCANNER_PATHS = [
     "/.env",
@@ -197,38 +349,10 @@ BLOCKED_SCANNER_PATHS = [
 ]
 
 
-# ════════════════════════════════════════════════════════════════════════
-# LLM PROVIDER KEYS (read from env — never hardcode)
-# ════════════════════════════════════════════════════════════════════════
-LLM_PROVIDERS = {
-    "sarvam": {
-        "api_key": os.environ.get("SARVAM_API_KEY", ""),
-        "base_url": "https://api.sarvam.ai/v1",
-        "models": ["sarvam-105b", "sarvam-30b"],
-    },
-    "groq": {
-        "api_key": os.environ.get("GROQ_API_KEY", ""),
-        "base_url": "https://api.groq.com/openai/v1",
-        "models": ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
-    },
-    "openai": {
-        "api_key": os.environ.get("OPENAI_API_KEY", ""),
-        "base_url": "https://api.openai.com/v1",
-        "models": ["gpt-4o", "gpt-4o-mini"],
-    },
-    "gemini": {
-        "api_key": os.environ.get("GEMINI_API_KEY", ""),
-        "base_url": "https://generativelanguage.googleapis.com/v1",
-        "models": ["gemini-2.0-flash", "gemini-pro"],
-    },
-    "deepseek": {
-        "api_key": os.environ.get("DEEPSEEK_API_KEY", ""),
-        "base_url": "https://api.deepseek.com/v1",
-        "models": ["deepseek-chat", "deepseek-reasoner"],
-    },
-    "openrouter": {
-        "api_key": os.environ.get("OPENROUTER_API_KEY", ""),
-        "base_url": "https://openrouter.ai/api/v1",
-        "models": ["auto", "anthropic/claude-3.5-sonnet"],
-    },
-}
+# Log config on import (helps with debugging)
+logger.info(f"Config loaded: {settings.app_name} v{settings.version}")
+logger.info(f"  Environment: {settings.environment}")
+logger.info(f"  Database: {'configured' if settings.database_url_resolved else 'NOT SET'}")
+logger.info(f"  Redis: {'configured' if settings.redis_url_resolved else 'not set (in-memory fallback)'}")
+logger.info(f"  Auth: {'enforced' if settings.enforce_auth else 'disabled (open)'}")
+logger.info(f"  Rate limit: {settings.rate_limit_per_min}/min per IP")
