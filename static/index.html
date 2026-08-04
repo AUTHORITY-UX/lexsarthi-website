@@ -1549,11 +1549,32 @@ async function loadMoatStatus() {
       });
   }
 }
-
+<!-- News Card with Image -->
+<div class="news-article" style="display:flex;gap:16px;align-items:flex-start;">
+  <div style="flex-shrink:0;width:120px;height:120px;border-radius:8px;overflow:hidden;background:var(--bg);">
+    <img src="${article.image_data || '/static/default-news.jpg'}" 
+         alt="${article.image_caption || article.title}"
+         style="width:100%;height:100%;object-fit:cover;"
+         onerror="this.style.display='none'">
+  </div>
+  <div style="flex:1;min-width:0;">
+    <div class="news-meta">
+      <span class="news-category ${article.category}">${article.category.replace('_',' ').toUpperCase()}</span>
+      <span>${article.source} ${article.source_icon || ''}</span>
+      <span>${timeAgo}</span>
+    </div>
+    <div class="news-title">
+      <a href="${article.url}" target="_blank">${article.title}</a>
+    </div>
+    <div class="news-summary">${article.summary}</div>
+    ${article.image_caption ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">📷 ${article.image_caption}</div>` : ''}
+  </div>
+</div>
 // ─────────────────────────────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────────────────────────────
 document.getElementById('chat-input').focus();
+  
 </script>
 </body>
 </html>
