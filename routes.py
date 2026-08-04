@@ -36,7 +36,24 @@ from pydantic import BaseModel, Field
 
 # ── Internal imports (absolute — fixed in earlier session) ──────────────
 from core.db import db
-from core.llm.router import llm_router, classify_complexity, LLM_ROUTING
+# classify_complexity and LLM_ROUTING live in core/config.py now
+# llm_router may be an instance or a class — handle both
+try:
+    from core.config import classify_complexity, LLM_ROUTING
+except ImportError:
+    def classify_complexity(q):
+        return "medium" if len(q.split()) > 10 else "simple"
+    LLM_ROUTING = {}
+
+try:
+    from core.llm.router import llm_router
+except (ImportError, AttributeError):
+    try:
+        from core.llm.router import LLMRouter
+        llm_router = LLMRouter()
+    except Exception:
+        llm_router = None
+        logger.warning("LLM router not available — chat will use fallback responses")
 
 # Optional imports — guard with try/except so missing modules don't crash startup
 try:
@@ -963,4 +980,4 @@ async def startup():
 async def shutdown():
     """Cleanup on shutdown."""
     await db.disconnect()
-    logger.info("Unknown Verdict v41.0 stopped")
+    logger.info("Unknown Verdict v41.0 stopped")  
