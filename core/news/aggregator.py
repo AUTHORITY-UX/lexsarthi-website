@@ -1,19 +1,17 @@
 """
 core/news/aggregator.py - AI News Corner
-Auto-updated news from internet, social media, and AI research
+Auto-updated news using httpx (no aiohttp dependency)
 """
 
 import json
 import logging
 import asyncio
 import feedparser
-import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from bs4 import BeautifulSoup
-import aiohttp
-import aiofiles
+import httpx
 
 from core.db import db
 from core.llm import LLMMessage, get_router
@@ -29,18 +27,17 @@ class NewsArticle:
     source: str
     url: str
     summary: str
-    content: str
-    category: str  # 'ai_law', 'legal_tech', 'ai_governance', 'research', 'policy'
-    published_date: datetime
+    content: str = ""
+    category: str = "general"
+    published_date: datetime = field(default_factory=datetime.now)
     author: str = ""
-    image_url: str = ""
     tags: List[str] = field(default_factory=list)
     sentiment: float = 0.0
     importance_score: float = 0.0
 
 
 class AINewsAggregator:
-    """Aggregate AI news from multiple sources"""
+    """Aggregate AI news from multiple sources using httpx"""
     
     SOURCES = {
         'techcrunch_ai': {
@@ -89,11 +86,25 @@ class AINewsAggregator:
         self.router = get_router()
         self.articles = []
         self.last_update = None
+        self._client = None
+    
+    async def get_client(self) -> httpx.AsyncClient:
+        """Get or create HTTP client"""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(30.0, connect=10.0),
+                limits=httpx.Limits(max_connections=20, max_keepalive_connections=10)
+            )
+        return self._client
     
     async def fetch_rss_feed(self, url: str) -> List[Dict]:
-        """Fetch and parse RSS feed"""
+        """Fetch and parse RSS feed using httpx"""
         try:
-            feed = feedparser.parse(url)
+            client = await self.get_client()
+            response = await client.get(url)
+            response.raise_for_status()
+            
+            feed = feedparser.parse(response.text)
             articles = []
             
             for entry in feed.entries[:10]:
@@ -103,7 +114,7 @@ class AINewsAggregator:
                     'summary': entry.get('summary', ''),
                     'published': entry.get('published', datetime.now().isoformat()),
                     'author': entry.get('author', ''),
-                    'tags': entry.get('tags', [])
+                    'tags': [t.get('term', '') for t in entry.get('tags', [])]
                 }
                 articles.append(article)
             
@@ -114,22 +125,23 @@ class AINewsAggregator:
             return []
     
     async def fetch_web_content(self, url: str) -> str:
-        """Fetch and extract content from webpage"""
+        """Fetch and extract content from webpage using httpx"""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=30) as response:
-                    html = await response.text()
-                    soup = BeautifulSoup(html, 'html.parser')
-                    
-                    # Remove script and style elements
-                    for script in soup(["script", "style"]):
-                        script.decompose()
-                    
-                    # Get main content
-                    content = soup.get_text(separator='\n')
-                    lines = [line.strip() for line in content.split('\n') if line.strip()]
-                    return ' '.join(lines[:50])  # First 50 lines
-                    
+            client = await self.get_client()
+            response = await client.get(url)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+            
+            # Get main content
+            content = soup.get_text(separator='\n')
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
+            return ' '.join(lines[:50])  # First 50 lines
+            
         except Exception as e:
             logger.error(f"Error fetching content {url}: {e}")
             return ""
@@ -151,15 +163,16 @@ class AINewsAggregator:
         
         try:
             response = await self.router.chat(messages, complexity="simple")
-            return response.content.strip().lower()
+            category = response.content.strip().lower()
+            valid_categories = ['ai_law', 'legal_tech', 'ai_governance', 'research', 'policy', 'general']
+            return category if category in valid_categories else 'general'
         except:
-            return "general"
+            return 'general'
     
     async def calculate_importance(self, article: Dict) -> float:
         """Calculate importance score for article"""
         score = 0.5  # Base score
         
-        # Keywords that indicate importance
         important_keywords = [
             'breakthrough', 'landmark', 'significant', 'historic',
             'regulation', 'act', 'law', 'governance', 'compliance',
@@ -179,15 +192,17 @@ class AINewsAggregator:
         
         # Check cache
         cache_key = f"news_{category if category else 'all'}"
-        cached = await db.fetchone(
-            "SELECT value, expires_at FROM moat_cache WHERE key = $1",
-            cache_key
-        )
-        
-        if cached and cached.get('expires_at') > datetime.now():
-            # Return cached news
-            articles_data = json.loads(cached['value'])
-            return [NewsArticle(**a) for a in articles_data]
+        try:
+            cached = await db.fetchone(
+                "SELECT value, expires_at FROM moat_cache WHERE key = $1",
+                cache_key
+            )
+            
+            if cached and cached.get('expires_at') and cached['expires_at'] > datetime.now():
+                articles_data = json.loads(cached['value'])
+                return [NewsArticle(**a) for a in articles_data]
+        except Exception as e:
+            logger.warning(f"Cache read error: {e}")
         
         # Fetch fresh news
         all_articles = []
@@ -208,18 +223,26 @@ class AINewsAggregator:
                     # Calculate importance
                     importance = await self.calculate_importance(article)
                     
+                    # Parse date
+                    pub_date = datetime.now()
+                    try:
+                        if article.get('published'):
+                            pub_date = datetime.fromisoformat(article['published'].replace('Z', '+00:00'))
+                    except:
+                        pass
+                    
                     # Create article
                     news_article = NewsArticle(
                         id=f"{source_name}_{hash(article.get('link', ''))}",
                         title=article.get('title', ''),
                         source=source_info['source'],
                         url=article.get('link', ''),
-                        summary=article.get('summary', ''),
+                        summary=article.get('summary', '')[:300],
                         content=content[:1000],
                         category=category_ai,
-                        published_date=datetime.fromisoformat(article.get('published', datetime.now().isoformat())),
+                        published_date=pub_date,
                         author=article.get('author', ''),
-                        tags=[t.get('term', '') for t in article.get('tags', [])],
+                        tags=article.get('tags', []),
                         importance_score=importance
                     )
                     
@@ -233,11 +256,14 @@ class AINewsAggregator:
         all_articles.sort(key=lambda x: (x.importance_score, x.published_date), reverse=True)
         
         # Cache results
-        await db.execute("""
-            INSERT INTO moat_cache (key, value, expires_at)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (key) DO UPDATE SET value = $2, expires_at = $3
-        """, cache_key, json.dumps([a.__dict__ for a in all_articles]), datetime.now() + timedelta(hours=1))
+        try:
+            await db.execute("""
+                INSERT INTO moat_cache (key, value, expires_at)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (key) DO UPDATE SET value = $2, expires_at = $3
+            """, cache_key, json.dumps([a.__dict__ for a in all_articles]), datetime.now() + timedelta(hours=1))
+        except Exception as e:
+            logger.warning(f"Cache write error: {e}")
         
         self.articles = all_articles[:limit]
         self.last_update = datetime.now()
@@ -262,20 +288,6 @@ class AINewsAggregator:
             'articles': articles[:10]
         }
     
-    async def fetch_instagram_posts(self, hashtags: List[str]) -> List[Dict]:
-        """Fetch Instagram posts related to AI"""
-        # Note: Instagram API integration would go here
-        # For now, return mock data
-        return [
-            {
-                'id': 'post1',
-                'content': f"Latest #AI updates: New regulations on #AIGovernance",
-                'source': 'Instagram',
-                'hashtags': ['AI', 'AIGovernance'],
-                'timestamp': datetime.now().isoformat()
-            }
-        ]
-    
     async def start_background_updater(self, interval_minutes: int = 15):
         """Start background news updater"""
         while True:
@@ -286,3 +298,19 @@ class AINewsAggregator:
             except Exception as e:
                 logger.error(f"Error updating news: {e}")
             await asyncio.sleep(interval_minutes * 60)
+    
+    async def close(self):
+        """Close HTTP client"""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+
+
+# Singleton instance
+_news_aggregator: Optional[AINewsAggregator] = None
+
+def get_news_aggregator() -> AINewsAggregator:
+    """Get news aggregator singleton"""
+    global _news_aggregator
+    if _news_aggregator is None:
+        _news_aggregator = AINewsAggregator()
+    return _news_aggregator
