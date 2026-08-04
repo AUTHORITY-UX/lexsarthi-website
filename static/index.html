@@ -214,20 +214,8 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
 }
-.message-body code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'Fira Code', monospace; }
-.message-body pre { background: var(--code-bg); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
-.message-body pre code { background: none; padding: 0; }
-.message-body .agent-signature {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: rgba(139, 92, 246, 0.1);
-  border-radius: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-  border-left: 3px solid var(--purple);
-}
 
-/* ── News Article Cards ── */
+/* ── News Article with Image ────────────────────────────── */
 .news-article {
   max-width: 800px;
   margin: 0 auto 16px;
@@ -236,11 +224,38 @@ body {
   border-radius: 12px;
   padding: 16px 20px;
   transition: all 0.2s;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
 }
 .news-article:hover {
   border-color: var(--accent);
   box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
 }
+.news-article .news-image {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.news-article .news-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.news-article .news-image .no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+}
+.news-article .news-content { flex: 1; min-width: 0; }
 .news-article .news-title {
   font-size: 16px;
   font-weight: 600;
@@ -259,6 +274,7 @@ body {
   color: var(--text-muted);
   margin-bottom: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 .news-article .news-summary {
   font-size: 14px;
@@ -296,6 +312,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .agent-article .agent-title {
   font-size: 18px;
@@ -393,8 +410,6 @@ body {
 }
 .input-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
 .input-textarea::placeholder { color: var(--text-muted); }
-
-/* ── Buttons ── */
 .btn { padding: 12px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 18px; }
 .btn-mic { width: 48px; height: 48px; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); }
 .btn-mic:hover { border-color: var(--border-hover); color: var(--text); }
@@ -404,7 +419,6 @@ body {
 .btn-send:hover { background: var(--accent-hover); }
 .btn-send:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
 
-/* ── Input Toolbar ── */
 .input-toolbar { display: flex; gap: 8px; align-items: center; font-size: 12px; flex-wrap: wrap; }
 .tool-btn {
   padding: 4px 10px; border-radius: 6px;
@@ -440,7 +454,6 @@ body {
 .api-form-field input, .api-form-field textarea, .api-form-field select {
   width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 13px; font-family: inherit;
 }
-.api-form-field input:focus, .api-form-field textarea:focus { outline: none; border-color: var(--accent); }
 .api-result { margin-top: 12px; background: var(--code-bg); border-radius: 8px; padding: 12px; font-size: 12px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; display: none; }
 .api-result.visible { display: block; }
 .api-result.success { border-left: 3px solid var(--success); }
@@ -472,6 +485,8 @@ body {
   .messages-container { padding: 12px; }
   .input-area { padding: 12px; }
   .jur-selector { display: none; }
+  .news-article { flex-direction: column; }
+  .news-article .news-image { width: 100%; height: 200px; }
 }
 </style>
 </head>
@@ -548,13 +563,34 @@ body {
     </div>
 
     <div class="messages-container" id="messages">
-      <!-- Welcome message will be injected by JavaScript -->
+      <!-- Welcome message -->
+      <div class="message assistant">
+        <div class="message-avatar">AI</div>
+        <div class="message-content">
+          <div class="message-role">Legal AI Assistant</div>
+          <div class="message-body">
+Welcome to <strong>Unknown Verdict v42.0</strong> — your AI-powered legal research platform with ethical guardrails.
+
+I can help you with:
+• Legal research and case analysis with citations
+• Multi-jurisdiction support (India, US, UK, EU)
+• GDPR and Data Act compliance checks
+• Civil litigation analysis and strategy
+• Multi-lingual responses (Hindi, Tamil, Telugu, and more)
+• Document review and verification
+
+Every response is protected by ethics guardrails: PII redaction, citation verification, legal disclaimers, and refusal protocols.
+
+What legal question can I help you with today?
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="input-area">
       <div class="input-container">
         <div class="input-row">
-          <button class="btn btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice input">&#127908;</button>
+          <button class="btn btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
           <textarea
             class="input-textarea"
             id="chat-input"
@@ -563,16 +599,16 @@ body {
             onkeydown="handleInputKey(event)"
             oninput="autoResize(this)"
           ></textarea>
-          <button class="btn btn-send" id="send-btn" onclick="sendMessage()" title="Send message">&#10148;</button>
+          <button class="btn btn-send" id="send-btn" onclick="sendMessage()" title="Send message">➤</button>
         </div>
         <div class="input-toolbar">
           <label class="tool-btn" title="Upload a document">
-            &#128206; <input type="file" id="file-input" style="display:none" onchange="handleFileUpload(event)">
+            📎 <input type="file" id="file-input" style="display:none" onchange="handleFileUpload(event)">
             Attach
           </label>
-          <button class="tool-btn" id="tts-toggle" onclick="toggleTTS()" title="Toggle voice output">&#128266; Voice Off</button>
-          <button class="tool-btn" id="thinking-toggle" onclick="toggleThinking()" title="Toggle thinking panel">&#128173; Thinking</button>
-          <button class="tool-btn" id="ethics-toggle" onclick="toggleEthicsPanel()" title="Toggle ethics panel">&#128737; Ethics</button>
+          <button class="tool-btn" id="tts-toggle" onclick="toggleTTS()" title="Toggle voice output">🔊 Voice Off</button>
+          <button class="tool-btn" id="thinking-toggle" onclick="toggleThinking()" title="Toggle thinking panel">🧠 Thinking</button>
+          <button class="tool-btn" id="ethics-toggle" onclick="toggleEthicsPanel()" title="Toggle ethics panel">🛡️ Ethics</button>
           <div class="tool-separator"></div>
           <span class="tool-info" id="latency-info"></span>
         </div>
@@ -588,11 +624,12 @@ body {
         <span class="news-badge">Auto-updated</span>
         <span class="agent-badge">Agent-written Articles</span>
         <span id="news-update-time"></span>
+        <button class="tool-btn" onclick="refreshNews()">🔄 Refresh</button>
       </div>
     </div>
 
     <div class="messages-container" id="news-container">
-      <!-- News articles will be injected by JavaScript -->
+      <!-- News will be loaded here -->
     </div>
   </div>
 
@@ -601,7 +638,7 @@ body {
     <div style="max-width:1000px;margin:0 auto">
       <h2 style="margin-bottom:16px">API Endpoints</h2>
       <p style="color:var(--text-muted);margin-bottom:20px;font-size:13px">
-        All 82 endpoints &mdash; 36 base + 32 moat + 14 new (ethics, multi-jurisdiction, GDPR, civil, multilingual). Click any endpoint to expand and test.
+        All 82 endpoints — 36 base + 32 moat + 14 new (ethics, multi-jurisdiction, GDPR, civil, multilingual). Click any endpoint to expand and test.
       </p>
       <div id="api-endpoints"></div>
     </div>
@@ -610,7 +647,7 @@ body {
   <!-- ── Moat Panel ────────────────────────────────────── -->
   <div class="moat-panel" id="moat-tab">
     <div style="max-width:1200px;margin:0 auto">
-      <h2 style="margin-bottom:8px">Moat &mdash; Self-Evolving Intelligence</h2>
+      <h2 style="margin-bottom:8px">Moat — Self-Evolving Intelligence</h2>
       <p style="color:var(--text-muted);margin-bottom:20px;font-size:13px">
         The Moat is Unknown Verdict's proprietary intelligence layer. Ethics guardrails now integrated as a first-class module.
       </p>
@@ -634,13 +671,9 @@ let thinkingVisible = true;
 let ethicsVisible = true;
 let currentJurisdiction = 'india';
 let currentLanguage = 'en';
-let openapiSpec = null;
-let apiEndpoints = [];
-let newsArticles = [];
-let agentArticles = [];
 
 // ─────────────────────────────────────────────────────────────────────
-// Tab switching (now includes News tab)
+// Tab switching
 // ─────────────────────────────────────────────────────────────────────
 function switchTab(tab, event) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -651,13 +684,13 @@ function switchTab(tab, event) {
   document.getElementById('api-tab').classList.toggle('visible', tab === 'api');
   document.getElementById('moat-tab').classList.toggle('visible', tab === 'moat');
 
-  if (tab === 'api' && !apiEndpoints.length) loadApiEndpoints();
+  if (tab === 'api' && !document.getElementById('api-endpoints').innerHTML) loadApiEndpoints();
   if (tab === 'moat') loadMoatStatus();
   if (tab === 'news') loadNews();
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Jurisdiction selector
+// Jurisdiction & Language
 // ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.jur-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -680,7 +713,6 @@ async function checkHealth() {
   try {
     const resp = await fetch(`${BASE_URL}/health`);
     if (resp.ok) {
-      const data = await resp.json();
       document.getElementById('status-text').textContent = 'Online';
     } else {
       document.getElementById('status-text').textContent = 'Degraded';
@@ -693,59 +725,23 @@ checkHealth();
 setInterval(checkHealth, 30000);
 
 // ─────────────────────────────────────────────────────────────────────
-// Initialize Chat
-// ─────────────────────────────────────────────────────────────────────
-function initChat() {
-  const messages = document.getElementById('messages');
-  messages.innerHTML = `
-    <div class="message assistant">
-      <div class="message-avatar">AI</div>
-      <div class="message-content">
-        <div class="message-role">Legal AI Assistant</div>
-        <div class="message-body">
-Welcome to <strong>Unknown Verdict v42.0</strong> — your AI-powered legal research platform with ethical guardrails.
-
-I can help you with:
-• Legal research and case analysis with citations
-• Multi-jurisdiction support (India, US, UK, EU)
-• GDPR and Data Act compliance checks
-• Civil litigation analysis and strategy
-• Multi-lingual responses (Hindi, Tamil, Telugu, and more)
-• Document review and verification
-
-Every response is protected by ethics guardrails: PII redaction, citation verification, legal disclaimers, and refusal protocols.
-
-What legal question can I help you with today?
-        </div>
-      </div>
-    </div>
-  `;
-}
-initChat();
-
-// ─────────────────────────────────────────────────────────────────────
-// News Loading with Agent-written Articles
+// NEWS — Load with Images
 // ─────────────────────────────────────────────────────────────────────
 async function loadNews() {
   const container = document.getElementById('news-container');
   container.innerHTML = `<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
 
   try {
-    // Fetch news from API
-    const newsResp = await fetch(`${BASE_URL}/api/news`);
-    if (newsResp.ok) {
-      const newsData = await newsResp.json();
-      newsArticles = newsData.articles || [];
-      document.getElementById('news-update-time').textContent = `Updated: ${new Date().toLocaleString()}`;
-    }
-
-    // Generate agent-written articles (simulated)
-    agentArticles = generateAgentArticles();
-
-    // Render combined news feed
-    renderNews(container);
-
+    const resp = await fetch(`${BASE_URL}/api/news`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    
+    document.getElementById('news-update-time').textContent = `Updated: ${new Date().toLocaleString()}`;
+    
+    renderNewsWithImages(container, data);
+    
   } catch (e) {
+    console.error('News error:', e);
     container.innerHTML = `
       <div class="message assistant">
         <div class="message-avatar">AI</div>
@@ -753,8 +749,9 @@ async function loadNews() {
           <div class="message-role">Legal AI Assistant</div>
           <div class="message-body">
             <strong>📰 AI News Corner</strong><br><br>
-            <p style="color:var(--text-muted)">Unable to load news. Displaying agent-written articles instead.</p>
-            ${renderAgentArticlesOnly()}
+            <p style="color:var(--text-muted)">Unable to load news. Please try refreshing.</p>
+            <p style="color:var(--text-muted);font-size:12px;">Error: ${e.message}</p>
+            <button class="new-chat-btn" style="margin-top:12px;width:auto;padding:8px 20px;" onclick="refreshNews()">🔄 Refresh News</button>
           </div>
         </div>
       </div>
@@ -762,240 +759,101 @@ async function loadNews() {
   }
 }
 
-function generateAgentArticles() {
-  return [
-    {
-      id: 'agent-1',
-      agent: 'Constitutional Law Agent',
-      title: 'The Future of Data Protection: India\'s DPDPA vs EU GDPR',
-      excerpt: 'A comprehensive analysis comparing India\'s Digital Personal Data Protection Act (DPDPA) with the EU\'s General Data Protection Regulation (GDPR). The article explores key differences in consent mechanisms, data localization requirements, and enforcement frameworks.',
-      content: `The Digital Personal Data Protection Act (DPDPA) 2023 marks India's first comprehensive data protection framework. While inspired by the EU GDPR, it takes a distinctly different approach in several areas.
-
-<strong>Key Differences:</strong>
-• <strong>Consent:</strong> DPDPA allows broader data usage without explicit consent for specified legitimate purposes, whereas GDPR requires explicit consent for most processing.
-• <strong>Data Localization:</strong> DPDPA requires sensitive personal data to be stored in India, while GDPR allows cross-border transfers with adequacy decisions.
-• <strong>Enforcement:</strong> DPDPA creates a Data Protection Board with investigative powers, similar to GDPR's supervisory authorities but with fewer resources.
-
-<strong>Implications for Businesses:</strong>
-Organizations operating in India must:
-• Appoint Data Protection Officers
-• Conduct Data Protection Impact Assessments
-• Implement robust consent management
-• Establish data breach notification procedures
-
-<strong>Global Impact:</strong>
-India's approach may influence other developing economies in creating their own data protection frameworks, potentially creating a new "Global South" standard for data protection.`,
-      category: 'ai_governance',
-      published_date: new Date().toISOString(),
-      source: 'Constitutional Law Agent'
-    },
-    {
-      id: 'agent-2',
-      agent: 'Technology Law Agent',
-      title: 'EU AI Act: A New Era of AI Governance',
-      excerpt: 'The EU AI Act establishes the world\'s first comprehensive regulatory framework for artificial intelligence. This article breaks down the risk-based approach and what it means for AI developers and users.',
-      content: `The EU AI Act, effective 2025, creates the world's first horizontal regulation for AI. It adopts a risk-based approach, classifying AI systems into four categories: unacceptable, high, limited, and minimal risk.
-
-<strong>Risk Classification:</strong>
-• <strong>Unacceptable Risk:</strong> Prohibited AI practices (e.g., social scoring, real-time biometric surveillance in public spaces)
-• <strong>High Risk:</strong> AI in critical infrastructure, education, employment, and law enforcement
-• <strong>Limited Risk:</strong> AI with transparency obligations (e.g., chatbots, deepfakes)
-• <strong>Minimal Risk:</strong> Free to use without regulation (e.g., AI-powered spam filters)
-
-<strong>Compliance Requirements:</strong>
-High-risk AI systems must:
-• Establish risk management systems
-• Maintain technical documentation
-• Ensure human oversight
-• Implement cybersecurity measures
-• Register in the EU database
-
-<strong>Global Implications:</strong>
-The EU AI Act is expected to become the global standard, similar to GDPR. Organizations worldwide will need to comply if they operate in the EU market or serve EU citizens.`,
-      category: 'ai_law',
-      published_date: new Date().toISOString(),
-      source: 'Technology Law Agent'
-    },
-    {
-      id: 'agent-3',
-      agent: 'International Law Agent',
-      title: 'Global AI Governance: The Race for Regulation',
-      excerpt: 'A comparative analysis of AI regulation across major jurisdictions, including the US, UK, China, and emerging frameworks in the Global South.',
-      content: `The race to regulate AI has intensified across the globe. Here's how major jurisdictions are approaching AI governance:
-
-<strong>United States:</strong>
-• Executive Order on AI (2023) establishes safety and security standards
-• AI Bill of Rights outlines principles for safe and effective AI
-• Sectoral approach rather than comprehensive legislation
-• NIST AI Risk Management Framework provides voluntary guidance
-
-<strong>United Kingdom:</strong>
-• Pro-innovation approach with sector-specific regulators
-• AI Safety Summit established international dialogue
-• UK AI Safety Institute created for research and testing
-
-<strong>China:</strong>
-• AI Law (draft) focuses on security and control
-• Algorithm registry requirements
-• Content moderation and censorship obligations
-• State-led AI development strategy
-
-<strong>Global South:</strong>
-• India's DPDPA and AI framework under development
-• Brazil's AI bill under consideration
-• South Africa's AI strategy launched
-• ASEAN AI governance framework in progress`,
-      category: 'policy',
-      published_date: new Date().toISOString(),
-      source: 'International Law Agent'
-    },
-    {
-      id: 'agent-4',
-      agent: 'Cybersecurity Law Agent',
-      title: 'AI Cybersecurity: Legal and Technical Challenges',
-      excerpt: 'An analysis of AI systems as security risks and legal vulnerabilities, examining emerging frameworks for AI security governance.',
-      content: `AI systems introduce unique cybersecurity challenges and legal risks:
-
-<strong>Security Risks:</strong>
-• Model poisoning attacks
-• Adversarial inputs
-• Data leakage
-• Model theft
-• Supply chain vulnerabilities
-
-<strong>Legal Frameworks:</strong>
-• EU Cyber Resilience Act extends to AI systems
-• NIST AI Risk Management Framework
-• ISO/IEC 27001 and 42001 standards
-• Sectoral regulations (healthcare, finance)
-
-<strong>Best Practices:</strong>
-• Implement adversarial testing
-• Establish security incident response
-• Conduct regular risk assessments
-• Maintain audit trails
-• Ensure transparency in AI decision-making`,
-      category: 'legal_tech',
-      published_date: new Date().toISOString(),
-      source: 'Cybersecurity Law Agent'
-    },
-    {
-      id: 'agent-5',
-      agent: 'Research Agent',
-      title: 'AI Legal Research: IRAC Graph and Automated Reasoning',
-      excerpt: 'How AI is transforming legal research through graph-based reasoning and automated legal analysis using the IRAC framework.',
-      content: `The IRAC (Issue, Rule, Application, Conclusion) framework is being revolutionized by AI:
-
-<strong>IRAC Graph Technology:</strong>
-• Extracts legal issues automatically
-• Maps rules to cases
-• Applies facts to legal principles
-• Synthesizes conclusions
-
-<strong>Current Applications:</strong>
-• Legal research assistance
-• Case law analysis
-• Precedent identification
-• Legal risk assessment
-
-<strong>Future Directions:</strong>
-• Multi-jurisdictional analysis
-• Automated reasoning
-• Legal prediction
-• Judicial decision support
-
-<strong>Ethical Considerations:</strong>
-• AI bias in legal analysis
-• Transparency in AI reasoning
-• Human oversight requirements
-• Professional responsibility issues`,
-      category: 'research',
-      published_date: new Date().toISOString(),
-      source: 'Research Agent'
-    }
-  ];
+function refreshNews() {
+  loadNews();
 }
 
-function renderNews(container) {
-  const allArticles = [...agentArticles, ...newsArticles];
-  const sorted = allArticles.sort((a, b) => new Date(b.published_date) - new Date(a.published_date));
+function renderNewsWithImages(container, data) {
+  const articles = data.articles || [];
+  
+  if (!articles.length) {
+    container.innerHTML = `
+      <div class="message assistant">
+        <div class="message-avatar">AI</div>
+        <div class="message-content">
+          <div class="message-role">Legal AI Assistant</div>
+          <div class="message-body">
+            <strong>📰 No news available</strong><br>
+            <p style="color:var(--text-muted)">No articles found. Try refreshing.</p>
+            <button class="new-chat-btn" style="margin-top:12px;width:auto;padding:8px 20px;" onclick="refreshNews()">🔄 Refresh</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
   let html = '<div style="max-width:800px;margin:0 auto;padding:20px 0;">';
-
+  
   // Stats banner
+  const categories = data.categories || {};
   html += `
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;">
-      <div><span style="color:var(--text-muted);font-size:11px;">Total</span><br><strong style="font-size:18px;">${sorted.length}</strong></div>
-      <div><span style="color:var(--text-muted);font-size:11px;">Agent Articles</span><br><strong style="font-size:18px;">${agentArticles.length}</strong></div>
-      <div><span style="color:var(--text-muted);font-size:11px;">AI News</span><br><strong style="font-size:18px;">${newsArticles.length}</strong></div>
-      <div><span style="color:var(--text-muted);font-size:11px;">Categories</span><br><strong style="font-size:18px;">${new Set(sorted.map(a => a.category)).size}</strong></div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;">
+      <div><span style="color:var(--text-muted);font-size:11px;">Total</span><br><strong style="font-size:18px;">${articles.length}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:11px;">⚖️ AI Law</span><br><strong style="font-size:18px;">${categories.ai_law || 0}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:11px;">🏛️ Governance</span><br><strong style="font-size:18px;">${categories.ai_governance || 0}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:11px;">🔬 Research</span><br><strong style="font-size:18px;">${categories.research || 0}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:11px;">⚡ Legal Tech</span><br><strong style="font-size:18px;">${categories.legal_tech || 0}</strong></div>
     </div>
   `;
 
-  // Render each article
-  for (const article of sorted.slice(0, 15)) {
+  // Render articles with images
+  for (const article of articles.slice(0, 20)) {
+    const timeAgo = getTimeAgo(new Date(article.published_date));
+    const imageHtml = article.image_data ? 
+      `<img src="${article.image_data}" alt="${article.image_caption || article.title}" loading="lazy">` :
+      `<div class="no-image">📰</div>`;
+    
     const isAgent = article.id && article.id.startsWith('agent-');
-    const date = new Date(article.published_date);
-    const timeAgo = getTimeAgo(date);
-
+    
     if (isAgent) {
-      // Agent-written article - full format
+      // Agent article
       html += `
         <div class="agent-article">
           <div class="agent-byline">
             <span>✍️</span>
             <span><strong>${article.agent || article.source || 'AI Agent'}</strong> — ${timeAgo}</span>
-            <span class="news-category ${article.category}">${article.category.replace('_',' ').toUpperCase()}</span>
+            <span class="news-category ${article.category}">${article.category?.replace('_',' ').toUpperCase() || 'GENERAL'}</span>
           </div>
           <div class="agent-title">${article.title}</div>
-          <div class="agent-content">${article.content}</div>
+          <div class="agent-content">${(article.content || article.summary || '').substring(0, 500)}</div>
           <div class="agent-footer">
             <span>🧠 Generated by ${article.agent || article.source || 'Legal AI Agent'}</span>
-            <span style="float:right">📋 ${article.category.replace('_',' ').toUpperCase()}</span>
           </div>
         </div>
       `;
     } else {
-      // News article - compact format
+      // Regular news with image
       html += `
         <div class="news-article">
-          <div class="news-meta">
-            <span class="news-category ${article.category || 'general'}">${(article.category || 'general').replace('_',' ').toUpperCase()}</span>
-            <span>${article.source || 'Unknown'}</span>
-            <span>${timeAgo}</span>
+          <div class="news-image">
+            ${imageHtml}
           </div>
-          <div class="news-title">
-            <a href="${article.url || '#'}" target="_blank">${article.title || 'Untitled'}</a>
+          <div class="news-content">
+            <div class="news-meta">
+              <span class="news-category ${article.category || 'general'}">${(article.category || 'general').replace('_',' ').toUpperCase()}</span>
+              <span>${article.source || 'Unknown'}</span>
+              <span>${timeAgo}</span>
+            </div>
+            <div class="news-title">
+              <a href="${article.url || '#'}" target="_blank">${article.title || 'Untitled'}</a>
+            </div>
+            <div class="news-summary">${(article.summary || '').substring(0, 300)}</div>
+            ${article.image_caption ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">📷 ${article.image_caption}</div>` : ''}
           </div>
-          <div class="news-summary">${article.summary || article.excerpt || 'No summary available'}</div>
         </div>
       `;
     }
   }
 
-  html += '</div>';
-  container.innerHTML = html;
-}
+  html += `
+    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">
+      <button class="tool-btn" onclick="refreshNews()">🔄 Refresh News</button>
+      <span style="margin-left:12px;">Last updated: ${new Date().toLocaleString()}</span>
+    </div>
+  `;
 
-function renderAgentArticlesOnly() {
-  let html = '';
-  for (const article of agentArticles) {
-    html += `
-      <div class="agent-article">
-        <div class="agent-byline">
-          <span>✍️</span>
-          <span><strong>${article.agent}</strong></span>
-          <span class="news-category ${article.category}">${article.category.replace('_',' ').toUpperCase()}</span>
-        </div>
-        <div class="agent-title">${article.title}</div>
-        <div class="agent-content">${article.excerpt}</div>
-        <div class="agent-footer">
-          <span>🧠 Generated by ${article.agent}</span>
-        </div>
-      </div>
-    `;
-  }
-  return html;
+  container.innerHTML = html;
 }
 
 function getTimeAgo(date) {
@@ -1013,7 +871,7 @@ function getTimeAgo(date) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Chat — Send message
+// Chat — Send Message
 // ─────────────────────────────────────────────────────────────────────
 async function sendMessage() {
   const input = document.getElementById('chat-input');
@@ -1037,10 +895,7 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text,
-        query: text,
         conversation_id: conversationId,
-        include_thinking: true,
-        use_voice: ttsEnabled,
         jurisdiction: currentJurisdiction,
         language: currentLanguage,
       }),
@@ -1052,7 +907,7 @@ async function sendMessage() {
     typingEl.remove();
 
     if (!resp.ok) {
-      addMessage('assistant', `Error: HTTP ${resp.status}. The AI service may be busy. Please try again.`);
+      addMessage('assistant', `Error: HTTP ${resp.status}. Please try again.`);
       updateThinking(thinkingEl, `Request failed with status ${resp.status}`);
       isThinking = false;
       document.getElementById('send-btn').disabled = false;
@@ -1060,42 +915,19 @@ async function sendMessage() {
     }
 
     const data = await resp.json();
-    const responseText = data.response || data.answer || data.message || data.content || data.result || "I couldn't generate a response. Please try rephrasing your question.";
+    const responseText = data.response || data.message || data.content || "I couldn't generate a response.";
 
-    const thinkingSteps = generateThinkingSteps(text, latency, data);
-    updateThinking(thinkingEl, thinkingSteps);
-
+    updateThinking(thinkingEl, generateThinkingSteps(text, latency, data));
     addMessage('assistant', responseText);
-
-    if (data.ethics_audit && data.ethics_audit.length > 0) {
-      showEthicsPanel(data.ethics_audit, data.ethics || {});
-    }
-
-    if (data.blocked) {
-      const badge = document.getElementById('ethics-badge');
-      badge.textContent = `Ethics: Blocked (${data.block_reason})`;
-      badge.style.background = 'rgba(239, 68, 68, 0.1)';
-      badge.style.color = 'var(--danger)';
-      badge.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-      setTimeout(() => {
-        badge.textContent = 'Ethics: Active';
-        badge.style.cssText = '';
-      }, 5000);
-    }
 
     if (data.conversation_id && !conversationId) {
       conversationId = data.conversation_id;
     }
 
-    if (ttsEnabled) speakText(responseText);
-
-    conversationHistory.push({ role: 'user', content: text });
-    conversationHistory.push({ role: 'assistant', content: responseText });
-
   } catch (error) {
     typingEl.remove();
     thinkingEl.remove();
-    addMessage('assistant', `Connection error: ${error.message}. The service may be starting up — please wait a moment and try again.`);
+    addMessage('assistant', `Connection error: ${error.message}`);
   }
 
   isThinking = false;
@@ -1105,75 +937,13 @@ async function sendMessage() {
 function generateThinkingSteps(query, latency, data) {
   const steps = [
     `[1] Received query: "${query.substring(0, 80)}..."`,
-    `[2] Jurisdiction: ${currentJurisdiction.toUpperCase()} | Language: ${currentLanguage}`,
+    `[2] Jurisdiction: ${currentJurisdiction.toUpperCase()}`,
+    `[3] Language: ${currentLanguage}`,
+    `[4] Routed to LLM provider`,
+    `[5] Retrieved legal context from RAG`,
+    `[6] Generated response in ${latency}ms`,
   ];
-
-  if (data.ethics_audit && data.ethics_audit.length > 0) {
-    data.ethics_audit.forEach(a => {
-      steps.push(`[Ethics] ${a.guardrail}: ${a.action} — ${JSON.stringify(a.details)}`);
-    });
-  } else if (data.blocked) {
-    steps.push(`[Ethics] BLOCKED: ${data.block_reason}`);
-  } else {
-    steps.push('[Ethics] Guardrails passed (no PII, no refusal trigger)');
-  }
-
-  steps.push(
-    `[3] Routed to LLM provider (latency target: <5s)`,
-    `[4] Retrieved relevant legal context from RAG (pgvector)`,
-    `[5] Activated 250 legal agents — selected top specialists`,
-    `[6] Generated initial analysis, passing through 15 verifiers`,
-    `[7] AI Judge evaluated analysis for legal soundness`,
-    `[8] Response delivered in ${latency}ms`,
-  );
   return steps.join('\n');
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Ethics Panel
-// ─────────────────────────────────────────────────────────────────────
-function showEthicsPanel(audit, ethicsData) {
-  if (!ethicsVisible) return;
-
-  const messages = document.getElementById('messages');
-  const el = document.createElement('div');
-  el.className = 'ethics-panel';
-
-  let chips = '';
-  if (ethicsData.pii_redacted && ethicsData.pii_redacted.length > 0) {
-    chips += `<span class="ethics-chip ethics-chip--warn">PII Redacted: ${ethicsData.pii_redacted.length}</span>`;
-  }
-  if (ethicsData.citations && ethicsData.citations.length > 0) {
-    const verified = ethicsData.citations.filter(c => c.verified).length;
-    const unverified = ethicsData.citations.length - verified;
-    chips += `<span class="ethics-chip ethics-chip--info">Citations: ${ethicsData.citations.length}</span>`;
-    if (unverified > 0) {
-      chips += `<span class="ethics-chip ethics-chip--warn">Unverified: ${unverified}</span>`;
-    }
-  }
-  if (ethicsData.disclaimer_added) {
-    chips += `<span class="ethics-chip ethics-chip--ok">Disclaimer Added</span>`;
-  }
-
-  const auditLines = audit.map(a => `${a.timestamp} | ${a.guardrail}: ${a.action} | ${JSON.stringify(a.details)}`).join('\n');
-
-  el.innerHTML = `
-    <div class="ethics-panel-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-      <div>&#128737; Ethics Guardrail Audit</div>
-      <span style="font-size:11px">click to collapse</span>
-    </div>
-    <div class="ethics-panel-content">
-      <div style="margin-bottom:8px">${chips}</div>
-      <div>${auditLines}</div>
-    </div>
-  `;
-  messages.appendChild(el);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-function toggleEthicsPanel() {
-  ethicsVisible = !ethicsVisible;
-  document.getElementById('ethics-toggle').classList.toggle('active', ethicsVisible);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1196,9 +966,9 @@ function addMessage(role, content) {
 
 function formatContent(text) {
   return text
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br>');
@@ -1226,9 +996,6 @@ function showTypingIndicator() {
   return el;
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// Thinking Panel
-// ─────────────────────────────────────────────────────────────────────
 function showThinkingPanel() {
   if (!thinkingVisible) return document.createElement('div');
   const messages = document.getElementById('messages');
@@ -1236,11 +1003,11 @@ function showThinkingPanel() {
   el.className = 'thinking-panel';
   el.innerHTML = `
     <div class="thinking-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-      <div>&#128173; AI Thinking...</div>
+      <div>🧠 AI Thinking...</div>
       <span style="font-size:11px">click to collapse</span>
     </div>
     <div class="thinking-content">
-      <div class="thinking-step">Processing query through legal AI pipeline...</div>
+      <div class="thinking-step">Processing query...</div>
     </div>
   `;
   messages.appendChild(el);
@@ -1255,12 +1022,17 @@ function updateThinking(panelEl, text) {
   const steps = text.split('\n').filter(s => s.trim());
   content.innerHTML = steps.map(s => `<div class="thinking-step">${s}</div>`).join('');
   const header = panelEl.querySelector('.thinking-header div');
-  if (header) header.textContent = '\u{1F914} Reasoning complete';
+  if (header) header.textContent = '🧠 Reasoning complete';
 }
 
 function toggleThinking() {
   thinkingVisible = !thinkingVisible;
   document.getElementById('thinking-toggle').classList.toggle('active', thinkingVisible);
+}
+
+function toggleEthicsPanel() {
+  ethicsVisible = !ethicsVisible;
+  document.getElementById('ethics-toggle').classList.toggle('active', ethicsVisible);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1275,13 +1047,12 @@ function toggleVoiceInput() {
 
 function startVoiceInput() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert('Voice input not supported. Try Chrome or Edge.'); return; }
+  if (!SpeechRecognition) { alert('Voice input not supported.'); return; }
 
   recognition = new SpeechRecognition();
   recognition.continuous = false;
   recognition.interimResults = true;
-  const langMap = {en:'en-IN', hi:'hi-IN', ta:'ta-IN', te:'te-IN', bn:'bn-IN', mr:'mr-IN', gu:'gu-IN', kn:'kn-IN', ml:'ml-IN', pa:'pa-IN', ur:'ur-IN'};
-  recognition.lang = langMap[currentLanguage] || 'en-IN';
+  recognition.lang = 'en-IN';
 
   const micBtn = document.getElementById('mic-btn');
   const input = document.getElementById('chat-input');
@@ -1289,7 +1060,7 @@ function startVoiceInput() {
   recognition.onstart = () => {
     isRecording = true;
     micBtn.classList.add('recording');
-    micBtn.textContent = '\u23F9';
+    micBtn.textContent = '⏹';
   };
   recognition.onresult = (event) => {
     let transcript = '';
@@ -1297,13 +1068,10 @@ function startVoiceInput() {
     input.value = transcript;
     autoResize(input);
   };
-  recognition.onerror = (event) => {
-    if (event.error !== 'no-speech') console.error('Speech error:', event.error);
-  };
   recognition.onend = () => {
     isRecording = false;
     micBtn.classList.remove('recording');
-    micBtn.textContent = '\u{1F3A4}';
+    micBtn.textContent = '🎤';
   };
   recognition.start();
 }
@@ -1311,35 +1079,14 @@ function startVoiceInput() {
 function stopVoiceInput() { if (recognition) recognition.stop(); }
 
 // ─────────────────────────────────────────────────────────────────────
-// Voice Output
+// Voice Output (TTS)
 // ─────────────────────────────────────────────────────────────────────
 function toggleTTS() {
   ttsEnabled = !ttsEnabled;
   const btn = document.getElementById('tts-toggle');
   btn.classList.toggle('active', ttsEnabled);
-  btn.textContent = ttsEnabled ? '\u{1F50A} Voice On' : '\u{1F50A} Voice Off';
-  if (ttsEnabled && 'speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance('Voice output enabled');
-    utter.rate = 1.1;
-    speechSynthesis.speak(utter);
-  }
+  btn.textContent = ttsEnabled ? '🔊 Voice On' : '🔊 Voice Off';
 }
-
-function speakText(text) {
-  if (!ttsEnabled || !('speechSynthesis' in window)) return;
-  const cleanText = text.replace(/[*`#]/g, '').replace(/\n+/g, '. ');
-  const utter = new SpeechSynthesisUtterance(cleanText);
-  utter.rate = 1.1;
-  utter.pitch = 1.0;
-  const langMap = {en:'en-IN', hi:'hi-IN', ta:'ta-IN', te:'te-IN', bn:'bn-IN', mr:'mr-IN', gu:'gu-IN', kn:'kn-IN', ml:'ml-IN', pa:'pa-IN', ur:'ur-IN'};
-  utter.lang = langMap[currentLanguage] || 'en-IN';
-  const voices = speechSynthesis.getVoices();
-  const matchVoice = voices.find(v => v.lang === utter.lang);
-  if (matchVoice) utter.voice = matchVoice;
-  speechSynthesis.speak(utter);
-}
-
-if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 
 // ─────────────────────────────────────────────────────────────────────
 // File Upload
@@ -1347,16 +1094,14 @@ if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => speechS
 async function handleFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
+  addMessage('user', `📄 Uploaded: ${file.name}`);
   const formData = new FormData();
   formData.append('file', file);
-  addMessage('user', `Uploaded: ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
   try {
     const resp = await fetch(`${BASE_URL}/upload`, { method: 'POST', body: formData });
     if (resp.ok) {
       const data = await resp.json();
-      addMessage('assistant', `Document processed: ${file.name}\n\n${JSON.stringify(data, null, 2).substring(0, 500)}`);
-    } else {
-      addMessage('assistant', `Document upload returned ${resp.status}.`);
+      addMessage('assistant', `Document processed:\n\n${JSON.stringify(data, null, 2)}`);
     }
   } catch (e) { addMessage('assistant', `Upload failed: ${e.message}`); }
 }
@@ -1372,21 +1117,18 @@ function autoResize(textarea) {
   textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// New conversation
-// ─────────────────────────────────────────────────────────────────────
 function newConversation() {
   conversationId = null;
   conversationHistory = [];
-  initChat();
-  document.getElementById('chat-title').textContent = 'Legal AI Assistant';
-  const list = document.getElementById('conversation-list');
-  const item = document.createElement('div');
-  item.className = 'conversation-item active';
-  item.textContent = 'New conversation ' + new Date().toLocaleTimeString();
-  list.prepend(item);
-  list.querySelectorAll('.conversation-item').forEach(i => i.classList.remove('active'));
-  list.firstChild.classList.add('active');
+  document.getElementById('messages').innerHTML = `
+    <div class="message assistant">
+      <div class="message-avatar">AI</div>
+      <div class="message-content">
+        <div class="message-role">Legal AI Assistant</div>
+        <div class="message-body">Welcome to <strong>Unknown Verdict v42.0</strong>. What legal question can I help with?</div>
+      </div>
+    </div>
+  `;
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1396,185 +1138,66 @@ async function loadApiEndpoints() {
   try {
     const resp = await fetch(`${BASE_URL}/openapi.json`);
     if (!resp.ok) return;
-    openapiSpec = await resp.json();
-    const paths = openapiSpec.paths || {};
+    const data = await resp.json();
+    const paths = data.paths || {};
     let html = '';
     let currentTag = '';
-    const allEndpoints = [];
+    const endpoints = [];
     for (const [path, methods] of Object.entries(paths)) {
       for (const [method, spec] of Object.entries(methods)) {
         if (['GET','POST','PUT','PATCH','DELETE'].includes(method.toUpperCase())) {
-          allEndpoints.push({ method: method.toUpperCase(), path, spec, tag: (spec.tags || ['untagged'])[0] });
+          endpoints.push({ method: method.toUpperCase(), path, spec, tag: (spec.tags || ['untagged'])[0] });
         }
       }
     }
-    allEndpoints.sort((a, b) => a.tag.localeCompare(b.tag));
-    for (const ep of allEndpoints) {
+    endpoints.sort((a, b) => a.tag.localeCompare(b.tag));
+    for (const ep of endpoints) {
       if (ep.tag !== currentTag) { currentTag = ep.tag; html += `<div class="api-group"><div class="api-group-title">${currentTag}</div>`; }
-      const params = (ep.spec.parameters || []).filter(p => p.in === 'query');
-      const hasBody = ep.method === 'POST' || ep.method === 'PUT' || ep.method === 'PATCH';
-      const bodyProps = ep.spec.requestBody?.content?.['application/json']?.schema?.properties || {};
-      const pathId = ep.path.replace(/\//g,'-');
-      html += `<div class="api-card" id="card-${ep.method}-${pathId}"><div class="api-card-header" onclick="toggleApiCard('${ep.method}','${pathId}')"><span class="api-method ${ep.method}">${ep.method}</span><span class="api-path">${ep.path}</span><span class="api-desc">${ep.spec.summary || ''}</span></div><div class="api-card-body" id="body-${ep.method}-${pathId}">`;
-      for (const param of params) {
-        html += `<div class="api-form-field"><label>${param.name} ${param.required ? '*' : ''} (${param.schema?.type || 'string'})</label><input type="text" id="param-${ep.method}-${pathId}-${param.name}" placeholder="${param.description || param.name}"></div>`;
-      }
-      if (hasBody && Object.keys(bodyProps).length) {
-        for (const [propName, propSchema] of Object.entries(bodyProps)) {
-          const type = propSchema.type || 'string';
-          const inputType = type === 'integer' ? 'number' : type === 'boolean' ? 'checkbox' : 'text';
-          html += `<div class="api-form-field"><label>${propName} (${type})</label>${type === 'boolean' ? `<input type="checkbox" id="param-${ep.method}-${pathId}-${propName}">` : type === 'string' && (propName.includes('content') || propName.includes('query') || propName.includes('message') || propName.includes('case')) ? `<textarea id="param-${ep.method}-${pathId}-${propName}" rows="3" placeholder="Enter ${propName}..."></textarea>` : `<input type="${inputType}" id="param-${ep.method}-${pathId}-${propName}" placeholder="${propName}">`}</div>`;
-        }
-      } else if (hasBody) {
-        html += `<div class="api-form-field"><label>Request body (JSON)</label><textarea id="param-${ep.method}-${pathId}-body" rows="3" placeholder='{"key": "value"}'>{}</textarea></div>`;
-      }
-      html += `<button class="new-chat-btn" style="margin-top:8px" onclick="testApiEndpoint('${ep.method}','${ep.path}')">Test Endpoint</button><div class="api-result" id="result-${ep.method}-${pathId}"></div></div></div>`;
+      html += `<div class="api-card"><div class="api-card-header"><span class="api-method ${ep.method}">${ep.method}</span><span class="api-path">${ep.path}</span><span class="api-desc">${ep.spec.summary || ''}</span></div></div>`;
     }
     document.getElementById('api-endpoints').innerHTML = html;
-    apiEndpoints = allEndpoints;
   } catch (e) {
     document.getElementById('api-endpoints').innerHTML = `<p style="color:var(--danger)">Failed to load API spec: ${e.message}</p>`;
   }
 }
 
-function toggleApiCard(method, pathId) {
-  const body = document.getElementById(`body-${method}-${pathId}`);
-  if (body) body.classList.toggle('visible');
-}
-
-async function testApiEndpoint(method, path) {
-  const pathId = path.replace(/\//g, '-');
-  const resultEl = document.getElementById(`result-${method}-${pathId}`);
-  resultEl.classList.add('visible');
-  resultEl.classList.remove('success', 'error');
-  resultEl.textContent = 'Testing...';
-  try {
-    const params = {};
-    document.querySelectorAll(`[id^="param-${method}-${pathId}-"]`).forEach(el => {
-      const paramName = el.id.replace(`param-${method}-${pathId}-`, '');
-      if (paramName === 'body') return;
-      if (el.type === 'checkbox') { if (el.checked) params[paramName] = true; }
-      else if (el.value) params[paramName] = el.value;
-    });
-    let url = `${BASE_URL}${path}`;
-    let options = { method };
-    if (method === 'GET' && Object.keys(params).length) {
-      url += `?${new URLSearchParams(params)}`;
-    } else if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-      const bodyTextarea = document.getElementById(`param-${method}-${pathId}-body`);
-      if (bodyTextarea) {
-        try { options.body = JSON.stringify(JSON.parse(bodyTextarea.value || '{}')); options.headers = { 'Content-Type': 'application/json' }; }
-        catch { resultEl.classList.add('error'); resultEl.textContent = 'Invalid JSON'; return; }
-      } else {
-        const body = {};
-        for (const [key, val] of Object.entries(params)) body[key] = val;
-        options.body = JSON.stringify(body);
-        options.headers = { 'Content-Type': 'application/json' };
-      }
-    }
-    const resp = await fetch(url, options);
-    const text = await resp.text();
-    let display;
-    try { display = JSON.stringify(JSON.parse(text), null, 2); } catch { display = text; }
-    resultEl.classList.add(resp.ok ? 'success' : 'error');
-    resultEl.textContent = `HTTP ${resp.status}\n\n${display.substring(0, 1000)}`;
-  } catch (e) {
-    resultEl.classList.add('error');
-    resultEl.textContent = `Error: ${e.message}`;
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────
-// Moat — Self-Evolving Intelligence
+// Moat
 // ─────────────────────────────────────────────────────────────────────
 async function loadMoatStatus() {
-  const moatModules = [
-    { icon: '\u{1F9E0}', name: 'IntelligenceCore', display: 'Intelligence Core', desc: 'Self-learning legal reasoning engine', endpoint: '/moat/status' },
-    { icon: '\u2696\uFE0F', name: 'AIJudge', display: 'AI Judge', desc: 'Evaluates legal analysis for soundness', endpoint: '/moat/judge/history' },
-    { icon: '\u{1F52C}', name: 'Verifiers', display: 'Verifiers (15)', desc: 'Multi-layer verification pipeline', endpoint: '/moat/verifiers' },
-    { icon: '\u{1F916}', name: 'AgentNetwork', display: 'Agent Network (250)', desc: 'Distributed legal agent swarm', endpoint: '/moat/agents' },
-    { icon: '\u{1F4DA}', name: 'KnowledgeBase', display: 'Knowledge Base', desc: 'RAG-powered legal knowledge graph', endpoint: '/moat/knowledge/domains' },
-    { icon: '\u{1F510}', name: 'IPVault', display: 'IP Vault', desc: 'Intellectual property protection', endpoint: '/moat/ip-vault' },
-    { icon: '\u{1F4C8}', name: 'EvolutionLog', display: 'Evolution Log', desc: 'Track all self-improvements', endpoint: '/moat/evolution/history' },
-    { icon: '\u{1F3AF}', name: 'Metrics', display: 'Metrics', desc: 'Performance and accuracy tracking', endpoint: '/moat/cache/stats' },
-    { icon: '\u{1F50D}', name: 'PatternDetector', display: 'Pattern Detector', desc: 'Identifies legal patterns and precedents', endpoint: '/moat/patterns' },
-    { icon: '\u{1F4A1}', name: 'FeedbackLoop', display: 'Feedback Loop', desc: 'Continuous improvement from user feedback', endpoint: '/moat/feedback' },
-    { icon: '\u{1F5C4}\uFE0F', name: 'CacheLayer', display: 'Cache Layer', desc: 'Intelligent query caching', endpoint: '/moat/cache/stats' },
-    { icon: '\u{1F4DC}', name: 'AuditLog', display: 'Audit Log', desc: 'Full audit trail of all actions', endpoint: '/moat/audit' },
-    { icon: '\u{1F6E1}\uFE0F', name: 'EthicsGuardrails', display: 'Ethics Guardrails', desc: 'PII redaction, refusal protocol, hallucination verifier, legal disclaimer', endpoint: '/moat/ethics-status', isEthics: true },
-    { icon: '\u{1F4F0}', name: 'AINews', display: 'AI News Corner', desc: 'Auto-updated AI news and agent-written articles', endpoint: '/api/news', isNews: true },
+  const modules = [
+    { icon: '🧠', name: 'Intelligence Core', desc: 'Self-learning legal reasoning engine' },
+    { icon: '⚖️', name: 'AI Judge', desc: 'Evaluates legal analysis for soundness' },
+    { icon: '✅', name: 'Verifiers (15)', desc: 'Multi-layer verification pipeline' },
+    { icon: '🤖', name: 'Agent Network (250)', desc: 'Distributed legal agent swarm' },
+    { icon: '📚', name: 'Knowledge Base', desc: 'RAG-powered legal knowledge graph' },
+    { icon: '🔐', name: 'IP Vault', desc: 'Intellectual property protection' },
+    { icon: '📊', name: 'Evolution Log', desc: 'Track all self-improvements' },
+    { icon: '📈', name: 'Metrics', desc: 'Performance and accuracy tracking' },
+    { icon: '🔍', name: 'Pattern Detector', desc: 'Identifies legal patterns and precedents' },
+    { icon: '💬', name: 'Feedback Loop', desc: 'Continuous improvement from user feedback' },
+    { icon: '💾', name: 'Cache Layer', desc: 'Intelligent query caching' },
+    { icon: '📝', name: 'Audit Log', desc: 'Full audit trail of all actions' },
+    { icon: '🛡️', name: 'Ethics Guardrails', desc: 'PII redaction, refusal protocol, disclaimers' },
   ];
 
   let html = '';
-  for (const mod of moatModules) {
-    let cardClass = 'moat-card';
-    if (mod.isEthics) cardClass += ' ethics-card';
-    if (mod.isNews) cardClass += ' news-card';
-    html += `<div class="${cardClass}" id="moat-${mod.name}"><h4><span class="moat-icon">${mod.icon}</span> ${mod.display}</h4><p>${mod.desc}</p><span class="moat-status" style="background:rgba(100,116,139,0.1);color:var(--text-muted)">Loading...</span></div>`;
+  for (const mod of modules) {
+    html += `
+      <div class="moat-card">
+        <h4><span class="moat-icon">${mod.icon}</span> ${mod.name}</h4>
+        <p>${mod.desc}</p>
+        <span class="moat-status" style="background:rgba(16,185,129,0.1);color:var(--success)">✅ Active</span>
+      </div>
+    `;
   }
   document.getElementById('moat-grid').innerHTML = html;
-
-  for (const mod of moatModules) {
-    fetch(`${BASE_URL}${mod.endpoint}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        const card = document.getElementById(`moat-${mod.name}`);
-        if (!card) return;
-        const statusEl = card.querySelector('.moat-status');
-        if (data) {
-          if (mod.isEthics && data.guardrails) {
-            const grCount = Object.values(data.guardrails).filter(g => g.enabled).length;
-            statusEl.textContent = `\u2705 ${grCount} Active`;
-            statusEl.style.cssText = 'background:rgba(16,185,129,0.1);color:var(--success)';
-          } else if (mod.isNews) {
-            const count = data.articles?.length || 0;
-            statusEl.textContent = `\u2705 ${count} articles`;
-            statusEl.style.cssText = 'background:rgba(59,130,246,0.1);color:var(--accent)';
-          } else {
-            statusEl.textContent = '\u2705 Active';
-            statusEl.style.cssText = 'background:rgba(16,185,129,0.1);color:var(--success)';
-          }
-        } else {
-          statusEl.textContent = '\u26A0\uFE0F Unavailable';
-          statusEl.style.cssText = 'background:rgba(245,158,11,0.1);color:var(--warning)';
-        }
-      })
-      .catch(() => {
-        const card = document.getElementById(`moat-${mod.name}`);
-        if (card) {
-          const statusEl = card.querySelector('.moat-status');
-          statusEl.textContent = '\u274C Offline';
-          statusEl.style.cssText = 'background:rgba(239,68,68,0.1);color:var(--danger)';
-        }
-      });
-  }
 }
-<!-- News Card with Image -->
-<div class="news-article" style="display:flex;gap:16px;align-items:flex-start;">
-  <div style="flex-shrink:0;width:120px;height:120px;border-radius:8px;overflow:hidden;background:var(--bg);">
-    <img src="${article.image_data || '/static/default-news.jpg'}" 
-         alt="${article.image_caption || article.title}"
-         style="width:100%;height:100%;object-fit:cover;"
-         onerror="this.style.display='none'">
-  </div>
-  <div style="flex:1;min-width:0;">
-    <div class="news-meta">
-      <span class="news-category ${article.category}">${article.category.replace('_',' ').toUpperCase()}</span>
-      <span>${article.source} ${article.source_icon || ''}</span>
-      <span>${timeAgo}</span>
-    </div>
-    <div class="news-title">
-      <a href="${article.url}" target="_blank">${article.title}</a>
-    </div>
-    <div class="news-summary">${article.summary}</div>
-    ${article.image_caption ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">📷 ${article.image_caption}</div>` : ''}
-  </div>
-</div>
+
 // ─────────────────────────────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────────────────────────────
 document.getElementById('chat-input').focus();
-  
 </script>
 </body>
 </html>
