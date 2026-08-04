@@ -1,13 +1,6 @@
 """
-core/judge.py
-==============
-AI Judge — renders verdicts using multi-LLM input + 15 verifiers.
-
-Critical fix: guards against null responses at every step.
-Previously a null Sarvam response crashed with:
-  AttributeError: 'NoneType' object has no attribute 'lower'
+core/judge.py - AI Judge with null guard
 """
-
 from __future__ import annotations
 
 import re
@@ -23,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 class AIJudge:
     def __init__(self):
-        self.mode = settings.VERDICT_ENGINE_MODE
+        # Safe fallback if VERDICT_ENGINE_MODE is not in settings
+        self.mode = getattr(settings, "VERDICT_ENGINE_MODE", "balanced")
         self.router = get_router()
 
     async def render_verdict(self, query: str, *, mode: Optional[str] = None,
@@ -43,7 +37,6 @@ class AIJudge:
         ]
         response = await self.router.chat(messages, model=model, complexity="complex")
 
-        # Null guard — the core fix
         content = _safe_text(response.content)
         if not content.strip():
             logger.warning("AI Judge: LLM returned empty response, returning fallback")
