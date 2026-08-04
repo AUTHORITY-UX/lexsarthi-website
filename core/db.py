@@ -420,3 +420,9 @@ async def fetch_db(sql: str, *args) -> list[dict]:
     """Backwards-compatible fetch wrapper."""
     rows = await db.fetch(sql, *args)
     return [dict(r) for r in rows]
+# ──────────────────────────────────────────────────────────────────────────
+# Backwards-compatible get_db for app.py
+# ──────────────────────────────────────────────────────────────────────────
+def get_db() -> Database:
+    """Return the database singleton (for backwards compatibility)."""
+    return db
