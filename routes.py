@@ -1040,6 +1040,78 @@ async def civil_litigation_strategy(req: CivilLitigationRequest):
             "jurisdiction": req.jurisdiction, "provider": response.provider}
 
 
+# ─── AI NEWS CORNER ENDPOINTS ───
+from core.news.aggregator import AINewsAggregator
+
+news_aggregator = AINewsAggregator()
+
+@router.get("/api/news")
+async def get_news(category: Optional[str] = None):
+    """Get aggregated AI news"""
+    try:
+        news = await news_aggregator.get_news(limit=20, category=category)
+        return {
+            'articles': [n.__dict__ for n in news],
+            'total': len(news),
+            'categories': {
+                'ai_law': len([n for n in news if n.category == 'ai_law']),
+                'legal_tech': len([n for n in news if n.category == 'legal_tech']),
+                'ai_governance': len([n for n in news if n.category == 'ai_governance']),
+                'research': len([n for n in news if n.category == 'research']),
+                'policy': len([n for n in news if n.category == 'policy']),
+                'general': len([n for n in news if n.category == 'general'])
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error fetching news: {e}")
+        return {'error': str(e), 'articles': []}
+
+@router.get("/api/news/categories")
+async def get_news_categories():
+    """Get available news categories"""
+    return {
+        'categories': [
+            {'id': 'all', 'label': 'All'},
+            {'id': 'ai_law', 'label': 'AI Law'},
+            {'id': 'ai_governance', 'label': 'AI Governance'},
+            {'id': 'research', 'label': 'Research'},
+            {'id': 'legal_tech', 'label': 'Legal Tech'},
+            {'id': 'policy', 'label': 'Policy'}
+        ]
+    }
+
+@router.post("/api/news/refresh")
+async def refresh_news():
+    """Force refresh news"""
+    try:
+        await news_aggregator.get_news(limit=50)
+        return {'status': 'refreshed', 'timestamp': datetime.now().isoformat()}
+    except Exception as e:
+        return {'error': str(e)}
+
+# ─── INSTAGRAM INTEGRATION ───
+@router.get("/api/news/instagram")
+async def get_instagram_news():
+    """Get AI news from Instagram"""
+    try:
+        posts = await news_aggregator.fetch_instagram_posts(['AI', 'AIGovernance', 'LegalAI'])
+        return {'posts': posts, 'count': len(posts)}
+    except Exception as e:
+        return {'error': str(e)}
+
+# ─── NEWS CORNER FRONTEND ───
+from fastapi.responses import HTMLResponse
+from pathlib import Path
+
+NEWS_STATIC_DIR = Path(__file__).parent / "static"
+
+@router.get("/news", response_class=HTMLResponse)
+async def news_corner():
+    """AI News Corner frontend"""
+    news_file = NEWS_STATIC_DIR / "news.html"
+    if news_file.exists():
+        return HTMLResponse(news_file.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>AI News Corner</h1><p>Coming soon...</p>")
 # ═════════════════════════════════════════════════════════════════════
 # NEW SECTION: MULTI-LINGUAL SUPPORT (4 endpoints)
 # ═════════════════════════════════════════════════════════════════════
@@ -1137,3 +1209,4 @@ async def detect_language(req: ChatRequest):
     response = await get_router().chat(messages, complexity="simple")
     return {"detected": response.content, "provider": response.provider,
             "latency_ms": response.latency_ms}
+    
