@@ -1,5 +1,5 @@
 """
-core/db.py - Fixed with asyncpg and proper connection pooling
+core/db.py - Fixed with asyncpg
 """
 from __future__ import annotations
 
@@ -23,7 +23,6 @@ class Database:
 
     async def _init_postgres(self):
         try:
-            # Use asyncpg with proper connection pooling
             self._pool = await asyncpg.create_pool(
                 settings.DATABASE_URL,
                 min_size=2,
@@ -32,7 +31,6 @@ class Database:
                 command_timeout=30,
                 ssl=True
             )
-            # Test connection
             async with self._pool.acquire() as conn:
                 await conn.execute("SELECT 1")
             self._connected = True
@@ -63,7 +61,7 @@ class Database:
                 self._redis_connected = False
                 self._redis = None
         except Exception as exc:
-            logger.warning(f"⚠️ Redis unavailable: {exc} — cache/rate-limit degraded")
+            logger.warning(f"⚠️ Redis unavailable: {exc}")
             self._redis_connected = False
             self._redis = None
 
@@ -72,10 +70,8 @@ class Database:
             return
         try:
             async with self._pool.acquire() as conn:
-                # Create extension
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
                 
-                # Drop and recreate tables
                 tables = [
                     "moat_cache_meta", "moat_audit_log", "moat_patterns",
                     "moat_inventory", "moat_ip_vault", "moat_feedback",
@@ -88,7 +84,6 @@ class Database:
                 for table in tables:
                     await conn.execute(f"DROP TABLE IF EXISTS {table} CASCADE")
                 
-                # Create all tables
                 await conn.execute("""
                     CREATE TABLE users (
                         id SERIAL PRIMARY KEY,
@@ -141,7 +136,6 @@ class Database:
                         created_at TIMESTAMP DEFAULT NOW()
                     );
                     
-                    -- Moat tables
                     CREATE TABLE moat_intelligence (
                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         module VARCHAR(100) NOT NULL,
@@ -252,7 +246,6 @@ class Database:
                     );
                 """)
                 
-                # Create indexes
                 await conn.execute("""
                     CREATE INDEX idx_legal_docs_juris ON legal_documents(jurisdiction);
                     CREATE INDEX idx_legal_docs_type ON legal_documents(doc_type);
