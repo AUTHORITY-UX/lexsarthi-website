@@ -936,7 +936,7 @@ async def issue_token(request: Request):
 # ════════════════════════════════════════════════════════════════════════
 # CATCH-ALL for scanner probes (security hardening)
 # ════════════════════════════════════════════════════════════════════════
-@app.api_route(
+@router.api_route()
     "/.env",
     [".env.local", ".env.production", ".streamlit/secrets.toml"],
     methods=["GET", "POST", "HEAD"],
@@ -981,3 +981,4 @@ async def shutdown():
     """Cleanup on shutdown."""
     await db.disconnect()
     logger.info("Unknown Verdict v41.0 stopped")  
+ 
