@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import os
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,29 +20,6 @@ def _as_bool(v: object) -> bool:
     if v is None:
         return False
     return str(v).strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _safe_json_parse(v: object) -> List[str]:
-    """Safely parse JSON or return empty list"""
-    if not v:
-        return []
-    if isinstance(v, list):
-        return [str(x).strip() for x in v if str(x).strip()]
-    if isinstance(v, str):
-        v = v.strip()
-        if not v:
-            return []
-        try:
-            parsed = json.loads(v)
-            if isinstance(parsed, list):
-                return [str(x).strip() for x in parsed if str(x).strip()]
-            if isinstance(parsed, str):
-                return [parsed.strip()]
-        except json.JSONDecodeError:
-            if "," in v:
-                return [x.strip() for x in v.split(",") if x.strip()]
-            return [v]
-    return []
 
 
 class Settings(BaseSettings):
@@ -60,11 +37,12 @@ class Settings(BaseSettings):
     # ── Feature toggles ──
     ENABLE_WEB_SEARCH: bool = False
     ENABLE_TARGETED_SEARCH: bool = False
-    TARGETED_SEARCH_DOMAINS: List[str] = Field(default_factory=list)
+    # Store as string to avoid JSON parsing errors
+    TARGETED_SEARCH_DOMAINS_RAW: str = ""
 
     # ── Verdict engine ──
     USE_VERDICT_ENGINE: bool = True
-    VERDICT_ENGINE_MODE: str = "balanced"  # ⚠️ ADDED THIS
+    VERDICT_ENGINE_MODE: str = "balanced"
 
     # ── Admin / JWT ──
     ADMIN_SECRET: str = ""
@@ -123,11 +101,6 @@ class Settings(BaseSettings):
     def _coerce_bool(cls, v):
         return _as_bool(v)
 
-    @field_validator("TARGETED_SEARCH_DOMAINS", mode="before")
-    @classmethod
-    def _coerce_list(cls, v):
-        return _safe_json_parse(v)
-
     # ── Convenience properties ──
     @property
     def available_llm_providers(self) -> List[str]:
@@ -160,6 +133,43 @@ class Settings(BaseSettings):
             return self.JWR_SECRET
         return self.SECRET_KEY or "change-me-in-production"
 
+    @property
+    def TARGETED_SEARCH_DOMAINS(self) -> List[str]:
+        """Parse TARGETED_SEARCH_DOMAINS_RAW safely - never crashes"""
+        raw = self.TARGETED_SEARCH_DOMAINS_RAW
+        if not raw:
+            return [
+                "https://www.indiacode.nic.in",
+                "https://www.sci.gov.in",
+                "https://legalaffairs.gov.in"
+            ]
+        
+        # Try JSON parse
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [str(x).strip() for x in parsed if str(x).strip()]
+            if isinstance(parsed, str):
+                return [parsed.strip()]
+        except json.JSONDecodeError:
+            pass
+        
+        # Try comma-separated
+        if "," in raw:
+            domains = [x.strip() for x in raw.split(",") if x.strip()]
+            if domains:
+                return domains
+        
+        # Single value
+        if raw.strip():
+            return [raw.strip()]
+        
+        # Fallback
+        return [
+            "https://www.indiacode.nic.in",
+            "https://www.sci.gov.in",
+        ]
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
@@ -168,6 +178,7 @@ def get_settings() -> Settings:
     except Exception as e:
         import logging
         logging.warning(f"Settings loading failed: {e}. Using fallback.")
+        # Create settings with hardcoded values
         return Settings(
             DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict"),
             REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
@@ -175,7 +186,7 @@ def get_settings() -> Settings:
             SECRET_KEY=os.getenv("SECRET_KEY", "fallback-secret-key"),
             USE_VERDICT_ENGINE=True,
             VERDICT_ENGINE_MODE="balanced",
-            TARGETED_SEARCH_DOMAINS=["https://www.indiacode.nic.in"],
+            TARGETED_SEARCH_DOMAINS_RAW=os.getenv("TARGETED_SEARCH_DOMAINS", ""),
         )
 
 
