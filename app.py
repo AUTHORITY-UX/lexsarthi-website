@@ -2,17 +2,6 @@
 app.py
 ======
 FastAPI application — entry point for Hugging Face Spaces.
-
-All imports are absolute/flat (from core..., from sarvam..., from routes).
-This replaces the old app.py that had broken relative imports.
-
-Startup sequence:
-  1. Load settings (all 25 secrets from HF Space)
-  2. Connect to Neon PostgreSQL + run migrations (creates all 17 tables)
-  3. Connect to Redis
-  4. Initialize LLM router (loads all provider API keys)
-  5. Mount all 68 endpoints (36 base + 32 moat)
-  6. Serve the frontend
 """
 
 from __future__ import annotations
@@ -64,14 +53,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    @asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
-    yield
-    logger.info("🛑 Shutting down...")
-    await router_llm.close()
-    await db.close()
-    logger.info("✅ Shutdown complete")
     logger.info("🚀 Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     logger.info("   Environment: %s", settings.ENVIRONMENT)
     logger.info("   LLM providers: %s", settings.available_llm_providers)
@@ -85,7 +66,10 @@ async def lifespan(app: FastAPI):
     logger.info("   LLM router initialized")
 
     logger.info("✅ %s v%s ready — 68 endpoints active", settings.APP_NAME, settings.APP_VERSION)
-    yield
+    
+    yield  # This is where the app runs
+    
+    # Shutdown cleanup
     logger.info("🛑 Shutting down %s", settings.APP_NAME)
     await router_llm.close()
     await db.close()
@@ -98,7 +82,8 @@ app = FastAPI(
     description=(
         "AI legal platform with 250+ agents, 15 verifiers, AI Judge, "
         "and a self-evolving intelligence layer (Moat). "
-        "Powered by multi-LLM routing (Sarvam, OpenAI, Gemini, Groq, DeepSeek, OpenRouter)."),
+        "Powered by multi-LLM routing (Sarvam, OpenAI, Gemini, Groq, DeepSeek, OpenRouter)."
+    ),
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -135,4 +120,3 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=7860, workers=1,
                 log_level=settings.LOG_LEVEL.lower())
- 
