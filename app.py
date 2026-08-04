@@ -64,6 +64,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    @asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("🚀 Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
+    yield
+    logger.info("🛑 Shutting down...")
+    await router_llm.close()
+    await db.close()
+    logger.info("✅ Shutdown complete")
     logger.info("🚀 Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     logger.info("   Environment: %s", settings.ENVIRONMENT)
     logger.info("   LLM providers: %s", settings.available_llm_providers)
