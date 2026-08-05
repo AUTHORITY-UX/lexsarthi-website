@@ -69,6 +69,5 @@ scikit-learn==1.6.1
 # Additional
 click==8.1.7
 typing-extensions==4.12.2
-
 # News Aggregation (replace aiohttp with httpx)
 # aiohttp is removed - httpx handles async HTTP
