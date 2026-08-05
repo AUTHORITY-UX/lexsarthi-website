@@ -1210,3 +1210,63 @@ async def detect_language(req: ChatRequest):
     return {"detected": response.content, "provider": response.provider,
             "latency_ms": response.latency_ms}
     
+from core.integrations.reddit_crawler import reddit_crawler
+
+@router.get("/api/reddit/crawl/{subreddit}")
+async def crawl_subreddit(subreddit: str, limit: int = 50):
+    """Crawl a subreddit for legal intelligence"""
+    posts = await reddit_crawler.crawl_subreddit(subreddit, limit)
+    count = await reddit_crawler.store_reddit_data(posts)
+    return {
+        'subreddit': subreddit,
+        'posts_found': len(posts),
+        'posts_stored': count,
+        'posts': posts
+    }
+
+@router.post("/api/reddit/search")
+async def search_reddit(query: str, limit: int = 50):
+    """Search Reddit for legal topics"""
+    results = await reddit_crawler.search_legal_topics(query, limit)
+    return {
+        'query': query,
+        'results': results,
+        'count': len(results)
+    }
+
+@router.get("/api/reddit/trending")
+async def get_trending_legal_topics():
+    """Get trending legal topics from Reddit"""
+    topics = await reddit_crawler.get_trending_legal_topics()
+    return {
+        'topics': topics,
+        'count': len(topics)
+    }
+
+@router.get("/api/reddit/insights")
+async def get_reddit_insights():
+    """Get legal intelligence insights from Reddit"""
+    insights = await reddit_crawler.generate_reddit_insights()
+    return insights
+
+@router.post("/api/reddit/crawl/all")
+async def crawl_all_legal_subreddits():
+    """Crawl all legal subreddits"""
+    from core.integrations.reddit_crawler import SUBREDDITS
+    results = {}
+    total_posts = 0
+    
+    for subreddit in SUBREDDITS:
+        try:
+            posts = await reddit_crawler.crawl_subreddit(subreddit, limit=20)
+            count = await reddit_crawler.store_reddit_data(posts)
+            results[subreddit] = {'posts': len(posts), 'stored': count}
+            total_posts += count
+        except Exception as e:
+            results[subreddit] = {'error': str(e)}
+    
+    return {
+        'subreddits_crawled': len(SUBREDDITS),
+        'total_posts_stored': total_posts,
+        'results': results
+    }
