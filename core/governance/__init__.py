@@ -3,14 +3,15 @@ core/governance/ - AI Governance Module
 Compliance auditor, risk classifier, regulatory intelligence tracker
 """
 
+# Import only what exists
 from .compliance import ComplianceAuditor
-from .risk import RiskClassifier
-from .regulatory import RegulatoryIntelligence
-from .ai_act import AIActCompliance
+from .regulatory_tracker import GlobalRegulatoryTracker
+
+# Remove risk import since it doesn't exist yet
+# from .risk import RiskClassifier
 
 __all__ = [
     'ComplianceAuditor',
-    'RiskClassifier', 
-    'RegulatoryIntelligence',
-    'AIActCompliance'
+    'GlobalRegulatoryTracker',
+    # 'RiskClassifier',  # Add when risk.py is created
 ]
