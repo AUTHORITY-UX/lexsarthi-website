@@ -8,10 +8,16 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 from collections import defaultdict
 
-from core.db import db
 from core.llm import LLMMessage, get_router
 
 logger = logging.getLogger(__name__)
+
+# Try to import db, but don't fail if not available
+try:
+    from core.db import db
+except ImportError:
+    db = None
+    logger.warning("⚠️ Database not available - self_correction in fallback mode")
 
 
 class SelfCorrectionLoop:
@@ -31,9 +37,8 @@ class SelfCorrectionLoop:
             LLMMessage(role="user", content=f"Error:\n{json.dumps(error, indent=2)}")
         ]
         
-        response = await self.router.chat(messages, complexity="complex")
-        
         try:
+            response = await self.router.chat(messages, complexity="complex")
             analysis = json.loads(response.content)
         except:
             analysis = {
@@ -56,12 +61,21 @@ class SelfCorrectionLoop:
         }
         
         self.correction_history.append(correction)
-        await self._store_correction(correction)
+        
+        # Store in database if available
+        if db:
+            try:
+                await self._store_correction(correction)
+            except Exception as e:
+                logger.error(f"Error storing correction: {e}")
         
         return correction
     
     async def _store_correction(self, correction: Dict):
         """Store correction in database"""
+        if not db:
+            return
+        
         try:
             await db.execute("""
                 INSERT INTO self_corrections 
@@ -79,37 +93,18 @@ class SelfCorrectionLoop:
     
     async def get_correction_history(self, limit: int = 50) -> List[Dict]:
         """Get correction history"""
-        try:
-            rows = await db.fetchall("""
-                SELECT * FROM self_corrections 
-                ORDER BY created_at DESC 
-                LIMIT $1
-            """, limit)
-            return [dict(row) for row in rows]
-        except:
-            return self.correction_history[-limit:]
-    
-    async def apply_correction(self, correction_id: str) -> Dict:
-        """Apply a correction"""
-        try:
-            row = await db.fetchone(
-                "SELECT * FROM self_corrections WHERE id = $1",
-                correction_id
-            )
-            if not row:
-                return {'error': 'Correction not found'}
-            
-            await db.execute(
-                "UPDATE self_corrections SET applied = TRUE WHERE id = $1",
-                correction_id
-            )
-            
-            return {
-                'status': 'applied',
-                'correction': dict(row)
-            }
-        except Exception as e:
-            return {'error': str(e)}
+        if db:
+            try:
+                rows = await db.fetchall("""
+                    SELECT * FROM self_corrections 
+                    ORDER BY created_at DESC 
+                    LIMIT $1
+                """, limit)
+                return [dict(row) for row in rows]
+            except:
+                pass
+        
+        return self.correction_history[-limit:]
     
     async def get_insights(self) -> Dict:
         """Get self-correction insights"""
@@ -124,4 +119,5 @@ class SelfCorrectionLoop:
         }
 
 
+# Singleton instance
 self_correction = SelfCorrectionLoop()
