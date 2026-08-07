@@ -1112,6 +1112,100 @@ async def news_corner():
     if news_file.exists():
         return HTMLResponse(news_file.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>AI News Corner</h1><p>Coming soon...</p>")
+
+# ─── PREDICTIVE ANALYTICS ───
+from core.analytics.predictive import predictive_analytics
+
+@router.post("/api/predict/case")
+async def predict_case(request: Request):
+    data = await request.json()
+    result = await predictive_analytics.predict_case_outcome(data)
+    return result
+
+# ─── MULTI-HOP REASONING ───
+from core.reasoning.multi_hop import multi_hop_reasoner
+
+@router.post("/api/reason/multi-hop")
+async def multi_hop_reason(request: Request):
+    data = await request.json()
+    result = await multi_hop_reasoner.reason(data.get('query'), data.get('context'))
+    return result
+
+# ─── LEGAL DRAFTING ───
+from core.drafting.automated import legal_drafting
+
+@router.post("/api/draft/document")
+async def draft_document(request: Request):
+    data = await request.json()
+    result = await legal_drafting.draft_document(
+        data.get('template_type'),
+        data.get('context', {}),
+        data.get('style', 'formal')
+    )
+    return result
+
+@router.post("/api/draft/review")
+async def review_document(request: Request):
+    data = await request.json()
+    result = await legal_drafting.review_document(
+        data.get('document'),
+        data.get('jurisdiction', 'india')
+    )
+    return result
+
+@router.get("/api/draft/templates")
+async def get_draft_templates():
+    return await legal_drafting.get_templates()
+
+# ─── REGULATORY TRACKER ───
+from core.governance.regulatory_tracker import regulatory_tracker
+
+@router.get("/api/regulatory/global")
+async def get_global_regulations():
+    return await regulatory_tracker.get_global_dashboard()
+
+@router.get("/api/regulatory/track")
+async def track_regulatory_changes():
+    return await regulatory_tracker.track_global_changes()
+
+@router.get("/api/regulatory/compliance")
+async def get_compliance_status(tenant_id: str = "default"):
+    return await regulatory_tracker.get_compliance_status(tenant_id)
+
+# ─── SELF-CORRECTION ───
+from core.agents.self_correction import self_correction
+
+@router.post("/api/corrections/analyze")
+async def analyze_error(request: Request):
+    data = await request.json()
+    result = await self_correction.analyze_error(data)
+    return result
+
+@router.get("/api/corrections/history")
+async def get_correction_history(limit: int = 50):
+    return await self_correction.get_correction_history(limit)
+
+@router.get("/api/corrections/insights")
+async def get_correction_insights():
+    return await self_correction.get_insights()
+
+# ─── WEBHOOKS ───
+from core.webhooks.manager import webhook_manager
+
+@router.post("/api/webhooks/register")
+async def register_webhook(request: Request):
+    data = await request.json()
+    result = await webhook_manager.register_webhook(
+        data.get('tenant_id', 'default'),
+        data.get('url'),
+        data.get('events', []),
+        data.get('secret')
+    )
+    return result
+
+@router.get("/api/webhooks")
+async def get_webhooks(tenant_id: str = "default"):
+    return await webhook_manager.get_webhooks(tenant_id)
 # ═════════════════════════════════════════════════════════════════════
 # NEW SECTION: MULTI-LINGUAL SUPPORT (4 endpoints)
 # ═════════════════════════════════════════════════════════════════════
