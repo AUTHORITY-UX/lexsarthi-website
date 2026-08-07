@@ -5,7 +5,7 @@ Database connection management with Redis support
 import os
 import logging
 from typing import Optional
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager  # ← ADD contextmanager
 
 import asyncpg
 import redis.asyncio as redis
