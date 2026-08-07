@@ -1206,6 +1206,322 @@ async def register_webhook(request: Request):
 @router.get("/api/webhooks")
 async def get_webhooks(tenant_id: str = "default"):
     return await webhook_manager.get_webhooks(tenant_id)
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import List, Optional
+import asyncio
+from datetime import datetime, timedelta
+import logging
+
+router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# ==================== LEGAL INTELLIGENCE ROUTES (No Reddit API) ====================
+
+@router.get("/legal-intelligence/status")
+async def get_intelligence_status():
+    """Get legal intelligence system status"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        
+        return {
+            "status": "active",
+            "sources": {
+                "rss_feeds": len(intelligence.LEGAL_RSS_FEEDS),
+                "websites": len(intelligence.LEGAL_WEBSITES),
+                "subreddits": len(intelligence.LEGAL_SUBREDDITS)
+            },
+            "stats": dict(intelligence.stats),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting intelligence status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/dashboard")
+async def get_intelligence_dashboard():
+    """Get comprehensive legal intelligence dashboard"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        dashboard = await intelligence.get_legal_dashboard()
+        
+        return dashboard
+        
+    except Exception as e:
+        logger.error(f"Error getting dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/rss")
+async def get_rss_content(
+    limit: int = Query(30, ge=1, le=100),
+    jurisdiction: Optional[str] = Query(None)
+):
+    """Get legal content from RSS feeds"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        content = await intelligence.fetch_rss_feeds(limit=limit)
+        
+        # Filter by jurisdiction if specified
+        if jurisdiction:
+            content = [c for c in content if c.jurisdiction == jurisdiction]
+        
+        return {
+            "total": len(content),
+            "content": [c.__dict__ for c in content],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting RSS content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/subreddit/{subreddit}")
+async def get_subreddit_content(subreddit: str, limit: int = Query(30, ge=1, le=100)):
+    """Get content from legal subreddit (via scraping)"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        content = await intelligence.crawl_legal_subreddits()
+        
+        # Filter by subreddit
+        filtered = [c for c in content if f"r/{subreddit}" in c.source][:limit]
+        
+        return {
+            "subreddit": subreddit,
+            "total": len(filtered),
+            "content": [c.__dict__ for c in filtered],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting subreddit content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/search")
+async def search_legal_content(
+    query: str = Query(..., min_length=2),
+    limit: int = Query(30, ge=1, le=100)
+):
+    """Search legal content across all sources"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        
+        # Get content from all sources
+        tasks = [
+            intelligence.fetch_rss_feeds(limit=20),
+            intelligence.scrape_legal_websites(),
+            intelligence.crawl_legal_subreddits(),
+            intelligence.google_legal_news(query=query, limit=10),
+            intelligence.scrape_legal_forums()
+        ]
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        all_content = []
+        for result in results:
+            if isinstance(result, list):
+                all_content.extend(result)
+        
+        # Search in content
+        query_lower = query.lower()
+        matches = []
+        
+        for content in all_content:
+            if query_lower in content.title.lower() or query_lower in content.text.lower():
+                matches.append(content)
+        
+        # Sort by relevance
+        matches.sort(key=lambda x: x.legal_relevance, reverse=True)
+        
+        return {
+            "query": query,
+            "total_matches": len(matches),
+            "matches": [c.__dict__ for c in matches[:limit]],
+            "sources_searched": [
+                "rss_feeds", "websites", "subreddits", 
+                "google_news", "forums"
+            ],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error searching content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/by-jurisdiction/{jurisdiction}")
+async def get_content_by_jurisdiction(
+    jurisdiction: str,
+    limit: int = Query(30, ge=1, le=100)
+):
+    """Get legal content by jurisdiction"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        
+        # Get content from all sources
+        tasks = [
+            intelligence.fetch_rss_feeds(limit=30),
+            intelligence.crawl_legal_subreddits(),
+            intelligence.google_legal_news(limit=20)
+        ]
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        all_content = []
+        for result in results:
+            if isinstance(result, list):
+                all_content.extend(result)
+        
+        # Filter by jurisdiction
+        filtered = [c for c in all_content if c.jurisdiction.lower() == jurisdiction.lower()]
+        
+        return {
+            "jurisdiction": jurisdiction,
+            "total": len(filtered),
+            "content": [c.__dict__ for c in filtered[:limit]],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting content by jurisdiction: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/category/{category}")
+async def get_content_by_category(
+    category: str,
+    limit: int = Query(30, ge=1, le=100)
+):
+    """Get legal content by category"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        
+        # Get content from all sources
+        tasks = [
+            intelligence.fetch_rss_feeds(limit=30),
+            intelligence.crawl_legal_subreddits(),
+            intelligence.google_legal_news(limit=20)
+        ]
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        all_content = []
+        for result in results:
+            if isinstance(result, list):
+                all_content.extend(result)
+        
+        # Filter by category
+        filtered = [c for c in all_content if category in c.categories]
+        
+        return {
+            "category": category,
+            "total": len(filtered),
+            "content": [c.__dict__ for c in filtered[:limit]],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting content by category: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/top-trending")
+async def get_top_trending():
+    """Get top trending legal content"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        
+        # Get content from all sources
+        tasks = [
+            intelligence.fetch_rss_feeds(limit=30),
+            intelligence.crawl_legal_subreddits(),
+            intelligence.google_legal_news(limit=30),
+            intelligence.scrape_legal_websites()
+        ]
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        all_content = []
+        for result in results:
+            if isinstance(result, list):
+                all_content.extend(result)
+        
+        # Sort by relevance and recency
+        all_content.sort(key=lambda x: (x.legal_relevance, x.published), reverse=True)
+        
+        return {
+            "trending": [c.__dict__ for c in all_content[:20]],
+            "total_analyzed": len(all_content),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting trending content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/legal-intelligence/refresh")
+async def refresh_intelligence():
+    """Force refresh of legal intelligence cache"""
+    try:
+        from core.integrations.legal_intelligence import clear_intelligence_cache
+        
+        await clear_intelligence_cache()
+        
+        return {
+            "status": "success",
+            "message": "Legal intelligence cache cleared and will refresh on next request",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error refreshing intelligence: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/legal-intelligence/sources")
+async def get_available_sources():
+    """Get all available legal intelligence sources"""
+    try:
+        from core.integrations.legal_intelligence import get_legal_intelligence
+        
+        intelligence = await get_legal_intelligence()
+        
+        return {
+            "rss_feeds": [
+                {
+                    "url": feed["url"],
+                    "jurisdiction": feed["jurisdiction"],
+                    "category": feed["category"]
+                }
+                for feed in intelligence.LEGAL_RSS_FEEDS
+            ],
+            "websites": [
+                {
+                    "url": site["url"],
+                    "jurisdiction": site["jurisdiction"],
+                    "category": site["category"]
+                }
+                for site in intelligence.LEGAL_WEBSITES
+            ],
+            "subreddits": intelligence.LEGAL_SUBREDDITS,
+            "total_sources": len(intelligence.LEGAL_RSS_FEEDS) + len(intelligence.LEGAL_WEBSITES) + len(intelligence.LEGAL_SUBREDDITS),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting sources: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 # ═════════════════════════════════════════════════════════════════════
 # NEW SECTION: MULTI-LINGUAL SUPPORT (4 endpoints)
 # ═════════════════════════════════════════════════════════════════════
