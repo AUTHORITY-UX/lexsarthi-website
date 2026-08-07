@@ -1173,7 +1173,7 @@ async def get_compliance_status(tenant_id: str = "default"):
     return await regulatory_tracker.get_compliance_status(tenant_id)
 
 # ─── SELF-CORRECTION ───
-from core.agents.self_correction import self_correction
+from core.self_correction import self_correction
 
 @router.post("/api/corrections/analyze")
 async def analyze_error(request: Request):
@@ -1363,4 +1363,4 @@ async def crawl_all_legal_subreddits():
         'subreddits_crawled': len(SUBREDDITS),
         'total_posts_stored': total_posts,
         'results': results
-    }
+    }   
