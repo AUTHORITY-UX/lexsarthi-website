@@ -1,18 +1,19 @@
 from pydantic_settings import BaseSettings
 from typing import Optional, List
+from pydantic import field_validator
 import os
 
 class Settings(BaseSettings):
     # App Settings
     APP_NAME: str = "Unknown Verdict"
     APP_VERSION: str = "43.0"
-    DEBUG: bool = False
+    DEBUG: bool = true
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
     
-    # JWT Settings - Use HF Secret
+    # JWT Settings
     jwt_signing_key: str = os.getenv("JWT_SECRET", os.getenv("JWR_SECRET", "fallback-secret-key-change-me"))
     
     # Admin Keys
@@ -50,7 +51,7 @@ class Settings(BaseSettings):
     MAX_CONTENT_PER_SOURCE: int = 50
     MIN_LEGAL_RELEVANCE: float = 0.3
     
-    # Search - FIXED: Use custom validator or simple string parsing
+    # Search - FIXED with validators
     ENABLE_WEB_SEARCH: bool = False
     ENABLE_TARGETED_SEARCH: bool = False
     TARGETED_SEARCH_DOMAINS: Optional[str] = os.getenv("TARGETED_SEARCH_DOMAINS")
@@ -59,70 +60,50 @@ class Settings(BaseSettings):
     # Verdict Engine
     VERDICT_ENGINE_MODE: str = os.getenv("VERDICT_ENGINE_MODE", "standard")
     USE_VERDICT_ENGINE: bool = False
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = False
-        
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str):
-            """Custom parser for environment variables"""
-            if field_name in ["ENABLE_WEB_SEARCH", "ENABLE_TARGETED_SEARCH", "USE_VERDICT_ENGINE", "DEBUG", "LEGAL_INTELLIGENCE_ENABLED"]:
-                # Clean the value and parse boolean
-                cleaned = raw_val.strip().lower()
-                if cleaned in ["true", "1", "yes", "on"]:
-                    return True
-                elif cleaned in ["false", "0", "no", "off", ""]:
-                    return False
-                return False
-            return raw_val
 
-# Create settings instance with custom parsing
+    # --- VALIDATORS: This is the key fix ---
+    @field_validator('ENABLE_WEB_SEARCH', 'ENABLE_TARGETED_SEARCH', 'USE_VERDICT_ENGINE', 'DEBUG', mode='before')
+    @classmethod
+    def coerce_bool(cls, v):
+        """Strip whitespace/newlines and parse common boolean strings."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            # This handles your 'true\n\n' problem
+            cleaned = v.strip().lower()
+            if cleaned in ['true', '1', 'yes', 'on', 't', 'y']:
+                return True
+            if cleaned in ['false', '0', 'no', 'off', 'f', 'n', '']:
+                return False
+        # Fallback: return False for any unexpected value
+        return False
+
+# Create settings instance
 settings = Settings()
 
-# Override boolean settings with proper parsing
-def _parse_bool(value: str) -> bool:
-    """Parse boolean from string with proper handling"""
-    if value is None:
-        return False
-    cleaned = str(value).strip().lower()
-    return cleaned in ["true", "1", "yes", "on", "t", "y"]
-
-# Apply boolean parsing for environment variables
-if os.getenv("ENABLE_WEB_SEARCH"):
-    settings.ENABLE_WEB_SEARCH = _parse_bool(os.getenv("ENABLE_WEB_SEARCH"))
-if os.getenv("ENABLE_TARGETED_SEARCH"):
-    settings.ENABLE_TARGETED_SEARCH = _parse_bool(os.getenv("ENABLE_TARGETED_SEARCH"))
-if os.getenv("USE_VERDICT_ENGINE"):
-    settings.USE_VERDICT_ENGINE = _parse_bool(os.getenv("USE_VERDICT_ENGINE"))
-
+# Helper functions remain the same
 def is_reddit_available() -> bool:
-    """Check if Reddit API credentials are available"""
     return bool(settings.REDDIT_CLIENT_ID and settings.REDDIT_CLIENT_ID != "")
 
 def get_llm_providers() -> dict:
-    """Get available LLM providers"""
     providers = {}
-    
     if settings.GROQ_API_KEY:
         providers["groq"] = settings.GROQ_API_KEY
-    
     if settings.OPENAI_API_KEY:
         providers["openai"] = settings.OPENAI_API_KEY
-    
     if settings.GEMINI_API_KEY:
         providers["gemini"] = settings.GEMINI_API_KEY
-    
     if settings.DEEPSEEK_API_KEY:
         providers["deepseek"] = {
             "api_key": settings.DEEPSEEK_API_KEY,
             "base_url": settings.DEEPSEEK_BASE_URL
         }
-    
     if settings.OPENROUTER_API_KEY:
         providers["openrouter"] = settings.OPENROUTER_API_KEY
-    
     if settings.SARVAM_API_KEY:
         providers["sarvam"] = settings.SARVAM_API_KEY
-    
     return providers
