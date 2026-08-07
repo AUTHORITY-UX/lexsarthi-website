@@ -1,230 +1,102 @@
-"""
-core/config.py
-==============
-Central configuration for Unknown Verdict v41.0.
-"""
-from __future__ import annotations
-
-import json
-import os
-from functools import lru_cache
-from typing import List, Optional
-
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-def _as_bool(v: object) -> bool:
-    if isinstance(v, bool):
-        return v
-    if v is None:
-        return False
-    return str(v).strip().lower() in {"1", "true", "yes", "on"}
-
-
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-    )
-
-    # ── Core infrastructure ──
-    DATABASE_URL: str = "postgresql://user:pass@localhost:5432/unknown_verdict"
-    REDIS_URL: str = "redis://localhost:6379/0"
-
-    # ── Feature toggles ──
-    ENABLE_WEB_SEARCH: bool = False
-    ENABLE_TARGETED_SEARCH: bool = False
-    # Store as string to avoid JSON parsing errors
-    TARGETED_SEARCH_DOMAINS_RAW: str = ""
-
-    # ── Verdict engine ──
-    USE_VERDICT_ENGINE: bool = True
-    VERDICT_ENGINE_MODE: str = "balanced"
-
-    # ── Admin / JWT ──
-    ADMIN_SECRET: str = ""
-    ADMIN_KEY: str = ""
-    JWT_SECRET: str = "change-me-in-production"
-    JWR_SECRET: str = ""
-    SECRET_KEY: str = "change-me-in-production"
-
-    # ── LLM API keys (6 providers) ──
-    SARVAM_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
-    GROQ_API_KEY: str = ""
-    DEEPSEEK_API_KEY: str = ""
-    OPENROUTER_API_KEY: str = ""
-
-    # ── Search / parsing ──
-    SERPAPI_KEY: str = ""
-    LLAMA_CLOUD_API_KEY: str = ""
-
-    # ── Payments ──
-    RAZORPAY_KEY_ID: str = ""
-    RAZORPAY_KEY_SECRET: str = ""
-
-    # ── Integrations ──
-    GITHUB_TOKEN: str = ""
-    LINKEDIN_ACCESS_TOKEN: str = ""
-    LINKEDIN_USER_ID: str = ""
-
-    # ── Runtime tuning ──
-    APP_NAME: str = "Unknown Verdict"
-    APP_VERSION: str = "41.0"
-    ENVIRONMENT: str = "production"
-    LOG_LEVEL: str = "INFO"
-
-    # LLM defaults
-    LLM_TIMEOUT_SECONDS: int = 30
-    LLM_MAX_TOKENS_DEFAULT: int = 1024
-    LLM_MAX_TOKENS_CHAT: int = 512
-    LLM_MAX_TOKENS_COMPLEX: int = 2048
-    LLM_TEMPERATURE: float = 0.3
-    LLM_STREAM_ENABLED: bool = True
-
-    # Cache
-    CACHE_TTL_SECONDS: int = 3600
-    CACHE_PREFIX: str = "uv:cache:"
-
-    # Rate limiting
-    RATE_LIMIT_REQUESTS: int = 100
-    RATE_LIMIT_WINDOW_SECONDS: int = 60
-
-    # ── Validators ──
-    @field_validator("ENABLE_WEB_SEARCH", "ENABLE_TARGETED_SEARCH",
-                     "USE_VERDICT_ENGINE", mode="before")
-    @classmethod
-    def _coerce_bool(cls, v):
-        return _as_bool(v)
-
-    # ── Convenience properties ──
-    @property
-    def available_llm_providers(self) -> List[str]:
-        mapping = [
-            ("sarvam", self.SARVAM_API_KEY),
-            ("openai", self.OPENAI_API_KEY),
-            ("gemini", self.GEMINI_API_KEY),
-            ("groq", self.GROQ_API_KEY),
-            ("deepseek", self.DEEPSEEK_API_KEY),
-            ("openrouter", self.OPENROUTER_API_KEY),
-        ]
-        return [name for name, key in mapping if key]
-
-    @property
-    def is_production(self) -> bool:
-        return self.ENVIRONMENT.lower() == "production"
-
-    @property
-    def admin_keys(self) -> List[str]:
-        return [k for k in (self.ADMIN_KEY, self.ADMIN_SECRET) if k]
-
-    @property
-    def jwt_signing_key(self) -> str:
-        """JWT signing key - uses ADMIN_SECRET as fallback"""
-        if self.ADMIN_SECRET:
-            return self.ADMIN_SECRET
-        if self.JWT_SECRET:
-            return self.JWT_SECRET
-        if self.JWR_SECRET:
-            return self.JWR_SECRET
-        return self.SECRET_KEY or "change-me-in-production"
-
-    @property
-    def TARGETED_SEARCH_DOMAINS(self) -> List[str]:
-        """Parse TARGETED_SEARCH_DOMAINS_RAW safely - never crashes"""
-        raw = self.TARGETED_SEARCH_DOMAINS_RAW
-        if not raw:
-            return [
-                "https://www.indiacode.nic.in",
-                "https://www.sci.gov.in",
-                "https://legalaffairs.gov.in"
-            ]
-        
-        # Try JSON parse
-        try:
-            parsed = json.loads(raw)
-            if isinstance(parsed, list):
-                return [str(x).strip() for x in parsed if str(x).strip()]
-            if isinstance(parsed, str):
-                return [parsed.strip()]
-        except json.JSONDecodeError:
-            pass
-        
-        # Try comma-separated
-        if "," in raw:
-            domains = [x.strip() for x in raw.split(",") if x.strip()]
-            if domains:
-                return domains
-        
-        # Single value
-        if raw.strip():
-            return [raw.strip()]
-        
-        # Fallback
-        return [
-            "https://www.indiacode.nic.in",
-            "https://www.sci.gov.in",
-        ]
-
-
-@lru_cache(maxsize=1)
-def get_settings() -> Settings:
-    try:
-        return Settings()
-    except Exception as e:
-        import logging
-        logging.warning(f"Settings loading failed: {e}. Using fallback.")
-        # Create settings with hardcoded values
-        return Settings(
-            DATABASE_URL=os.getenv("DATABASE_URL", "postgresql://localhost:5432/unknown_verdict"),
-            REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
-            ADMIN_SECRET=os.getenv("ADMIN_SECRET", "fallback-secret"),
-            SECRET_KEY=os.getenv("SECRET_KEY", "fallback-secret-key"),
-            USE_VERDICT_ENGINE=True,
-            VERDICT_ENGINE_MODE="balanced",
-            TARGETED_SEARCH_DOMAINS_RAW=os.getenv("TARGETED_SEARCH_DOMAINS", ""),
-        )
-
-
-settings = get_settings()
 from pydantic_settings import BaseSettings
 from typing import Optional
 import os
 
 class Settings(BaseSettings):
-    # ... existing settings ...
+    # App Settings
+    APP_NAME: str = "Unknown Verdict"
+    APP_VERSION: str = "43.0"
+    DEBUG: bool = False
     
-    # Reddit Settings (Optional - falls back to scraping if not available)
-    REDDIT_CLIENT_ID: Optional[str] = os.getenv("REDDIT_CLIENT_ID", "")
-    REDDIT_CLIENT_SECRET: Optional[str] = os.getenv("REDDIT_CLIENT_SECRET", "")
+    # Database
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
+    
+    # JWT Settings - Use your existing HF Secret
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET", os.getenv("JWR_SECRET", "fallback-secret-key-change-me"))
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
+    # LLM Providers
+    GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY")
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
+    DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
+    OPENROUTER_API_KEY: Optional[str] = os.getenv("OPENROUTER_API_KEY")
+    SARVAM_API_KEY: Optional[str] = os.getenv("SARVAM_API_KEY")
+    
+    # DeepSeek Configuration
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com/v1"
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+    
+    # OpenRouter Configuration
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_DEFAULT_MODEL: str = "openai/gpt-3.5-turbo"
+    OPENROUTER_REFERRER: str = "https://upamnyu12-lex.hf.space"
+    
+    # Reddit (Optional)
+    REDDIT_CLIENT_ID: Optional[str] = os.getenv("REDDIT_CLIENT_ID")
+    REDDIT_CLIENT_SECRET: Optional[str] = os.getenv("REDDIT_CLIENT_SECRET")
     REDDIT_USER_AGENT: str = "UnknownVerdict/1.0"
-    REDDIT_RATE_LIMIT: int = 60
-    REDDIT_CACHE_TTL: int = 3600
     
-    # Legal Intelligence Settings
+    # Legal Intelligence
     LEGAL_INTELLIGENCE_ENABLED: bool = True
     MAX_CONTENT_PER_SOURCE: int = 50
     MIN_LEGAL_RELEVANCE: float = 0.3
-    CRAWL_INTERVAL: int = 3600  # 1 hour
+    
+    # Rate Limiting
+    RATE_LIMIT_WINDOW: int = 60
+    RATE_LIMIT_MAX_REQUESTS: int = 100
+    
+    # Admin
+    ADMIN_SECRET: Optional[str] = os.getenv("ADMIN_SECRET")
+    ADMIN_KEY: Optional[str] = os.getenv("ADMIN_KEY")
+    
+    # Search
+    ENABLE_WEB_SEARCH: bool = os.getenv("ENABLE_WEB_SEARCH", "false").lower() == "true"
+    ENABLE_TARGETED_SEARCH: bool = os.getenv("ENABLE_TARGETED_SEARCH", "false").lower() == "true"
+    TARGETED_SEARCH_DOMAINS: Optional[str] = os.getenv("TARGETED_SEARCH_DOMAINS")
+    SERPAPI_KEY: Optional[str] = os.getenv("SERPAPI_KEY")
+    
+    # Other
+    VERDICT_ENGINE_MODE: str = os.getenv("VERDICT_ENGINE_MODE", "standard")
+    USE_VERDICT_ENGINE: bool = os.getenv("USE_VERDICT_ENGINE", "true").lower() == "true"
     
     class Config:
         env_file = ".env"
         case_sensitive = True
 
-# ==================== REDDIT FALLBACK ====================
-# We check if Reddit credentials exist, otherwise use scraping
+# Create settings instance
+settings = Settings()
 
 def is_reddit_available() -> bool:
     """Check if Reddit API credentials are available"""
-    return (
-        settings.REDDIT_CLIENT_ID and 
-        settings.REDDIT_CLIENT_SECRET and
-        settings.REDDIT_CLIENT_ID != ""
-    )
+    return bool(settings.REDDIT_CLIENT_ID and settings.REDDIT_CLIENT_ID != "")
 
-# Create settings instance
-settings = Settings()
+def get_llm_providers() -> dict:
+    """Get available LLM providers"""
+    providers = {}
+    
+    if settings.GROQ_API_KEY:
+        providers["groq"] = settings.GROQ_API_KEY
+    
+    if settings.OPENAI_API_KEY:
+        providers["openai"] = settings.OPENAI_API_KEY
+    
+    if settings.GEMINI_API_KEY:
+        providers["gemini"] = settings.GEMINI_API_KEY
+    
+    if settings.DEEPSEEK_API_KEY:
+        providers["deepseek"] = {
+            "api_key": settings.DEEPSEEK_API_KEY,
+            "base_url": settings.DEEPSEEK_BASE_URL
+        }
+    
+    if settings.OPENROUTER_API_KEY:
+        providers["openrouter"] = settings.OPENROUTER_API_KEY
+    
+    if settings.SARVAM_API_KEY:
+        providers["sarvam"] = settings.SARVAM_API_KEY
+    
+    return providers
