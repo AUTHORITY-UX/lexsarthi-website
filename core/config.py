@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # App Settings
     APP_NAME: str = "Unknown Verdict"
     APP_VERSION: str = "43.0"
-    DEBUG: bool = true
+    DEBUG: bool = True  # ← FIXED: True not true
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     MAX_CONTENT_PER_SOURCE: int = 50
     MIN_LEGAL_RELEVANCE: float = 0.3
     
-    # Search - FIXED with validators
+    # Search
     ENABLE_WEB_SEARCH: bool = False
     ENABLE_TARGETED_SEARCH: bool = False
     TARGETED_SEARCH_DOMAINS: Optional[str] = os.getenv("TARGETED_SEARCH_DOMAINS")
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = False
 
-    # --- VALIDATORS: This is the key fix ---
+    # Validators for boolean fields
     @field_validator('ENABLE_WEB_SEARCH', 'ENABLE_TARGETED_SEARCH', 'USE_VERDICT_ENGINE', 'DEBUG', mode='before')
     @classmethod
     def coerce_bool(cls, v):
@@ -73,19 +73,16 @@ class Settings(BaseSettings):
         if isinstance(v, bool):
             return v
         if isinstance(v, str):
-            # This handles your 'true\n\n' problem
             cleaned = v.strip().lower()
             if cleaned in ['true', '1', 'yes', 'on', 't', 'y']:
                 return True
             if cleaned in ['false', '0', 'no', 'off', 'f', 'n', '']:
                 return False
-        # Fallback: return False for any unexpected value
         return False
 
 # Create settings instance
 settings = Settings()
 
-# Helper functions remain the same
 def is_reddit_available() -> bool:
     return bool(settings.REDDIT_CLIENT_ID and settings.REDDIT_CLIENT_ID != "")
 
