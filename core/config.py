@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, List
 import os
 
 class Settings(BaseSettings):
@@ -12,11 +12,16 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
     
-    # JWT Settings - Use your existing HF Secret
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET", os.getenv("JWR_SECRET", "fallback-secret-key-change-me"))
-    JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    # JWT Settings - Use HF Secret
+    jwt_signing_key: str = os.getenv("JWT_SECRET", os.getenv("JWR_SECRET", "fallback-secret-key-change-me"))
+    
+    # Admin Keys
+    admin_keys: List[str] = [os.getenv("ADMIN_KEY", ""), os.getenv("ADMIN_SECRET", "")]
+    
+    # Rate Limiting
+    RATE_LIMIT_REQUESTS: int = 100
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
+    CACHE_PREFIX: str = "unknown_verdict:"
     
     # LLM Providers
     GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY")
@@ -45,27 +50,19 @@ class Settings(BaseSettings):
     MAX_CONTENT_PER_SOURCE: int = 50
     MIN_LEGAL_RELEVANCE: float = 0.3
     
-    # Rate Limiting
-    RATE_LIMIT_WINDOW: int = 60
-    RATE_LIMIT_MAX_REQUESTS: int = 100
-    
-    # Admin
-    ADMIN_SECRET: Optional[str] = os.getenv("ADMIN_SECRET")
-    ADMIN_KEY: Optional[str] = os.getenv("ADMIN_KEY")
-    
     # Search
     ENABLE_WEB_SEARCH: bool = os.getenv("ENABLE_WEB_SEARCH", "false").lower() == "true"
     ENABLE_TARGETED_SEARCH: bool = os.getenv("ENABLE_TARGETED_SEARCH", "false").lower() == "true"
     TARGETED_SEARCH_DOMAINS: Optional[str] = os.getenv("TARGETED_SEARCH_DOMAINS")
     SERPAPI_KEY: Optional[str] = os.getenv("SERPAPI_KEY")
     
-    # Other
+    # Verdict Engine
     VERDICT_ENGINE_MODE: str = os.getenv("VERDICT_ENGINE_MODE", "standard")
     USE_VERDICT_ENGINE: bool = os.getenv("USE_VERDICT_ENGINE", "true").lower() == "true"
     
     class Config:
         env_file = ".env"
-        case_sensitive = True
+        case_sensitive = False  # Important for compatibility
 
 # Create settings instance
 settings = Settings()
