@@ -71,3 +71,6 @@ click==8.1.7
 typing-extensions==4.12.2
 # News Aggregation (replace aiohttp with httpx)
 # aiohttp is removed - httpx handles async HTTP
+asyncpraw==7.7.1
+praw==7.7.1
+aiohttp==3.9.5
