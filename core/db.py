@@ -4,8 +4,8 @@ Database connection management with Redis support
 
 import os
 import logging
-from typing import Optional, Union
-from contextlib import contextmanager
+from typing import Optional
+from contextlib import asynccontextmanager
 
 import asyncpg
 import redis.asyncio as redis
@@ -29,7 +29,73 @@ class Database:
         self._async_session_maker = None
         self._redis_client = None
         self._pool = None
+        self.pool = None  # For app.py check
         
+    async def connect(self):
+        """Initialize database connections - called from app.py lifespan"""
+        try:
+            # Create async engine
+            if settings.DATABASE_URL:
+                self._async_engine = create_async_engine(
+                    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+                    echo=settings.DEBUG,
+                    pool_size=10,
+                    max_overflow=20
+                )
+                self._async_session_maker = async_sessionmaker(
+                    self._async_engine,
+                    class_=AsyncSession,
+                    expire_on_commit=False
+                )
+                
+                # Create connection pool
+                self._pool = await asyncpg.create_pool(
+                    settings.DATABASE_URL,
+                    min_size=2,
+                    max_size=10
+                )
+                self.pool = self._pool  # For app.py check
+                logger.info("✅ PostgreSQL pool created")
+            else:
+                logger.warning("⚠️ DATABASE_URL not set, running without database")
+            
+            # Connect to Redis
+            if settings.REDIS_URL:
+                try:
+                    self._redis_client = redis.from_url(
+                        settings.REDIS_URL,
+                        decode_responses=True,
+                        max_connections=10
+                    )
+                    await self._redis_client.ping()
+                    logger.info("✅ Redis connected successfully")
+                except Exception as e:
+                    logger.warning(f"⚠️ Redis connection failed: {e}")
+                    self._redis_client = None
+            else:
+                logger.info("ℹ️ Redis URL not configured, using in-memory fallback")
+                
+        except Exception as e:
+            logger.error(f"❌ Database connection failed: {e}")
+            raise
+    
+    async def disconnect(self):
+        """Close all connections - called from app.py lifespan"""
+        if self._pool:
+            await self._pool.close()
+            self._pool = None
+            self.pool = None
+        
+        if self._redis_client:
+            await self._redis_client.close()
+            self._redis_client = None
+        
+        if self._async_engine:
+            await self._async_engine.dispose()
+            self._async_engine = None
+        
+        logger.info("Database connections closed")
+    
     def get_engine(self):
         """Get sync SQLAlchemy engine"""
         if not self._engine:
@@ -72,58 +138,30 @@ class Database:
     
     async def get_redis(self) -> Optional[redis.Redis]:
         """Get Redis client"""
-        if self._redis_client is None:
-            if settings.REDIS_URL:
-                try:
-                    self._redis_client = redis.from_url(
-                        settings.REDIS_URL,
-                        decode_responses=True,
-                        max_connections=10
-                    )
-                    # Test connection
-                    await self._redis_client.ping()
-                    logger.info("✅ Redis connected successfully")
-                except Exception as e:
-                    logger.warning(f"⚠️ Redis connection failed: {e}")
-                    self._redis_client = None
-            else:
-                logger.info("ℹ️ Redis URL not configured, using in-memory fallback")
-        
         return self._redis_client
     
     async def get_pool(self):
         """Get asyncpg connection pool"""
-        if self._pool is None:
-            try:
-                self._pool = await asyncpg.create_pool(
-                    settings.DATABASE_URL,
-                    min_size=2,
-                    max_size=10
-                )
-                logger.info("✅ Database pool created")
-            except Exception as e:
-                logger.error(f"❌ Database pool creation failed: {e}")
-                raise
         return self._pool
     
-    async def close(self):
-        """Close all connections"""
-        if self._pool:
-            await self._pool.close()
-            self._pool = None
+    @asynccontextmanager
+    async def get_session(self):
+        """Get async session (context manager)"""
+        if not self._async_session_maker:
+            await self.connect()
         
-        if self._redis_client:
-            await self._redis_client.close()
-            self._redis_client = None
-        
-        if self._async_engine:
-            await self._async_engine.dispose()
-            self._async_engine = None
-        
-        logger.info("Database connections closed")
+        async with self._async_session_maker() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
     
     @contextmanager
-    def get_session(self):
+    def get_sync_session(self):
         """Get sync session (context manager)"""
         session = self.get_session_maker()()
         try:
@@ -135,25 +173,20 @@ class Database:
         finally:
             session.close()
 
-# Global database instance
-_db = None
+# Create global database instance
+db = Database()
 
+# Helper functions
 def get_db() -> Database:
-    """Get or create database instance"""
-    global _db
-    if _db is None:
-        _db = Database()
-    return _db
+    """Get database instance"""
+    return db
 
 async def init_db():
     """Initialize database connections"""
-    db = get_db()
-    await db.get_pool()
-    await db.get_redis()
+    await db.connect()
     logger.info("✅ Database initialized")
 
 async def close_db():
     """Close database connections"""
-    db = get_db()
-    await db.close()
+    await db.disconnect()
     logger.info("Database closed")
