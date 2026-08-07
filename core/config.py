@@ -50,22 +50,51 @@ class Settings(BaseSettings):
     MAX_CONTENT_PER_SOURCE: int = 50
     MIN_LEGAL_RELEVANCE: float = 0.3
     
-    # Search
-    ENABLE_WEB_SEARCH: bool = os.getenv("ENABLE_WEB_SEARCH", "false").lower() == "true"
-    ENABLE_TARGETED_SEARCH: bool = os.getenv("ENABLE_TARGETED_SEARCH", "false").lower() == "true"
+    # Search - FIXED: Use custom validator or simple string parsing
+    ENABLE_WEB_SEARCH: bool = False
+    ENABLE_TARGETED_SEARCH: bool = False
     TARGETED_SEARCH_DOMAINS: Optional[str] = os.getenv("TARGETED_SEARCH_DOMAINS")
     SERPAPI_KEY: Optional[str] = os.getenv("SERPAPI_KEY")
     
     # Verdict Engine
     VERDICT_ENGINE_MODE: str = os.getenv("VERDICT_ENGINE_MODE", "standard")
-    USE_VERDICT_ENGINE: bool = os.getenv("USE_VERDICT_ENGINE", "true").lower() == "true"
+    USE_VERDICT_ENGINE: bool = False
     
     class Config:
         env_file = ".env"
-        case_sensitive = False  # Important for compatibility
+        case_sensitive = False
+        
+        @classmethod
+        def parse_env_var(cls, field_name: str, raw_val: str):
+            """Custom parser for environment variables"""
+            if field_name in ["ENABLE_WEB_SEARCH", "ENABLE_TARGETED_SEARCH", "USE_VERDICT_ENGINE", "DEBUG", "LEGAL_INTELLIGENCE_ENABLED"]:
+                # Clean the value and parse boolean
+                cleaned = raw_val.strip().lower()
+                if cleaned in ["true", "1", "yes", "on"]:
+                    return True
+                elif cleaned in ["false", "0", "no", "off", ""]:
+                    return False
+                return False
+            return raw_val
 
-# Create settings instance
+# Create settings instance with custom parsing
 settings = Settings()
+
+# Override boolean settings with proper parsing
+def _parse_bool(value: str) -> bool:
+    """Parse boolean from string with proper handling"""
+    if value is None:
+        return False
+    cleaned = str(value).strip().lower()
+    return cleaned in ["true", "1", "yes", "on", "t", "y"]
+
+# Apply boolean parsing for environment variables
+if os.getenv("ENABLE_WEB_SEARCH"):
+    settings.ENABLE_WEB_SEARCH = _parse_bool(os.getenv("ENABLE_WEB_SEARCH"))
+if os.getenv("ENABLE_TARGETED_SEARCH"):
+    settings.ENABLE_TARGETED_SEARCH = _parse_bool(os.getenv("ENABLE_TARGETED_SEARCH"))
+if os.getenv("USE_VERDICT_ENGINE"):
+    settings.USE_VERDICT_ENGINE = _parse_bool(os.getenv("USE_VERDICT_ENGINE"))
 
 def is_reddit_available() -> bool:
     """Check if Reddit API credentials are available"""
