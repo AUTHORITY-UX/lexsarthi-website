@@ -7,7 +7,9 @@ class Settings(BaseSettings):
     # App Settings
     APP_NAME: str = "Unknown Verdict"
     APP_VERSION: str = "43.0"
-    DEBUG: bool = True  # ← FIXED: True not true
+    DEBUG: bool = True
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")  # ← ADD THIS LINE
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
@@ -60,6 +62,24 @@ class Settings(BaseSettings):
     # Verdict Engine
     VERDICT_ENGINE_MODE: str = os.getenv("VERDICT_ENGINE_MODE", "standard")
     USE_VERDICT_ENGINE: bool = False
+
+    # Available LLM Providers (computed property)
+    @property
+    def available_llm_providers(self) -> List[str]:
+        providers = []
+        if self.GROQ_API_KEY:
+            providers.append("groq")
+        if self.OPENAI_API_KEY:
+            providers.append("openai")
+        if self.GEMINI_API_KEY:
+            providers.append("gemini")
+        if self.DEEPSEEK_API_KEY:
+            providers.append("deepseek")
+        if self.OPENROUTER_API_KEY:
+            providers.append("openrouter")
+        if self.SARVAM_API_KEY:
+            providers.append("sarvam")
+        return providers
 
     class Config:
         env_file = ".env"
