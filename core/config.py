@@ -191,3 +191,40 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+from pydantic_settings import BaseSettings
+from typing import Optional
+import os
+
+class Settings(BaseSettings):
+    # ... existing settings ...
+    
+    # Reddit Settings (Optional - falls back to scraping if not available)
+    REDDIT_CLIENT_ID: Optional[str] = os.getenv("REDDIT_CLIENT_ID", "")
+    REDDIT_CLIENT_SECRET: Optional[str] = os.getenv("REDDIT_CLIENT_SECRET", "")
+    REDDIT_USER_AGENT: str = "UnknownVerdict/1.0"
+    REDDIT_RATE_LIMIT: int = 60
+    REDDIT_CACHE_TTL: int = 3600
+    
+    # Legal Intelligence Settings
+    LEGAL_INTELLIGENCE_ENABLED: bool = True
+    MAX_CONTENT_PER_SOURCE: int = 50
+    MIN_LEGAL_RELEVANCE: float = 0.3
+    CRAWL_INTERVAL: int = 3600  # 1 hour
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+# ==================== REDDIT FALLBACK ====================
+# We check if Reddit credentials exist, otherwise use scraping
+
+def is_reddit_available() -> bool:
+    """Check if Reddit API credentials are available"""
+    return (
+        settings.REDDIT_CLIENT_ID and 
+        settings.REDDIT_CLIENT_SECRET and
+        settings.REDDIT_CLIENT_ID != ""
+    )
+
+# Create settings instance
+settings = Settings()
