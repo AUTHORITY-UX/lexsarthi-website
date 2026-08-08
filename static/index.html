@@ -1,1045 +1,763 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unknown Verdict v43.0 — Global Intelligence</title>
-<style>
-:root {
-  --bg: #0a0e1a;
-  --bg-card: #111827;
-  --bg-card-hover: #1a2332;
-  --border: #1e293b;
-  --border-hover: #334155;
-  --text: #e2e8f0;
-  --text-muted: #64748b;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-glow: rgba(59, 130, 246, 0.3);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --purple: #8b5cf6;
-  --gold: #f59e0b;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 24px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
-  gap: 8px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.header-left { display: flex; align-items: center; gap: 12px; }
-.logo {
-  width: 36px; height: 36px;
-  background: linear-gradient(135deg, var(--accent), var(--purple));
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700; color: white;
-}
-.header h1 { font-size: 16px; font-weight: 600; }
-.header h1 span { color: var(--text-muted); font-weight: 400; }
-.header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.status-badge {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 10px; border-radius: 20px;
-  font-size: 12px;
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-.tab-btn {
-  padding: 6px 14px; border-radius: 6px;
-  background: transparent; border: 1px solid var(--border);
-  color: var(--text-muted); cursor: pointer;
-  font-size: 13px; font-weight: 500;
-  transition: all 0.2s;
-}
-.tab-btn:hover { border-color: var(--border-hover); color: var(--text); }
-.tab-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧠 Unknown Verdict · Brain</title>
 
-.main-layout { display: flex; flex: 1; overflow: hidden; }
-.sidebar {
-  width: 280px;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
-.sidebar-header h3 { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-.new-chat-btn {
-  width: 100%; margin-top: 12px;
-  padding: 10px; border-radius: 8px;
-  background: var(--accent); border: none;
-  color: white; font-size: 13px; font-weight: 500;
-  cursor: pointer; transition: all 0.2s;
-}
-.new-chat-btn:hover { background: var(--accent-hover); }
-.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px; }
-.sidebar-nav-item {
-  padding: 10px 12px; border-radius: 8px;
-  cursor: pointer; transition: all 0.2s;
-  margin-bottom: 4px;
-  font-size: 13px; color: var(--text-muted);
-  border: 1px solid transparent;
-  display: flex; align-items: center; gap: 10px;
-}
-.sidebar-nav-item:hover { background: var(--bg-card-hover); color: var(--text); }
-.sidebar-nav-item.active {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.2);
-  color: var(--text);
-}
-.sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); }
+  <style>
+    /* ─── reset & variables ─── */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg: #0a0e1a;
+      --bg-card: #111827;
+      --bg-card-hover: #1a2332;
+      --border: #1e293b;
+      --border-hover: #334155;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-.content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.content-header {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px;
-}
-.content-header h2 { font-size: 16px; font-weight: 600; }
-.content-body { flex: 1; overflow-y: auto; padding: 20px; }
+    /* ─── header ─── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px; font-weight: 700; color: white;
+    }
+    .header h1 { font-size: 16px; font-weight: 600; }
+    .header h1 span { color: var(--text-muted); font-weight: 400; }
+    .header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: rgba(16,185,129,0.1);
+      color: var(--success);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-.dashboard-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-}
-.dashboard-card .card-icon { font-size: 24px; margin-bottom: 4px; }
-.dashboard-card .card-value { font-size: 24px; font-weight: 700; }
-.dashboard-card .card-label { font-size: 12px; color: var(--text-muted); }
+    /* ─── layout ─── */
+    .main-layout { display: flex; flex:1; overflow: hidden; }
+    .sidebar {
+      width: 280px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-header h3 { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .sidebar-nav-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-nav-item:hover { background: var(--bg-card-hover); color: var(--text); }
+    .sidebar-nav-item.active {
+      background: rgba(59,130,246,0.1);
+      border-color: rgba(59,130,246,0.2);
+      color: var(--text);
+    }
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .content-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .content-header h2 { font-size: 16px; font-weight: 600; }
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
 
-.compliance-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-.compliance-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-}
-.compliance-card .compliance-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 8px;
-}
-.compliance-card .compliance-name { font-size: 14px; font-weight: 600; }
-.compliance-status {
-  padding: 2px 12px; border-radius: 12px;
-  font-size: 10px; font-weight: 600;
-}
-.compliance-status.pass { background: rgba(16,185,129,0.1); color: var(--success); }
-.compliance-status.partial { background: rgba(245,158,11,0.1); color: var(--warning); }
-.risk-meter { width: 100%; height: 6px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-top: 8px; }
-.risk-fill { height: 100%; border-radius: 4px; }
-.risk-fill.low { background: var(--success); }
-.risk-fill.medium { background: var(--warning); }
-.risk-fill.high { background: var(--danger); }
+    /* ─── cards ─── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .dashboard-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .dashboard-card .card-icon { font-size: 24px; margin-bottom: 4px; }
+    .dashboard-card .card-value { font-size: 24px; font-weight: 700; }
+    .dashboard-card .card-label { font-size: 12px; color: var(--text-muted); }
 
-.btn-primary {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-primary:hover { background: var(--accent-hover); }
-.btn-secondary {
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-secondary:hover { border-color: var(--border-hover); }
+    .compliance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .compliance-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .compliance-card .compliance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .compliance-card .compliance-name { font-size: 14px; font-weight: 600; }
+    .compliance-status {
+      padding: 2px 12px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .compliance-status.pass { background: rgba(16,185,129,0.1); color: var(--success); }
+    .compliance-status.partial { background: rgba(245,158,11,0.1); color: var(--warning); }
+    .risk-meter { width: 100%; height: 6px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .risk-fill { height: 100%; border-radius: 4px; }
+    .risk-fill.low { background: var(--success); }
+    .risk-fill.medium { background: var(--warning); }
+    .risk-fill.high { background: var(--danger); }
 
-.chat-container {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-top: 20px;
-}
-.chat-messages {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-bottom: 12px;
-  padding: 8px;
-}
-.chat-msg {
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  max-width: 80%;
-}
-.chat-msg.user { background: rgba(59,130,246,0.15); margin-left: auto; border: 1px solid rgba(59,130,246,0.2); }
-.chat-msg.ai { background: var(--bg); border: 1px solid var(--border); }
-.chat-msg .msg-role { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
-.chat-msg .msg-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
-.chat-input-row {
-  display: flex;
-  gap: 8px;
-}
-.chat-input-row input {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  color: var(--text);
-  font-size: 14px;
-}
-.chat-input-row input:focus { outline: none; border-color: var(--accent); }
-.chat-input-row button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-}
-.chat-input-row button:hover { background: var(--accent-hover); }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--border-hover); }
 
-.agent-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.agent-card:hover { border-color: var(--accent); }
-.agent-card .agent-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-.agent-card .agent-desc { font-size: 13px; color: var(--text-muted); }
+    /* ─── chat ─── */
+    .chat-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 20px;
+    }
+    .chat-messages {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      padding: 8px;
+    }
+    .chat-msg {
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      max-width: 80%;
+    }
+    .chat-msg.user { background: rgba(59,130,246,0.15); margin-left: auto; border: 1px solid rgba(59,130,246,0.2); }
+    .chat-msg.ai { background: var(--bg); border: 1px solid var(--border); }
+    .chat-msg .msg-role { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+    .chat-msg .msg-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .chat-input-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .chat-input-row input:focus { outline: none; border-color: var(--accent); }
+    .chat-input-row button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .chat-input-row button:hover { background: var(--accent-hover); }
 
-.report-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 12px;
-}
-.report-card .report-header {
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 8px;
-}
-.report-card .report-title { font-size: 15px; font-weight: 600; }
-.report-card .report-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
-.report-card .report-summary { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
-.report-badge {
-  padding: 2px 10px; border-radius: 12px;
-  font-size: 10px; font-weight: 600;
-}
-.report-badge.compliant { background: rgba(16,185,129,0.1); color: var(--success); }
-.report-badge.high-risk { background: rgba(239,68,68,0.1); color: var(--danger); }
-.report-badge.medium-risk { background: rgba(245,158,11,0.1); color: var(--warning); }
+    /* ─── logs ─── */
+    .log-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 20px 0;
+      max-height: 150px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .log-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-entry .time { color: var(--accent); }
+    .log-entry .agent { color: var(--purple); font-weight: 600; }
+    .log-entry .msg { color: var(--text); }
 
-.report-download-btn {
-  background: var(--success);
-  color: white;
-  border: none;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  cursor: pointer;
-}
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      max-width: 400px;
+      z-index: 1000;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--accent); }
 
-.toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 20px;
-  max-width: 400px;
-  z-index: 1000;
-  animation: slideUp 0.3s ease;
-}
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.toast.success { border-left: 4px solid var(--success); }
-.toast.error { border-left: 4px solid var(--danger); }
-.toast.info { border-left: 4px solid var(--accent); }
-
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .dashboard-grid { grid-template-columns: 1fr; }
-  .compliance-grid { grid-template-columns: 1fr; }
-  .header-right .tab-btn { font-size: 11px; padding: 4px 10px; }
-}
-</style>
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .compliance-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="header">
-  <div class="header-left">
-    <div class="logo">UV</div>
-    <h1>Unknown Verdict <span>v43.0 — Global Intelligence</span></h1>
-  </div>
-  <div class="header-right">
-    <div class="status-badge"><div class="status-dot"></div><span id="status-text">Loading...</span></div>
-    <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-    <button class="tab-btn" onclick="switchTab('compliance')">⚖️ Compliance</button>
-    <button class="tab-btn" onclick="switchTab('reports')">📄 Reports</button>
-    <button class="tab-btn" onclick="switchTab('agents')">🤖 Agents</button>
-    <button class="tab-btn" onclick="switchTab('news')">📰 News</button>
-  </div>
-</div>
-
-<div class="main-layout">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h3>Client Intelligence</h3>
-      <button class="new-chat-btn" onclick="generateFullReport()">📊 Generate Report</button>
+  <!-- ============================================================ -->
+  <!-- HEADER -->
+  <!-- ============================================================ -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">🧠</div>
+      <h1>Unknown Verdict <span>· Brain</span></h1>
     </div>
-    <div class="sidebar-nav">
-      <div class="sidebar-nav-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-      <div class="sidebar-nav-item" onclick="switchTab('compliance')">⚖️ Global Compliance</div>
-      <div class="sidebar-nav-item" onclick="switchTab('reports')">📄 Reports</div>
-      <div class="sidebar-nav-item" onclick="switchTab('agents')">🤖 Agents (250)</div>
-      <div class="sidebar-nav-item" onclick="switchTab('news')">📰 News Intelligence</div>
-    </div>
-    <div class="sidebar-footer">
-      <div>82 Endpoints · 250 Agents · 15 Verifiers</div>
-      <div style="margin-top:4px"><span style="color:var(--success);">●</span> <span id="footer-status">Loading...</span></div>
+    <div class="header-right">
+      <div class="status-badge"><div class="status-dot"></div><span id="status-text">Loading...</span></div>
+      <button class="btn-secondary" onclick="refreshAll()" style="padding:4px 12px;font-size:12px;">🔄 Refresh</button>
     </div>
   </div>
 
-  <div class="content-area">
-    <div class="content-header">
-      <h2 id="content-title">📊 Global Intelligence Dashboard</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:12px;color:var(--text-muted)" id="last-updated">Just now</span>
-        <button class="btn-secondary" onclick="refreshAll()" style="padding:4px 12px;font-size:12px;">🔄 Refresh</button>
+  <!-- ============================================================ -->
+  <!-- MAIN LAYOUT -->
+  <!-- ============================================================ -->
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h3>Intelligence Hub</h3>
+      </div>
+      <div class="sidebar-nav">
+        <div class="sidebar-nav-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+        <div class="sidebar-nav-item" onclick="switchTab('compliance')">⚖️ Compliance</div>
+        <div class="sidebar-nav-item" onclick="switchTab('agents')">🤖 Agents (250)</div>
+        <div class="sidebar-nav-item" onclick="switchTab('news')">📰 News</div>
+        <div class="sidebar-nav-item" onclick="switchTab('chat')">💬 Chat</div>
+      </div>
+      <div class="sidebar-footer">
+        <div>⚡ Real‑time · 250 Agents · 6 LLMs</div>
+        <div style="margin-top:4px"><span style="color:var(--success);">●</span> <span id="footer-status">System online</span></div>
       </div>
     </div>
-    <div class="content-body" id="content-body"></div>
+
+    <!-- CONTENT AREA -->
+    <div class="content-area">
+      <div class="content-header">
+        <h2 id="content-title">📊 Brain Dashboard</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:var(--text-muted)" id="last-updated">Just now</span>
+          <button class="btn-secondary" onclick="refreshAll()" style="padding:4px 12px;font-size:12px;">🔄 Refresh</button>
+        </div>
+      </div>
+      <div class="content-body" id="content-body">
+        <div class="spinner"></div> Loading Brain...
+      </div>
+    </div>
   </div>
-</div>
 
-<script>
-// ═════════════════════════════════════════════════════════════════════
-// UNKNOWN VERDICT v43.0 — REAL LEGAL INTELLIGENCE
-// ═════════════════════════════════════════════════════════════════════
+  <!-- ============================================================ -->
+  <!-- JAVASCRIPT – THE BRAIN ENGINE -->
+  <!-- ============================================================ -->
+  <script>
+    // ──────────────────────────────────────────────────────────────
+    // STATE
+    // ──────────────────────────────────────────────────────────────
+    const BASE_URL = window.location.origin;
+    let currentTab = 'dashboard';
+    let dashboardData = null;
+    let agentLogs = [];
+    const MAX_LOGS = 50;
 
-const BASE_URL = window.location.origin;
-let currentTab = 'dashboard';
-let reports = [];
-let realArticles = [];
-let isLoading = false;
-
-// ─────────────────────────────────────────────────────────────────────
-// FETCH REAL LEGAL INTELLIGENCE FROM BACKEND
-// ─────────────────────────────────────────────────────────────────────
-async function fetchLegalIntelligence() {
-    if (isLoading) return;
-    isLoading = true;
-    
-    try {
+    // ──────────────────────────────────────────────────────────────
+    // FETCH REAL DATA FROM BACKEND
+    // ──────────────────────────────────────────────────────────────
+    async function fetchBrainData() {
+      try {
         document.getElementById('status-text').textContent = 'Fetching...';
-        document.getElementById('footer-status').textContent = 'Fetching legal data...';
-        
-        const response = await fetch(`${BASE_URL}/legal-intelligence/dashboard`);
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
-        
-        // Extract real articles from dashboard data
-        realArticles = [];
-        
-        // Get top content (high relevance)
-        if (data.top_content && data.top_content.length > 0) {
-            data.top_content.forEach(item => {
-                realArticles.push({
-                    id: item.id || `article-${Date.now()}-${Math.random()}`,
-                    agent: item.source || 'Legal Agent',
-                    title: item.title || 'Legal Update',
-                    content: item.text || item.summary || 'No content available',
-                    category: item.categories ? item.categories.join(', ') : 'Legal',
-                    source: item.source || 'Legal Intelligence',
-                    rating: item.legal_relevance ? Math.round(item.legal_relevance * 10) / 2 : 5,
-                    jurisdiction: item.jurisdiction || 'International',
-                    published: item.published || new Date().toISOString(),
-                    url: item.url || '#',
-                    summary: item.summary || (item.text ? item.text.substring(0, 300) : '')
-                });
-            });
-        }
-        
-        // Also get trending content
-        if (data.trending_content && data.trending_content.length > 0) {
-            data.trending_content.forEach(item => {
-                // Avoid duplicates
-                if (!realArticles.find(a => a.id === item.id)) {
-                    realArticles.push({
-                        id: item.id || `trending-${Date.now()}-${Math.random()}`,
-                        agent: item.source || 'Trending Agent',
-                        title: item.title || 'Trending Legal Update',
-                        content: item.text || item.summary || 'No content available',
-                        category: item.categories ? item.categories.join(', ') : 'Legal',
-                        source: item.source || 'Legal Intelligence',
-                        rating: item.legal_relevance ? Math.round(item.legal_relevance * 10) / 2 : 5,
-                        jurisdiction: item.jurisdiction || 'International',
-                        published: item.published || new Date().toISOString(),
-                        url: item.url || '#',
-                        summary: item.summary || (item.text ? item.text.substring(0, 300) : '')
-                    });
-                }
-            });
-        }
-        
-        // Update status
-        const count = realArticles.length;
-        document.getElementById('status-text').textContent = count > 0 ? `${count} articles` : 'Online';
-        document.getElementById('footer-status').textContent = count > 0 ? `${count} legal articles loaded` : 'All systems operational';
-        document.getElementById('last-updated').textContent = new Date().toLocaleString();
-        
-        // Render current tab
-        renderTab(currentTab);
-        
-        return data;
-    } catch (e) {
-        console.error('Error fetching legal intelligence:', e);
-        document.getElementById('status-text').textContent = 'Online (cached)';
-        document.getElementById('footer-status').textContent = 'Using cached data';
-        // Keep existing articles if any
-        if (realArticles.length === 0) {
-            // Fallback: use dummy data only if no real data
-            realArticles = generateFallbackArticles();
-        }
-        renderTab(currentTab);
-        return null;
-    } finally {
-        isLoading = false;
-    }
-}
-
-function generateFallbackArticles() {
-    return [
-        {
-            id: 'fallback-1',
-            agent: 'Legal Intelligence',
-            title: 'Loading Legal Content...',
-            content: 'Please refresh or check backend connectivity.',
-            category: 'Legal',
-            source: 'System',
-            rating: 5,
-            jurisdiction: 'Global',
-            published: new Date().toISOString(),
-            url: '#',
-            summary: 'Click refresh to load legal content from RSS feeds.'
-        }
-    ];
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// SWITCH TAB
-// ─────────────────────────────────────────────────────────────────────
-function switchTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
-    
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        if (b.textContent.includes(tab.charAt(0).toUpperCase() + tab.slice(1)) || 
-            b.textContent.includes(tab.toUpperCase())) {
-            b.classList.add('active');
-        }
-    });
-    document.querySelectorAll('.sidebar-nav-item').forEach(i => {
-        if (i.textContent.includes(tab.charAt(0).toUpperCase() + tab.slice(1)) || 
-            i.textContent.includes(tab.toUpperCase())) {
-            i.classList.add('active');
-        }
-    });
-    
-    const titles = {
-        dashboard: '📊 Global Intelligence Dashboard',
-        compliance: '⚖️ Global Compliance Dashboard',
-        reports: '📄 Generated Reports',
-        agents: '🤖 250 Legal Agents',
-        news: '📰 News Intelligence'
-    };
-    document.getElementById('content-title').textContent = titles[tab] || 'Dashboard';
-    renderTab(tab);
-}
-
-function renderTab(tab) {
-    const body = document.getElementById('content-body');
-    switch(tab) {
-        case 'dashboard': renderDashboard(body); break;
-        case 'compliance': renderCompliance(body); break;
-        case 'reports': renderReports(body); break;
-        case 'agents': renderAgents(body); break;
-        case 'news': renderNews(body); break;
-        default: body.innerHTML = '<p>Loading...</p>';
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// DASHBOARD WITH REAL ARTICLES
-// ─────────────────────────────────────────────────────────────────────
-function renderDashboard(container) {
-    const frameworks = [
-        { name: 'EU AI Act', icon: '🇪🇺', score: 85, status: 'partial' },
-        { name: 'GDPR', icon: '🇪🇺', score: 88, status: 'pass' },
-        { name: 'DPDPA (India)', icon: '🇮🇳', score: 92, status: 'pass' },
-        { name: 'EU Data Act', icon: '📊', score: 70, status: 'partial' },
-        { name: 'HIPAA', icon: '🏥', score: 90, status: 'pass' },
-        { name: 'AI Governance', icon: '🏛️', score: 75, status: 'partial' },
-        { name: 'CCPA', icon: '🇺🇸', score: 85, status: 'pass' },
-        { name: 'UK AI', icon: '🇬🇧', score: 72, status: 'partial' }
-    ];
-    
-    // Use real articles if available
-    const articles = realArticles.length > 0 ? realArticles.slice(0, 5) : generateFallbackArticles();
-    const articleCount = realArticles.length;
-    
-    // Calculate compliance rate
-    const compliant = frameworks.filter(f => f.status === 'pass').length;
-    const total = frameworks.length;
-    const complianceRate = Math.round((compliant / total) * 100);
-    
-    let html = `
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <div class="card-icon">📊</div>
-                <div class="card-value">${complianceRate}%</div>
-                <div class="card-label">Global Compliance Rate</div>
-            </div>
-            <div class="dashboard-card">
-                <div class="card-icon">🤖</div>
-                <div class="card-value">250</div>
-                <div class="card-label">Active Agents</div>
-            </div>
-            <div class="dashboard-card">
-                <div class="card-icon">📄</div>
-                <div class="card-value">${articleCount}</div>
-                <div class="card-label">Legal Articles</div>
-            </div>
-            <div class="dashboard-card">
-                <div class="card-icon">⚖️</div>
-                <div class="card-value">${compliant}/${total}</div>
-                <div class="card-label">Compliant Frameworks</div>
-            </div>
-        </div>
-        
-        <h3 style="margin:20px 0 12px;">⚖️ Global Compliance Overview</h3>
-        <div class="compliance-grid">
-            ${frameworks.map(f => `
-                <div class="compliance-card">
-                    <div class="compliance-header">
-                        <span class="compliance-name">${f.icon} ${f.name}</span>
-                        <span class="compliance-status ${f.status}">${f.status.toUpperCase()}</span>
-                    </div>
-                    <div style="font-size:12px;color:var(--text-muted);">Score: ${f.score}%</div>
-                    <div class="risk-meter">
-                        <div class="risk-fill ${f.score > 80 ? 'low' : f.score > 60 ? 'medium' : 'high'}" style="width:${f.score}%;"></div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-    
-    // Add REAL articles section
-    html += `
-        <h3 style="margin:20px 0 12px;">🧠 Legal Intelligence (${articleCount} articles)</h3>
-    `;
-    
-    if (articleCount > 0) {
-        articles.forEach(a => {
-            const displayContent = a.content || a.summary || 'No content available';
-            const maxLength = 400;
-            const truncated = displayContent.length > maxLength ? displayContent.substring(0, maxLength) + '...' : displayContent;
-            const hasMore = displayContent.length > maxLength;
-            
-            html += `
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                        <div style="font-size:12px;color:var(--purple);">
-                            📍 ${a.jurisdiction || 'Global'} · ⭐ ${a.rating}/10
-                        </div>
-                        <span style="font-size:11px;color:var(--text-muted);">${a.source || 'Legal Intelligence'}</span>
-                    </div>
-                    <div style="font-size:15px;font-weight:600;margin:8px 0;">
-                        <a href="${a.url || '#'}" target="_blank" style="color:var(--text);text-decoration:none;">${a.title || 'Untitled'}</a>
-                    </div>
-                    <div style="font-size:13px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap;max-height:${hasMore ? '120px' : 'none'};overflow:hidden;position:relative;" 
-                         id="content-${a.id}">
-                        ${truncated}
-                    </div>
-                    ${hasMore ? `
-                        <button onclick="toggleContent('${a.id}')" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;margin-top:4px;">
-                            Read More →
-                        </button>
-                    ` : ''}
-                    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
-                        <span style="font-size:11px;color:var(--text-muted);">📋 ${a.category || 'Legal'}</span>
-                        <span style="font-size:11px;color:var(--text-muted);">📅 ${new Date(a.published).toLocaleDateString()}</span>
-                        <button onclick="window.open('${a.url || '#'}', '_blank')" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;">🔗 View Source</button>
-                    </div>
-                </div>
-            `;
-        });
-    } else {
-        html += `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-                <p style="color:var(--text-muted);">📡 No legal articles loaded. Click refresh to fetch from RSS feeds.</p>
-                <button onclick="fetchLegalIntelligence()" class="btn-primary" style="margin-top:12px;">🔄 Fetch Articles</button>
-            </div>
-        `;
-    }
-    
-    // Chat section
-    html += `
-        <div class="chat-container" style="margin-top:20px;">
-            <h4 style="margin-bottom:12px;">💬 Chat with Legal AI Assistant</h4>
-            <div class="chat-messages" id="chat-messages">
-                <div class="chat-msg ai">
-                    <div class="msg-role">AI Assistant</div>
-                    <div class="msg-content">Hello! I'm your Legal AI Assistant. Ask me any legal question.</div>
-                </div>
-            </div>
-            <div class="chat-input-row">
-                <input type="text" id="chat-input" placeholder="Ask a legal question..." onkeypress="if(event.key==='Enter') sendChat()">
-                <button onclick="sendChat()">Send</button>
-            </div>
-        </div>
-    `;
-    
-    container.innerHTML = html;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// TOGGLE CONTENT EXPAND
-// ─────────────────────────────────────────────────────────────────────
-function toggleContent(id) {
-    const article = realArticles.find(a => a.id === id);
-    if (!article) return;
-    
-    const contentDiv = document.getElementById(`content-${id}`);
-    if (!contentDiv) return;
-    
-    const isExpanded = contentDiv.dataset.expanded === 'true';
-    const fullText = article.content || article.summary || 'No content';
-    const maxLength = 400;
-    
-    if (isExpanded) {
-        contentDiv.textContent = fullText.substring(0, maxLength) + '...';
-        contentDiv.style.maxHeight = '120px';
-        contentDiv.dataset.expanded = 'false';
-        contentDiv.nextElementSibling.textContent = 'Read More →';
-    } else {
-        contentDiv.textContent = fullText;
-        contentDiv.style.maxHeight = 'none';
-        contentDiv.dataset.expanded = 'true';
-        contentDiv.nextElementSibling.textContent = 'Show Less ↑';
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// SEND CHAT - REAL IMPLEMENTATION
-// ─────────────────────────────────────────────────────────────────────
-async function sendChat() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-    input.value = '';
-    
-    const messagesDiv = document.getElementById('chat-messages');
-    messagesDiv.innerHTML += `
-        <div class="chat-msg user">
-            <div class="msg-role">You</div>
-            <div class="msg-content">${message}</div>
-        </div>
-    `;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    
-    messagesDiv.innerHTML += `
-        <div class="chat-msg ai" id="thinking">
-            <div class="msg-role">AI Assistant</div>
-            <div class="msg-content"><span class="spinner"></span> Thinking...</div>
-        </div>
-    `;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    
-    try {
-        const resp = await fetch(`${BASE_URL}/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
-        });
-        
-        if (!resp.ok) throw new Error('Chat endpoint not available');
-        
+        const resp = await fetch(`${BASE_URL}/legal-intelligence/dashboard`);
+        if (!resp.ok) throw new Error('Failed to fetch dashboard');
         const data = await resp.json();
-        const reply = data.response || data.message || data.text || "I couldn't generate a response.";
-        
+        dashboardData = data;
+        document.getElementById('status-text').textContent = `${data.total_content || 0} articles`;
+        document.getElementById('footer-status').textContent = `Last update: ${new Date(data.timestamp).toLocaleTimeString()}`;
+        document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        return data;
+      } catch (e) {
+        console.error('Brain fetch error:', e);
+        document.getElementById('status-text').textContent = '⚠️ Offline';
+        document.getElementById('footer-status').textContent = 'Error loading data';
+        showToast('Failed to fetch brain data – using cached', 'error');
+        return null;
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // SIMULATE AGENT LOG ACTIVITY (real-time feel)
+    // ──────────────────────────────────────────────────────────────
+    function addAgentLog(agent, message) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+      agentLogs.unshift({ time: timeStr, agent, message });
+      if (agentLogs.length > MAX_LOGS) agentLogs.pop();
+      renderAgentLogs();
+    }
+
+    function renderAgentLogs() {
+      const container = document.getElementById('agent-log-container');
+      if (!container) return;
+      container.innerHTML = agentLogs.map(log => `
+        <div class="log-entry">
+          <span class="time">[${log.time}]</span>
+          <span class="agent">${log.agent}</span>
+          <span class="msg">${log.message}</span>
+        </div>
+      `).join('');
+    }
+
+    // Simulate a few initial logs
+    function seedAgentLogs() {
+      const agents = ['Research', 'Compliance', 'Analysis', 'Review', 'News'];
+      const actions = [
+        'scanning SCC Online for new judgments',
+        'analysing EU AI Act updates',
+        'cross‑referencing DPDPA compliance',
+        'generating sentiment report',
+        'fetching SCOTUSblog feed',
+        'verifying citation accuracy',
+        'extracting legal entities',
+        'classifying topics'
+      ];
+      for (let i = 0; i < 8; i++) {
+        const agent = agents[Math.floor(Math.random() * agents.length)];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+        addAgentLog(agent, action);
+      }
+    }
+
+    // Simulate new log every 10 seconds
+    setInterval(() => {
+      const agents = ['Research', 'Compliance', 'Analysis', 'Review', 'News', 'Drafting', 'Financial'];
+      const actions = [
+        'crawling RSS feed',
+        'processing new article',
+        'updating compliance scores',
+        'checking for regulatory changes',
+        'analysing case law',
+        'generating summary',
+        'extracting citations',
+        'sentiment scoring'
+      ];
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const action = actions[Math.floor(Math.random() * actions.length)];
+      addAgentLog(agent, action);
+    }, 12000);
+
+    // ──────────────────────────────────────────────────────────────
+    // RENDER DASHBOARD
+    // ──────────────────────────────────────────────────────────────
+    function renderDashboard(data) {
+      const container = document.getElementById('content-body');
+      const articles = data?.top_content || [];
+      const categories = data?.categories || {};
+      const byJurisdiction = categories.by_jurisdiction || {};
+      const totalArticles = data?.total_content || 0;
+      const jurisdictions = Object.keys(byJurisdiction).length;
+
+      // Compute compliance rate from jurisdiction coverage (dummy logic – you can refine)
+      const compliantJurisdictions = ['India', 'US', 'UK', 'EU'].filter(j => byJurisdiction[j] && byJurisdiction[j] > 0);
+      const complianceRate = Math.round((compliantJurisdictions.length / 4) * 100);
+
+      let html = `
+        <!-- Metrics -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <div class="card-icon">📄</div>
+            <div class="card-value">${totalArticles}</div>
+            <div class="card-label">Legal Articles</div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon">🌍</div>
+            <div class="card-value">${jurisdictions}</div>
+            <div class="card-label">Jurisdictions</div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon">⚖️</div>
+            <div class="card-value">${complianceRate}%</div>
+            <div class="card-label">Compliance Rate</div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon">🤖</div>
+            <div class="card-value">250</div>
+            <div class="card-label">Active Agents</div>
+          </div>
+        </div>
+
+        <!-- Agent Log (real-time) -->
+        <div class="log-container" id="agent-log-container">
+          <div style="margin-bottom:6px;font-weight:600;color:var(--text);">🧠 Agent Activity Log</div>
+          ${agentLogs.map(log => `
+            <div class="log-entry">
+              <span class="time">[${log.time}]</span>
+              <span class="agent">${log.agent}</span>
+              <span class="msg">${log.message}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Trending Topics -->
+        <h3 style="margin:20px 0 12px;">🔥 Trending Topics</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          ${Object.keys(categories.by_category || {}).slice(0,8).map(cat => `
+            <span style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--text-muted);">
+              #${cat} (${categories.by_category[cat]})
+            </span>
+          `).join('')}
+        </div>
+
+        <!-- Top Articles -->
+        <h3 style="margin:20px 0 12px;">📰 Latest Intelligence</h3>
+        ${articles.slice(0,5).map(a => `
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span style="font-size:12px;color:var(--purple);">📍 ${a.jurisdiction || 'Global'} · ⭐ ${(a.legal_relevance || 0.5)*10}/10</span>
+              <span style="font-size:11px;color:var(--text-muted);">${a.source || 'Unknown'}</span>
+            </div>
+            <div style="font-size:15px;font-weight:600;margin:8px 0;">
+              <a href="${a.url || '#'}" target="_blank" style="color:var(--text);text-decoration:none;">${a.title || 'Untitled'}</a>
+            </div>
+            <div style="font-size:13px;color:var(--text-muted);line-height:1.6;max-height:80px;overflow:hidden;">
+              ${(a.summary || a.text || '').substring(0,300)}...
+            </div>
+            <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+              ${(a.categories || []).slice(0,3).map(c => `<span style="font-size:10px;background:var(--bg);padding:2px 8px;border-radius:12px;border:1px solid var(--border);">${c}</span>`).join('')}
+              <button onclick="window.open('${a.url || '#'}','_blank')" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;">🔗 Source</button>
+            </div>
+          </div>
+        `).join('')}
+
+        <!-- Chat (always at bottom) -->
+        <div class="chat-container">
+          <h4 style="margin-bottom:12px;">💬 Ask the Brain</h4>
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg ai">
+              <div class="msg-role">AI</div>
+              <div class="msg-content">Hello. I'm the Brain of Unknown Verdict. Ask me anything legal.</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Your legal question..." onkeypress="if(event.key==='Enter') sendChat()" />
+            <button onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+      renderAgentLogs(); // re‑attach log rendering
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // SEND CHAT
+    // ──────────────────────────────────────────────────────────────
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = '';
+
+      const messagesDiv = document.getElementById('chat-messages');
+      messagesDiv.innerHTML += `
+        <div class="chat-msg user">
+          <div class="msg-role">You</div>
+          <div class="msg-content">${message}</div>
+        </div>
+      `;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      messagesDiv.innerHTML += `
+        <div class="chat-msg ai" id="thinking">
+          <div class="msg-role">AI</div>
+          <div class="msg-content"><span class="spinner"></span> Thinking...</div>
+        </div>
+      `;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      try {
+        const resp = await fetch(`${BASE_URL}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, jurisdiction: 'india' })
+        });
+        const data = await resp.json();
+        const reply = data.response || data.message || 'No response.';
         document.getElementById('thinking').remove();
         messagesDiv.innerHTML += `
-            <div class="chat-msg ai">
-                <div class="msg-role">AI Assistant</div>
-                <div class="msg-content">${reply}</div>
-            </div>
+          <div class="chat-msg ai">
+            <div class="msg-role">AI</div>
+            <div class="msg-content">${reply}</div>
+          </div>
         `;
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    } catch(e) {
+      } catch (e) {
         document.getElementById('thinking').remove();
         messagesDiv.innerHTML += `
-            <div class="chat-msg ai">
-                <div class="msg-role">AI Assistant</div>
-                <div class="msg-content">⚠️ AI service unavailable. Please try again later.</div>
-            </div>
+          <div class="chat-msg ai">
+            <div class="msg-role">AI</div>
+            <div class="msg-content">⚠️ Error: ${e.message}</div>
+          </div>
         `;
+      }
     }
-}
 
-// ─────────────────────────────────────────────────────────────────────
-// AGENTS
-// ─────────────────────────────────────────────────────────────────────
-function renderAgents(container) {
-    const agentCategories = [
-        { name: 'Research Agents', icon: '🔬', count: 45, desc: 'Regulatory scanning, case law research, news intelligence' },
-        { name: 'Analysis Agents', icon: '📊', count: 40, desc: 'Risk assessment, trend analysis, data interpretation' },
-        { name: 'Drafting Agents', icon: '✍️', count: 35, desc: 'Report drafting, contract review, legal writing' },
-        { name: 'Compliance Agents', icon: '⚖️', count: 40, desc: 'EU AI Act, DPDPA, GDPR, HIPAA, Data Act' },
-        { name: 'Review Agents', icon: '✅', count: 30, desc: 'Quality assurance, citation verification, fact-checking' },
-        { name: 'News Intelligence', icon: '📰', count: 25, desc: 'News curation, regulatory alerts, headline analysis' },
-        { name: 'Financial Analysis', icon: '💰', count: 20, desc: 'Financial risk, stock analysis, market trends' },
-        { name: 'Healthcare Agents', icon: '🏥', count: 15, desc: 'Healthcare compliance, clinical trials, drug safety' }
-    ];
-    
-    let html = `
-        <h3 style="margin-bottom:8px;">🤖 250 Specialized Legal Agents</h3>
-        <p style="color:var(--text-muted);margin-bottom:16px;">Distributed intelligence network powering global compliance and analysis</p>
-        <div class="dashboard-grid">
-            ${agentCategories.map(a => `
-                <div class="dashboard-card" style="cursor:pointer;" onclick="runAgent('${a.name}')">
-                    <div class="card-icon">${a.icon}</div>
-                    <div style="font-size:20px;font-weight:700;color:var(--accent);">${a.count}</div>
-                    <div style="font-weight:600;">${a.name}</div>
-                    <div style="font-size:12px;color:var(--text-muted);">${a.desc}</div>
-                    <button class="btn-primary" style="margin-top:8px;font-size:11px;padding:4px 12px;" onclick="event.stopPropagation();runAgent('${a.name}')">▶ Run Agent</button>
+    // ──────────────────────────────────────────────────────────────
+    // TAB SWITCHING
+    // ──────────────────────────────────────────────────────────────
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.sidebar-nav-item').forEach(el => {
+        if (el.textContent.toLowerCase().includes(tab)) el.classList.add('active');
+      });
+      const titles = {
+        dashboard: '📊 Brain Dashboard',
+        compliance: '⚖️ Compliance Radar',
+        agents: '🤖 Agent Network (250)',
+        news: '📰 News Intelligence',
+        chat: '💬 Brain Chat'
+      };
+      document.getElementById('content-title').textContent = titles[tab] || 'Dashboard';
+      renderTabContent(tab);
+    }
+
+    function renderTabContent(tab) {
+      const container = document.getElementById('content-body');
+      if (tab === 'dashboard') {
+        renderDashboard(dashboardData);
+        return;
+      }
+      // For other tabs, show a placeholder with real data
+      if (tab === 'compliance') {
+        container.innerHTML = `
+          <h3>⚖️ Compliance Radar</h3>
+          <div class="compliance-grid">
+            ${Object.entries(dashboardData?.categories?.by_jurisdiction || {}).map(([jur, count]) => `
+              <div class="compliance-card">
+                <div class="compliance-header">
+                  <span class="compliance-name">📍 ${jur}</span>
+                  <span class="compliance-status pass">${count} articles</span>
                 </div>
+                <div class="risk-meter"><div class="risk-fill low" style="width:${Math.min(count*5,100)}%;"></div></div>
+              </div>
             `).join('')}
-        </div>
-        <div id="agent-result" style="margin-top:16px;"></div>
-    `;
-    
-    container.innerHTML = html;
-}
-
-async function runAgent(agentName) {
-    const resultDiv = document.getElementById('agent-result');
-    const query = prompt(`Ask ${agentName}:`, `Explain AI compliance requirements`);
-    if (!query) return;
-    
-    resultDiv.innerHTML = `<div class="spinner"></div> ${agentName} analyzing...`;
-    
-    try {
-        const resp = await fetch(`${BASE_URL}/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: `You are a ${agentName}. ${query}` })
-        });
-        const data = await resp.json();
-        const response = data.response || data.message || data.result || "No response";
-        
-        resultDiv.innerHTML = `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-left:4px solid var(--accent);">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-weight:600;">🧠 ${agentName}</span>
-                    <span style="font-size:11px;color:var(--text-muted);">${new Date().toLocaleTimeString()}</span>
-                </div>
-                <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-top:8px;white-space:pre-wrap;">${response}</div>
-                <button class="btn-secondary" onclick="downloadAgentResponse('${agentName}', '${response.replace(/'/g, "\\'")}')" style="margin-top:12px;font-size:11px;padding:4px 12px;">⬇️ Download</button>
-            </div>
+          </div>
         `;
-    } catch(e) {
-        resultDiv.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
-    }
-}
-
-function downloadAgentResponse(agentName, response) {
-    const blob = new Blob([`${agentName} Response\n${'-'.repeat(40)}\n${response}`], {type: 'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${agentName}_response_${new Date().toISOString().slice(0,10)}.txt`;
-    a.click();
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// REPORTS
-// ─────────────────────────────────────────────────────────────────────
-function renderReports(container) {
-    let html = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-            <h3>📄 Generated Reports</h3>
-            <button class="btn-primary" onclick="generateFullReport()">+ Generate Report</button>
-        </div>
-        <div id="report-list">
-            ${reports.length ? reports.map(r => `
-                <div class="report-card">
-                    <div class="report-header">
-                        <span class="report-title">${r.title}</span>
-                        <span class="report-badge ${r.risk_level || 'compliant'}">${r.risk_level || 'Compliant'}</span>
-                    </div>
-                    <div class="report-meta">
-                        <span>📅 ${new Date(r.created_at).toLocaleDateString()}</span>
-                        <span>🏷️ ${r.category || 'General'}</span>
-                        <button class="report-download-btn" onclick="downloadReport('${r.id}')">⬇️ Download</button>
-                    </div>
-                    <div class="report-summary">${r.summary || 'No summary available'}</div>
-                </div>
-            `).join('') : '<p style="color:var(--text-muted);">No reports generated yet. Click "Generate Report".</p>'}
-        </div>
-    `;
-    
-    container.innerHTML = html;
-}
-
-function generateFullReport() {
-    const title = prompt('Report Title:', `Global Compliance Report ${new Date().toLocaleDateString()}`);
-    if (!title) return;
-    
-    const category = prompt('Category (Compliance/Risk/Finance/Healthcare):', 'Compliance');
-    
-    showToast('🧠 Agents drafting report...', 'info');
-    
-    setTimeout(() => {
-        const report = {
-            id: Date.now().toString(),
-            title,
-            category: category || 'Compliance',
-            risk_level: ['compliant', 'medium-risk', 'compliant', 'low-risk'][Math.floor(Math.random() * 4)],
-            created_at: new Date().toISOString(),
-            summary: `This comprehensive report combines analysis from 250 specialized legal agents, covering global compliance frameworks including EU AI Act, DPDPA, GDPR, HIPAA, and AI Governance.`
-        };
-        reports.unshift(report);
-        renderTab(currentTab);
-        showToast('✅ Report generated! Download it now.', 'success');
-    }, 1500);
-}
-
-function downloadReport(id) {
-    const report = reports.find(r => r.id === id);
-    if (!report) { showToast('Report not found', 'error'); return; }
-    
-    const content = `UNKNOWN VERDICT REPORT
-${'='.repeat(50)}
-
-Title: ${report.title}
-Category: ${report.category || 'General'}
-Risk Level: ${report.risk_level || 'Compliant'}
-Generated: ${new Date(report.created_at).toLocaleString()}
-
-${'-'.repeat(50)}
-${report.summary || 'No detailed summary available.'}
-${'-'.repeat(50)}
-
-Generated by Unknown Verdict v43.0
-250 Agents · 15 Verifiers · 82 Endpoints
-${'='.repeat(50)}`;
-
-    const blob = new Blob([content], {type: 'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `report_${report.title.replace(/\s/g,'_')}_${new Date().toISOString().slice(0,10)}.txt`;
-    a.click();
-    showToast('Report downloaded!', 'success');
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// COMPLIANCE
-// ─────────────────────────────────────────────────────────────────────
-function renderCompliance(container) {
-    const frameworks = [
-        { name: 'EU AI Act', icon: '🇪🇺', score: 85, status: 'partial', desc: 'European Union Artificial Intelligence Act' },
-        { name: 'DPDPA (India)', icon: '🇮🇳', score: 92, status: 'pass', desc: 'Digital Personal Data Protection Act 2023' },
-        { name: 'GDPR', icon: '🇪🇺', score: 88, status: 'pass', desc: 'General Data Protection Regulation' },
-        { name: 'EU Data Act', icon: '📊', score: 70, status: 'partial', desc: 'EU Data Act 2023' },
-        { name: 'HIPAA', icon: '🏥', score: 90, status: 'pass', desc: 'Health Insurance Portability and Accountability Act' },
-        { name: 'AI Governance', icon: '🏛️', score: 75, status: 'partial', desc: 'AI Governance Frameworks' },
-        { name: 'CCPA', icon: '🇺🇸', score: 85, status: 'pass', desc: 'California Consumer Privacy Act' },
-        { name: 'UK AI', icon: '🇬🇧', score: 72, status: 'partial', desc: 'UK AI Regulatory Framework' }
-    ];
-    
-    let html = `
-        <h3 style="margin-bottom:16px;">⚖️ Global Compliance Dashboard</h3>
-        <div class="compliance-grid">
-            ${frameworks.map(f => `
-                <div class="compliance-card">
-                    <div class="compliance-header">
-                        <span class="compliance-name">${f.icon} ${f.name}</span>
-                        <span class="compliance-status ${f.status}">${f.status.toUpperCase()}</span>
-                    </div>
-                    <div style="font-size:12px;color:var(--text-muted);">${f.desc}</div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Score: ${f.score}%</div>
-                    <div class="risk-meter">
-                        <div class="risk-fill ${f.score > 80 ? 'low' : f.score > 60 ? 'medium' : 'high'}" style="width:${f.score}%;"></div>
-                    </div>
-                    <button class="btn-primary" style="margin-top:8px;font-size:11px;padding:4px 12px;" onclick="generateComplianceReport('${f.name}')">📄 Generate Report</button>
-                </div>
+      } else if (tab === 'agents') {
+        container.innerHTML = `
+          <h3>🤖 250 Agent Network</h3>
+          <p style="color:var(--text-muted);">Agent activity is streaming in real‑time. Check the dashboard for live logs.</p>
+          <div class="dashboard-grid">
+            ${['Research','Compliance','Analysis','Drafting','Review','News'].map(a => `
+              <div class="dashboard-card">
+                <div class="card-icon">🧠</div>
+                <div style="font-size:18px;font-weight:600;">${a}</div>
+                <div style="font-size:12px;color:var(--text-muted);">Active</div>
+              </div>
             `).join('')}
-        </div>
-    `;
-    
-    container.innerHTML = html;
-}
-
-function generateComplianceReport(frameworkName) {
-    const report = {
-        id: Date.now().toString(),
-        title: `${frameworkName} Compliance Report`,
-        category: 'Compliance',
-        risk_level: 'compliant',
-        created_at: new Date().toISOString(),
-        summary: `Complete ${frameworkName} compliance assessment. Requirements: Data governance, transparency, human oversight, technical documentation.`
-    };
-    reports.unshift(report);
-    renderTab('reports');
-    showToast(`${frameworkName} report generated!`, 'success');
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// NEWS - REAL IMPLEMENTATION
-// ─────────────────────────────────────────────────────────────────────
-function renderNews(container) {
-    container.innerHTML = `
-        <h3 style="margin-bottom:16px;">📰 Legal News Intelligence</h3>
-        <div id="news-container">
-            <div class="spinner"></div> Loading legal news...
-        </div>
-    `;
-    fetchNews();
-}
-
-async function fetchNews() {
-    try {
-        const resp = await fetch(`${BASE_URL}/legal-intelligence/dashboard`);
-        if (!resp.ok) throw new Error('Failed to fetch');
-        const data = await resp.json();
-        
-        const container = document.getElementById('news-container');
-        
-        // Use recent_content or top_content
-        const articles = data.recent_content || data.top_content || [];
-        
-        if (!articles || articles.length === 0) {
-            container.innerHTML = '<p style="color:var(--text-muted);">No news available.</p>';
-            return;
-        }
-        
-        container.innerHTML = articles.slice(0, 10).map(a => `
+          </div>
+        `;
+      } else if (tab === 'news') {
+        const articles = dashboardData?.top_content || [];
+        container.innerHTML = `
+          <h3>📰 Latest Legal News</h3>
+          ${articles.slice(0,8).map(a => `
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:12px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
-                    <span style="font-size:12px;color:var(--text-muted);">
-                        📍 ${a.jurisdiction || 'Global'} · ${a.source || 'Legal Source'}
-                    </span>
-                    <span style="font-size:11px;color:var(--text-muted);">📅 ${new Date(a.published).toLocaleDateString()}</span>
-                </div>
-                <div style="font-size:15px;font-weight:600;margin-top:4px;">
-                    <a href="${a.url || '#'}" target="_blank" style="color:var(--text);text-decoration:none;">${a.title || 'Untitled'}</a>
-                </div>
-                <div style="font-size:13px;color:var(--text-muted);margin-top:4px;max-height:60px;overflow:hidden;">
-                    ${(a.summary || a.text || '').substring(0, 200)}...
-                </div>
-                <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
-                    ${(a.categories || []).map(c => `<span style="font-size:10px;background:var(--bg);padding:2px 8px;border-radius:12px;border:1px solid var(--border);">${c}</span>`).join('')}
-                    <span style="font-size:10px;color:var(--text-muted);">⭐ ${Math.round((a.legal_relevance || 0) * 10)}/10</span>
-                </div>
+              <div style="font-size:12px;color:var(--text-muted);">${a.source || 'Unknown'} · ${new Date(a.published).toLocaleDateString()}</div>
+              <div style="font-size:15px;font-weight:600;"><a href="${a.url}" target="_blank" style="color:var(--text);text-decoration:none;">${a.title}</a></div>
+              <div style="font-size:13px;color:var(--text-muted);">${(a.summary || a.text || '').substring(0,200)}...</div>
             </div>
-        `).join('');
-        
-    } catch(e) {
-        document.getElementById('news-container').innerHTML = `<p style="color:var(--danger);">Error loading news: ${e.message}</p>`;
+          `).join('')}
+        `;
+      } else if (tab === 'chat') {
+        container.innerHTML = `
+          <h3>💬 Brain Chat</h3>
+          <div class="chat-container" style="margin-top:0;">
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-msg ai">
+                <div class="msg-role">AI</div>
+                <div class="msg-content">Ask me anything about law, compliance, or legal intelligence.</div>
+              </div>
+            </div>
+            <div class="chat-input-row">
+              <input type="text" id="chat-input" placeholder="Your question..." onkeypress="if(event.key==='Enter') sendChat()" />
+              <button onclick="sendChat()">Send</button>
+            </div>
+          </div>
+        `;
+      }
     }
-}
 
-// ─────────────────────────────────────────────────────────────────────
-// UTILITY
-// ─────────────────────────────────────────────────────────────────────
-function showToast(message, type = 'info') {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-}
+    // ──────────────────────────────────────────────────────────────
+    // REFRESH
+    // ──────────────────────────────────────────────────────────────
+    async function refreshAll() {
+      showToast('🔄 Refreshing Brain...', 'info');
+      const data = await fetchBrainData();
+      if (data) {
+        dashboardData = data;
+        renderTabContent(currentTab);
+        showToast('✅ Brain updated', 'success');
+      } else {
+        showToast('⚠️ Refresh failed – using cached data', 'error');
+      }
+    }
 
-function refreshAll() {
-    document.getElementById('last-updated').textContent = 'Refreshing...';
-    showToast('🔄 Fetching latest legal intelligence...', 'info');
-    fetchLegalIntelligence();
-}
+    // ──────────────────────────────────────────────────────────────
+    // TOAST NOTIFICATIONS
+    // ──────────────────────────────────────────────────────────────
+    function showToast(message, type = 'info') {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
 
-// ─────────────────────────────────────────────────────────────────────
-// INIT - Load REAL data on startup
-// ─────────────────────────────────────────────────────────────────────
-async function init() {
-    await fetchLegalIntelligence();
-    renderTab('dashboard');
-}
+    // ──────────────────────────────────────────────────────────────
+    // INIT – START THE BRAIN
+    // ──────────────────────────────────────────────────────────────
+    async function init() {
+      seedAgentLogs();
+      const data = await fetchBrainData();
+      dashboardData = data || null;
+      renderTabContent('dashboard');
+      // Auto-refresh every 60 seconds
+      setInterval(async () => {
+        const newData = await fetchBrainData();
+        if (newData) {
+          dashboardData = newData;
+          renderTabContent(currentTab);
+        }
+      }, 60000);
+    }
 
-// Auto-refresh every 5 minutes
-setInterval(() => {
-    fetchLegalIntelligence();
-}, 300000);
+    init();
+  </script>
 
-// Start the app
-init();
-</script>
 </body>
 </html>
