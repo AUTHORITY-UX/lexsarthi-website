@@ -1,18 +1,15 @@
-"""core.llm — multi-LLM provider layer + intelligent router."""
-from core.llm.providers import (
-    LLMMessage, LLMResponse, BaseLLMProvider,
-    SarvamProvider, OpenAIProvider, GeminiProvider,
-    GroqProvider, DeepSeekProvider, OpenRouterProvider,
-    PROVIDER_CLASSES, MODEL_REGISTRY,
-    get_provider, close_all_providers,
-)
-from core.llm.router import LLMRouter, ComplexityClassifier, FALLBACK_CHAINS, get_router
+# core/llm/__init__.py
+
+from core.llm.ollama_provider import OllamaProvider, LLMMessage, LLMResponse
+from core.llm.router import LLMRouter, get_router, reset_router, chat_with_ollama, get_provider
 
 __all__ = [
-    "LLMMessage", "LLMResponse", "BaseLLMProvider",
-    "SarvamProvider", "OpenAIProvider", "GeminiProvider",
-    "GroqProvider", "DeepSeekProvider", "OpenRouterProvider",
-    "PROVIDER_CLASSES", "MODEL_REGISTRY",
-    "get_provider", "close_all_providers",
-    "LLMRouter", "ComplexityClassifier", "FALLBACK_CHAINS", "get_router",
+    'OllamaProvider',
+    'LLMMessage',
+    'LLMResponse',
+    'LLMRouter',
+    'get_router',
+    'reset_router',
+    'chat_with_ollama',
+    'get_provider'
 ]
