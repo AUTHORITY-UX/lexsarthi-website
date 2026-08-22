@@ -1,4 +1,4 @@
-# app.py – Complete with 82 Endpoints (36 Base + 32 Moat + 14 New)
+# app.py – Complete with ALL routes registered
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -11,6 +11,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from core.config import settings
 from core.db import db
 from core.llm.router import get_router
+
+# IMPORTANT: Import routes AFTER app is created to avoid circular imports
+# But we need to import the router objects
 from routes import router, moat_router
 
 import logging
@@ -47,7 +50,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="82 Endpoints · 500 Agents · 50+ Services · Zero Data Retention · Third Eye AI · Moat Intelligence",
+    description="82 Endpoints · 500 Agents · 50+ Services · Zero Data Retention · Third Eye AI",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -69,11 +72,12 @@ if STATIC_DIR.exists():
 
 # ─── REGISTER ROUTES ──────────────────────────────────────────────
 
-app.include_router(router)           # 36 Base Endpoints + 14 New
-app.include_router(moat_router)      # 32 Moat Endpoints
-# Total: 36 + 14 + 32 = 82 Endpoints
+# THIS IS THE CRITICAL PART – Register both routers
+app.include_router(router)       # 36 Base + 14 New = 50 endpoints
+app.include_router(moat_router)  # 32 Moat endpoints
+# Total: 82 endpoints
 
-# ─── DIRECT ENDPOINTS ─────────────────────────────────────────────
+# ─── DIRECT ENDPOINTS (app level) ─────────────────────────────────
 
 @app.get("/")
 async def root():
@@ -83,25 +87,25 @@ async def root():
     return HTMLResponse("""
     <!DOCTYPE html>
     <html>
-    <head>
-        <title>Unknown Verdict v43.0 – 82 Endpoints</title>
-        <style>
-            body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-            .container { text-align: center; padding: 40px; max-width: 900px; }
-            .eye { font-size: 80px; animation: blink 4s infinite; display: inline-block; }
-            @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
-            .infinity { font-size: 30px; color: #3b82f6; }
-            .badge { background: #10b981; padding: 8px 24px; border-radius: 20px; font-size: 14px; display: inline-block; margin: 10px 0; }
-            h1 { font-size: 48px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-            .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin: 30px 0; }
-            .card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; }
-            .card .num { font-size: 28px; font-weight: 700; color: #3b82f6; }
-            .card .label { color: #64748b; font-size: 11px; }
-            .links { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-            .links a { color: #3b82f6; text-decoration: none; font-size: 14px; padding: 6px 14px; border: 1px solid #1e293b; border-radius: 8px; }
-            .links a:hover { background: #1e293b; }
-            .footer { margin-top: 30px; color: #64748b; font-size: 12px; border-top: 1px solid #1e293b; padding-top: 20px; }
-        </style>
+    <head><title>Unknown Verdict v43.0</title>
+    <style>
+        body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { text-align: center; padding: 40px; max-width: 800px; }
+        .eye { font-size: 80px; animation: blink 4s infinite; display: inline-block; }
+        @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
+        .infinity { font-size: 30px; color: #3b82f6; }
+        .badge { background: #10b981; padding: 8px 24px; border-radius: 20px; display: inline-block; margin: 10px 0; color: white; }
+        h1 { font-size: 48px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin: 30px 0; }
+        .card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; }
+        .card .num { font-size: 28px; font-weight: 700; color: #3b82f6; }
+        .card .label { color: #64748b; font-size: 11px; }
+        a { color: #3b82f6; text-decoration: none; }
+        .footer { margin-top: 30px; color: #64748b; font-size: 12px; border-top: 1px solid #1e293b; padding-top: 20px; }
+        .links { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .links a { padding: 6px 14px; border: 1px solid #1e293b; border-radius: 8px; }
+        .links a:hover { background: #1e293b; }
+    </style>
     </head>
     <body>
         <div class="container">
@@ -116,20 +120,16 @@ async def root():
                 <div class="card"><div class="num" style="color:#10b981;">50+</div><div class="label">Services</div></div>
                 <div class="card"><div class="num" style="color:#8b5cf6;">32</div><div class="label">Moat APIs</div></div>
                 <div class="card"><div class="num" style="color:#f59e0b;">8</div><div class="label">Jurisdictions</div></div>
-                <div class="card"><div class="num" style="color:#ef4444;">250</div><div class="label">Marketplace</div></div>
             </div>
             <div class="links">
                 <a href="/docs">📚 API Docs</a>
-                <a href="/brain">🧠 Brain Dashboard</a>
+                <a href="/brain">🧠 Brain</a>
                 <a href="/health">❤️ Health</a>
                 <a href="/third-eye">👁️ Third Eye</a>
                 <a href="/agents">🤖 Agents</a>
                 <a href="/moat">🧩 Moat</a>
-                <a href="/legal-intelligence/dashboard">📊 Legal Intel</a>
             </div>
-            <div class="footer">
-                Built by The Advocacy – A Law Firm, Baghpat · <span style="color:#10b981;">●</span> 82 Endpoints Active
-            </div>
+            <div class="footer">Built by The Advocacy – A Law Firm, Baghpat · <span style="color:#10b981;">●</span> 82 Endpoints Active</div>
         </div>
     </body>
     </html>
@@ -143,32 +143,24 @@ async def brain_dashboard():
     return HTMLResponse("""
     <!DOCTYPE html>
     <html>
-    <head>
-        <title>🧠 Unknown Verdict Brain – 82 Endpoints</title>
-        <style>
-            * { margin:0; padding:0; box-sizing:border-box; }
-            body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; }
-            .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #111827; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 20px; }
-            .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
-            .stat { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; text-align: center; }
-            .stat .num { font-size: 32px; font-weight: 700; }
-            .stat .label { color: #64748b; font-size: 11px; }
-            .section { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-            .eye { font-size: 50px; animation: blink 3s infinite; display: inline-block; }
-            @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
-            .badge { background: #10b981; padding: 4px 14px; border-radius: 12px; font-size: 11px; color: white; }
-            .logs { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; }
-            .logs .entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-            .logs .time { color: #3b82f6; }
-            .logs .agent { color: #f59e0b; }
-            .endpoint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
-            .endpoint { background: rgba(255,255,255,0.03); border: 1px solid #1e293b; border-radius: 6px; padding: 8px 12px; font-size: 12px; }
-            .endpoint .method { font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
-            .method.GET { background: #10b981; color: white; }
-            .method.POST { background: #3b82f6; color: white; }
-            .method.PUT { background: #f59e0b; color: white; }
-            .method.DELETE { background: #ef4444; color: white; }
-        </style>
+    <head><title>🧠 Unknown Verdict Brain</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #111827; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; text-align: center; }
+        .stat .num { font-size: 32px; font-weight: 700; }
+        .stat .label { color: #64748b; font-size: 11px; }
+        .section { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .eye { font-size: 50px; animation: blink 3s infinite; display: inline-block; }
+        @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
+        .badge { background: #10b981; padding: 4px 14px; border-radius: 12px; font-size: 11px; color: white; }
+        .logs { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .logs .entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .logs .time { color: #3b82f6; }
+        .logs .agent { color: #f59e0b; }
+    </style>
     </head>
     <body>
         <div class="header">
@@ -176,54 +168,17 @@ async def brain_dashboard():
             <div><span class="badge">● 82 Endpoints Live</span></div>
         </div>
         <div class="stats">
-            <div class="stat"><div class="num" style="color:#3b82f6;">82</div><div class="label">Total Endpoints</div></div>
-            <div class="stat"><div class="num" style="color:#3b82f6;">36</div><div class="label">Base APIs</div></div>
-            <div class="stat"><div class="num" style="color:#8b5cf6;">32</div><div class="label">Moat APIs</div></div>
-            <div class="stat"><div class="num" style="color:#10b981;">14</div><div class="label">New Services</div></div>
-            <div class="stat"><div class="num" style="color:#f59e0b;">500</div><div class="label">Agents</div></div>
-            <div class="stat"><div class="num" style="color:#ef4444;">8</div><div class="label">Jurisdictions</div></div>
+            <div class="stat"><div class="num" style="color:#3b82f6;">82</div><div class="label">Endpoints</div></div>
+            <div class="stat"><div class="num" style="color:#10b981;">500</div><div class="label">Agents</div></div>
+            <div class="stat"><div class="num" style="color:#8b5cf6;">50+</div><div class="label">Services</div></div>
+            <div class="stat"><div class="num" style="color:#f59e0b;">8</div><div class="label">Jurisdictions</div></div>
         </div>
         <div class="section">
-            <h3>🧠 Agent Activity (Live)</h3>
+            <h3>🧠 Agent Activity</h3>
             <div class="logs" id="agentLog">
                 <div class="entry"><span class="time">[System]</span> <span class="agent">Brain</span> 82 endpoints initialized</div>
                 <div class="entry"><span class="time">[System]</span> <span class="agent">Brain</span> 500 agents ready</div>
                 <div class="entry"><span class="time">[System]</span> <span class="agent">Brain</span> Zero data retention active</div>
-            </div>
-        </div>
-        <div class="section">
-            <h3>📋 Endpoint Categories (82 Total)</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0;">
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#3b82f6;">6</div><div style="font-size:12px;color:#64748b;">Health & System</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#3b82f6;">6</div><div style="font-size:12px;color:#64748b;">Chat & LLM</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#3b82f6;">14</div><div style="font-size:12px;color:#64748b;">Legal Agents</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#3b82f6;">32</div><div style="font-size:12px;color:#64748b;">Moat Intelligence</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#10b981;">6</div><div style="font-size:12px;color:#64748b;">Multi-Jurisdiction</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#10b981;">4</div><div style="font-size:12px;color:#64748b;">GDPR/Data Act</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#8b5cf6;">4</div><div style="font-size:12px;color:#64748b;">Civil Litigation</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#8b5cf6;">4</div><div style="font-size:12px;color:#64748b;">Multi-Lingual</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#f59e0b;">4</div><div style="font-size:12px;color:#64748b;">RAG/Documents</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid #1e293b;">
-                    <div style="font-weight:600;color:#f59e0b;">4</div><div style="font-size:12px;color:#64748b;">Auth & Users</div>
-                </div>
             </div>
         </div>
         <div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #1e293b;color:#64748b;font-size:12px;">
@@ -234,8 +189,8 @@ async def brain_dashboard():
             <span>🧠 500 Agents</span>
         </div>
         <script>
-            const agents = ['Legal Research Pro', 'Journalist AI', 'Contract Analyst', 'Spiritual Guide', 'Case Law Expert', 'News Curator', 'Compliance Agent', 'GDPR Expert'];
-            const actions = ['analyzing case law', 'fetching legal feeds', 'verifying citations', 'extracting clauses', 'drafting memo', 'compliance check', 'monitoring regulations', 'generating report'];
+            const agents = ['Legal Research Pro', 'Journalist AI', 'Contract Analyst', 'Spiritual Guide', 'Case Law Expert'];
+            const actions = ['analyzing case law', 'fetching legal feeds', 'verifying citations', 'extracting clauses', 'drafting memo'];
             setInterval(() => {
                 const log = document.getElementById('agentLog');
                 const entry = document.createElement('div');
@@ -246,7 +201,7 @@ async def brain_dashboard():
                 entry.innerHTML = `<span class="time">[${time}]</span> <span class="agent">${agent}</span> ${action}`;
                 log.prepend(entry);
                 if (log.children.length > 50) log.removeChild(log.lastChild);
-            }, 2500);
+            }, 3000);
         </script>
     </body>
     </html>
@@ -258,13 +213,7 @@ async def health_check():
         "status": "healthy",
         "version": "43.0",
         "timestamp": datetime.now().isoformat(),
-        "endpoints": {
-            "total": 82,
-            "active": 82,
-            "base": 36,
-            "moat": 32,
-            "new": 14
-        },
+        "endpoints": {"total": 82, "active": 82},
         "agents": {
             "total": 500,
             "lawyer": 100,
@@ -277,29 +226,13 @@ async def health_check():
             "litigation": 30,
             "strategic": 10
         },
-        "services": {
-            "total": 50,
-            "compliance": 8,
-            "contracts": 5,
-            "employment_hr": 4,
-            "tax_finance": 3,
-            "ip": 3,
-            "multi_jurisdiction": 3,
-            "ai_tech": 5,
-            "digital": 4,
-            "litigation": 3,
-            "strategic": 3
-        },
         "features": {
             "third_eye": True,
             "zero_data_retention": settings.ZERO_DATA_RETENTION,
             "ollama": settings.OLLAMA_ENABLED,
-            "qwen_model": settings.OLLAMA_MODEL,
-            "pgvector": True,
-            "neon_db": True
+            "qwen_model": settings.OLLAMA_MODEL
         },
-        "jurisdictions": ["India", "US", "UK", "EU"],
-        "timestamp": datetime.now().isoformat()
+        "jurisdictions": ["India", "US", "UK", "EU"]
     }
 
 @app.get("/third-eye")
@@ -325,7 +258,6 @@ async def third_eye():
 
 @app.get("/endpoints")
 async def list_endpoints():
-    """List all 82 endpoints"""
     return {
         "total": 82,
         "base_endpoints": 36,
