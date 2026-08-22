@@ -1,18 +1,7 @@
 """
 routes.py  —  Unknown Verdict v42.0
 ====================================
-All 82 API endpoints — 36 base + 32 moat + 14 new (ethics + multi-jurisdiction + GDPR + civil + multilingual)
-
-CHANGES FROM v41:
-  - /chat now runs ethics guardrails (refusal, PII redaction, hallucination check, disclaimer)
-  - /chat/stream wraps guardrails in SSE flow
-  - /moat/ethics-status endpoint added
-  - US/UK/EU law support (6 endpoints)
-  - GDPR / Data Act compliance (4 endpoints)
-  - Civil litigation endpoints (4 endpoints)
-  - Multi-lingual support (4 endpoints + chat language param)
-
-ETHICS INTEGRATION: 5 lines added to /chat, nothing removed.
+All 82 API endpoints — 36 base + 32 moat + 14 new
 """
 
 from __future__ import annotations
@@ -21,21 +10,24 @@ import json
 import time
 import hashlib
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from pathlib import Path
+from datetime import datetime
+import asyncio
+import random
 
-from fastapi import APIRouter, Request, HTTPException, Depends, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Request, HTTPException, Depends, Query, Body
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from core.config import settings
-from core.llm import LLMMessage, LLMResponse, get_router, get_provider
 from core.db import db
+from core.llm import LLMMessage, LLMResponse, get_router, get_provider
 from core.auth import get_current_user, require_user, require_admin, check_rate_limit, jwt_manager
 from core.verifiers import verify_all, verify_summary
 from core.judge import judge as ai_judge
 
 # ─── ETHICS GUARDRAILS ───────────────────────────────────────────
-# Uses core/ethics_guardrails.py — zero external deps, stdlib only
 try:
     from core.ethics_guardrails import EthicsPipeline, ethics_status
     ETHICS_AVAILABLE = True
@@ -48,7 +40,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 moat_router = APIRouter(prefix="/moat", tags=["Moat Intelligence"])
-
 
 # ─── Request / response models ───
 class ChatRequest(BaseModel):
