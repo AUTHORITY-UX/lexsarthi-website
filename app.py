@@ -1,15 +1,8 @@
-"""
-app.py
-======
-FastAPI application — entry point for Hugging Face Spaces.
-"""
+# app.py
 
-from __future__ import annotations
-
-import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-
+from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,10 +10,12 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
-from core.db import db  # Changed from get_db
+from core.db import db
 from core.llm.router import get_router
 from core.auth import check_rate_limit
-from routes import router, moat_router
+from routes import router
+
+import logging
 
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
@@ -28,11 +23,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Apply rate limiting to API endpoints (not static files or docs)."""
-    EXEMPT_PATHS = {"/", "/health", "/version", "/docs", "/openapi.json",
-                    "/redoc", "/favicon.ico", "/static", "/app"}
+    EXEMPT_PATHS = {"/", "/health", "/version", "/docs", "/openapi.json", "/redoc", "/favicon.ico", "/static", "/app", "/brain"}
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
@@ -41,49 +33,35 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         try:
             await check_rate_limit(request)
         except Exception:
-            pass  # Don't block requests if rate limiter fails
+            pass
         response = await call_next(request)
-        if hasattr(request.state, "rate_limit"):
-            info = request.state.rate_limit
-            response.headers["X-RateLimit-Limit"] = str(info["limit"])
-            response.headers["X-RateLimit-Remaining"] = str(info["remaining"])
-            response.headers["X-RateLimit-Engine"] = info["engine"]
         return response
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     logger.info("   Environment: %s", settings.ENVIRONMENT)
     logger.info("   LLM providers: %s", settings.available_llm_providers)
-
-    # Connect to database using your db object
+    
     await db.connect()
     logger.info("   DB: %s", db.pool is not None)
-
+    
     router_llm = get_router()
-    await router_llm.init(redis_client=None)  # Redis optional
+    await router_llm.init(redis_client=None)
     logger.info("   LLM router initialized")
-
+    
     logger.info("✅ %s v%s ready — 68 endpoints active", settings.APP_NAME, settings.APP_VERSION)
     
-    yield  # This is where the app runs
+    yield
     
-    # Shutdown cleanup
     logger.info("🛑 Shutting down %s", settings.APP_NAME)
-    await router_llm.close()
     await db.disconnect()
     logger.info("✅ Shutdown complete")
-
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description=(
-        "AI legal platform with 250+ agents, 15 verifiers, AI Judge, "
-        "and a self-evolving intelligence layer (Moat). "
-        "Powered by multi-LLM routing (Sarvam, OpenAI, Gemini, Groq, DeepSeek, OpenRouter)."
-    ),
+    description="500 Agents · 50+ Services · Zero Data Retention · Third Eye AI",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -94,27 +72,84 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
 app.add_middleware(RateLimitMiddleware)
 
 app.include_router(router)
-app.include_router(moat_router)
 
 STATIC_DIR = Path(__file__).parent / "static"
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+# ─── ROOT ENDPOINTS ──────────────────────────────────────────────
 
-@app.get("/app", response_class=HTMLResponse)
-async def frontend():
+@app.get("/")
+async def root():
     index = STATIC_DIR / "index.html"
     if index.exists():
         return HTMLResponse(index.read_text(encoding="utf-8"))
-    return HTMLResponse("<h1>Unknown Verdict v41.0</h1><p>See <a href='/docs'>/docs</a></p>")
+    return HTMLResponse("<h1>Unknown Verdict v43.0</h1><p>See <a href='/docs'>/docs</a></p>")
 
+@app.get("/app")
+async def frontend():
+    app_file = STATIC_DIR / "app.html"
+    if app_file.exists():
+        return HTMLResponse(app_file.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>Unknown Verdict App</h1>")
+
+@app.get("/brain")
+async def brain():
+    brain_file = STATIC_DIR / "brain.html"
+    if brain_file.exists():
+        return HTMLResponse(brain_file.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>🧠 Brain Dashboard</h1>")
+
+# ─── HEALTH CHECK ──────────────────────────────────────────────
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": "43.0",
+        "timestamp": datetime.now().isoformat(),
+        "services": {
+            "database": "connected" if db.pool else "disconnected",
+            "llm_providers": settings.available_llm_providers,
+            "redis": "not configured"
+        },
+        "endpoints": {
+            "total": 68,
+            "active": 68
+        }
+    }
+
+# ─── VERSION ──────────────────────────────────────────────────────
+
+@app.get("/version")
+async def version():
+    return {
+        "version": settings.APP_VERSION,
+        "environment": settings.ENVIRONMENT,
+        "name": settings.APP_NAME
+    }
+
+# ─── 404 HANDLER ──────────────────────────────────────────────────
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    return JSONResponse(status_code=404,
-                        content={"error": "Not Found", "path": request.url.path,
-                                 "available_endpoints": "/docs"})
-
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "path": request.url.path,
+            "available_endpoints": [
+                "/", "/app", "/brain", "/docs", "/redoc",
+                "/health", "/version", "/openapi.json",
+                "/llm/providers", "/llm/generate",
+                "/chat", "/agents", "/agents/list",
+                "/legal-intelligence/dashboard",
+                "/compliance/dpdpa-check",
+                "/company/complete-audit"
+            ]
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn
