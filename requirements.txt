@@ -10,15 +10,15 @@ pgvector==0.2.5
 sqlalchemy==2.0.23
 alembic==1.12.1
 
-# LLM Providers (remove openrouter exact version)
+# LLM Providers
 openai==1.3.0
 groq==0.4.1
 google-generativeai==0.3.2
-# openrouter>=1.0.0  # Uncomment when needed
+httpx==0.25.1
 
-# Ollama uses httpx (already installed)
-
-# Authentication
+# Authentication (ADD THESE)
+PyJWT==2.8.0
+jwt==1.3.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
@@ -49,11 +49,5 @@ cachetools==5.3.2
 python-dateutil==2.8.2
 pytz==2023.3
 
-# ML (optional – install separately)
-# numpy>=1.26.0
-# scipy>=1.14.0
-# scikit-learn>=1.5.0
-# torch>=2.5.0
-# transformers>=4.35.0
-# sentence-transformers>=2.2.2
-# pandas>=2.2.0
+# Additional
+typing-extensions==4.8.0
