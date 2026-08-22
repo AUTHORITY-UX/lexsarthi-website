@@ -1,8 +1,5 @@
-# app.py
-
 from contextlib import asynccontextmanager
 from pathlib import Path
-from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -24,7 +21,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    EXEMPT_PATHS = {"/", "/health", "/version", "/docs", "/openapi.json", "/redoc", "/favicon.ico", "/static", "/app", "/brain"}
+    EXEMPT_PATHS = {"/", "/health", "/version", "/docs", "/openapi.json", "/redoc", "/favicon.ico", "/static", "/app"}
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
@@ -77,79 +74,32 @@ STATIC_DIR = Path(__file__).parent / "static"
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# ─── ROOT ENDPOINTS ──────────────────────────────────────────────
-
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
     index = STATIC_DIR / "index.html"
     if index.exists():
         return HTMLResponse(index.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>Unknown Verdict v43.0</h1><p>See <a href='/docs'>/docs</a></p>")
 
-@app.get("/app")
+@app.get("/app", response_class=HTMLResponse)
 async def frontend():
     app_file = STATIC_DIR / "app.html"
     if app_file.exists():
         return HTMLResponse(app_file.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>Unknown Verdict App</h1>")
 
-@app.get("/brain")
+@app.get("/brain", response_class=HTMLResponse)
 async def brain():
     brain_file = STATIC_DIR / "brain.html"
     if brain_file.exists():
         return HTMLResponse(brain_file.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>🧠 Brain Dashboard</h1>")
 
-# ─── HEALTH CHECK ──────────────────────────────────────────────
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "version": "43.0",
-        "timestamp": datetime.now().isoformat(),
-        "services": {
-            "database": "connected" if db.pool else "disconnected",
-            "llm_providers": settings.available_llm_providers,
-            "redis": "not configured"
-        },
-        "endpoints": {
-            "total": 68,
-            "active": 68
-        }
-    }
-
-# ─── VERSION ──────────────────────────────────────────────────────
-
-@app.get("/version")
-async def version():
-    return {
-        "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT,
-        "name": settings.APP_NAME
-    }
-
-# ─── 404 HANDLER ──────────────────────────────────────────────────
-
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    return JSONResponse(
-        status_code=404,
-        content={
-            "error": "Not Found",
-            "path": request.url.path,
-            "available_endpoints": [
-                "/", "/app", "/brain", "/docs", "/redoc",
-                "/health", "/version", "/openapi.json",
-                "/llm/providers", "/llm/generate",
-                "/chat", "/agents", "/agents/list",
-                "/legal-intelligence/dashboard",
-                "/compliance/dpdpa-check",
-                "/company/complete-audit"
-            ]
-        }
-    )
+    return JSONResponse(status_code=404,
+                        content={"error": "Not Found", "path": request.url.path,
+                                 "available_endpoints": "/docs"})
 
 if __name__ == "__main__":
     import uvicorn
