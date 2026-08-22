@@ -27,6 +27,7 @@ stripe==6.4.0
 
 # Caching
 redis==5.0.1
+aiohttp==3.9.1
 
 # Parsing
 feedparser==6.0.10
