@@ -1,3 +1,5 @@
+# core/config.py
+
 import os
 from typing import List, Optional
 from dotenv import load_dotenv
@@ -8,6 +10,9 @@ class Settings:
     APP_NAME = os.getenv("APP_NAME", "Unknown Verdict")
     APP_VERSION = os.getenv("APP_VERSION", "43.0")
     ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+    
+    # Debug mode (ADD THIS)
+    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
     
     # Database
     DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -35,6 +40,8 @@ class Settings:
     
     # Security
     JWT_SECRET = os.getenv("JWT_SECRET", "change-this-in-production")
+    jwt_signing_key = JWT_SECRET
+    
     ZERO_DATA_RETENTION = os.getenv("ZERO_DATA_RETENTION", "true").lower() == "true"
     
     # Features
