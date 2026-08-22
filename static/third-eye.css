@@ -1,0 +1,169 @@
+/* ─── THIRD EYE – BLINKING WITH INFINITY LIFELINE ─── */
+
+.third-eye-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 40px auto;
+    width: 200px;
+    height: 200px;
+}
+
+.infinity-ring {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border: 2px solid rgba(102, 126, 234, 0.15);
+    border-radius: 50%;
+    animation: spin 20s linear infinite;
+    pointer-events: none;
+}
+
+.infinity-ring::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 4s linear infinite;
+}
+
+.infinity-ring::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    border-bottom: 2px solid #764ba2;
+    border-radius: 50%;
+    animation: spin 6s linear reverse infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.eye-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 120px;
+    height: 120px;
+}
+
+.eye {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 30% 30%, #ffffff, #f0f0f0);
+    border-radius: 50%;
+    box-shadow: 0 0 60px rgba(102, 126, 234, 0.3), 0 0 120px rgba(102, 126, 234, 0.1), inset 0 -20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.eye:hover { transform: scale(1.05); }
+
+.eyelid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, 
+        rgba(10, 10, 15, 0) 0%,
+        rgba(10, 10, 15, 0) 45%,
+        rgba(10, 10, 15, 0.95) 50%,
+        rgba(10, 10, 15, 0) 55%,
+        rgba(10, 10, 15, 0) 100%
+    );
+    border-radius: 50%;
+    z-index: 3;
+    animation: blink 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes blink {
+    0%, 45%, 55%, 100% { opacity: 0; }
+    48%, 52% { opacity: 1; }
+}
+
+.iris {
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(circle at 40% 35%, 
+        #667eea 0%, #5a6fd6 30%, #3a4fa8 60%, #1a2a6a 80%, #0a0a2a 100%
+    );
+    border-radius: 50%;
+    z-index: 1;
+    animation: irisGlow 4s ease-in-out infinite;
+}
+
+@keyframes irisGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+    50% { box-shadow: 0 0 60px rgba(102, 126, 234, 0.6); }
+}
+
+.pupil {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    background: radial-gradient(circle, #0a0a0a 40%, #1a1a2a 70%, transparent);
+    border-radius: 50%;
+    z-index: 2;
+    animation: pupilPulse 8s ease-in-out infinite;
+}
+
+@keyframes pupilPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.reflection {
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 20%;
+    height: 15%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+    border-radius: 50%;
+    z-index: 3;
+    transform: rotate(-30deg);
+    animation: reflectionMove 6s ease-in-out infinite;
+}
+
+@keyframes reflectionMove {
+    0%, 100% { transform: translate(0, 0) rotate(-30deg); }
+    50% { transform: translate(5px, 5px) rotate(-30deg); }
+}
+
+.lifeline-text {
+    position: absolute;
+    bottom: -30px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #667eea;
+    text-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    animation: textPulse 4s ease-in-out infinite;
+    white-space: nowrap;
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 0.7; letter-spacing: 3px; }
+    50% { opacity: 1; letter-spacing: 5px; }
+}
