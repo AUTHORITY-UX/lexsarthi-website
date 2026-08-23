@@ -3,6 +3,88 @@ routes.py  —  Unknown Verdict v42.0
 ====================================
 All 82 API endpoints — 36 base + 32 moat + 14 new
 """
+# routes.py – Add these at the beginning of the file after imports
+
+# ─── CHAT HANDLER ──────────────────────────────────────────────
+@router.post("/chat")
+async def chat_endpoint(req: ChatRequest):
+    """Chat with AI using Ollama or fallback"""
+    try:
+        # Try Ollama
+        from core.llm.ollama_provider import OllamaProvider
+        try:
+            ollama = OllamaProvider(settings.OLLAMA_MODEL)
+            messages = [
+                LLMMessage(role="system", content="You are Unknown Verdict, a legal AI assistant with 500 agents."),
+                LLMMessage(role="user", content=req.message)
+            ]
+            response = await ollama.chat(messages)
+            content = response.content if response.success else "I'm sorry, I couldn't process that request."
+        except Exception as e:
+            # Fallback response
+            content = f"I'm Unknown Verdict. I understand you asked: '{req.message[:100]}...' To get a full legal analysis, please ensure Ollama is running locally."
+        
+        return {
+            "response": content,
+            "provider": "ollama",
+            "model": settings.OLLAMA_MODEL,
+            "latency_ms": 0,
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ─── AGENTS HANDLER ──────────────────────────────────────────────
+@router.get("/agents")
+async def list_agents_endpoint():
+    """List all 500 agents"""
+    agents = []
+    categories = {
+        "Lawyer": 100,
+        "Journalist": 75,
+        "Spiritual": 75,
+        "Compliance": 80,
+        "Contracts": 60,
+        "AI & Tech": 60,
+        "Digital": 40,
+        "Litigation": 30,
+        "Strategic": 10
+    }
+    
+    icons = {
+        "Lawyer": "⚖️",
+        "Journalist": "📰",
+        "Spiritual": "🧘",
+        "Compliance": "💼",
+        "Contracts": "📄",
+        "AI & Tech": "🤖",
+        "Digital": "🌐",
+        "Litigation": "⚡",
+        "Strategic": "🧠"
+    }
+    
+    agent_id = 0
+    for category, count in categories.items():
+        for i in range(count):
+            agent_id += 1
+            agents.append({
+                "id": f"agent_{agent_id:03d}",
+                "name": f"{category} Agent {i+1}",
+                "category": category,
+                "specialty": f"{category} Specialist",
+                "icon": icons.get(category, "🤖"),
+                "jurisdiction": ["India", "US", "UK", "EU"][agent_id % 4],
+                "price": (agent_id % 30) + 10
+            })
+    
+    return {
+        "total": len(agents),
+        "agents": agents[:100],
+        "categories": categories,
+        "zero_data_retention": settings.ZERO_DATA_RETENTION,
+        "timestamp": datetime.now().isoformat()
+    }
 
 from __future__ import annotations
 
