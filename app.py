@@ -1,4 +1,5 @@
-# app.py – Complete with ALL routes registered
+# app.py – Complete Unknown Verdict v43.0
+# 82 Endpoints · 500 Agents · 50+ Services · Zero Data Retention · Third Eye AI
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,8 +13,7 @@ from core.config import settings
 from core.db import db
 from core.llm.router import get_router
 
-# IMPORTANT: Import routes AFTER app is created to avoid circular imports
-# But we need to import the router objects
+# Import routes
 from routes import router, moat_router
 
 import logging
@@ -23,6 +23,9 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+# ─── LIFESPAN ───────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,7 +48,8 @@ async def lifespan(app: FastAPI):
     await db.disconnect()
     logger.info("✅ Shutdown complete")
 
-# ─── CREATE APP ─────────────────────────────────────────────────────
+
+# ─── CREATE APP ────────────────────────────────────────────────────
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -56,87 +60,198 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+
 # ─── MIDDLEWARE ────────────────────────────────────────────────────
 
-app.add_middleware(CORSMiddleware, 
-                   allow_origins=["*"], 
-                   allow_credentials=True,
-                   allow_methods=["*"], 
-                   allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# ─── STATIC FILES ──────────────────────────────────────────────────
+
+# ─── STATIC FILES ─────────────────────────────────────────────────
 
 STATIC_DIR = Path(__file__).parent / "static"
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+
 # ─── REGISTER ROUTES ──────────────────────────────────────────────
 
-# THIS IS THE CRITICAL PART – Register both routers
 app.include_router(router)       # 36 Base + 14 New = 50 endpoints
 app.include_router(moat_router)  # 32 Moat endpoints
 # Total: 82 endpoints
 
-# ─── DIRECT ENDPOINTS (app level) ─────────────────────────────────
+
+# ─── ROOT ENDPOINTS ────────────────────────────────────────────────
 
 @app.get("/")
 async def root():
+    """Main landing page with Third Eye"""
     index = STATIC_DIR / "index.html"
     if index.exists():
         return HTMLResponse(index.read_text(encoding="utf-8"))
     return HTMLResponse("""
     <!DOCTYPE html>
     <html>
-    <head><title>Unknown Verdict v43.0</title>
-    <style>
-        body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { text-align: center; padding: 40px; max-width: 800px; }
-        .eye { font-size: 80px; animation: blink 4s infinite; display: inline-block; }
-        @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
-        .infinity { font-size: 30px; color: #3b82f6; }
-        .badge { background: #10b981; padding: 8px 24px; border-radius: 20px; display: inline-block; margin: 10px 0; color: white; }
-        h1 { font-size: 48px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin: 30px 0; }
-        .card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; }
-        .card .num { font-size: 28px; font-weight: 700; color: #3b82f6; }
-        .card .label { color: #64748b; font-size: 11px; }
-        a { color: #3b82f6; text-decoration: none; }
-        .footer { margin-top: 30px; color: #64748b; font-size: 12px; border-top: 1px solid #1e293b; padding-top: 20px; }
-        .links { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-        .links a { padding: 6px 14px; border: 1px solid #1e293b; border-radius: 8px; }
-        .links a:hover { background: #1e293b; }
-    </style>
+    <head>
+        <title>Unknown Verdict v43.0 – 82 Endpoints</title>
+        <style>
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body {
+                background: #0a0e1a;
+                color: #e2e8f0;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+            }
+            .container {
+                text-align: center;
+                padding: 50px;
+                max-width: 900px;
+                background: rgba(255,255,255,0.03);
+                border-radius: 30px;
+                border: 1px solid rgba(255,255,255,0.08);
+                backdrop-filter: blur(10px);
+            }
+            .eye {
+                font-size: 80px;
+                animation: blink 4s infinite;
+                display: inline-block;
+            }
+            @keyframes blink {
+                0%, 45%, 55%, 100% { opacity: 1; }
+                48%, 52% { opacity: 0; }
+            }
+            .infinity {
+                font-size: 30px;
+                color: #00d4ff;
+                margin: 10px 0;
+                text-shadow: 0 0 30px rgba(0,212,255,0.3);
+            }
+            .badge {
+                background: #10b981;
+                padding: 8px 24px;
+                border-radius: 20px;
+                display: inline-block;
+                margin: 10px 0;
+                color: white;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            h1 {
+                font-size: 48px;
+                background: linear-gradient(135deg, #00d4ff, #7b2fbe, #ff6b35);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 8px;
+            }
+            .subtitle { color: #94a3b8; font-size: 18px; }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 15px;
+                margin: 30px 0;
+            }
+            .card {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 12px;
+                padding: 16px;
+                transition: all 0.3s ease;
+            }
+            .card:hover {
+                transform: translateY(-5px);
+                border-color: #00d4ff;
+                box-shadow: 0 0 30px rgba(0,212,255,0.1);
+            }
+            .card .num {
+                font-size: 28px;
+                font-weight: 700;
+                color: #00d4ff;
+            }
+            .card .label { color: #94a3b8; font-size: 11px; }
+            .links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                justify-content: center;
+                margin: 20px 0;
+            }
+            .links a {
+                color: #00d4ff;
+                text-decoration: none;
+                padding: 8px 16px;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                font-size: 14px;
+            }
+            .links a:hover {
+                background: rgba(0,212,255,0.1);
+                border-color: #00d4ff;
+            }
+            .footer {
+                margin-top: 30px;
+                color: #94a3b8;
+                font-size: 12px;
+                border-top: 1px solid rgba(255,255,255,0.05);
+                padding-top: 20px;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
             <div class="eye">👁️</div>
             <h1>Unknown Verdict</h1>
-            <div style="color:#64748b;">v43.0 · 82 Endpoints · 500 Agents · 50+ Services</div>
+            <div class="subtitle">v43.0 · 82 Endpoints · 500 Agents · 50+ Services</div>
             <div class="badge">🚀 Zero Data Retention · Human-in-the-Loop</div>
             <div class="infinity">♾️ 2026 – 2126</div>
             <div class="grid">
                 <div class="card"><div class="num">82</div><div class="label">Endpoints</div></div>
-                <div class="card"><div class="num" style="color:#3b82f6;">500</div><div class="label">Agents</div></div>
+                <div class="card"><div class="num" style="color:#7b2fbe;">500</div><div class="label">Agents</div></div>
                 <div class="card"><div class="num" style="color:#10b981;">50+</div><div class="label">Services</div></div>
-                <div class="card"><div class="num" style="color:#8b5cf6;">32</div><div class="label">Moat APIs</div></div>
-                <div class="card"><div class="num" style="color:#f59e0b;">8</div><div class="label">Jurisdictions</div></div>
+                <div class="card"><div class="num" style="color:#ff6b35;">8</div><div class="label">Jurisdictions</div></div>
             </div>
             <div class="links">
                 <a href="/docs">📚 API Docs</a>
-                <a href="/brain">🧠 Brain</a>
+                <a href="/brain">🧠 Brain Dashboard</a>
                 <a href="/health">❤️ Health</a>
                 <a href="/third-eye">👁️ Third Eye</a>
                 <a href="/agents">🤖 Agents</a>
                 <a href="/moat">🧩 Moat</a>
             </div>
-            <div class="footer">Built by The Advocacy – A Law Firm, Baghpat · <span style="color:#10b981;">●</span> 82 Endpoints Active</div>
+            <div class="footer">
+                Built by The Advocacy – A Law Firm, Baghpat<br>
+                <span style="color:#10b981;">●</span> 82 Endpoints Active
+            </div>
         </div>
     </body>
     </html>
     """)
 
+
+@app.get("/app")
+async def frontend():
+    """Main application interface"""
+    app_file = STATIC_DIR / "app.html"
+    if app_file.exists():
+        return HTMLResponse(app_file.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>Unknown Verdict App</h1><p>See <a href='/'>home</a></p>")
+
+
+# ─── BRAIN DASHBOARD ───────────────────────────────────────────────
+
 @app.get("/brain")
 async def brain_dashboard():
+    """Brain dashboard frontend"""
     brain_file = STATIC_DIR / "brain.html"
     if brain_file.exists():
         return HTMLResponse(brain_file.read_text(encoding="utf-8"))
@@ -147,31 +262,59 @@ async def brain_dashboard():
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #111827; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 20px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; text-align: center; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px; background: rgba(255,255,255,0.05);
+            border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px; margin-bottom: 20px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 16px; text-align: center;
+        }
         .stat .num { font-size: 32px; font-weight: 700; }
-        .stat .label { color: #64748b; font-size: 11px; }
-        .section { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .eye { font-size: 50px; animation: blink 3s infinite; display: inline-block; }
+        .stat .label { color: #94a3b8; font-size: 11px; }
+        .section {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 20px; margin-bottom: 20px;
+        }
+        .eye { font-size: 50px; animation: blink 4s infinite; display: inline-block; }
         @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
         .badge { background: #10b981; padding: 4px 14px; border-radius: 12px; font-size: 11px; color: white; }
-        .logs { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .logs {
+            background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px;
+            max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;
+        }
         .logs .entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .logs .time { color: #3b82f6; }
-        .logs .agent { color: #f59e0b; }
+        .logs .time { color: #00d4ff; }
+        .logs .agent { color: #ff6b35; }
+        .agent-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px; margin-top: 10px;
+        }
+        .agent-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px; padding: 12px 16px;
+        }
+        .agent-card .cat { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.05); }
+        .agent-card .name { font-weight: 600; margin: 4px 0; }
+        .agent-card .price { color: #10b981; font-size: 12px; }
     </style>
     </head>
     <body>
         <div class="header">
-            <div><span class="eye">👁️</span> <span style="font-size:22px;font-weight:700;">Unknown Verdict</span> <span style="color:#64748b;font-size:13px;">· Brain Dashboard</span></div>
+            <div><span class="eye">👁️</span> <span style="font-size:22px;font-weight:700;">Unknown Verdict</span> <span style="color:#94a3b8;font-size:13px;">· Brain Dashboard</span></div>
             <div><span class="badge">● 82 Endpoints Live</span></div>
         </div>
         <div class="stats">
-            <div class="stat"><div class="num" style="color:#3b82f6;">82</div><div class="label">Endpoints</div></div>
-            <div class="stat"><div class="num" style="color:#10b981;">500</div><div class="label">Agents</div></div>
-            <div class="stat"><div class="num" style="color:#8b5cf6;">50+</div><div class="label">Services</div></div>
-            <div class="stat"><div class="num" style="color:#f59e0b;">8</div><div class="label">Jurisdictions</div></div>
+            <div class="stat"><div class="num" style="color:#00d4ff;">82</div><div class="label">Endpoints</div></div>
+            <div class="stat"><div class="num" style="color:#7b2fbe;">500</div><div class="label">Agents</div></div>
+            <div class="stat"><div class="num" style="color:#10b981;">50+</div><div class="label">Services</div></div>
+            <div class="stat"><div class="num" style="color:#ff6b35;">8</div><div class="label">Jurisdictions</div></div>
         </div>
         <div class="section">
             <h3>🧠 Agent Activity</h3>
@@ -181,7 +324,18 @@ async def brain_dashboard():
                 <div class="entry"><span class="time">[System]</span> <span class="agent">Brain</span> Zero data retention active</div>
             </div>
         </div>
-        <div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #1e293b;color:#64748b;font-size:12px;">
+        <div class="section">
+            <h3>🤖 500 Agents Available</h3>
+            <div class="agent-grid">
+                <div class="agent-card"><span class="cat">⚖️ Lawyer</span><div class="name">Constitutional Law Expert</div><div class="price">$50/hr</div></div>
+                <div class="agent-card"><span class="cat">⚖️ Lawyer</span><div class="name">Criminal Law Specialist</div><div class="price">$55/hr</div></div>
+                <div class="agent-card"><span class="cat">📰 Journalist</span><div class="name">Legal Writer</div><div class="price">$40/hr</div></div>
+                <div class="agent-card"><span class="cat">🧘 Spiritual</span><div class="name">Meditation Guide</div><div class="price">$25/hr</div></div>
+                <div class="agent-card"><span class="cat">💼 Compliance</span><div class="name">DPDPA Expert</div><div class="price">$75/hr</div></div>
+                <div class="agent-card"><span class="cat">📄 Contracts</span><div class="name">NDA Reviewer</div><div class="price">$60/hr</div></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05);color:#94a3b8;font-size:12px;">
             <span>♾️ 2026 – 2126</span>
             <span>🔒 Zero Data Retention</span>
             <span>⚡ 82 Endpoints Active</span>
@@ -189,8 +343,8 @@ async def brain_dashboard():
             <span>🧠 500 Agents</span>
         </div>
         <script>
-            const agents = ['Legal Research Pro', 'Journalist AI', 'Contract Analyst', 'Spiritual Guide', 'Case Law Expert'];
-            const actions = ['analyzing case law', 'fetching legal feeds', 'verifying citations', 'extracting clauses', 'drafting memo'];
+            const agents = ['Legal Research Pro', 'Journalist AI', 'Contract Analyst', 'Spiritual Guide', 'Case Law Expert', 'Compliance Agent'];
+            const actions = ['analyzing case law', 'fetching legal feeds', 'verifying citations', 'extracting clauses', 'drafting memo', 'compliance check'];
             setInterval(() => {
                 const log = document.getElementById('agentLog');
                 const entry = document.createElement('div');
@@ -207,8 +361,12 @@ async def brain_dashboard():
     </html>
     """)
 
+
+# ─── DIRECT ENDPOINTS ─────────────────────────────────────────────
+
 @app.get("/health")
 async def health_check():
+    """Health check endpoint"""
     return {
         "status": "healthy",
         "version": "43.0",
@@ -230,13 +388,17 @@ async def health_check():
             "third_eye": True,
             "zero_data_retention": settings.ZERO_DATA_RETENTION,
             "ollama": settings.OLLAMA_ENABLED,
-            "qwen_model": settings.OLLAMA_MODEL
+            "qwen_model": settings.OLLAMA_MODEL,
+            "pgvector": True,
+            "neon_db": True
         },
         "jurisdictions": ["India", "US", "UK", "EU"]
     }
 
+
 @app.get("/third-eye")
 async def third_eye():
+    """The legendary Third Eye endpoint"""
     return {
         "eye": "👁️",
         "status": "OPEN",
@@ -256,8 +418,10 @@ async def third_eye():
         "timestamp": datetime.now().isoformat()
     }
 
+
 @app.get("/endpoints")
 async def list_endpoints():
+    """List all 82 endpoints"""
     return {
         "total": 82,
         "base_endpoints": 36,
@@ -279,30 +443,116 @@ async def list_endpoints():
         "timestamp": datetime.now().isoformat()
     }
 
+
+@app.get("/version")
+async def version_info():
+    """Version information"""
+    return {
+        "version": "43.0",
+        "environment": settings.ENVIRONMENT,
+        "name": settings.APP_NAME,
+        "features": {
+            "zero_data_retention": settings.ZERO_DATA_RETENTION,
+            "ollama": settings.OLLAMA_ENABLED,
+            "third_eye": True
+        }
+    }
+
+
+@app.get("/status")
+async def system_status():
+    """System status"""
+    return {
+        "app": settings.APP_NAME,
+        "version": "43.0",
+        "environment": settings.ENVIRONMENT,
+        "database": {"connected": db.pool is not None},
+        "llm": {
+            "providers": settings.available_llm_providers,
+            "ollama": {
+                "enabled": settings.OLLAMA_ENABLED,
+                "model": settings.OLLAMA_MODEL
+            }
+        },
+        "agents": {
+            "total": 500,
+            "categories": {
+                "Lawyer": 100,
+                "Journalist": 75,
+                "Spiritual": 75,
+                "Compliance": 80,
+                "Contracts": 60,
+                "AI & Tech": 60,
+                "Digital": 40,
+                "Litigation": 30,
+                "Strategic": 10
+            }
+        },
+        "features": {
+            "zero_data_retention": settings.ZERO_DATA_RETENTION,
+            "third_eye": True,
+            "pgvector": True,
+            "neon_db": True,
+            "ollama": settings.OLLAMA_ENABLED
+        },
+        "jurisdictions": ["India", "US", "UK", "EU"],
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.get("/providers")
+async def list_providers():
+    """List all LLM providers"""
+    return {
+        "providers": settings.available_llm_providers,
+        "total": len(settings.available_llm_providers),
+        "default": "ollama" if settings.OLLAMA_ENABLED else "groq",
+        "ollama": {
+            "enabled": settings.OLLAMA_ENABLED,
+            "model": settings.OLLAMA_MODEL,
+            "host": settings.OLLAMA_HOST
+        }
+    }
+
+
+# ─── 404 HANDLER ──────────────────────────────────────────────────
+
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
+    """Custom 404 handler with available endpoints"""
     return JSONResponse(
         status_code=404,
         content={
             "error": "Not Found",
             "path": request.url.path,
             "available_endpoints": [
-                "/", "/brain", "/docs", "/health", "/third-eye", "/endpoints",
+                "/", "/app", "/brain", "/docs", "/redoc",
+                "/health", "/version", "/status", "/providers",
+                "/third-eye", "/endpoints", "/openapi.json",
                 "/chat", "/chat/stream",
                 "/agents", "/agents/list", "/agents/categories",
-                "/compliance/dpdpa-check", "/compliance/gdpr-check", "/compliance/eu-ai-act",
-                "/company/complete-audit",
-                "/legal-intelligence/dashboard", "/legal-intelligence/search",
-                "/agent/events",
+                "/compliance/dpdpa-check", "/compliance/gdpr-check",
+                "/company/complete-audit", "/company/audit-report",
+                "/legal-intelligence/dashboard",
+                "/agent/events", "/agent/write-article",
+                "/domain/scan",
                 "/moat", "/moat/status", "/moat/ethics-status",
-                "/law/multi-jurisdiction", "/law/comparative", "/law/jurisdictions",
+                "/law/multi-jurisdiction", "/law/jurisdictions",
                 "/document/analyze", "/contract/analyze",
                 "/auth/login", "/auth/me"
             ]
         }
     )
 
+
+# ─── RUN ──────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, workers=1,
-                log_level=settings.LOG_LEVEL.lower())
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=7860,
+        workers=1,
+        log_level=settings.LOG_LEVEL.lower()
+    )
