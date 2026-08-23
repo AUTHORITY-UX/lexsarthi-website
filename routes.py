@@ -15,7 +15,7 @@ from enum import Enum
 from fastapi import APIRouter, Request, HTTPException, Depends, Query, Body, BackgroundTasks
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field  # Removed EmailStr
 
 from core.config import settings
 from core.db import db
@@ -110,7 +110,7 @@ class CivilLitigationRequest(BaseModel):
     case_type: Optional[str] = None
     jurisdiction: str = "india"
     model: Optional[str] = None
-    stage: str = "analysis"  # analysis, strategy, pleading
+    stage: str = "analysis"
 
 class DamagesRequest(BaseModel):
     query: str
@@ -148,13 +148,13 @@ class CompanyAuditRequest(BaseModel):
     generate_pdf: bool = False
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str  # Changed from EmailStr
     password: str
     remember_me: bool = False
 
 class RegisterRequest(BaseModel):
     name: str
-    email: EmailStr
+    email: str  # Changed from EmailStr
     password: str
     plan: str = "free"
 
@@ -179,7 +179,6 @@ class EmploymentAuditRequest(BaseModel):
     content: str
     audit_type: str = "policies"
     jurisdiction: str = "india"
-
 # ═════════════════════════════════════════════════════════════════════
 # 1. HEALTH & SYSTEM (6 endpoints)
 # ═════════════════════════════════════════════════════════════════════
