@@ -2259,3 +2259,188 @@ async def moat_update_config(request: Request):
         "zero_data_retention": settings.ZERO_DATA_RETENTION,
         "timestamp": datetime.now().isoformat()
     }
+    # ─── AGENT ROUTES ─── Add this to routes.py
+
+from core.agents.registry import get_all_agents, get_agent, get_agents_by_category, get_agent_categories
+from core.agents.orchestrator import orchestrator
+
+# ─── LIST ALL 500 AGENTS ──────────────────────────────────────────
+
+@router.get("/agents")
+async def list_agents():
+    """List all 500 agents"""
+    agents = get_all_agents()
+    categories = get_agent_categories()
+    
+    return {
+        "total": len(agents),
+        "agents": list(agents.values())[:100],  # First 100 for performance
+        "categories": categories,
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/agents/all")
+async def list_all_agents():
+    """List ALL 500 agents (full list)"""
+    agents = get_all_agents()
+    return {
+        "total": len(agents),
+        "agents": list(agents.values()),
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/agents/categories")
+async def get_categories():
+    """Get agent categories with counts"""
+    return {
+        "categories": get_agent_categories(),
+        "total": 500,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/agents/{agent_id}")
+async def get_agent_detail(agent_id: str):
+    """Get agent details by ID"""
+    agent = get_agent(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    return agent
+
+@router.post("/agents/run")
+async def run_agents(
+    agent_ids: List[str] = Body(...),
+    task: str = Body(...)
+):
+    """Run specific agents on a task"""
+    try:
+        results = await orchestrator.execute_multi_agent(agent_ids, task)
+        return {
+            "task": task,
+            "agents_used": len(agent_ids),
+            "results": results,
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agents/orchestrate")
+async def orchestrate_agents(
+    task: str = Body(...),
+    categories: Optional[List[str]] = Body(None)
+):
+    """Orchestrate agents by category"""
+    try:
+        if categories:
+            result = await orchestrator.orchestrate_by_category(categories, task)
+        else:
+            result = await orchestrator.orchestrate_all(task)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agents/research")
+async def agent_research(
+    query: str = Body(...),
+    jurisdiction: str = Body("india")
+):
+    """Legal research using research agents"""
+    try:
+        result = await orchestrator.orchestrate_research(query, jurisdiction)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agents/compliance")
+async def agent_compliance(
+    document: str = Body(...),
+    compliance_type: str = Body("dpdpa")
+):
+    """Compliance audit using compliance agents"""
+    try:
+        result = await orchestrator.orchestrate_compliance(document, compliance_type)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agents/contract")
+async def agent_contract_review(
+    contract: str = Body(...),
+    contract_type: str = Body("general")
+):
+    """Contract review using contract agents"""
+    try:
+        result = await orchestrator.orchestrate_contract_review(contract, contract_type)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agents/arbitration")
+async def agent_arbitration(
+    dispute: str = Body(...),
+    jurisdiction: str = Body("india")
+):
+    """Arbitration analysis using litigation agents"""
+    try:
+        result = await orchestrator.orchestrate_arbitration(dispute, jurisdiction)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/agents/status")
+async def agent_system_status():
+    """Get agent system status"""
+    try:
+        status = await orchestrator.get_agent_status()
+        return status
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@router.get("/agents/jurisdictions")
+async def get_agents_by_jurisdiction():
+    """Get agent counts by jurisdiction"""
+    from core.agents.registry import get_agents_by_jurisdiction
+    
+    jurisdictions = ["india", "us", "uk", "eu", "global"]
+    result = {}
+    for j in jurisdictions:
+        agents = get_agents_by_jurisdiction(j)
+        result[j] = len(agents)
+    
+    return {
+        "jurisdictions": result,
+        "total": sum(result.values()),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/agents/task")
+async def run_agent_task(
+    agent_id: str = Body(...),
+    task: str = Body(...),
+    context: Optional[Dict] = Body(None)
+):
+    """Run a single agent on a task"""
+    try:
+        result = await orchestrator.execute_agent(agent_id, task, context)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agent/{agent_id}/task")
+async def run_specific_agent(
+    agent_id: str,
+    task: str = Body(...),
+    context: Optional[Dict] = Body(None)
+):
+    """Run a specific agent by ID"""
+    try:
+        result = await orchestrator.execute_agent(agent_id, task, context)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
