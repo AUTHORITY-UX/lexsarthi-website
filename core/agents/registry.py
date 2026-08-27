@@ -104,3 +104,53 @@ def get_agent_categories():
         cat = agent["category"]
         categories[cat] = categories.get(cat, 0) + 1
     return categories
+# ─── ADD THESE FUNCTIONS ──────────────────────────────────────────
+
+def get_agents_by_jurisdiction(jurisdiction: str):
+    """Get agents filtered by jurisdiction"""
+    jurisdiction = jurisdiction.lower()
+    result = {}
+    for agent_id, agent in AGENTS.items():
+        if agent.get("jurisdiction", "").lower() == jurisdiction:
+            result[agent_id] = agent
+    return result
+
+def search_agents(query: str):
+    """Search agents by name, category, or specialty"""
+    query = query.lower()
+    results = []
+    for agent in AGENTS.values():
+        name = agent.get("name", "").lower()
+        category = agent.get("category", "").lower()
+        specialty = agent.get("specialty", "").lower()
+        if query in name or query in category or query in specialty:
+            results.append(agent)
+    return results[:20]
+
+def get_agent_stats():
+    """Get statistics about all agents"""
+    categories = {}
+    jurisdictions = {
+        "india": 0,
+        "us": 0,
+        "uk": 0,
+        "eu": 0,
+        "global": 0
+    }
+    
+    for agent in AGENTS.values():
+        cat = agent.get("category", "Unknown")
+        categories[cat] = categories.get(cat, 0) + 1
+        
+        jur = agent.get("jurisdiction", "global").lower()
+        if jur in jurisdictions:
+            jurisdictions[jur] += 1
+        else:
+            jurisdictions["global"] += 1
+    
+    return {
+        "total": len(AGENTS),
+        "categories": categories,
+        "jurisdictions": jurisdictions,
+        "timestamp": datetime.now().isoformat()
+    }
