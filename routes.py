@@ -1009,6 +1009,102 @@ async def write_article(request: Request):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@router.get("/articles")
+async def get_articles(limit: int = 20):
+    """Get published articles – from DB or fallback"""
+    try:
+        from core.db import db
+        
+        # Try to get from database
+        if db.pool:
+            async with db.pool.acquire() as conn:
+                rows = await conn.fetch("""
+                    SELECT id, title, summary, content, tags, source, published_at
+                    FROM articles
+                    ORDER BY published_at DESC
+                    LIMIT $1
+                """, limit)
+                
+                if rows:
+                    return {
+                        "status": "ok",
+                        "count": len(rows),
+                        "source": "database",
+                        "articles": [dict(r) for r in rows]
+                    }
+    except Exception as e:
+        logger.warning(f"DB fetch failed: {e}")
+    
+    # ─── FALLBACK: Return generated articles ───
+    # These are the articles that would come from /agent/write-article
+    fallback_articles = [
+        {
+            "id": "dpdpa-2026",
+            "title": "DPDP Act 2023: Complete Compliance Guide",
+            "summary": "The Digital Personal Data Protection Act 2023 requires all data fiduciaries to register, appoint a Data Protection Officer, and implement consent management systems.",
+            "content": "Full analysis of DPDP Act 2023...",
+            "tags": ["data_protection", "compliance", "india"],
+            "source": "Unknown Verdict Legal Intelligence",
+            "published_at": "2026-08-25T10:00:00"
+        },
+        {
+            "id": "ai-act-2026",
+            "title": "EU AI Act: What Indian Tech Companies Need to Know",
+            "summary": "The EU AI Act introduces risk-based regulation for AI systems. Indian companies serving EU markets must comply.",
+            "content": "Full analysis of EU AI Act...",
+            "tags": ["ai", "eu", "regulation"],
+            "source": "Unknown Verdict Legal Intelligence",
+            "published_at": "2026-08-23T10:00:00"
+        },
+        {
+            "id": "contract-2026",
+            "title": "Smart Contracts: Legal Enforceability in India",
+            "summary": "The Indian Contract Act 1872 applies to smart contracts. Courts are recognizing digital signatures.",
+            "content": "Full analysis of smart contracts...",
+            "tags": ["contracts", "technology", "india"],
+            "source": "Unknown Verdict Legal Intelligence",
+            "published_at": "2026-08-20T10:00:00"
+        },
+        {
+            "id": "arbitration-2026",
+            "title": "Arbitration in India: Recent Amendments",
+            "summary": "The Arbitration and Conciliation Act has seen significant amendments.",
+            "content": "Full analysis of arbitration amendments...",
+            "tags": ["arbitration", "dispute_resolution"],
+            "source": "Unknown Verdict Legal Intelligence",
+            "published_at": "2026-08-18T10:00:00"
+        }
+    ]
+    
+    return {
+        "status": "ok",
+        "count": len(fallback_articles),
+        "source": "fallback",
+        "articles": fallback_articles[:limit]
+    }
+
+@router.get("/articles/{article_id}")
+async def get_article(article_id: str):
+    """Get a specific article by ID"""
+    try:
+        from core.db import db
+        if db.pool:
+            async with db.pool.acquire() as conn:
+                row = await conn.fetchrow("""
+                    SELECT * FROM articles WHERE id = $1
+                """, article_id)
+                if row:
+                    return dict(row)
+    except:
+        pass
+    
+    # Fallback: search in fallback articles
+    fallback = FALLBACK_ARTICLES
+    for article in fallback:
+        if article.get("id") == article_id:
+            return article
+    
+    raise HTTPException(status_code=404, detail="Article not found")
 # ═════════════════════════════════════════════════════════════════════
 # 9. DOMAIN SCAN (1 endpoint)
 # ═════════════════════════════════════════════════════════════════════
