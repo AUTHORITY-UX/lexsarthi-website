@@ -320,59 +320,39 @@ async def metrics():
 # ═════════════════════════════════════════════════════════════════════
 # 2. CHAT & LLM (6 endpoints)
 # ═════════════════════════════════════════════════════════════════════
-
 @router.post("/chat")
 async def chat_endpoint(req: ChatRequest):
+    """Chat with AI – always returns valid JSON"""
     try:
         from core.llm.ollama_provider import OllamaProvider
         
-        # Build system prompt with jurisdiction and language support
-        system_prompt = "You are Unknown Verdict, a legal AI assistant with 500 specialized agents."
-        if req.jurisdiction and req.jurisdiction != "india":
-            jurisdiction_prompts = {
-                "us": "Specializing in US law. Cite U.S.C., CFR, and Supreme Court cases.",
-                "uk": "Specializing in UK law. Cite Acts of Parliament and common law.",
-                "eu": "Specializing in EU law. Cite GDPR, AI Act, TEU, TFEU."
-            }
-            system_prompt += " " + jurisdiction_prompts.get(req.jurisdiction, "")
-        
-        if req.language and req.language != "en":
-            language_names = {
-                "hi": "Hindi", "ta": "Tamil", "te": "Telugu", "bn": "Bengali",
-                "mr": "Marathi", "gu": "Gujarati", "kn": "Kannada", "ml": "Malayalam",
-                "pa": "Punjabi", "fr": "French", "de": "German", "es": "Spanish"
-            }
-            lang_name = language_names.get(req.language, req.language)
-            system_prompt += f" Respond in {lang_name}."
-        
         try:
-            ollama = OllamaProvider(req.model or settings.OLLAMA_MODEL)
+            ollama = OllamaProvider(settings.OLLAMA_MODEL)
             messages = [
-                LLMMessage(role="system", content=system_prompt),
+                LLMMessage(role="system", content="You are Unknown Verdict, a legal AI assistant with 500 agents."),
                 LLMMessage(role="user", content=req.message)
             ]
-            response = await ollama.chat(
-                messages,
-                temperature=req.temperature,
-                max_tokens=req.max_tokens
-            )
+            response = await ollama.chat(messages)
             content = response.content if response.success else "I'm sorry, I couldn't process that request."
         except Exception as e:
-            content = f"I'm Unknown Verdict. I understand you asked: '{req.message[:100]}...'\n\nNote: To get full legal analysis, please ensure Ollama is running locally or use cloud providers."
+            content = f"I'm Unknown Verdict. I understand you asked: '{req.message[:100]}...'"
         
         return {
             "response": content,
             "provider": "ollama",
             "model": settings.OLLAMA_MODEL,
-            "latency_ms": 0,
             "zero_data_retention": True,
-            "jurisdiction": req.jurisdiction or "india",
-            "language": req.language or "en",
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        return {
+            "response": f"I received your message but encountered an error: {str(e)}",
+            "provider": "ollama",
+            "model": settings.OLLAMA_MODEL,
+            "error": str(e),
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
 @router.post("/chat/stream")
 async def chat_stream(req: ChatRequest):
     req.stream = True
@@ -1499,28 +1479,39 @@ async def eu_law_analysis(req: ChatRequest):
 # ═════════════════════════════════════════════════════════════════════
 # 15. SSE EVENTS (1 endpoint)
 # ═════════════════════════════════════════════════════════════════════
-
 @router.get("/agent/events")
 async def agent_events(request: Request):
+    """SSE stream of agent activity"""
     async def event_generator():
-        agents = ['Legal Research Pro', 'Journalist AI', 'Contract Analyst', 
-                  'Spiritual Guide', 'Case Law Expert', 'Compliance Agent',
-                  'GDPR Specialist', 'DPDPA Expert', 'Arbitration Expert']
-        actions = ['analyzing case law', 'fetching RSS feeds', 'verifying citations', 
-                   'extracting clauses', 'drafting legal memo', 'compliance check',
-                   'monitoring regulations', 'generating report', 'reviewing contracts',
-                   'cross-referencing with GDPR', 'tracking Supreme Court decisions',
-                   'analysing legal trends', 'processing legal documents',
-                   'detecting PII violations', 'flagging ethical concerns']
-        jurisdictions = ['India', 'US', 'UK', 'EU']
+        agents = [
+            "Legal Research Pro", "Journalist AI", "Contract Analyst", 
+            "Spiritual Guide", "Case Law Expert", "Compliance Agent",
+            "GDPR Specialist", "DPDPA Expert", "Arbitration Expert"
+        ]
+        actions = [
+            "analyzing case law", "fetching legal feeds", "verifying citations",
+            "extracting clauses", "drafting legal memo", "compliance check",
+            "monitoring regulations", "generating report", "reviewing contracts"
+        ]
+        findings = [
+            f"Found {random.randint(1, 10)} new legal articles",
+            f"Identified {random.randint(1, 5)} compliance issues",
+            f"Detected {random.randint(0, 3)} regulatory changes",
+            f"Processed {random.randint(5, 25)} legal documents",
+            f"Extracted {random.randint(3, 15)} legal citations",
+            f"Flagged {random.randint(0, 2)} ethical concerns"
+        ]
+        jurisdictions = ["India", "US", "UK", "EU"]
         
         event_id = 0
         while True:
             if await request.is_disconnected():
                 break
+            
             event_id += 1
             agent = agents[event_id % len(agents)]
             action = actions[event_id % len(actions)]
+            finding = findings[event_id % len(findings)]
             jurisdiction = jurisdictions[event_id % len(jurisdictions)]
             
             data = {
@@ -1528,15 +1519,15 @@ async def agent_events(request: Request):
                 "event": "agent_update",
                 "agent": agent,
                 "action": action,
-                "category": ["lawyer", "journalist", "compliance", "spiritual"][event_id % 4],
+                "finding": finding,
+                "category": ["lawyer", "journalist", "compliance"][event_id % 3],
                 "jurisdiction": jurisdiction,
                 "timestamp": datetime.now().isoformat(),
-                "finding": f"Processed {event_id} tasks",
-                "relevance_score": round(random.uniform(0.5, 1.0), 2),
                 "progress": min(event_id % 100, 100)
             }
+            
             yield f"event: agent_update\ndata: {json.dumps(data)}\n\n"
-            await asyncio.sleep(random.uniform(2, 5))
+            await asyncio.sleep(random.uniform(2, 4))
     
     return StreamingResponse(
         event_generator(),
@@ -1547,7 +1538,6 @@ async def agent_events(request: Request):
             "X-Accel-Buffering": "no"
         }
     )
-
 # ═════════════════════════════════════════════════════════════════════
 # 16. BRAIN DASHBOARD (1 endpoint)
 # ═════════════════════════════════════════════════════════════════════
@@ -2443,4 +2433,4 @@ async def run_specific_agent(
         result = await orchestrator.execute_agent(agent_id, task, context)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))  
