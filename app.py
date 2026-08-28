@@ -1,649 +1,335 @@
-"""
-Unknown Verdict v43.0 — Backend Fixes Module
-=============================================
-core/app_fixes.py
+# app.py – Complete Unknown Verdict v43.0
+# 82 Endpoints · 500 Agents · 50+ Services · Zero Data Retention · Third Eye AI
 
-Drop-in module that fixes FIVE critical issues:
-1. SSE not working — "Connecting..." forever, Events: 0
-2. Chat "Error: The string did not match the expected pattern"
-3. Articles page empty — RSS feeds not loading
-4. Login/Auth broken — email login not working
-5. UTF-8 encoding — "â€"" instead of "–", "âˆž" instead of "∞"
+from contextlib import asynccontextmanager
+from pathlib import Path
+from datetime import datetime
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse
 
-INTEGRATION (already done in patched app.py):
-    from core.app_fixes import apply_all_fixes
-    apply_all_fixes(app)
-"""
+from core.config import settings
+from core.db import db
+from core.llm.router import get_router
 
-from __future__ import annotations
+# Import routes
+from routes import router, moat_router
 
-import json
-import time
-import asyncio
 import logging
-import hashlib
-import secrets
-from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, Request, HTTPException, Header
-from fastapi.responses import StreamingResponse, JSONResponse
-from pydantic import BaseModel
-
-logger = logging.getLogger("core.app_fixes")
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PYDANTIC MODELS — MUST BE AT MODULE LEVEL (not inside functions)
-# This fixes the "PydanticUndefinedAnnotation: name 'ChatRequest' is not defined" error
-# ═══════════════════════════════════════════════════════════════════════════
+# ─── LIFESPAN ───────────────────────────────────────────────────────
 
-class ChatRequest(BaseModel):
-    message: str
-    agent: Optional[str] = "general"
-    stream: Optional[bool] = False
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("🚀 Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
+    logger.info("   Environment: %s", settings.ENVIRONMENT)
+    logger.info("   LLM providers: %s", settings.available_llm_providers)
 
+    await db.connect()
+    logger.info("   DB: %s", db.pool is not None)
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+    router_llm = get_router()
+    await router_llm.init(redis_client=None)
+    logger.info("   LLM router initialized")
 
+    logger.info("✅ %s v%s ready — 82 endpoints active", settings.APP_NAME, settings.APP_VERSION)
 
-class RegisterRequest(BaseModel):
-    email: str
-    username: str
-    password: str
-    full_name: Optional[str] = None
+    yield
 
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: dict
+    logger.info("🛑 Shutting down %s", settings.APP_NAME)
+    await db.disconnect()
+    logger.info("✅ Shutdown complete")
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# FIX 1: SSE — "Connecting..." + "Events: 0"
-# ═══════════════════════════════════════════════════════════════════════════
+# ─── CREATE APP ────────────────────────────────────────────────────
 
-def fix_sse(app: FastAPI):
-    """Add/override SSE endpoints with proper streaming."""
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="82 Endpoints · 500 Agents · 50+ Services · Zero Data Retention · Third Eye AI",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
 
-    @app.get("/agent/events")
-    async def agent_events(request: Request):
-        """SSE endpoint for real-time agent activity — FIXED."""
-        return StreamingResponse(
-            _sse_event_stream(request),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache, no-transform",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",
-                "Access-Control-Allow-Origin": "*",
+
+# ─── MIDDLEWARE ────────────────────────────────────────────────────
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ─── STATIC FILES ─────────────────────────────────────────────────
+
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+# ─── REGISTER ROUTES ────────────────────────────────────────────────
+
+app.include_router(router)       # 36 Base + 14 New = 50 endpoints
+app.include_router(moat_router)  # 32 Moat endpoints
+# Total: 82 endpoints
+
+
+# ─── DISABLE app_fixes – routes.py already has all endpoints ──────
+
+# try:
+#     from core.app_fixes import apply_all_fixes
+#     apply_all_fixes(app)
+# except Exception as e:
+#     logger.error(f"⚠️ app_fixes failed (app still runs): {e}")
+
+
+# ─── ROOT ENDPOINT ─────────────────────────────────────────────────
+
+@app.get("/", include_in_schema=False)
+async def root(request: Request):
+    """Root — HTML for browsers, JSON for API clients."""
+    accept = request.headers.get("accept", "")
+
+    if "application/json" in accept or "text/plain" in accept or "curl" in request.headers.get("user-agent", "").lower():
+        return JSONResponse(
+            content={
+                "name": "Unknown Verdict",
+                "version": "43.0",
+                "status": "operational",
+                "docs": "/docs",
+                "endpoints": 82,
+                "agents": 500,
+                "services": 50,
+                "jurisdictions": ["India", "US", "UK", "EU"],
+                "zero_data_retention": True,
+                "third_eye": True,
+                "lifeline": "2026 - infinity",
+                "domain": "advocacyalawfrim.in",
             },
+            media_type="application/json; charset=utf-8",
         )
 
-    @app.get("/sse")
-    async def sse_alias(request: Request):
-        return StreamingResponse(
-            _sse_event_stream(request),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache, no-transform",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",
-                "Access-Control-Allow-Origin": "*",
-            },
-        )
-
-    @app.get("/events")
-    async def events_alias(request: Request):
-        return StreamingResponse(
-            _sse_event_stream(request),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache, no-transform",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",
-                "Access-Control-Allow-Origin": "*",
-            },
-        )
+    index = STATIC_DIR / "index.html"
+    if index.exists():
+        return HTMLResponse(index.read_text(encoding="utf-8"))
+    return HTMLResponse("""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Unknown Verdict v43.0</title></head>
+<body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
+<h1>👁️ Unknown Verdict v43.0</h1>
+<p>82 Endpoints · 500 Agents · 50+ Services</p>
+<p><a href="/docs" style="color:#3b82f6">API Docs</a> | <a href="/brain" style="color:#3b82f6">Brain</a> | <a href="/health" style="color:#3b82f6">Health</a></p>
+</body></html>""")
 
 
-async def _sse_event_stream(request: Request):
-    """Generate SSE events with heartbeats and agent activity."""
-    import random
-
-    yield _sse_format({
-        "type": "connection",
-        "status": "connected",
-        "timestamp": _now_iso(),
-        "message": "Unknown Verdict Agent Stream Active",
-        "agents": 500,
-        "endpoints": 82,
-    })
-
-    agents = [
-        ("Legal Research Agent", "searching case law database"),
-        ("Compliance Agent", "checking DPDPA requirements"),
-        ("Contract Review Agent", "analyzing contract clauses"),
-        ("Litigation Agent", "researching precedents"),
-        ("IP Agent", "searching trademark database"),
-        ("Tax Law Agent", "analyzing GST provisions"),
-        ("Employment Agent", "reviewing POSH compliance"),
-        ("Constitutional Agent", "analyzing fundamental rights"),
-        ("Arbitration Agent", "reviewing arbitration clause"),
-        ("Cyber Law Agent", "checking IT Act provisions"),
-    ]
-
-    heartbeat_count = 0
-
-    while True:
-        if await request.is_disconnected():
-            break
-
-        heartbeat_count += 1
-        if heartbeat_count >= 3:
-            yield ": heartbeat\n\n"
-            heartbeat_count = 0
-
-        for _ in range(random.randint(1, 2)):
-            agent, action = random.choice(agents)
-            event_type = "agent_activity"
-            status = "processing"
-            if random.random() < 0.2:
-                event_type = "agent_complete"
-                status = "completed"
-            yield _sse_format({
-                "type": event_type,
-                "agent": agent,
-                "action": action,
-                "status": status,
-                "timestamp": _now_iso(),
-                "session_id": f"sess-{random.randint(10000, 99999)}",
-            })
-
-        await asyncio.sleep(3)
+@app.get("/app")
+async def frontend():
+    app_file = STATIC_DIR / "app.html"
+    if app_file.exists():
+        return HTMLResponse(app_file.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>Unknown Verdict App</h1><p>See <a href='/'>home</a></p>")
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# FIX 2: Chat — "The string did not match the expected pattern"
-# ═══════════════════════════════════════════════════════════════════════════
+# ─── BRAIN DASHBOARD ───────────────────────────────────────────────
 
-def fix_chat(app: FastAPI):
-    """Add a robust chat endpoint that always returns valid JSON."""
-
-    @app.post("/chat")
-    async def chat(req: ChatRequest):
-        """Chat endpoint — always returns valid JSON."""
-        try:
-            response_text = ""
-            try:
-                from core.llm.router import get_router
-                router = get_router()
-                response = await router.generate(
-                    prompt=req.message,
-                    temperature=0.4,
-                    max_tokens=800,
-                )
-                if isinstance(response, str):
-                    response_text = response
-                elif isinstance(response, dict):
-                    response_text = (
-                        response.get("text") or
-                        response.get("content") or
-                        response.get("response") or
-                        response.get("output") or
-                        response.get("generated_text") or
-                        ""
-                    )
-                    if not response_text and "choices" in response:
-                        choices = response["choices"]
-                        if choices and isinstance(choices[0], dict):
-                            response_text = (
-                                choices[0].get("message", {}).get("content") or
-                                choices[0].get("text", "")
-                            )
-                else:
-                    response_text = str(response)
-            except Exception as llm_err:
-                logger.warning(f"LLM router error: {llm_err}")
-                response_text = (
-                    f"I'm the Unknown Verdict Brain with 500 agents. "
-                    f"You asked: \"{req.message}\"\n\n"
-                    f"I'm currently initializing my LLM providers. "
-                    f"Configured providers: Groq, OpenAI, Gemini, DeepSeek, OpenRouter, Ollama.\n"
-                    f"Please ensure at least one provider has a valid API key."
-                )
-
-            return JSONResponse(
-                content={
-                    "response": response_text,
-                    "text": response_text,
-                    "message": response_text,
-                    "answer": response_text,
-                    "agent": req.agent,
-                    "timestamp": _now_iso(),
-                    "status": "ok",
-                },
-                media_type="application/json; charset=utf-8",
-            )
-        except Exception as e:
-            logger.error(f"Chat error: {e}")
-            return JSONResponse(
-                content={
-                    "response": "I encountered an error processing your request. Please try again.",
-                    "text": "I encountered an error processing your request. Please try again.",
-                    "error": str(e),
-                    "status": "error",
-                    "timestamp": _now_iso(),
-                },
-                media_type="application/json; charset=utf-8",
-                status_code=200,
-            )
-
-    @app.post("/brain/ask")
-    async def brain_ask(req: ChatRequest):
-        return await chat(req)
-
-    @app.post("/chat/stream")
-    async def chat_stream(req: ChatRequest, request: Request):
-        """Streaming chat via SSE."""
-        async def generate():
-            yield _sse_format({
-                "type": "agent_thinking",
-                "agent": "Brain",
-                "message": "Processing your request...",
-                "timestamp": _now_iso(),
-            })
-            await asyncio.sleep(0.3)
-
-            try:
-                from core.llm.router import get_router
-                router = get_router()
-                response = await router.generate(
-                    prompt=req.message,
-                    temperature=0.4,
-                    max_tokens=800,
-                )
-                if isinstance(response, str):
-                    full_text = response
-                elif isinstance(response, dict):
-                    full_text = response.get("text") or response.get("content") or str(response)
-                else:
-                    full_text = str(response)
-            except Exception as e:
-                logger.warning(f"LLM error in stream: {e}")
-                full_text = (
-                    f"I received your message: \"{req.message}\". "
-                    f"Please ensure at least one LLM provider is configured."
-                )
-
-            words = full_text.split()
-            for i in range(0, len(words), 3):
-                chunk = " ".join(words[i:i+3]) + " "
-                yield _sse_format({
-                    "type": "agent_typing",
-                    "token": chunk,
-                    "timestamp": _now_iso(),
-                })
-                await asyncio.sleep(0.05)
-
-            yield _sse_format({
-                "type": "agent_done",
-                "agent": "Brain",
-                "full_response": full_text,
-                "timestamp": _now_iso(),
-                "tokens": len(words),
-            })
-
-        return StreamingResponse(
-            generate(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",
-            },
-        )
+@app.get("/brain")
+async def brain_dashboard():
+    brain_file = STATIC_DIR / "brain.html"
+    if brain_file.exists():
+        return HTMLResponse(brain_file.read_text(encoding="utf-8"))
+    return HTMLResponse("""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Brain Dashboard</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;color:#fff;font-family:sans-serif}
+.header{text-align:center;padding:30px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:600px;margin:20px auto}
+.stat{background:#1f2937;border:1px solid #374151;border-radius:8px;padding:16px;text-align:center}
+.stat-num{font-size:28px;font-weight:bold;color:#10b981}.stat-label{color:#9ca3af;font-size:12px}
+.activity{max-width:600px;margin:20px auto;padding:16px;background:#1f2937;border-radius:8px}
+.activity h3{color:#60a5fa;margin-bottom:12px}.activity-log{max-height:200px;overflow-y:auto}
+.activity-log div{padding:6px 0;border-bottom:1px solid #374151;font-size:13px;color:#9ca3af}
+</style></head>
+<body>
+<div class="header"><h1>👁️ Unknown Verdict · Brain Dashboard</h1><p style="color:#10b981">● 82 Endpoints Live</p></div>
+<div class="stats">
+<div class="stat"><div class="stat-num">82</div><div class="stat-label">Endpoints</div></div>
+<div class="stat"><div class="stat-num">500</div><div class="stat-label">Agents</div></div>
+<div class="stat"><div class="stat-num">50+</div><div class="stat-label">Services</div></div>
+<div class="stat"><div class="stat-num">8</div><div class="stat-label">Jurisdictions</div></div>
+</div>
+<div class="activity"><h3>🧠 Agent Activity</h3><div class="activity-log" id="agent-activity-feed">
+<div>[System] Brain 82 endpoints initialized</div>
+<div>[System] Brain 500 agents ready</div>
+<div>[System] Brain Zero data retention active</div>
+</div></div>
+</body></html>""")
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# FIX 3: Articles — Empty page
-# ═══════════════════════════════════════════════════════════════════════════
+# ─── DIRECT ENDPOINTS ─────────────────────────────────────────────
 
-def fix_articles(app: FastAPI):
-    """Add articles endpoint with RSS + fallback."""
-
-    @app.get("/articles")
-    async def get_articles(limit: int = 20):
-        articles = []
-        try:
-            articles = await _fetch_rss_feeds()
-        except Exception as e:
-            logger.warning(f"RSS fetch failed: {e}")
-
-        if not articles:
-            articles = _get_fallback_articles()
-
-        return {
-            "status": "ok",
-            "count": len(articles),
-            "source": "rss" if len(articles) > 5 else "fallback",
-            "articles": articles[:limit],
-        }
-
-    @app.get("/articles/{article_id}")
-    async def get_article(article_id: str):
-        articles = _get_fallback_articles()
-        for a in articles:
-            if a.get("id") == article_id:
-                return a
-        raise HTTPException(status_code=404, detail="Article not found")
-
-
-async def _fetch_rss_feeds() -> list:
-    """Fetch legal news from RSS feeds."""
-    import xml.etree.ElementTree as ET
-
-    feeds = [
-        ("LiveLaw", "https://www.livelaw.in/feed"),
-        ("Bar&Bench", "https://www.barandbench.com/feed"),
-        ("LegallyIndia", "https://www.legallyindia.com/feed"),
-    ]
-
-    articles = []
-    for source, url in feeds:
-        try:
-            import httpx
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(url)
-                if resp.status_code == 200:
-                    root = ET.fromstring(resp.text)
-                    for item in root.findall(".//item")[:5]:
-                        title = item.findtext("title", "")
-                        link = item.findtext("link", "")
-                        desc = item.findtext("description", "")
-                        pub_date = item.findtext("pubDate", "")
-                        articles.append({
-                            "id": hashlib.md5(link.encode()).hexdigest()[:12],
-                            "title": title,
-                            "url": link,
-                            "summary": desc[:300] if desc else "",
-                            "source": source,
-                            "date": pub_date,
-                        })
-        except Exception as e:
-            logger.debug(f"RSS feed {source} failed: {e}")
-            continue
-
-    return articles
-
-
-def _get_fallback_articles() -> list:
-    """Curated legal articles — shown when RSS feeds unavailable."""
-    return [
-        {
-            "id": "dpdpa-2025",
-            "title": "DPDP Act 2023: Compliance Deadlines and Requirements",
-            "url": "https://advocacyalawfrim.in/articles/dpdpa-2025",
-            "summary": "The Digital Personal Data Protection Act 2023 requires all data fiduciaries to register, appoint a Data Protection Officer, and implement consent management systems.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-25",
-            "category": "Data Protection",
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": "43.0",
+        "timestamp": datetime.now().isoformat(),
+        "endpoints": {"total": 82, "active": 82},
+        "agents": {
+            "total": 500,
+            "lawyer": 100, "journalist": 75, "spiritual": 75,
+            "compliance": 80, "contracts": 60, "ai_tech": 60,
+            "digital": 40, "litigation": 30, "strategic": 10
         },
-        {
-            "id": "ibc-recent-amendments",
-            "title": "IBC 2016: Recent Amendments and NCLT Practice Notes",
-            "url": "https://advocacyalawfrim.in/articles/ibc-amendments",
-            "summary": "The Insolvency and Bankruptcy Code has seen significant amendments in 2025-2026, particularly around pre-pack insolvency and MSME resolution.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-22",
-            "category": "Insolvency",
+        "features": {
+            "third_eye": True,
+            "zero_data_retention": settings.ZERO_DATA_RETENTION,
+            "ollama": settings.OLLAMA_ENABLED,
+            "qwen_model": settings.OLLAMA_MODEL,
+            "pgvector": True, "neon_db": True
         },
-        {
-            "id": "gst-e-invoicing",
-            "title": "GST E-Invoicing: New Threshold and Compliance",
-            "url": "https://advocacyalawfrim.in/articles/gst-e-invoicing",
-            "summary": "GST e-invoicing is now mandatory for businesses with turnover above ₹5 crore. Here's what you need to know about IRN generation and compliance.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-20",
-            "category": "Taxation",
-        },
-        {
-            "id": "sc-bail-jurisprudence",
-            "title": "Supreme Court Bail Jurisprudence: Recent Trends",
-            "url": "https://advocacyalawfrim.in/articles/sc-bail-trends",
-            "summary": "The Supreme Court has increasingly emphasized personal liberty in bail matters, with key rulings on anticipatory bail and default bail under CrPC.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-18",
-            "category": "Criminal Law",
-        },
-        {
-            "id": "sebi-insider-trading",
-            "title": "SEBI Insider Trading Regulations: 2026 Updates",
-            "url": "https://advocacyalawfrim.in/articles/sebi-insider-trading",
-            "summary": "SEBI has tightened insider trading norms with expanded definitions of connected persons and stricter reporting requirements.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-15",
-            "category": "Securities Law",
-        },
-        {
-            "id": "rera-builder-disputes",
-            "title": "RERA Builder-Buyer Disputes: Key Precedents",
-            "url": "https://advocacyalawfrim.in/articles/rera-disputes",
-            "summary": "RERA authorities across states have established key precedents on delayed possession, carpet area disputes, and refund claims.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-12",
-            "category": "Real Estate",
-        },
-        {
-            "id": "trademark-2026",
-            "title": "Trademark Registration: E-Filing and Examination Updates",
-            "url": "https://advocacyalawfrim.in/articles/trademark-2026",
-            "summary": "The Indian Trademark Registry has updated its e-filing system with faster examination timelines and new objection categories.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-10",
-            "category": "Intellectual Property",
-        },
-        {
-            "id": "arbitration-enforcement",
-            "title": "Enforcement of Foreign Arbitral Awards in India",
-            "url": "https://advocacyalawfrim.in/articles/arbitration-enforcement",
-            "summary": "Indian courts have increasingly adopted pro-enforcement stance on foreign arbitral awards under the New York Convention.",
-            "source": "Unknown Verdict Legal Intelligence",
-            "date": "2026-08-08",
-            "category": "Arbitration",
-        },
-    ]
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# FIX 4: Auth — Login not working
-# ═══════════════════════════════════════════════════════════════════════════
-
-def fix_auth(app: FastAPI):
-    """Add working auth endpoints."""
-
-    @app.post("/auth/login", response_model=TokenResponse)
-    async def login(req: LoginRequest):
-        """Login with email + password."""
-        user = await _authenticate_user(req.email, req.password)
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        token = _create_token(user)
-        return TokenResponse(
-            access_token=token,
-            user={
-                "id": user["id"],
-                "email": user["email"],
-                "username": user.get("username", user["email"]),
-                "tier": user.get("tier", "free"),
-            },
-        )
-
-    @app.post("/auth/register", response_model=TokenResponse)
-    async def register(req: RegisterRequest):
-        """Register a new user."""
-        existing = await _get_user_by_email(req.email)
-        if existing:
-            raise HTTPException(status_code=409, detail="Email already registered")
-        user = await _create_user(req)
-        token = _create_token(user)
-        return TokenResponse(
-            access_token=token,
-            user={
-                "id": user["id"],
-                "email": user["email"],
-                "username": user.get("username", req.username),
-                "tier": "free",
-            },
-        )
-
-    @app.get("/auth/me")
-    async def me(authorization: Optional[str] = Header(None)):
-        """Get current user from token."""
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Not authenticated")
-        token = authorization.replace("Bearer ", "")
-        user = _verify_token(token)
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
-        return {"user": user}
-
-    @app.get("/user/profile")
-    async def user_profile(authorization: Optional[str] = Header(None)):
-        """Get user profile."""
-        if not authorization:
-            raise HTTPException(status_code=401, detail="Not authenticated")
-        token = authorization.replace("Bearer ", "")
-        user = _verify_token(token)
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return {
-            "user": user,
-            "tier": user.get("tier", "free"),
-            "queries_used_today": user.get("queries_used_today", 0),
-            "is_premium": user.get("is_premium", False),
-        }
-
-
-# ─── Auth Helpers ─────────────────────────────────────────────────────────
-
-_simple_tokens: dict = {}
-
-
-async def _authenticate_user(email: str, password: str) -> Optional[dict]:
-    """Authenticate user against PostgreSQL users table."""
-    try:
-        from core.db import db
-        if db.pool is None:
-            logger.error("DB pool is None — database not connected")
-            return None
-        async with db.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT id, email, username, password_hash, full_name, tier, "
-                "is_premium, queries_used_today FROM users WHERE email = $1",
-                email
-            )
-            if not row:
-                return None
-            valid = await conn.fetchval(
-                "SELECT crypt($1, password_hash) = password_hash",
-                password
-            )
-            if not valid:
-                return None
-            return dict(row)
-    except Exception as e:
-        logger.error(f"Auth DB error: {e}")
-        return None
-
-
-async def _get_user_by_email(email: str) -> Optional[dict]:
-    try:
-        from core.db import db
-        if db.pool is None:
-            return None
-        async with db.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT id, email FROM users WHERE email = $1", email
-            )
-            return dict(row) if row else None
-    except:
-        return None
-
-
-async def _create_user(req: RegisterRequest) -> dict:
-    """Create a new user in the database."""
-    try:
-        from core.db import db
-        if db.pool is None:
-            raise HTTPException(status_code=500, detail="Database not connected")
-        async with db.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "INSERT INTO users (email, username, password_hash, full_name, tier, api_key, memory) "
-                "VALUES ($1, $2, crypt($3, gen_salt('bf', 8)), $4, 'free', $5, '[]') "
-                "RETURNING id, email, username, full_name, tier",
-                req.email, req.username, req.password,
-                req.full_name or req.username,
-                secrets.token_hex(16),
-            )
-            return dict(row)
-    except Exception as e:
-        logger.error(f"User creation error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create user")
-
-
-def _create_token(user: dict) -> str:
-    token = secrets.token_urlsafe(32)
-    _simple_tokens[token] = {
-        "id": user.get("id"),
-        "email": user.get("email"),
-        "username": user.get("username"),
-        "tier": user.get("tier", "free"),
-        "created_at": time.time(),
+        "jurisdictions": ["India", "US", "UK", "EU"]
     }
-    return token
 
 
-def _verify_token(token: str) -> Optional[dict]:
-    user = _simple_tokens.get(token)
-    if not user:
-        return None
-    if time.time() - user.get("created_at", 0) > 86400:
-        _simple_tokens.pop(token, None)
-        return None
-    return user
+@app.get("/third-eye")
+async def third_eye():
+    return JSONResponse(
+        content={
+            "eye": "👁️",
+            "status": "OPEN",
+            "message": "The Third Eye is always watching. Unknown Verdict sees everything across 82 endpoints.",
+            "lifeline": "2026 – ∞",
+            "blinking": True,
+            "agents": 500, "services": 50, "endpoints": 82,
+            "jurisdictions": ["India", "US", "UK", "EU"],
+            "features": {
+                "zero_data_retention": True,
+                "human_in_the_loop": True,
+                "ollama_offline": True,
+                "pgvector_search": True
+            },
+            "timestamp": datetime.now().isoformat()
+        },
+        media_type="application/json; charset=utf-8",
+    )
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# APPLY ALL FIXES
-# ═══════════════════════════════════════════════════════════════════════════
-
-def apply_all_fixes(app: FastAPI):
-    """Apply all fixes to the FastAPI app."""
-    logger.info("🔧 Applying Unknown Verdict v43.0 fixes...")
-
-    fix_sse(app)
-    logger.info("  ✅ Fix 1: SSE streaming (/agent/events, /sse, /events)")
-
-    fix_chat(app)
-    logger.info("  ✅ Fix 2: Chat JSON parsing (/chat, /chat/stream, /brain/ask)")
-
-    fix_articles(app)
-    logger.info("  ✅ Fix 3: Articles (/articles, /articles/{id})")
-
-    fix_auth(app)
-    logger.info("  ✅ Fix 4: Auth (/auth/login, /auth/register, /auth/me, /user/profile)")
-
-    logger.info("🎉 All fixes applied — 4 issues resolved")
+@app.get("/endpoints")
+async def list_endpoints():
+    return {
+        "total": 82,
+        "base_endpoints": 36,
+        "moat_endpoints": 32,
+        "new_endpoints": 14,
+        "categories": {
+            "health_system": 6, "chat_llm": 6, "legal_agents": 14,
+            "moat_intelligence": 32, "multi_jurisdiction": 6,
+            "gdpr_data_act": 4, "civil_litigation": 4, "multi_lingual": 4,
+            "rag_documents": 4, "auth_users": 4
+        },
+        "docs_url": "/docs",
+        "timestamp": datetime.now().isoformat()
+    }
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
+@app.get("/version")
+async def version_info():
+    return {
+        "version": "43.0",
+        "environment": settings.ENVIRONMENT,
+        "name": settings.APP_NAME,
+        "features": {
+            "zero_data_retention": settings.ZERO_DATA_RETENTION,
+            "ollama": settings.OLLAMA_ENABLED,
+            "third_eye": True
+        }
+    }
 
-def _now_iso() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+
+@app.get("/status")
+async def system_status():
+    return {
+        "app": settings.APP_NAME,
+        "version": "43.0",
+        "environment": settings.ENVIRONMENT,
+        "database": {"connected": db.pool is not None},
+        "llm": {
+            "providers": settings.available_llm_providers,
+            "ollama": {"enabled": settings.OLLAMA_ENABLED, "model": settings.OLLAMA_MODEL}
+        },
+        "agents": {
+            "total": 500,
+            "categories": {
+                "Lawyer": 100, "Journalist": 75, "Spiritual": 75,
+                "Compliance": 80, "Contracts": 60, "AI & Tech": 60,
+                "Digital": 40, "Litigation": 30, "Strategic": 10
+            }
+        },
+        "features": {
+            "zero_data_retention": settings.ZERO_DATA_RETENTION,
+            "third_eye": True, "pgvector": True, "neon_db": True,
+            "ollama": settings.OLLAMA_ENABLED
+        },
+        "jurisdictions": ["India", "US", "UK", "EU"],
+        "timestamp": datetime.now().isoformat()
+    }
 
 
-def _sse_format(data: dict) -> str:
-    return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+@app.get("/providers")
+async def list_providers():
+    return {
+        "providers": settings.available_llm_providers,
+        "total": len(settings.available_llm_providers),
+        "default": "ollama" if settings.OLLAMA_ENABLED else "groq",
+        "ollama": {
+            "enabled": settings.OLLAMA_ENABLED,
+            "model": settings.OLLAMA_MODEL,
+            "host": settings.OLLAMA_HOST
+        }
+    }
+
+
+# ─── 404 HANDLER ──────────────────────────────────────────────────
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "path": request.url.path,
+            "available_endpoints": [
+                "/", "/app", "/brain", "/docs", "/redoc",
+                "/health", "/version", "/status", "/providers",
+                "/third-eye", "/endpoints", "/openapi.json",
+                "/chat", "/chat/stream",
+                "/agents", "/agents/list", "/agents/categories",
+                "/articles",
+                "/auth/login", "/auth/register", "/auth/me",
+                "/agent/events",
+                "/moat", "/moat/status",
+            ]
+        }
+    )
+
+
+# ─── RUN ──────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=7860,
+        workers=1,
+        log_level=settings.LOG_LEVEL.lower()
+    )
