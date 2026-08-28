@@ -939,7 +939,6 @@ async def judge_endpoint(req: VerdictRequest):
 # ═════════════════════════════════════════════════════════════════════
 # 8. ARTICLE WRITING (1 endpoint)
 # ═════════════════════════════════════════════════════════════════════
-
 @router.post("/agent/write-article")
 async def write_article(request: Request):
     try:
@@ -989,10 +988,27 @@ async def write_article(request: Request):
                 "citations": [],
                 "tags": ["legal", "judgment"]
             }
+        
+        # ─── NEW: Save to database ───
+        try:
+            from core.db import db
+            async with db.pool.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO articles (title, summary, content, tags, source, published_at)
+                    VALUES ($1, $2, $3, $4, $5, NOW())
+                """,
+                    result.get("headline", "Legal Analysis"),
+                    result.get("summary", ""),
+                    result.get("analysis", ""),
+                    result.get("tags", []),
+                    "AI Generated"
+                )
+        except Exception as db_err:
+            logger.warning(f"Could not save article to DB: {db_err}")
+        
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 # ═════════════════════════════════════════════════════════════════════
 # 9. DOMAIN SCAN (1 endpoint)
 # ═════════════════════════════════════════════════════════════════════
