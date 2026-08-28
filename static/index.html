@@ -1,961 +1,428 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unknown Verdict v43.0 – The Legal AGI</title>
-  <style>
-    /* ─── RESET & BASE ─── */
-    * { margin:0; padding:0; box-sizing:border-box; }
-    :root {
-      --bg-primary: #0a0e1a;
-      --bg-card: rgba(17, 24, 39, 0.7);
-      --border: rgba(255,255,255,0.08);
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --accent: #00d4ff;
-      --purple: #7b2fbe;
-      --gold: #ff6b35;
-      --success: #10b981;
-      --lawyer: #3b82f6;
-      --journalist: #f59e0b;
-      --spiritual: #8b5cf6;
-      --compliance: #10b981;
-      --contracts: #06b6d4;
-      --ai-tech: #ec4899;
-      --digital: #f97316;
-      --litigation: #ef4444;
-      --strategic: #8b5cf6;
-      --glow: 0 0 30px rgba(0, 212, 255, 0.3);
-    }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    /* ─── PARTICLE / STARFIELD ─── */
-    #starfield {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
-    }
-    /* ─── GLASS CARD ─── */
-    .glass {
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px;
-    }
-    /* ─── HEADER ─── */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 24px;
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 20px;
-      font-weight: 700;
-      color: #fff;
-    }
-    .logo .eye-icon { font-size: 28px; animation: blink 4s infinite; }
-    @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
-    .logo span { color: var(--text-muted); font-weight: 400; font-size: 14px; }
-    .status-badge {
-      display: flex; align-items: center; gap: 8px;
-      padding: 4px 14px; border-radius: 20px; font-size: 12px;
-      background: rgba(16,185,129,0.1); color: var(--success);
-      border: 1px solid rgba(16,185,129,0.2);
-    }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-    /* ─── SIDEBAR ─── */
-    .main { display: flex; flex: 1; min-height: calc(100vh - 70px); position: relative; z-index: 1; }
-    .sidebar {
-      width: 240px;
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      border-right: 1px solid var(--border);
-      padding: 16px;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-    .sidebar h3 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-    .sidebar-item {
-      padding: 10px 14px; border-radius: 10px; cursor: pointer; margin-bottom: 4px;
-      color: var(--text-muted); transition: all 0.2s; display: flex; align-items: center; gap: 10px;
-    }
-    .sidebar-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-    .sidebar-item.active { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
-    .sidebar-footer {
-      margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border);
-      font-size: 11px; color: var(--text-muted);
-    }
-    /* ─── CONTENT ─── */
-    .content {
-      flex: 1; padding: 24px; overflow-y: auto;
-    }
-    .content-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 24px; flex-wrap: wrap; gap: 8px;
-    }
-    .content-header h2 { font-size: 24px; font-weight: 600; background: linear-gradient(135deg, var(--accent), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    /* ─── THIRD EYE HERO ─── */
-    .hero {
-      text-align: center;
-      padding: 40px 20px;
-      background: radial-gradient(ellipse at center, rgba(123,47,190,0.15) 0%, transparent 70%);
-      border-radius: 30px;
-      margin-bottom: 30px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero .eye-container {
-      display: inline-block;
-      position: relative;
-      width: 140px;
-      height: 140px;
-      margin-bottom: 16px;
-      cursor: pointer;
-    }
-    .hero .eye-container .eye {
-      width: 100%; height: 100%;
-      background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
-      border-radius: 50%;
-      box-shadow: 0 0 60px rgba(0,212,255,0.3), 0 0 120px rgba(123,47,190,0.2);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s;
-    }
-    .hero .eye-container .eye:hover { transform: scale(1.05); }
-    .hero .eye-container .eye .iris {
-      position: absolute;
-      top: 18%; left: 18%;
-      width: 64%; height: 64%;
-      background: radial-gradient(circle at 40% 35%, #00d4ff 0%, #7b2fbe 50%, #1a1a3e 80%);
-      border-radius: 50%;
-      transition: transform 0.1s;
-    }
-    .hero .eye-container .eye .pupil {
-      position: absolute;
-      top: 30%; left: 30%;
-      width: 40%; height: 40%;
-      background: radial-gradient(circle, #0a0e1a 40%, #1a1a3e 70%);
-      border-radius: 50%;
-      transition: transform 0.1s;
-    }
-    .hero .eye-container .eye .reflection {
-      position: absolute;
-      top: 12%; left: 20%;
-      width: 20%; height: 14%;
-      background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 100%);
-      border-radius: 50%;
-      transform: rotate(-30deg);
-    }
-    .hero .eye-container .eye .eyelid {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: linear-gradient(to bottom, 
-        rgba(10,14,26,0) 0%, rgba(10,14,26,0) 45%,
-        rgba(10,14,26,0.95) 50%, rgba(10,14,26,0) 55%,
-        rgba(10,14,26,0) 100%
-      );
-      border-radius: 50%;
-      z-index: 3;
-      animation: blink 5s ease-in-out infinite;
-      pointer-events: none;
-    }
-    .hero .eye-container .cosmic-rays {
-      position: absolute;
-      top: -20px; left: -20px;
-      width: calc(100% + 40px); height: calc(100% + 40px);
-      pointer-events: none;
-      z-index: -1;
-      animation: spin 20s linear infinite;
-    }
-    .hero .eye-container .cosmic-rays::before,
-    .hero .eye-container .cosmic-rays::after {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 200%; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      transform-origin: center;
-      opacity: 0.3;
-    }
-    .hero .eye-container .cosmic-rays::before { transform: rotate(0deg); }
-    .hero .eye-container .cosmic-rays::after { transform: rotate(60deg); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .hero h1 {
-      font-size: 42px;
-      background: linear-gradient(135deg, var(--accent), var(--purple), var(--gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-    }
-    .hero .subtitle { color: var(--text-muted); font-size: 18px; }
-    .hero .infinity {
-      font-size: 28px;
-      color: var(--gold);
-      font-weight: 300;
-      letter-spacing: 2px;
-      text-shadow: 0 0 30px rgba(255,107,53,0.3);
-      margin-top: 8px;
-    }
-    .hero .badge-group {
-      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 16px;
-    }
-    .hero .badge-group .badge {
-      padding: 6px 18px; border-radius: 20px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .hero .badge-group .badge i { margin-right: 6px; }
-    /* ─── STATS ─── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px; margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--bg-card);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 20px;
-      text-align: center;
-    }
-    .stat-card .icon { font-size: 28px; }
-    .stat-card .value { font-size: 30px; font-weight: 700; margin: 4px 0; }
-    .stat-card .label { font-size: 12px; color: var(--text-muted); }
-    .stat-card .value.cyan { color: var(--accent); }
-    .stat-card .value.green { color: var(--success); }
-    .stat-card .value.purple { color: var(--purple); }
-    .stat-card .value.gold { color: var(--gold); }
-    /* ─── AGENT LOG ─── */
-    .log-container {
-      background: var(--bg-card);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px 16px;
-      max-height: 250px;
-      overflow-y: auto;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      margin-bottom: 24px;
-    }
-    .log-entry {
-      padding: 4px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
-    .log-entry .time { color: var(--accent); }
-    .log-entry .agent { font-weight: 600; }
-    .log-entry .agent.lawyer { color: var(--lawyer); }
-    .log-entry .agent.journalist { color: var(--journalist); }
-    .log-entry .agent.spiritual { color: var(--spiritual); }
-    /* ─── AGENT GRID ─── */
-    .agent-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px; margin-bottom: 24px;
-    }
-    .agent-card {
-      background: var(--bg-card);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .agent-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--glow); }
-    .agent-card .cat {
-      font-size: 10px; padding: 2px 10px; border-radius: 12px; display: inline-block;
-    }
-    .agent-card .cat.lawyer { background: rgba(59,130,246,0.15); color: var(--lawyer); }
-    .agent-card .cat.journalist { background: rgba(245,158,11,0.15); color: var(--journalist); }
-    .agent-card .cat.spiritual { background: rgba(139,92,246,0.15); color: var(--spiritual); }
-    .agent-card .cat.compliance { background: rgba(16,185,129,0.15); color: var(--compliance); }
-    .agent-card .cat.contracts { background: rgba(6,182,212,0.15); color: var(--contracts); }
-    .agent-card .cat.ai-tech { background: rgba(236,72,153,0.15); color: var(--ai-tech); }
-    .agent-card .cat.digital { background: rgba(249,115,22,0.15); color: var(--digital); }
-    .agent-card .cat.litigation { background: rgba(239,68,68,0.15); color: var(--litigation); }
-    .agent-card .cat.strategic { background: rgba(139,92,246,0.15); color: var(--strategic); }
-    .agent-card .name { font-size: 14px; font-weight: 600; margin: 4px 0; }
-    .agent-card .price { font-size: 12px; color: var(--success); }
-    .agent-card .jurisdiction { font-size: 11px; color: var(--text-muted); }
-    /* ─── CHAT ─── */
-    .chat-container {
-      background: var(--bg-card);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-top: 20px;
-    }
-    .chat-messages { max-height: 300px; overflow-y: auto; margin-bottom: 12px; }
-    .chat-msg { padding: 8px 12px; border-radius: 10px; margin-bottom: 8px; max-width: 80%; }
-    .chat-msg.user { background: rgba(0,212,255,0.12); margin-left: auto; }
-    .chat-msg.ai { background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
-    .chat-msg .role { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-    .chat-input-row { display: flex; gap: 8px; }
-    .chat-input-row input {
-      flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-      border-radius: 10px; padding: 10px 14px; color: var(--text);
-    }
-    .chat-input-row input:focus { outline: none; border-color: var(--accent); }
-    .chat-input-row button {
-      padding: 10px 24px; border-radius: 10px; border: none;
-      background: linear-gradient(135deg, var(--accent), var(--purple));
-      color: white; cursor: pointer; font-weight: 600;
-    }
-    .chat-input-row button:hover { opacity: 0.9; }
-    /* ─── TOAST ─── */
-    .toast {
-      position: fixed; bottom: 20px; right: 20px;
-      background: var(--bg-card); backdrop-filter: blur(12px);
-      border: 1px solid var(--border); border-radius: 12px;
-      padding: 14px 20px; max-width: 400px; z-index: 999;
-    }
-    .toast.success { border-left: 4px solid var(--success); }
-    .toast.error { border-left: 4px solid #ef4444; }
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .agent-grid { grid-template-columns: 1fr; }
-      .header { flex-direction: column; align-items: stretch; }
-      .hero h1 { font-size: 28px; }
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unknown Verdict v43.0</title>
+    <style>
+        /* ─── RESET ─── */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --bg: #0a0e1a;
+            --bg-card: #111827;
+            --border: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #00d4ff;
+            --success: #10b981;
+            --gold: #f59e0b;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* ─── HEADER ─── */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .logo .eye { font-size: 28px; animation: blink 4s infinite; }
+        @keyframes blink { 0%,45%,55%,100% { opacity:1; } 48%,52% { opacity:0; } }
+        .logo span { color: var(--text-muted); font-weight: 400; font-size: 14px; }
+        .status-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 20px;
+            background: rgba(16,185,129,0.1); color: var(--success);
+            border: 1px solid rgba(16,185,129,0.2);
+            font-size: 13px;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        .btn {
+            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg); color: var(--text); cursor: pointer;
+            font-size: 13px; transition: all 0.2s;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        
+        /* ─── STATS ─── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .num { font-size: 32px; font-weight: 700; color: var(--accent); }
+        .stat-card .label { font-size: 12px; color: var(--text-muted); }
+        
+        /* ─── SECTION ─── */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section h3 { margin-bottom: 12px; color: var(--text); font-size: 16px; }
+        
+        /* ─── LOGS ─── */
+        .logs {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .logs .entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .logs .time { color: var(--accent); }
+        .logs .agent { color: var(--gold); font-weight: 600; }
+        
+        /* ─── ARTICLES ─── */
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .article-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        .article-card h4 { font-size: 15px; margin-bottom: 6px; color: var(--text); }
+        .article-card p { font-size: 13px; color: var(--text-muted); }
+        .article-card .meta { font-size: 11px; color: var(--text-muted); margin-top: 8px; display: flex; gap: 12px; }
+        .article-card .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; background: rgba(0,212,255,0.1); color: var(--accent); font-size: 10px; margin: 4px 4px 0 0; }
+        
+        /* ─── CHAT ─── */
+        .chat-messages {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            max-width: 80%;
+        }
+        .chat-msg.user { background: rgba(0,212,255,0.12); margin-left: auto; }
+        .chat-msg.ai { background: rgba(255,255,255,0.05); border: 1px solid var(--border); }
+        .chat-msg .role { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .chat-input {
+            display: flex; gap: 8px;
+        }
+        .chat-input input {
+            flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 14px; color: var(--text);
+            font-size: 14px;
+        }
+        .chat-input input:focus { outline: none; border-color: var(--accent); }
+        .chat-input button {
+            padding: 10px 24px; border-radius: 8px; border: none;
+            background: var(--accent); color: white; cursor: pointer;
+            font-weight: 600; font-size: 14px;
+        }
+        .chat-input button:hover { opacity: 0.9; }
+        .chat-input button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* ─── TAGS ─── */
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { padding: 4px 12px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+        
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 600px) {
+            .header { flex-direction: column; align-items: stretch; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .article-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- STARFIELD BACKGROUND -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<canvas id="starfield"></canvas>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- HEADER -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="header">
-  <div class="logo">
-    <span class="eye-icon">👁️</span>
-    Unknown Verdict
-    <span>· v43.0 · 82 Endpoints</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div class="status-badge">
-      <div class="status-dot"></div>
-      <span id="status-text">Live</span>
+<div class="container">
+    <!-- ─── HEADER ─── -->
+    <div class="header">
+        <div class="logo">
+            <span class="eye">👁️</span>
+            Unknown Verdict
+            <span>v43.0 · 82 Endpoints</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div class="status-badge">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <span style="font-size:13px;color:var(--text-muted);" id="eventCounter">Events: 0</span>
+            <button class="btn" onclick="refreshAll()">🔄 Refresh</button>
+        </div>
     </div>
-    <span style="font-size:12px;color:var(--text-muted);" id="event-counter">Events: 0</span>
-    <button class="btn" onclick="refreshAll()">🔄 Refresh</button>
-  </div>
-</div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- MAIN -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="main">
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h3>🧠 Intelligence Hub</h3>
-    <div class="sidebar-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-    <div class="sidebar-item" onclick="switchTab('agents')">🤖 Agents (500)</div>
-    <div class="sidebar-item" onclick="switchTab('marketplace')">💰 Marketplace</div>
-    <div class="sidebar-item" onclick="switchTab('chat')">💬 Chat</div>
-    <div class="sidebar-item" onclick="switchTab('articles')">✍️ Articles</div>
-    <div class="sidebar-item" onclick="switchTab('domains')">🌐 Domain Scan</div>
-    <div class="sidebar-item" onclick="switchTab('reports')">📧 Reports</div>
-    <div class="sidebar-footer">
-      <div>⚡ 500 Agents · 50+ Services</div>
-      <div style="margin-top:4px;"><span style="color:var(--success);">●</span> <span id="footer-status">Online</span></div>
-      <div style="margin-top:4px;font-size:10px;color:var(--gold);">💰 Making money on the internet</div>
-      <div style="margin-top:4px;font-size:10px;color:var(--text-muted);">♾️ 2026 – 2126</div>
+    <!-- ─── STATS ─── -->
+    <div class="stats">
+        <div class="stat-card"><div class="num">82</div><div class="label">Endpoints</div></div>
+        <div class="stat-card"><div class="num" style="color:#10b981;">500</div><div class="label">Agents</div></div>
+        <div class="stat-card"><div class="num" style="color:#8b5cf6;">50+</div><div class="label">Services</div></div>
+        <div class="stat-card"><div class="num" style="color:#f59e0b;">8</div><div class="label">Jurisdictions</div></div>
     </div>
-  </div>
 
-  <!-- Content -->
-  <div class="content">
-    <div class="content-header">
-      <h2 id="content-title">📊 Brain Dashboard</h2>
-      <span style="font-size:12px;color:var(--text-muted);" id="last-updated">Just now</span>
+    <!-- ─── AGENT ACTIVITY ─── -->
+    <div class="section">
+        <h3>🧠 Real Agent Activity</h3>
+        <div class="logs" id="agentLog">
+            <div class="entry"><span class="time">[System]</span> <span class="agent">Brain</span> Initializing 500 agents...</div>
+            <div class="entry"><span class="time">[System]</span> <span class="agent">Brain</span> 82 endpoints ready</div>
+        </div>
     </div>
-    <div id="content-body"><div style="text-align:center;padding:40px;">Loading the Brain...</div></div>
-  </div>
+
+    <!-- ─── ARTICLES ─── -->
+    <div class="section">
+        <h3>📰 Latest Legal Intelligence</h3>
+        <div class="article-grid" id="articlesContainer">
+            <div style="color:var(--text-muted);text-align:center;padding:20px;grid-column:1/-1;">Loading articles...</div>
+        </div>
+    </div>
+
+    <!-- ─── TRENDING TOPICS ─── -->
+    <div class="section">
+        <h3>🔥 Trending Topics</h3>
+        <div class="tags">
+            <span class="tag">#AI Regulation</span>
+            <span class="tag">#DPDPA</span>
+            <span class="tag">#GDPR</span>
+            <span class="tag">#EU AI Act</span>
+            <span class="tag">#Contract Law</span>
+            <span class="tag">#IP Protection</span>
+            <span class="tag">#Legal Tech</span>
+        </div>
+    </div>
+
+    <!-- ─── CHAT ─── -->
+    <div class="section">
+        <h3>💬 Ask the Brain</h3>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg ai">
+                <div class="role">🧠 Brain</div>
+                Hello. I'm the Unknown Verdict Brain with 500 agents. Ask me anything.
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Ask a legal, journalistic, or spiritual question..." onkeypress="if(event.key==='Enter') sendChat()" />
+            <button id="sendBtn" onclick="sendChat()">Send</button>
+        </div>
+    </div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════════
-// STARFIELD
-// ════════════════════════════════════════════════════════════════════
-const canvas = document.getElementById('starfield');
-const ctx = canvas.getContext('2d');
-let stars = [];
-let w, h;
-
-function resize() {
-  w = canvas.width = window.innerWidth;
-  h = canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-function createStars() {
-  stars = [];
-  for (let i = 0; i < 200; i++) {
-    stars.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.8 + 0.2,
-      speed: Math.random() * 0.3 + 0.05,
-      opacity: Math.random() * 0.8 + 0.2,
-      twinkle: Math.random() * 100
-    });
-  }
-}
-createStars();
-
-function drawStars() {
-  ctx.clearRect(0, 0, w, h);
-  stars.forEach(s => {
-    s.y += s.speed;
-    if (s.y > h) { s.y = 0; s.x = Math.random() * w; }
-    s.twinkle += 0.01;
-    const alpha = s.opacity * (0.6 + 0.4 * Math.sin(s.twinkle));
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-    ctx.fill();
-  });
-  requestAnimationFrame(drawStars);
-}
-drawStars();
-
-// ─── THIRD EYE MOUSE TRACKING ──────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const eye = document.querySelector('.eye-container .eye');
-  if (!eye) return;
-  const iris = eye.querySelector('.iris');
-  const pupil = eye.querySelector('.pupil');
-  document.addEventListener('mousemove', (e) => {
-    const rect = eye.getBoundingClientRect();
-    const cx = rect.left + rect.width/2;
-    const cy = rect.top + rect.height/2;
-    const dx = e.clientX - cx;
-    const dy = e.clientY - cy;
-    const angle = Math.atan2(dy, dx);
-    const dist = Math.min(12, Math.hypot(dx, dy)/20);
-    const x = Math.cos(angle) * dist;
-    const y = Math.sin(angle) * dist;
-    if (iris) iris.style.transform = `translate(${x*0.3}px, ${y*0.3}px)`;
-    if (pupil) pupil.style.transform = `translate(${x*0.2}px, ${y*0.2}px)`;
-  });
-  // Click to wake
-  eye.addEventListener('click', () => {
-    const eyelid = eye.querySelector('.eyelid');
-    eyelid.style.animation = 'none';
-    void eyelid.offsetWidth;
-    eyelid.style.animation = 'blink 0.8s ease-in-out 3';
-    setTimeout(() => { eyelid.style.animation = 'blink 5s ease-in-out infinite'; }, 3000);
-  });
-});
-
-// ════════════════════════════════════════════════════════════════════
-// BRAIN – MAIN APPLICATION
-// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ════════════════════════════════════════════════════════════════
 
 const BASE_URL = window.location.origin;
-let currentTab = 'dashboard';
-let dashboardData = null;
 let eventSource = null;
 let eventCount = 0;
-let allAgents = [];
-let isConnected = false;
 
-// ─── CONNECT SSE ──────────────────────────────────────────────────
+// ─── SSE CONNECTION ──────────────────────────────────────────────
+
 function connectSSE() {
-  if (eventSource) eventSource.close();
-  document.getElementById('status-text').textContent = 'Connecting...';
-  try {
-    eventSource = new EventSource(`${BASE_URL}/agent/events`);
-    eventSource.onopen = () => {
-      isConnected = true;
-      document.getElementById('status-text').textContent = '🟢 Live';
-      document.getElementById('footer-status').textContent = 'SSE connected';
-    };
-    eventSource.onmessage = (ev) => {
-      try {
-        const data = JSON.parse(ev.data);
-        if (data.type === 'agent_activity' || data.event === 'agent_update') {
-          handleAgentEvent(data.data || data);
-        }
-      } catch(e) {}
-    };
-    eventSource.onerror = () => {
-      document.getElementById('status-text').textContent = '⚠️ Reconnecting...';
-      setTimeout(connectSSE, 3000);
-    };
-  } catch(e) {
-    setTimeout(connectSSE, 5000);
-  }
-}
-
-function handleAgentEvent(event) {
-  eventCount++;
-  document.getElementById('event-counter').textContent = `Events: ${eventCount}`;
-  const log = document.getElementById('agent-log');
-  if (!log) return;
-  const time = new Date().toLocaleTimeString();
-  const category = event.category || 'lawyer';
-  const agentName = event.agent || event.agent_id || 'Unknown';
-  const action = event.action || event.task || 'processing';
-  const finding = event.finding || '';
-  const entry = document.createElement('div');
-  entry.className = 'log-entry';
-  entry.innerHTML = `
-    <span class="time">[${time}]</span>
-    <span class="agent ${category}">${agentName}</span>
-    ${action} ${finding ? `<span style="color:var(--success);">🎯 ${finding}</span>` : ''}
-    ${event.jurisdiction ? `<span style="color:var(--text-muted);font-size:10px;">📍 ${event.jurisdiction}</span>` : ''}
-  `;
-  log.prepend(entry);
-  while (log.children.length > 100) log.removeChild(log.lastChild);
-  document.getElementById('status-text').textContent = `🟢 ${agentName.split(' ').slice(0,2).join(' ')}`;
-}
-
-// ─── FETCH DATA ──────────────────────────────────────────────────
-async function fetchDashboard() {
-  try {
-    const resp = await fetch(`${BASE_URL}/legal-intelligence/dashboard`);
-    if (resp.ok) dashboardData = await resp.json();
-  } catch(e) { console.error('Dashboard fetch error:', e); }
-}
-
-async function fetchAgents() {
-  try {
-    const resp = await fetch(`${BASE_URL}/agents`);
-    if (resp.ok) {
-      const data = await resp.json();
-      allAgents = data.agents || [];
-    } else {
-      allAgents = generateFallbackAgents();
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
     }
-  } catch(e) {
-    allAgents = generateFallbackAgents();
-  }
+
+    try {
+        const url = `${BASE_URL}/agent/events`;
+        console.log('Connecting to SSE:', url);
+        eventSource = new EventSource(url);
+
+        eventSource.onopen = () => {
+            console.log('SSE connected');
+            document.getElementById('statusText').textContent = '🟢 Live';
+            document.getElementById('statusDot').style.background = '#10b981';
+        };
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('SSE event:', data);
+                
+                // Update event counter
+                eventCount++;
+                document.getElementById('eventCounter').textContent = `Events: ${eventCount}`;
+                
+                // Update agent log
+                const log = document.getElementById('agentLog');
+                if (log && data.agent) {
+                    const entry = document.createElement('div');
+                    entry.className = 'entry';
+                    const time = new Date().toLocaleTimeString();
+                    const finding = data.finding || data.action || 'processing...';
+                    entry.innerHTML = `<span class="time">[${time}]</span> <span class="agent">${data.agent}</span> ${finding}`;
+                    log.prepend(entry);
+                    while (log.children.length > 20) log.removeChild(log.lastChild);
+                }
+            } catch (e) {
+                console.error('SSE parse error:', e);
+            }
+        };
+
+        eventSource.onerror = (e) => {
+            console.error('SSE error:', e);
+            document.getElementById('statusText').textContent = '⚠️ Reconnecting...';
+            document.getElementById('statusDot').style.background = '#f59e0b';
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            setTimeout(connectSSE, 3000);
+        };
+    } catch (e) {
+        console.error('SSE connection failed:', e);
+        setTimeout(connectSSE, 3000);
+    }
 }
 
-function generateFallbackAgents() {
-  const cats = [
-    { name: 'Constitutional Law', cat: 'lawyer', icon: '⚖️' },
-    { name: 'Criminal Law', cat: 'lawyer', icon: '⚖️' },
-    { name: 'Civil Law', cat: 'lawyer', icon: '⚖️' },
-    { name: 'Corporate Law', cat: 'lawyer', icon: '⚖️' },
-    { name: 'Family Law', cat: 'lawyer', icon: '⚖️' },
-    { name: 'DPDPA Compliance', cat: 'compliance', icon: '💼' },
-    { name: 'GDPR Expert', cat: 'compliance', icon: '💼' },
-    { name: 'EU AI Act Assessor', cat: 'compliance', icon: '💼' },
-    { name: 'Legal Journalism', cat: 'journalist', icon: '📰' },
-    { name: 'News Curation', cat: 'journalist', icon: '📰' },
-    { name: 'Meditation Guide', cat: 'spiritual', icon: '🧘' },
-    { name: 'Ethics Coach', cat: 'spiritual', icon: '🧘' },
-  ];
-  const agents = [];
-  for (let i=0; i<500; i++) {
-    const c = cats[i % cats.length];
-    agents.push({
-      id: `agent_${i+1}`,
-      name: `${c.name} Agent ${i+1}`,
-      category: c.cat.charAt(0).toUpperCase() + c.cat.slice(1),
-      specialty: c.name,
-      icon: c.icon,
-      jurisdiction: ['India','US','UK','EU'][i%4],
-      price: Math.floor(Math.random()*30+5)
-    });
-  }
-  return agents;
-}
+// ─── CHAT ─────────────────────────────────────────────────────────
 
-// ─── RENDER TABS ──────────────────────────────────────────────────
-function renderDashboard() {
-  const data = dashboardData || {};
-  const articles = data.top_content || [];
-  const html = `
-    <!-- Hero / Third Eye -->
-    <div class="hero">
-      <div class="eye-container">
-        <div class="eye" id="thirdEye">
-          <div class="iris"></div>
-          <div class="pupil"></div>
-          <div class="reflection"></div>
-          <div class="eyelid"></div>
-          <div class="cosmic-rays"></div>
-        </div>
-      </div>
-      <h1>Unknown Verdict</h1>
-      <div class="subtitle">The Legal AGI · Est. 2026 – Publish 2126</div>
-      <div class="infinity">♾️ 2026 – 2126</div>
-      <div class="badge-group">
-        <span class="badge"><i>🧠</i> Think</span>
-        <span class="badge"><i>🗣️</i> Speak</span>
-        <span class="badge"><i>👂</i> Listen</span>
-        <span class="badge"><i>🔮</i> Self-Improve</span>
-        <span class="badge"><i>📷</i> Images work too</span>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card"><div class="icon">⚡</div><div class="value cyan">82</div><div class="label">Endpoints</div></div>
-      <div class="stat-card"><div class="icon">🤖</div><div class="value green">${allAgents.length}</div><div class="label">Agents</div></div>
-      <div class="stat-card"><div class="icon">📚</div><div class="value purple">50+</div><div class="label">Services</div></div>
-      <div class="stat-card"><div class="icon">🌍</div><div class="value gold">8</div><div class="label">Jurisdictions</div></div>
-    </div>
-
-    <!-- Agent Log -->
-    <div class="log-container" id="agent-log">
-      <div style="margin-bottom:6px;font-weight:600;color:var(--text);">🧠 Real Agent Activity</div>
-      <div style="color:var(--text-muted);font-size:11px;padding:4px 0;">Waiting for agent events...</div>
-    </div>
-
-    <!-- Trending -->
-    <h3 style="margin:16px 0 12px;">🔥 Trending Topics</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-      ${['AI Regulation','DPDPA','GDPR','EU AI Act','Contract Law','IP Protection','Legal Tech'].map(t =>
-        `<span style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--text-muted);">#${t}</span>`
-      ).join('')}
-    </div>
-
-    <!-- Articles -->
-    <h3 style="margin:16px 0 12px;">📰 Latest Intelligence</h3>
-    ${articles.slice(0,3).map(a => `
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:10px;">
-        <div style="font-size:12px;color:var(--text-muted);">📍 ${a.jurisdiction||'Global'}</div>
-        <div style="font-weight:600;margin:4px 0;"><a href="${a.url||'#'}" target="_blank" style="color:var(--text);text-decoration:none;">${a.title||'Legal Update'}</a></div>
-        <div style="font-size:13px;color:var(--text-muted);">${(a.summary||a.text||'').substring(0,180)}...</div>
-      </div>
-    `).join('') || '<div style="color:var(--text-muted);">Loading intelligence...</div>'}
-
-    ${renderChat()}
-  `;
-  document.getElementById('content-body').innerHTML = html;
-}
-
-function renderAgents() {
-  const cats = {};
-  allAgents.forEach(a => { cats[a.category] = (cats[a.category]||0) + 1; });
-  const html = `
-    <h3 style="margin-bottom:12px;">🤖 500 Agents – All Categories</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-      ${Object.entries(cats).map(([c,n]) => `
-        <span style="font-size:13px;color:var(--text-muted);">${c}: <strong style="color:var(--${c.toLowerCase()},#fff);">${n}</strong></span>
-      `).join('')}
-    </div>
-    <div class="agent-grid">
-      ${allAgents.slice(0,40).map(a => `
-        <div class="agent-card" onclick="runAgent('${a.id}')">
-          <span class="cat ${a.category.toLowerCase()}">${a.category}</span>
-          <div class="name">${a.icon} ${a.specialty || a.name}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${a.name}</div>
-          <div class="price">💰 $${a.price || Math.floor(Math.random()*20+5)}/task</div>
-          <div class="jurisdiction">📍 ${a.jurisdiction||'Global'}</div>
-        </div>
-      `).join('')}
-      ${allAgents.length > 40 ? `<div style="color:var(--text-muted);text-align:center;padding:20px;">+ ${allAgents.length-40} more agents</div>` : ''}
-    </div>
-    <div id="agent-result" style="margin-top:16px;"></div>
-    ${renderChat()}
-  `;
-  document.getElementById('content-body').innerHTML = html;
-}
-
-function renderMarketplace() {
-  const html = `
-    <h3 style="margin-bottom:12px;">💰 Agent Marketplace</h3>
-    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px;background:var(--bg-card);padding:16px;border-radius:12px;border:1px solid var(--border);">
-      <div><span style="color:var(--text-muted);">Total Earnings:</span> <strong style="color:var(--gold);">$${Math.floor(Math.random()*50000+10000)}</strong></div>
-      <div><span style="color:var(--text-muted);">Today:</span> <strong style="color:var(--success);">$${Math.floor(Math.random()*1000+100)}</strong></div>
-      <div><span style="color:var(--text-muted);">Agents:</span> <strong style="color:var(--accent);">${allAgents.length}</strong></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
-      ${['Lawyer','Journalist','Spiritual','Compliance','Contracts','AI & Tech','Digital','Litigation','Strategic'].map(c => {
-        const count = allAgents.filter(a => a.category === c).length;
-        return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-          <div style="font-size:24px;">${['⚖️','📰','🧘','💼','📄','🤖','🌐','⚡','🧠'][['Lawyer','Journalist','Spiritual','Compliance','Contracts','AI & Tech','Digital','Litigation','Strategic'].indexOf(c)]}</div>
-          <div style="font-weight:600;">${c}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${count} agents</div>
-          <button class="btn" style="margin-top:8px;" onclick="hireCategory('${c.toLowerCase()}')">Hire</button>
-        </div>`;
-      }).join('')}
-    </div>
-    <div id="hire-result"></div>
-    ${renderChat()}
-  `;
-  document.getElementById('content-body').innerHTML = html;
-}
-
-function renderChat() {
-  return `
-    <div class="chat-container">
-      <h4 style="margin-bottom:12px;">💬 Ask the Brain</h4>
-      <div class="chat-messages" id="chat-messages">
-        <div class="chat-msg ai"><div class="role">🧠 Brain</div>Hello. I'm the Unknown Verdict Brain with ${allAgents.length} agents. Ask me anything.</div>
-      </div>
-      <div class="chat-input-row">
-        <input type="text" id="chat-input" placeholder="Ask a legal, journalistic, or spiritual question..." onkeypress="if(event.key==='Enter') sendChat()" />
-        <button onclick="sendChat()">Send</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderArticles() {
-  const html = `
-    <h3 style="margin-bottom:12px;">✍️ Write Article from Judgment</h3>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
-      <textarea id="judgment-text" rows="6" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:14px;" placeholder="Paste judgment text or case citation..."></textarea>
-      <button class="btn" style="margin-top:8px;" onclick="writeArticle()">✍️ Generate Article</button>
-    </div>
-    <div id="article-result"></div>
-    ${renderChat()}
-  `;
-  document.getElementById('content-body').innerHTML = html;
-}
-
-function renderDomains() {
-  const html = `
-    <h3 style="margin-bottom:12px;">🌐 Domain & Site Scanner</h3>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <input type="text" id="domain-input" placeholder="Enter domain (e.g., example.com)" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);" />
-        <button class="btn" onclick="scanDomain()">🔍 Scan</button>
-      </div>
-    </div>
-    <div id="domain-result"></div>
-    ${renderChat()}
-  `;
-  document.getElementById('content-body').innerHTML = html;
-}
-
-function renderReports() {
-  const html = `
-    <h3 style="margin-bottom:12px;">📧 Automated Audit Reports</h3>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <input type="text" id="company-name" placeholder="Company Name" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);" />
-        <input type="text" id="company-industry" placeholder="Industry" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);" />
-        <select id="company-jurisdiction" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);">
-          <option value="india">India</option>
-          <option value="us">US</option>
-          <option value="uk">UK</option>
-          <option value="eu">EU</option>
-        </select>
-        <input type="email" id="report-email" placeholder="Recipient Email" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);" />
-      </div>
-      <button class="btn" style="margin-top:12px;" onclick="generateReport()">📧 Generate & Send Report</button>
-    </div>
-    <div id="report-result"></div>
-    ${renderChat()}
-  `;
-  document.getElementById('content-body').innerHTML = html;
-}
-
-// ─── TAB SWITCHING ──────────────────────────────────────────────
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(el => {
-    if (el.textContent.toLowerCase().includes(tab) || el.textContent.includes('Agents') && tab==='agents') el.classList.add('active');
-  });
-  const titles = {
-    dashboard: '📊 Brain Dashboard',
-    agents: '🤖 Agents (500)',
-    marketplace: '💰 Marketplace',
-    chat: '💬 Chat',
-    articles: '✍️ Articles',
-    domains: '🌐 Domain Scan',
-    reports: '📧 Reports'
-  };
-  document.getElementById('content-title').textContent = titles[tab] || 'Dashboard';
-  if (tab === 'dashboard') renderDashboard();
-  else if (tab === 'agents') renderAgents();
-  else if (tab === 'marketplace') renderMarketplace();
-  else if (tab === 'chat') { document.getElementById('content-body').innerHTML = `<h3>💬 Chat</h3>${renderChat()}`; }
-  else if (tab === 'articles') renderArticles();
-  else if (tab === 'domains') renderDomains();
-  else if (tab === 'reports') renderReports();
-}
-
-// ─── ACTIONS ─────────────────────────────────────────────────────
 async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim(); if (!msg) return; input.value='';
-  const msgs = document.getElementById('chat-messages');
-  msgs.innerHTML += `<div class="chat-msg user"><div class="role">You</div>${msg}</div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-  msgs.innerHTML += `<div class="chat-msg ai" id="thinking"><div class="role">🧠 Brain</div><span style="color:var(--text-muted);">Thinking...</span></div>`;
-  try {
-    const resp = await fetch(`${BASE_URL}/chat`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:msg}) });
-    const data = await resp.json();
-    document.getElementById('thinking').remove();
-    msgs.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>${data.response||'No response'}</div>`;
-  } catch(e) {
-    document.getElementById('thinking').remove();
-    msgs.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>⚠️ Error: ${e.message}</div>`;
-  }
-  msgs.scrollTop = msgs.scrollHeight;
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    input.value = '';
+
+    const messagesDiv = document.getElementById('chatMessages');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Add user message
+    messagesDiv.innerHTML += `<div class="chat-msg user"><div class="role">You</div>${message}</div>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Thinking...';
+
+    const thinkingId = 'thinking-' + Date.now();
+    messagesDiv.innerHTML += `<div class="chat-msg ai" id="${thinkingId}"><div class="role">🧠 Brain</div><span style="color:#94a3b8;">Thinking...</span></div>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    try {
+        const response = await fetch(`${BASE_URL}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        const thinkingEl = document.getElementById(thinkingId);
+        if (thinkingEl) thinkingEl.remove();
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            // If not JSON, use as text
+            const text = await response.text();
+            data = { response: text };
+        }
+
+        const aiResponse = data.response || data.text || data.message || 'I received your message.';
+        messagesDiv.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>${aiResponse}</div>`;
+
+    } catch (error) {
+        const thinkingEl = document.getElementById(thinkingId);
+        if (thinkingEl) thinkingEl.remove();
+        messagesDiv.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>
+            <span style="color:#f59e0b;">⚠️ ${error.message}</span>
+            <br><span style="font-size:12px;color:#94a3b8;">Please try again.</span>
+        </div>`;
+        console.error('Chat error:', error);
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 }
 
-async function runAgent(id) {
-  const agent = allAgents.find(a => a.id === id);
-  if (!agent) return showToast('Agent not found','error');
-  const task = prompt(`What task for ${agent.name}?`, 'Analyze latest legal developments');
-  if (!task) return;
-  const div = document.getElementById('agent-result');
-  if (!div) return;
-  div.innerHTML = `<span style="color:var(--text-muted);">${agent.icon} ${agent.name} working...</span>`;
-  try {
-    const resp = await fetch(`${BASE_URL}/agents/${id}/task`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({task, agent_type:agent.category}) });
-    const data = await resp.json();
-    div.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;border-left:4px solid var(--accent);margin-top:12px;">
-      <div style="font-weight:600;">🧠 ${data.agent||agent.name}</div>
-      <div style="font-size:14px;color:var(--text-muted);margin-top:8px;">${data.response||data.result||'Complete'}</div>
-    </div>`;
-    showToast(`✅ ${agent.name} done`,'success');
-  } catch(e) { div.innerHTML = `<div style="color:#ef4444;">Error: ${e.message}</div>`; }
+// ─── ARTICLES ─────────────────────────────────────────────────────
+
+async function fetchArticles() {
+    const container = document.getElementById('articlesContainer');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${BASE_URL}/articles`);
+        const data = await response.json();
+
+        if (data.articles && data.articles.length > 0) {
+            container.innerHTML = data.articles.map(article => `
+                <div class="article-card">
+                    <h4>${article.title || 'Untitled'}</h4>
+                    <p>${article.summary || article.content?.substring(0, 150) || 'No summary available.'}</p>
+                    <div class="meta">
+                        <span>📚 ${article.source || 'Unknown Verdict'}</span>
+                        <span>${article.published_at ? new Date(article.published_at).toLocaleDateString() : ''}</span>
+                    </div>
+                    ${article.tags ? article.tags.map(t => `<span class="tag">#${t}</span>`).join('') : ''}
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:20px;grid-column:1/-1;">No articles available. Generate one using the "Write Article" feature.</div>`;
+        }
+    } catch (error) {
+        console.error('Articles fetch error:', error);
+        container.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:20px;grid-column:1/-1;">⚠️ Could not load articles.</div>`;
+    }
 }
 
-async function hireCategory(cat) {
-  const agents = allAgents.filter(a => a.category.toLowerCase() === cat);
-  if (!agents.length) return;
-  const task = prompt(`What task for ${agents.length} ${cat} agents?`, 'Analyze compliance requirements');
-  if (!task) return;
-  const div = document.getElementById('hire-result');
-  if (!div) return;
-  div.innerHTML = `<span style="color:var(--text-muted);">Hiring ${agents.length} agents...</span>`;
-  try {
-    const resp = await fetch(`${BASE_URL}/agents/orchestrate`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({task, categories:[cat]}) });
-    const data = await resp.json();
-    div.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;border-left:4px solid var(--gold);margin-top:12px;">
-      <div style="font-weight:600;">💰 Hire Complete</div>
-      <div style="font-size:13px;color:var(--text-muted);">${data.response||'Task completed'}</div>
-    </div>`;
-    showToast(`✅ ${agents.length} agents hired`,'success');
-  } catch(e) { div.innerHTML = `<div style="color:#ef4444;">Error: ${e.message}</div>`; }
-}
+// ─── REFRESH ──────────────────────────────────────────────────────
 
-async function writeArticle() {
-  const text = document.getElementById('judgment-text').value.trim();
-  if (!text) return showToast('Please paste judgment text','error');
-  const div = document.getElementById('article-result');
-  div.innerHTML = '<span style="color:var(--text-muted);">🧠 Writing article...</span>';
-  try {
-    const resp = await fetch(`${BASE_URL}/agent/write-article`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({judgment:text}) });
-    const data = await resp.json();
-    div.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;border-left:4px solid var(--gold);margin-top:12px;">
-      <div style="font-size:20px;font-weight:700;">${data.headline||'Article'}</div>
-      <div style="font-size:12px;color:var(--text-muted);">${data.summary||''}</div>
-      <div style="margin:12px 0;font-size:14px;color:var(--text);">${data.analysis||'Analysis...'}</div>
-      ${data.tags ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${data.tags.map(t=>`<span style="background:var(--bg);padding:2px 10px;border-radius:12px;font-size:11px;color:var(--accent);">#${t}</span>`).join('')}</div>` : ''}
-    </div>`;
-    showToast('✅ Article generated','success');
-  } catch(e) { div.innerHTML = `<div style="color:#ef4444;">Error: ${e.message}</div>`; }
-}
-
-async function scanDomain() {
-  const domain = document.getElementById('domain-input').value.trim();
-  if (!domain) return showToast('Enter a domain','error');
-  const div = document.getElementById('domain-result');
-  div.innerHTML = '<span style="color:var(--text-muted);">🔍 Scanning...</span>';
-  try {
-    const resp = await fetch(`${BASE_URL}/domain/scan`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({domain}) });
-    const data = await resp.json();
-    div.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;border-left:4px solid var(--accent);margin-top:12px;">
-      <div style="font-size:18px;font-weight:600;">🌐 ${domain}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
-        <div><span style="color:var(--text-muted);">Registrar:</span> ${data.registrar||'N/A'}</div>
-        <div><span style="color:var(--text-muted);">Expires:</span> ${data.expiration||'N/A'}</div>
-        <div><span style="color:var(--text-muted);">SSL:</span> ${data.ssl_valid ? '✅ Valid' : '❌ Invalid'}</div>
-        <div><span style="color:var(--text-muted);">Reputation:</span> ${data.reputation||'N/A'}</div>
-      </div>
-      <div style="font-size:13px;color:var(--text-muted);">${data.details||''}</div>
-    </div>`;
-    showToast('✅ Scan complete','success');
-  } catch(e) { div.innerHTML = `<div style="color:#ef4444;">Error: ${e.message}</div>`; }
-}
-
-async function generateReport() {
-  const name = document.getElementById('company-name').value.trim();
-  const industry = document.getElementById('company-industry').value.trim();
-  const jurisdiction = document.getElementById('company-jurisdiction').value;
-  const email = document.getElementById('report-email').value.trim();
-  if (!name || !email) return showToast('Fill company name and email','error');
-  const div = document.getElementById('report-result');
-  div.innerHTML = '<span style="color:var(--text-muted);">📧 Generating report...</span>';
-  try {
-    const resp = await fetch(`${BASE_URL}/company/audit-report`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({company_name:name, industry, jurisdiction, email, documents:{}}) });
-    const data = await resp.json();
-    div.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;border-left:4px solid var(--success);margin-top:12px;">
-      <div style="font-weight:600;">📧 Report Sent to ${email}</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">${data.message||'Audit report generated and sent.'}</div>
-      <div style="font-size:12px;color:var(--gold);">Compliance Score: ${data.score||'N/A'}</div>
-    </div>`;
-    showToast('✅ Report sent!','success');
-  } catch(e) { div.innerHTML = `<div style="color:#ef4444;">Error: ${e.message}</div>`; }
-}
-
-// ─── UTILITY ─────────────────────────────────────────────────────
-function showToast(msg, type='info') {
-  const existing = document.querySelector('.toast'); if (existing) existing.remove();
-  const t = document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 3000);
-}
 async function refreshAll() {
-  showToast('🔄 Refreshing...','info');
-  await fetchAgents(); await fetchDashboard();
-  if (currentTab==='dashboard') renderDashboard();
-  else if (currentTab==='agents') renderAgents();
-  else if (currentTab==='marketplace') renderMarketplace();
-  document.getElementById('last-updated').textContent = new Date().toLocaleString();
-  showToast('✅ Refreshed','success');
+    document.getElementById('statusText').textContent = '🔄 Refreshing...';
+    await fetchArticles();
+    document.getElementById('statusText').textContent = '🟢 Live';
 }
 
-// ─── INIT ──────────────────────────────────────────────────────
-async function init() {
-  connectSSE();
-  await fetchAgents();
-  await fetchDashboard();
-  renderDashboard();
-  setInterval(async () => {
-    await fetchDashboard();
-    if (currentTab==='dashboard') renderDashboard();
-  }, 60000);
-}
-init();
+// ─── INIT ─────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Unknown Verdict v43.0 – Frontend Loading');
+    
+    // Connect SSE
+    connectSSE();
+    
+    // Fetch articles
+    fetchArticles();
+    
+    // Refresh articles every 60 seconds
+    setInterval(fetchArticles, 60000);
+});
+
+// Expose functions globally
+window.sendChat = sendChat;
+window.refreshAll = refreshAll;
 </script>
 </body>
 </html>
