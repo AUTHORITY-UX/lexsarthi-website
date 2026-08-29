@@ -65,3 +65,4 @@ class Config:
     def is_offline_ready(cls) -> bool:
         """Check if offline components are available."""
         return cls.ZVEC_PATH.exists() and cls.METADATA_PATH.exists()
+    settings = Config()
