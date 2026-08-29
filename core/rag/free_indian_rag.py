@@ -18,6 +18,7 @@ except ImportError:
     logger.warning("⚠️ ZVec not installed. Install from https://github.com/alibaba/zvec")
     zvec = None
 
+
 class FreeIndianRAG:
     """
     Loads 32.5M Indian legal vectors from ZVec database.
@@ -31,7 +32,7 @@ class FreeIndianRAG:
         self.metadata = None
         self.loaded = False
         self.vector_count = 0
-        self.dim = 768  # Default for InCaseLawBERT
+        self.dim = 768
 
     def load(self) -> bool:
         """Load ZVec database and metadata."""
@@ -108,9 +109,7 @@ class FreeIndianRAG:
         return metadata
 
     def search(self, query_embedding: np.ndarray, top_k: int = 10) -> List[Dict[str, Any]]:
-        """
-        Search for similar documents using the ZVec index.
-        """
+        """Search for similar documents using the ZVec index."""
         if not self.loaded:
             logger.warning("RAG not loaded, returning fallback results")
             return self._fallback_search(top_k)
@@ -151,25 +150,6 @@ class FreeIndianRAG:
             "zvec_path": str(self.zvec_path),
             "metadata_path": str(self.metadata_path)
         }
-
-    def search_keyword(self, query: str, top_k: int = 10) -> List[Dict]:
-        """Simple keyword-based search (fallback when no embedding)."""
-        if not self.metadata:
-            return []
-
-        query_lower = query.lower()
-        query_words = set(query_lower.split())
-
-        scored = []
-        for doc in self.metadata:
-            text = (doc.get("title", "") + " " + doc.get("summary", "") +
-                   doc.get("topic", "") + " " + doc.get("court", "")).lower()
-            score = sum(1 for word in query_words if word in text)
-            if score > 0:
-                scored.append((score, doc))
-
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [doc for _, doc in scored[:top_k]]
 
 
 # Singleton
