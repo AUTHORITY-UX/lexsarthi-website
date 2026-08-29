@@ -1,3 +1,12 @@
+# Space metadata
+title: Unknown Verdict
+emoji: ⚖️
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+sdk_version: "1.0"
+app_file: app.py
+pinned: true
 # ⚖️ Unknown Verdict v43.0 — Sovereign Legal AGI
 
 ```
