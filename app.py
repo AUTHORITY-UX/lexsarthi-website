@@ -13,7 +13,7 @@ from core.config import settings
 from core.db import db
 from core.llm.router import get_router
 
-# Import routes
+# ✅ IMPORT ROUTES FROM routes.py
 from routes import router, moat_router
 
 import logging
@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI):
     await router_llm.init(redis_client=None)
     logger.info("   LLM router initialized")
 
+    # ✅ FIXED: Show 114 endpoints
     logger.info("✅ %s v%s ready — 114 endpoints active", settings.APP_NAME, settings.APP_VERSION)
 
     yield
@@ -81,8 +82,9 @@ if STATIC_DIR.exists():
 
 # ─── REGISTER ROUTES ────────────────────────────────────────────────
 
-app.include_router(router)       # All routes from routes.py
-app.include_router(moat_router)  # All Moat routes
+# ✅ ADD THIS – Include routes from routes.py
+app.include_router(router)
+app.include_router(moat_router)
 
 
 # ─── FRONTEND ENDPOINTS ────────────────────────────────────────────
@@ -94,8 +96,6 @@ async def frontend():
         return HTMLResponse(app_file.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>Unknown Verdict App</h1><p>See <a href='/'>home</a></p>")
 
-
-# ─── BRAIN DASHBOARD ───────────────────────────────────────────────
 
 @app.get("/brain")
 async def brain_dashboard():
@@ -125,14 +125,13 @@ async def brain_dashboard():
 <div>[System] Brain 530 agents ready</div>
 <div>[System] Brain Zero data retention active</div>
 </div></div>
-</body></html>""")
+</body></html>"""))
 
 
 # ─── 404 HANDLER ──────────────────────────────────────────────────
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    # Get all routes from the app
     routes = []
     for route in app.routes:
         if hasattr(route, "path"):
@@ -143,7 +142,7 @@ async def not_found_handler(request: Request, exc):
         content={
             "error": "Not Found",
             "path": request.url.path,
-            "available_endpoints": sorted(set(routes))[:30]  # Show first 30
+            "available_endpoints": sorted(set(routes))[:30]
         }
     )
 
