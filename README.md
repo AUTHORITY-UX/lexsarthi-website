@@ -1,3 +1,10 @@
+---
+sdk: docker
+emoji: 💻
+colorFrom: indigo
+colorTo: indigo
+pinned: true
+---
 # Space metadata
 title: Unknown Verdict
 emoji: ⚖️
