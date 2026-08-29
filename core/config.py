@@ -13,16 +13,16 @@ class Config:
     MODELS_DIR.mkdir(exist_ok=True)
 
     # LLM Configuration
-    LLM_MODE = os.getenv("LLM_MODE", "hybrid")  # "offline", "online", "hybrid"
+    LLM_MODE = os.getenv("LLM_MODE", "hybrid")
     LLM_MODEL_NAME = os.getenv("LLM_MODEL", "LiquidAI/LFM2.5-2.6B")
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "law-ai/InCaseLawBERT")
-    DEVICE = os.getenv("DEVICE", "cpu")  # "cpu" or "cuda"
+    DEVICE = os.getenv("DEVICE", "cpu")
 
     # RAG Configuration
     ZVEC_PATH = DATA_DIR / "legal_vectors.zvec"
     METADATA_PATH = DATA_DIR / "metadata.json"
     GRAPH_PATH = DATA_DIR / "citation_graph.pkl"
-    RAG_BACKEND = os.getenv("RAG_BACKEND", "zvec")  # "zvec", "faiss", "hybrid"
+    RAG_BACKEND = os.getenv("RAG_BACKEND", "zvec")
 
     # Online Providers (fallback)
     ONLINE_PROVIDERS: List[str] = ["groq", "openai", "gemini", "deepseek", "openrouter"]
@@ -40,7 +40,7 @@ class Config:
 
     # Zero Data Retention
     ZERO_DATA_RETENTION = True
-    RETENTION_DAYS = 0  # Delete immediately
+    RETENTION_DAYS = 0
 
     # Security
     JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
