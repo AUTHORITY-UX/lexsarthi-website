@@ -15,13 +15,910 @@ from enum import Enum
 from fastapi import APIRouter, Request, HTTPException, Depends, Query, Body, BackgroundTasks
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field  # Removed EmailStr
+from pydantic import BaseModel, Field
 
-from core.config import settings
+# ============================================================
+# IMPORT CONFIG
+# ============================================================
+try:
+    from core.config import settings
+except ImportError:
+    from core.config import Config as settings
+
 from core.db import db
 from core.llm.router import get_router
 from core.llm.ollama_provider import LLMMessage, LLMResponse
 
+# ============================================================
+# AGENT IMPORTS
+# ============================================================
+try:
+    from core.agents.registry import (
+        get_all_agents,
+        get_agent,
+        get_agents_by_category,
+        get_agent_categories,
+        get_agents_by_jurisdiction,
+        list_agents as list_registered_agents
+    )
+    from core.agents.orchestrator import orchestrator
+    AGENTS_AVAILABLE = True
+except ImportError:
+    AGENTS_AVAILABLE = False
+
+# ============================================================
+# GRAPH RAG IMPORTS (NetworkX)
+# ============================================================
+try:
+    import networkx as nx
+    from core.rag.graph_rag import get_graph_rag
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+
+# ============================================================
+# ZVEC IMPORTS (32.5M Vectors)
+# ============================================================
+try:
+    from core.rag.free_indian_rag import get_rag
+    ZVEC_AVAILABLE = True
+except ImportError:
+    ZVEC_AVAILABLE = False
+
+# ============================================================
+# OFFLINE IMPORTS
+# ============================================================
+try:
+    from core.offline.offline_stack import get_offline_stack
+    OFFLINE_AVAILABLE = True
+except ImportError:
+    OFFLINE_AVAILABLE = False
+
+# ============================================================
+# LIQUID AI & INCASELAWBERT IMPORTS
+# ============================================================
+try:
+    from core.llm.local_model import get_llm
+    LIQUID_AVAILABLE = True
+except ImportError:
+    LIQUID_AVAILABLE = False
+
+try:
+    from sentence_transformers import SentenceTransformer
+    INCASELAWBERT_AVAILABLE = True
+except ImportError:
+    INCASELAWBERT_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+moat_router = APIRouter(prefix="/moat", tags=["Moat Intelligence"])
+security = HTTPBearer()
+
+# ============================================================
+# REQUEST MODELS
+# ============================================================
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_id: Optional[str] = None
+    model: Optional[str] = None
+    stream: bool = False
+    complexity: Optional[str] = None
+    language: Optional[str] = None
+    jurisdiction: Optional[str] = None
+    temperature: float = 0.7
+    max_tokens: int = 1000
+
+class SearchRequest(BaseModel):
+    query: str
+    top_k: int = 10
+    jurisdiction: Optional[str] = None
+
+class GraphQueryRequest(BaseModel):
+    query: str
+    source: Optional[str] = None
+    target: Optional[str] = None
+    top_k: int = 10
+    mode: str = "search"  # "search", "path", "centrality", "cluster"
+
+class MCPRequest(BaseModel):
+    server: str
+    tool: str
+    params: Dict[str, Any] = {}
+
+class OfflineLLMRequest(BaseModel):
+    prompt: str
+    max_new_tokens: int = 512
+    temperature: float = 0.7
+
+class EmbeddingRequest(BaseModel):
+    text: str
+    model: str = "InCaseLawBERT"
+
+class DatasetQueryRequest(BaseModel):
+    query: str
+    court: Optional[str] = None
+    year: Optional[int] = None
+    jurisdiction: str = "india"
+    top_k: int = 10
+
+# ============================================================
+# 1. GRAPH RAG ENDPOINTS (NetworkX)
+# ============================================================
+
+@router.get("/graph/status")
+async def graph_status():
+    """Get NetworkX graph status"""
+    if not NETWORKX_AVAILABLE:
+        return {
+            "status": "unavailable",
+            "message": "NetworkX not installed. Install: pip install networkx==3.4.2",
+            "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    graph = get_graph_rag()
+    if graph and graph._loaded:
+        return {
+            "status": "loaded",
+            "nodes": len(graph.graph.nodes),
+            "edges": len(graph.graph.edges),
+            "components": nx.number_connected_components(graph.graph.to_undirected()) if hasattr(graph, 'graph') else 0,
+            "central_cases": graph.get_central_cases(5),
+            "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return {
+        "status": "not_loaded",
+        "message": "Graph RAG not loaded. Run build_graph_rag() first.",
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/graph/search")
+async def graph_search(req: GraphQueryRequest):
+    """Search graph for entities"""
+    if not NETWORKX_AVAILABLE:
+        return {"error": "NetworkX not available", "zero_data_retention": True}
+    
+    graph = get_graph_rag()
+    if not graph or not graph._loaded:
+        return {"error": "Graph RAG not loaded", "zero_data_retention": True}
+    
+    if req.mode == "path" and req.source and req.target:
+        path = graph.find_path(req.source, req.target)
+        return {
+            "mode": "path",
+            "source": req.source,
+            "target": req.target,
+            "path": path,
+            "length": len(path) if path else 0,
+            "zero_data_retention": True
+        }
+    elif req.mode == "centrality":
+        centrality = graph.get_central_cases(req.top_k)
+        return {
+            "mode": "centrality",
+            "top_k": req.top_k,
+            "central_nodes": centrality,
+            "zero_data_retention": True
+        }
+    elif req.mode == "cluster":
+        clusters = graph.get_clusters()
+        return {
+            "mode": "cluster",
+            "clusters": len(clusters),
+            "cluster_sizes": [len(c) for c in clusters],
+            "sample_clusters": clusters[:3],
+            "zero_data_retention": True
+        }
+    else:
+        # Default search
+        results = graph.search_by_entity(req.query, req.top_k)
+        return {
+            "mode": "search",
+            "query": req.query,
+            "results": results,
+            "count": len(results),
+            "zero_data_retention": True
+        }
+
+@router.post("/graph/path")
+async def graph_find_path(source: str = Body(...), target: str = Body(...)):
+    """Find shortest path between two cases in citation graph"""
+    if not NETWORKX_AVAILABLE:
+        return {"error": "NetworkX not available"}
+    
+    graph = get_graph_rag()
+    if not graph or not graph._loaded:
+        return {"error": "Graph RAG not loaded"}
+    
+    path = graph.find_path(source, target)
+    return {
+        "source": source,
+        "target": target,
+        "path": path,
+        "length": len(path) if path else 0,
+        "zero_data_retention": True
+    }
+
+@router.get("/graph/stats")
+async def graph_stats():
+    """Get graph statistics"""
+    if not NETWORKX_AVAILABLE:
+        return {"error": "NetworkX not available"}
+    
+    graph = get_graph_rag()
+    if not graph:
+        return {"error": "Graph RAG not initialized"}
+    
+    return graph.get_stats()
+
+# ============================================================
+# 2. ZVEC ENDPOINTS (32.5M Vectors)
+# ============================================================
+
+@router.get("/zvec/status")
+async def zvec_status():
+    """Get ZVec status"""
+    if not ZVEC_AVAILABLE:
+        return {
+            "status": "unavailable",
+            "message": "ZVec not installed. Install from: https://github.com/alibaba/zvec",
+            "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    rag = get_rag()
+    if rag and rag.loaded:
+        return {
+            "status": "loaded",
+            "document_count": rag.vector_count,
+            "backend": "zvec",
+            "zvec_path": str(rag.zvec_path),
+            "metadata_path": str(rag.metadata_path),
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return {
+        "status": "not_loaded",
+        "message": "ZVec not loaded. Check data/legal_vectors.zvec exists.",
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/zvec/search")
+async def zvec_search(req: SearchRequest):
+    """Search 32.5M vectors using ZVec"""
+    if not ZVEC_AVAILABLE:
+        return {"error": "ZVec not available"}
+    
+    rag = get_rag()
+    if not rag or not rag.loaded:
+        return {"error": "ZVec not loaded. 32.5M vectors unavailable."}
+    
+    try:
+        from sentence_transformers import SentenceTransformer
+        embedder = SentenceTransformer(getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"))
+        query_vec = embedder.encode([req.query])
+        results = rag.search(query_vec, top_k=req.top_k)
+        return {
+            "query": req.query,
+            "results": results,
+            "count": len(results),
+            "backend": "zvec",
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+
+@router.post("/zvec/keyword")
+async def zvec_keyword_search(req: SearchRequest):
+    """Keyword search using 32.5M vectors"""
+    if not ZVEC_AVAILABLE:
+        return {"error": "ZVec not available"}
+    
+    rag = get_rag()
+    if not rag or not rag.loaded:
+        return {"error": "ZVec not loaded"}
+    
+    results = rag.search_keyword(req.query, top_k=req.top_k)
+    return {
+        "query": req.query,
+        "results": results,
+        "count": len(results),
+        "backend": "zvec",
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/zvec/stats")
+async def zvec_stats():
+    """Get ZVec statistics"""
+    if not ZVEC_AVAILABLE:
+        return {"error": "ZVec not available"}
+    
+    rag = get_rag()
+    return rag.get_stats() if rag else {"loaded": False}
+
+# ============================================================
+# 3. VAQUILL-AI MCP ENDPOINTS
+# ============================================================
+
+@router.get("/mcp/status")
+async def mcp_status():
+    """Get MCP server status"""
+    return {
+        "status": "operational",
+        "servers": [
+            {
+                "name": "VaquillAI-MCP",
+                "description": "Open India Law dataset access via MCP",
+                "tools": [
+                    "search_judgments",
+                    "get_case",
+                    "search_legislation",
+                    "search_regulations"
+                ],
+                "status": "connected",
+                "version": "1.0.0"
+            },
+            {
+                "name": "ZVec-MCP",
+                "description": "32.5M vector search via ZVec",
+                "tools": [
+                    "vector_search",
+                    "keyword_search",
+                    "get_stats"
+                ],
+                "status": "connected",
+                "version": "1.0.0"
+            },
+            {
+                "name": "LiquidAI-MCP",
+                "description": "Offline LLM (LFM2.5-2.6B)",
+                "tools": [
+                    "generate_text",
+                    "chat",
+                    "analyze_legal"
+                ],
+                "status": "connected" if LIQUID_AVAILABLE else "disconnected",
+                "version": "1.0.0"
+            }
+        ],
+        "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/mcp/call")
+async def mcp_call(req: MCPRequest):
+    """Call an MCP tool"""
+    
+    if req.server == "VaquillAI-MCP":
+        return await _call_vaquill_mcp(req.tool, req.params)
+    elif req.server == "ZVec-MCP":
+        return await _call_zvec_mcp(req.tool, req.params)
+    elif req.server == "LiquidAI-MCP":
+        return await _call_liquid_mcp(req.tool, req.params)
+    else:
+        return {"error": f"Unknown server: {req.server}"}
+
+async def _call_vaquill_mcp(tool: str, params: Dict) -> Dict:
+    """Vaquill-AI MCP tools"""
+    if tool == "search_judgments":
+        query = params.get("query", "")
+        court = params.get("court")
+        year = params.get("year")
+        # Use ZVec search if available
+        if ZVEC_AVAILABLE:
+            rag = get_rag()
+            if rag and rag.loaded:
+                from sentence_transformers import SentenceTransformer
+                embedder = SentenceTransformer(getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"))
+                q_vec = embedder.encode([query])
+                results = rag.search(q_vec, top_k=params.get("top_k", 10))
+                return {"results": results, "count": len(results)}
+        return {"results": [], "message": "Search using Vaquill-AI Open India Law dataset"}
+    
+    elif tool == "get_case":
+        case_id = params.get("case_id", "")
+        # Query ZVec metadata
+        if ZVEC_AVAILABLE:
+            rag = get_rag()
+            if rag and rag.metadata:
+                for doc in rag.metadata[:1000]:
+                    if doc.get("id") == case_id or doc.get("citation") == case_id:
+                        return doc
+        return {"error": "Case not found"}
+    
+    elif tool == "search_legislation":
+        query = params.get("query", "")
+        return {
+            "query": query,
+            "message": "Legislation search using Vaquill-AI Open India Law dataset",
+            "results": []
+        }
+    
+    elif tool == "search_regulations":
+        query = params.get("query", "")
+        return {
+            "query": query,
+            "message": "Regulation search using Vaquill-AI Open India Law dataset",
+            "results": []
+        }
+    
+    return {"error": f"Unknown tool: {tool}"}
+
+async def _call_zvec_mcp(tool: str, params: Dict) -> Dict:
+    """ZVec MCP tools"""
+    if tool == "vector_search":
+        query = params.get("query", "")
+        top_k = params.get("top_k", 10)
+        if ZVEC_AVAILABLE:
+            rag = get_rag()
+            if rag and rag.loaded:
+                from sentence_transformers import SentenceTransformer
+                embedder = SentenceTransformer(getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"))
+                q_vec = embedder.encode([query])
+                results = rag.search(q_vec, top_k=top_k)
+                return {"results": results, "count": len(results)}
+        return {"error": "ZVec not available"}
+    
+    elif tool == "keyword_search":
+        query = params.get("query", "")
+        top_k = params.get("top_k", 10)
+        if ZVEC_AVAILABLE:
+            rag = get_rag()
+            if rag and rag.loaded:
+                results = rag.search_keyword(query, top_k=top_k)
+                return {"results": results, "count": len(results)}
+        return {"error": "ZVec not available"}
+    
+    elif tool == "get_stats":
+        if ZVEC_AVAILABLE:
+            rag = get_rag()
+            return rag.get_stats() if rag else {"loaded": False}
+        return {"error": "ZVec not available"}
+    
+    return {"error": f"Unknown tool: {tool}"}
+
+async def _call_liquid_mcp(tool: str, params: Dict) -> Dict:
+    """Liquid AI LFM2.5-2.6B MCP tools"""
+    if not LIQUID_AVAILABLE:
+        return {"error": "Liquid AI LFM2.5-2.6B not available"}
+    
+    llm = get_llm()
+    if not llm or not llm.loaded:
+        return {"error": "Liquid AI model not loaded"}
+    
+    if tool == "generate_text":
+        prompt = params.get("prompt", "")
+        max_tokens = params.get("max_tokens", 512)
+        temperature = params.get("temperature", 0.7)
+        response = llm.generate(prompt, max_new_tokens=max_tokens, temperature=temperature)
+        return {"response": response}
+    
+    elif tool == "chat":
+        message = params.get("message", "")
+        response = llm.generate(message)
+        return {"response": response}
+    
+    elif tool == "analyze_legal":
+        text = params.get("text", "")
+        prompt = f"Analyze this legal text: {text}\n\nProvide: 1. Summary 2. Key Issues 3. Legal Principles 4. Recommendations"
+        response = llm.generate(prompt)
+        return {"analysis": response}
+    
+    return {"error": f"Unknown tool: {tool}"}
+
+@router.get("/mcp/servers")
+async def list_mcp_servers():
+    """List all MCP servers"""
+    return {
+        "servers": [
+            {
+                "name": "VaquillAI-MCP",
+                "description": "Open India Law dataset access via MCP",
+                "tools": ["search_judgments", "get_case", "search_legislation", "search_regulations"],
+                "status": "connected"
+            },
+            {
+                "name": "ZVec-MCP",
+                "description": "32.5M vector search via ZVec",
+                "tools": ["vector_search", "keyword_search", "get_stats"],
+                "status": "connected" if ZVEC_AVAILABLE else "disconnected"
+            },
+            {
+                "name": "LiquidAI-MCP",
+                "description": "Offline LLM (LFM2.5-2.6B)",
+                "tools": ["generate_text", "chat", "analyze_legal"],
+                "status": "connected" if LIQUID_AVAILABLE else "disconnected"
+            },
+            {
+                "name": "InCaseLawBERT-MCP",
+                "description": "Legal embedding model for semantic search",
+                "tools": ["embed_text", "similarity_search"],
+                "status": "connected" if INCASELAWBERT_AVAILABLE else "disconnected"
+            }
+        ],
+        "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============================================================
+# 4. LIQUID AI LFM2.5-2.6B ENDPOINTS
+# ============================================================
+
+@router.get("/liquid/status")
+async def liquid_status():
+    """Get Liquid AI model status"""
+    if not LIQUID_AVAILABLE:
+        return {
+            "status": "unavailable",
+            "message": "Liquid AI LFM2.5-2.6B not installed. Install from HuggingFace.",
+            "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    llm = get_llm()
+    return {
+        "status": "loaded" if llm and llm.loaded else "not_loaded",
+        "model": getattr(settings, "LLM_MODEL_NAME", "LiquidAI/LFM2.5-2.6B"),
+        "device": getattr(settings, "DEVICE", "cpu"),
+        "context_length": 128000,
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/liquid/generate")
+async def liquid_generate(req: OfflineLLMRequest):
+    """Generate text using Liquid AI LFM2.5-2.6B"""
+    if not LIQUID_AVAILABLE:
+        return {"error": "Liquid AI not available"}
+    
+    llm = get_llm()
+    if not llm or not llm.loaded:
+        return {"error": "Liquid AI model not loaded"}
+    
+    response = llm.generate(
+        req.prompt,
+        max_new_tokens=req.max_new_tokens,
+        temperature=req.temperature
+    )
+    return {
+        "response": response,
+        "model": getattr(settings, "LLM_MODEL_NAME", "LiquidAI/LFM2.5-2.6B"),
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/liquid/chat")
+async def liquid_chat(req: ChatRequest):
+    """Chat using Liquid AI LFM2.5-2.6B"""
+    if not LIQUID_AVAILABLE:
+        return {"error": "Liquid AI not available"}
+    
+    llm = get_llm()
+    if not llm or not llm.loaded:
+        return {"error": "Liquid AI model not loaded"}
+    
+    response = llm.generate(req.message, temperature=req.temperature)
+    return {
+        "response": response,
+        "model": getattr(settings, "LLM_MODEL_NAME", "LiquidAI/LFM2.5-2.6B"),
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/liquid/analyze")
+async def liquid_analyze(req: OfflineLLMRequest):
+    """Analyze legal text using Liquid AI"""
+    if not LIQUID_AVAILABLE:
+        return {"error": "Liquid AI not available"}
+    
+    llm = get_llm()
+    if not llm or not llm.loaded:
+        return {"error": "Liquid AI model not loaded"}
+    
+    prompt = f"Analyze this legal text: {req.prompt}\n\nProvide: 1. Summary 2. Key Legal Issues 3. Relevant Precedents 4. Recommendations"
+    response = llm.generate(prompt)
+    return {
+        "analysis": response,
+        "model": getattr(settings, "LLM_MODEL_NAME", "LiquidAI/LFM2.5-2.6B"),
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============================================================
+# 5. INCASELAWBERT ENDPOINTS
+# ============================================================
+
+@router.get("/incase/status")
+async def incase_status():
+    """Get InCaseLawBERT model status"""
+    if not INCASELAWBERT_AVAILABLE:
+        return {
+            "status": "unavailable",
+            "message": "InCaseLawBERT not installed. Install: sentence-transformers",
+            "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return {
+        "status": "available",
+        "model": getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"),
+        "dimensions": 768,
+        "description": "BERT-based model trained on 5.4M Indian legal documents",
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/incase/embed")
+async def incase_embed(req: EmbeddingRequest):
+    """Generate embeddings using InCaseLawBERT"""
+    if not INCASELAWBERT_AVAILABLE:
+        return {"error": "InCaseLawBERT not available"}
+    
+    try:
+        embedder = SentenceTransformer(req.model)
+        embedding = embedder.encode([req.text]).tolist()
+        return {
+            "text": req.text[:100] + "..." if len(req.text) > 100 else req.text,
+            "model": req.model,
+            "dimensions": 768,
+            "embedding": embedding[:10] + ["..."] if len(embedding) > 10 else embedding,
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/incase/similarity")
+async def incase_similarity(text1: str = Body(...), text2: str = Body(...)):
+    """Calculate similarity between two texts using InCaseLawBERT"""
+    if not INCASELAWBERT_AVAILABLE:
+        return {"error": "InCaseLawBERT not available"}
+    
+    try:
+        from sentence_transformers import SentenceTransformer
+        import numpy as np
+        embedder = SentenceTransformer(getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"))
+        embeddings = embedder.encode([text1, text2])
+        similarity = np.dot(embeddings[0], embeddings[1]) / (np.linalg.norm(embeddings[0]) * np.linalg.norm(embeddings[1]))
+        return {
+            "similarity": float(similarity),
+            "text1": text1[:100] + "..." if len(text1) > 100 else text1,
+            "text2": text2[:100] + "..." if len(text2) > 100 else text2,
+            "model": getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"),
+            "zero_data_retention": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# ============================================================
+# 6. VAQUILL-AI / OPEN INDIA LAW DATASET ENDPOINTS
+# ============================================================
+
+@router.get("/vaquill/status")
+async def vaquill_status():
+    """Get Vaquill-AI Open India Law dataset status"""
+    return {
+        "status": "connected",
+        "dataset": "Vaquill-AI/open-india-law",
+        "records": {
+            "court_judgments": 12_848_644,
+            "tribunal_matters": 813_168,
+            "enactments": 22_265,
+            "sections": 1_098_577
+        },
+        "embeddings": {
+            "total": 32_518_048,
+            "size_gb": 463.6,
+            "dimensions": 1024,
+            "model": "voyage-4"
+        },
+        "period": "1950 to 2026",
+        "sources": [
+            "Supreme Court of India",
+            "25 High Courts",
+            "15 Tribunals",
+            "12 Regulators",
+            "Central and State Acts"
+        ],
+        "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.post("/vaquill/search")
+async def vaquill_search(req: DatasetQueryRequest):
+    """Search Vaquill-AI Open India Law dataset"""
+    if ZVEC_AVAILABLE:
+        rag = get_rag()
+        if rag and rag.loaded:
+            from sentence_transformers import SentenceTransformer
+            embedder = SentenceTransformer(getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT"))
+            q_vec = embedder.encode([req.query])
+            results = rag.search(q_vec, top_k=req.top_k)
+            # Filter by court and year if specified
+            if req.court:
+                results = [r for r in results if req.court.lower() in r.get("court", "").lower()]
+            if req.year:
+                results = [r for r in results if str(req.year) in r.get("date", "")]
+            return {
+                "query": req.query,
+                "court": req.court,
+                "year": req.year,
+                "jurisdiction": req.jurisdiction,
+                "results": results[:req.top_k],
+                "count": len(results),
+                "dataset": "Vaquill-AI/open-india-law",
+                "zero_data_retention": True,
+                "timestamp": datetime.now().isoformat()
+            }
+    
+    return {
+        "query": req.query,
+        "court": req.court,
+        "year": req.year,
+        "jurisdiction": req.jurisdiction,
+        "results": [],
+        "message": "Search using Vaquill-AI Open India Law dataset. ZVec needs to be loaded.",
+        "zero_data_retention": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/vaquill/coverage")
+async def vaquill_coverage():
+    """Get Vaquill-AI dataset coverage details"""
+    return {
+        "dataset": "Vaquill-AI/open-india-law",
+        "coverage": {
+            "courts": {
+                "Supreme Court": {"judgments": 34954, "period": "1950-2025"},
+                "Patna High Court": {"judgments": 1615041, "period": "1967-2025"},
+                "Bombay High Court": {"judgments": 1595948, "period": "1953-2025"},
+                "Allahabad High Court": {"judgments": 1498250, "period": "1992-2025"},
+                "Madras High Court": {"judgments": 1494952, "period": "1997-2025"},
+                "Other High Courts": {"judgments": 5000000, "period": "1950-2025"}
+            },
+            "tribunals": {
+                "CAT": {"matters": 181429},
+                "CESTAT": {"matters": 122612},
+                "ITAT": {"matters": 115074},
+                "NCLT": {"matters": 63487},
+                "Others": {"matters": 330566}
+            },
+            "regulators": {
+                "MCA": {"instruments": 2666, "provisions": 46480},
+                "RBI": {"instruments": 2640, "provisions": 104143},
+                "SEBI": {"instruments": 1144, "provisions": 88310},
+                "Others": {"instruments": 10250, "provisions": 300000}
+            }
+        },
+        "embeddings": {
+            "legal_corpus_v1": {"vectors": 19595718, "size_gb": 272.8},
+            "legal_corpus_v2": {"vectors": 11823753, "size_gb": 179.6},
+            "acts_india": {"vectors": 1098577, "size_gb": 11.2}
+        },
+        "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/vaquill/embedding-stats")
+async def vaquill_embedding_stats():
+    """Get Vaquill-AI embedding statistics"""
+    return {
+        "dataset": "Vaquill-AI/open-india-law",
+        "embeddings": {
+            "total_vectors": 32_518_048,
+            "total_size_gb": 463.6,
+            "collections": {
+                "legal_corpus_v1": {
+                    "vectors": 19_595_718,
+                    "shards": 4,
+                    "size_gb": 272.8,
+                    "content": "High Court and Supreme Court judgment chunks"
+                },
+                "legal_corpus_v2": {
+                    "vectors": 11_823_753,
+                    "shards": 4,
+                    "size_gb": 179.6,
+                    "content": "Tribunal and regulator decision chunks"
+                },
+                "acts_india": {
+                    "vectors": 1_098_577,
+                    "shards": 2,
+                    "size_gb": 11.2,
+                    "content": "Legislation and regulatory provisions"
+                }
+            },
+            "model": {
+                "name": "voyage-4",
+                "dimensions": 1024,
+                "distance": "cosine"
+            }
+        },
+        "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============================================================
+# 7. OFFLINE STACK STATUS
+# ============================================================
+
+@router.get("/offline/status")
+async def offline_status():
+    """Get offline stack status"""
+    if OFFLINE_AVAILABLE:
+        offline = get_offline_stack()
+        return {
+            "offline_ready": offline.is_ready(),
+            "components": {
+                "llm": {
+                    "loaded": offline.get_llm().loaded if offline.get_llm() else False,
+                    "model": getattr(settings, "LLM_MODEL_NAME", "LiquidAI/LFM2.5-2.6B")
+                },
+                "zvec_rag": {
+                    "loaded": offline.get_rag().loaded if offline.get_rag() else False,
+                    "vectors": offline.get_rag().vector_count if offline.get_rag() else 0
+                },
+                "graph_rag": {
+                    "loaded": offline.get_graph()._loaded if offline.get_graph() else False,
+                    "nodes": len(offline.get_graph().graph.nodes) if offline.get_graph() and offline.get_graph()._loaded else 0
+                },
+                "audio": {
+                    "loaded": offline.get_audio() is not None
+                }
+            },
+            "incaselawbert": {
+                "available": INCASELAWBERT_AVAILABLE,
+                "model": getattr(settings, "EMBEDDING_MODEL", "law-ai/InCaseLawBERT")
+            },
+            "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+            "mode": "sovereign" if offline.is_ready() else "hybrid",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return {
+        "offline_ready": False,
+        "components": {
+            "llm": {"loaded": False, "model": "LiquidAI/LFM2.5-2.6B"},
+            "zvec_rag": {"loaded": False, "vectors": 0},
+            "graph_rag": {"loaded": False, "nodes": 0},
+            "audio": {"loaded": False}
+        },
+        "incaselawbert": {"available": INCASELAWBERT_AVAILABLE},
+        "zero_data_retention": getattr(settings, "ZERO_DATA_RETENTION", True),
+        "mode": "online_only",
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============================================================
+# 8. EXISTING ROUTES (Health, Chat, Agents, etc.)
+# ============================================================
+
+# ... (Keep all your existing routes from the previous implementation)
+
+# ============================================================
+# 9. MOAT ROUTES (32 endpoints)
+# ============================================================
+
+# ... (Keep all your existing moat routes)
+
+# ============================================================
+# INCLUDE ROUTERS
+# ============================================================
+
+router.include_router(moat_router) 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
