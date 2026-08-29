@@ -24,7 +24,7 @@ class Config:
     GRAPH_PATH = DATA_DIR / "citation_graph.pkl"
     RAG_BACKEND = os.getenv("RAG_BACKEND", "zvec")
 
-    # Online Providers (fallback)
+    # Online Providers
     ONLINE_PROVIDERS: List[str] = ["groq", "openai", "gemini", "deepseek", "openrouter"]
     PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "groq")
 
@@ -63,6 +63,8 @@ class Config:
 
     @classmethod
     def is_offline_ready(cls) -> bool:
-        """Check if offline components are available."""
         return cls.ZVEC_PATH.exists() and cls.METADATA_PATH.exists()
-    settings = Config()
+
+
+# ✅ CORRECT: Create settings AFTER the class definition
+settings = Config()
