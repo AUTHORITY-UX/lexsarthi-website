@@ -35,26 +35,18 @@ class Config:
     LLM_MODE = os.getenv("LLM_MODE", "hybrid")  # "offline", "online", "hybrid"
     LLM_MODEL_NAME = os.getenv("LLM_MODEL", "LiquidAI/LFM2.5-2.6B")
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "law-ai/InCaseLawBERT")
-    DEVICE = os.getenv("DEVICE", "cpu")  # "cpu" or "cuda"
+    DEVICE = os.getenv("DEVICE", "cpu")
     MAX_TOKENS = int(os.getenv("MAX_TOKENS", "4096"))
     TEMPERATURE = float(os.getenv("TEMPERATURE", "0.7"))
 
     # ============================================================
-    # RAG CONFIGURATION – 32.5M VECTORS
-    # ============================================================
-    ZVEC_PATH = DATA_DIR / "legal_vectors.zvec"
-    METADATA_PATH = DATA_DIR / "metadata.json"
-    GRAPH_PATH = DATA_DIR / "citation_graph.pkl"
-    RAG_BACKEND = os.getenv("RAG_BACKEND", "zvec")  # "zvec", "faiss", "hybrid"
-    RAG_TOP_K = int(os.getenv("RAG_TOP_K", "10"))
-    RAG_VECTOR_DIM = int(os.getenv("RAG_VECTOR_DIM", "768"))
-    RAG_TOTAL_VECTORS = int(os.getenv("RAG_TOTAL_VECTORS", "32518048"))  # 32.5M
-
-    # ============================================================
-    # ONLINE LLM PROVIDERS (Fallback)
+    # ONLINE LLM PROVIDERS (For fallback)
     # ============================================================
     ONLINE_PROVIDERS: List[str] = ["groq", "openai", "gemini", "deepseek", "openrouter", "ollama"]
     PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "groq")
+
+    # ✅ ADD THIS – Alias for backward compatibility
+    available_llm_providers = ONLINE_PROVIDERS
 
     # ============================================================
     # API KEYS
@@ -67,12 +59,30 @@ class Config:
     OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
     # ============================================================
+    # OLLAMA CONFIGURATION
+    # ============================================================
+    OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "true").lower() == "true"
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+    OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+    # ============================================================
     # DATABASE
     # ============================================================
     DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/unknown_verdict")
     DB_POOL_MIN_SIZE = int(os.getenv("DB_POOL_MIN_SIZE", "1"))
     DB_POOL_MAX_SIZE = int(os.getenv("DB_POOL_MAX_SIZE", "10"))
     DB_TIMEOUT = int(os.getenv("DB_TIMEOUT", "30"))
+
+    # ============================================================
+    # RAG CONFIGURATION – 32.5M VECTORS
+    # ============================================================
+    ZVEC_PATH = DATA_DIR / "legal_vectors.zvec"
+    METADATA_PATH = DATA_DIR / "metadata.json"
+    GRAPH_PATH = DATA_DIR / "citation_graph.pkl"
+    RAG_BACKEND = os.getenv("RAG_BACKEND", "zvec")
+    RAG_TOP_K = int(os.getenv("RAG_TOP_K", "10"))
+    RAG_VECTOR_DIM = int(os.getenv("RAG_VECTOR_DIM", "768"))
+    RAG_TOTAL_VECTORS = int(os.getenv("RAG_TOTAL_VECTORS", "32518048"))
 
     # ============================================================
     # ZERO DATA RETENTION
@@ -86,7 +96,7 @@ class Config:
     # ============================================================
     JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
     JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-    JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "10080"))  # 7 days
+    JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "10080"))
     JWT_REFRESH_EXPIRATION_DAYS = int(os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "30"))
 
     # ============================================================
@@ -105,24 +115,32 @@ class Config:
     ENABLE_THIRD_EYE = os.getenv("ENABLE_THIRD_EYE", "true").lower() == "true"
     ENABLE_MCP = os.getenv("ENABLE_MCP", "true").lower() == "true"
     ENABLE_MOAT = os.getenv("ENABLE_MOAT", "true").lower() == "true"
-    ENABLE_JUDGE = os.getenv("ENABLE_JUDGE", "true").lower() == "true"  # Shakti
+    ENABLE_JUDGE = os.getenv("ENABLE_JUDGE", "true").lower() == "true"
     ENABLE_VERIFIERS = os.getenv("ENABLE_VERIFIERS", "true").lower() == "true"
     ENABLE_ARTICLES = os.getenv("ENABLE_ARTICLES", "true").lower() == "true"
+    ENABLE_WEB_SEARCH = os.getenv("ENABLE_WEB_SEARCH", "true").lower() == "true"
+    ENABLE_TARGETED_SEARCH = os.getenv("ENABLE_TARGETED_SEARCH", "true").lower() == "true"
+
+    # ============================================================
+    # VERDICT ENGINE
+    # ============================================================
+    USE_VERDICT_ENGINE = os.getenv("USE_VERDICT_ENGINE", "true").lower() == "true"
+    VERDICT_ENGINE_MODE = os.getenv("VERDICT_ENGINE_MODE", "balanced")
 
     # ============================================================
     # AGENTS CONFIGURATION – 530+ Agents
     # ============================================================
     TOTAL_AGENTS = int(os.getenv("TOTAL_AGENTS", "530"))
     AGENT_CATEGORIES = {
-        "lawyer": 100,
-        "journalist": 75,
-        "spiritual": 75,
-        "compliance": 80,
-        "contracts": 60,
-        "ai_tech": 60,
-        "digital": 40,
-        "litigation": 30,
-        "strategic": 10,
+        "Lawyer": 100,
+        "Journalist": 75,
+        "Spiritual": 75,
+        "Compliance": 80,
+        "Contracts": 60,
+        "AI & Tech": 60,
+        "Digital": 40,
+        "Litigation": 30,
+        "Strategic": 10,
     }
     AGENT_JURISDICTIONS = ["India", "US", "UK", "EU"]
 
@@ -141,14 +159,17 @@ class Config:
     # ============================================================
     # RATE LIMITING
     # ============================================================
-    RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+    RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
+    RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+    RATE_LIMIT_PER_MINUTE = RATE_LIMIT_REQUESTS
     RATE_LIMIT_PER_DAY = int(os.getenv("RATE_LIMIT_PER_DAY", "1000"))
 
     # ============================================================
     # CACHE
     # ============================================================
     REDIS_URL = os.getenv("REDIS_URL", "")
-    CACHE_TTL = int(os.getenv("CACHE_TTL", "3600"))  # 1 hour
+    CACHE_TTL = int(os.getenv("CACHE_TTL", "3600"))
+    CACHE_TTL_SECONDS = CACHE_TTL
 
     # ============================================================
     # LOGGING
@@ -175,22 +196,18 @@ class Config:
     # ============================================================
     @classmethod
     def is_offline_ready(cls) -> bool:
-        """Check if offline components are available."""
         return cls.ZVEC_PATH.exists() and cls.METADATA_PATH.exists()
 
     @classmethod
     def is_redis_available(cls) -> bool:
-        """Check if Redis is configured."""
         return bool(cls.REDIS_URL)
 
     @classmethod
     def get_agent_count(cls) -> int:
-        """Get total agent count."""
         return sum(cls.AGENT_CATEGORIES.values())
 
     @classmethod
     def get_endpoint_count(cls) -> int:
-        """Get total endpoint count."""
         return cls.TOTAL_ENDPOINTS
 
 
@@ -206,10 +223,4 @@ settings = Config()
 __all__ = [
     "Config",
     "settings",
-    "APP_NAME",
-    "APP_VERSION",
-    "APP_DESCRIPTION",
-    "DATABASE_URL",
-    "JWT_SECRET",
-    "ZERO_DATA_RETENTION",
 ]
