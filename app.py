@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from core.config import Config
+from core.config import settings 
 from core.db import db
 from core.llm.router import get_router
 
