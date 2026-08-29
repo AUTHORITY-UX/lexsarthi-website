@@ -1,5 +1,6 @@
 # app.py – Complete Unknown Verdict v43.0
 # 114 Endpoints · 530 Agents · 50+ Services · Zero Data Retention · Third Eye AI
+# Est. 2026 — Publish 2129
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -13,7 +14,8 @@ from core.config import settings
 from core.db import db
 from core.llm.router import get_router
 
-# Import routes from routes.py
+# ─── IMPORT ROUTES FROM routes.py ─────────────────────────────────────
+
 try:
     from routes import router, moat_router
     ROUTES_AVAILABLE = True
@@ -85,11 +87,14 @@ if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
-# ─── REGISTER ROUTES ────────────────────────────────────────────────
+# ─── REGISTER ROUTES FROM routes.py ──────────────────────────────────
 
 if ROUTES_AVAILABLE and router is not None:
     app.include_router(router)
     app.include_router(moat_router)
+    logger.info("✅ Routes from routes.py loaded")
+else:
+    logger.warning("⚠️ routes.py not found – using fallback endpoints")
 
 
 # ─── ROOT ENDPOINT ──────────────────────────────────────────────────
@@ -117,7 +122,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "db": "connected",
+        "db": "connected" if hasattr(db, "pool") and db.pool else "disconnected",
         "version": settings.APP_VERSION,
         "endpoints": 114,
         "agents": 530,
@@ -144,7 +149,7 @@ async def third_eye():
         "features": {
             "zero_data_retention": settings.ZERO_DATA_RETENTION,
             "human_in_the_loop": True,
-            "ollama_offline": True,
+            "ollama_offline": settings.OLLAMA_ENABLED,
             "pgvector_search": True,
             "neon_db": True,
             "third_eye": True
@@ -226,7 +231,7 @@ async def system_status():
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "environment": settings.ENVIRONMENT,
-        "database": {"connected": db.pool is not None},
+        "database": {"connected": hasattr(db, "pool") and db.pool is not None},
         "llm": {
             "providers": settings.available_llm_providers,
             "ollama": {"enabled": settings.OLLAMA_ENABLED, "model": settings.OLLAMA_MODEL}
@@ -241,8 +246,15 @@ async def system_status():
         },
         "features": {
             "zero_data_retention": settings.ZERO_DATA_RETENTION,
-            "third_eye": True, "pgvector": True, "neon_db": True,
-            "ollama": settings.OLLAMA_ENABLED
+            "third_eye": True, 
+            "pgvector": True, 
+            "neon_db": True,
+            "ollama": settings.OLLAMA_ENABLED,
+            "zvec": True,
+            "graph_rag": True,
+            "liquid_ai": True,
+            "incaselawbert": True,
+            "vaquill_ai": True
         },
         "jurisdictions": ["India", "US", "UK", "EU"],
         "timestamp": datetime.now().isoformat()
@@ -265,6 +277,22 @@ async def list_providers():
     }
 
 
+# ─── METRICS ────────────────────────────────────────────────────────
+
+@app.get("/metrics")
+async def metrics():
+    return {
+        "db_connected": hasattr(db, "pool") and db.pool is not None,
+        "llm_providers": settings.available_llm_providers,
+        "endpoints": 114,
+        "agents": 530,
+        "services": 50,
+        "zero_data_retention": settings.ZERO_DATA_RETENTION,
+        "third_eye": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
 # ─── APP FRONTEND ───────────────────────────────────────────────────
 
 @app.get("/app")
@@ -272,7 +300,17 @@ async def frontend():
     app_file = STATIC_DIR / "app.html"
     if app_file.exists():
         return HTMLResponse(app_file.read_text(encoding="utf-8"))
-    return HTMLResponse("<h1>Unknown Verdict App</h1><p>See <a href='/'>home</a></p>")
+    return HTMLResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>Unknown Verdict App</title></head>
+    <body style="background:#0a0a1a;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
+        <h1>👁️ Unknown Verdict</h1>
+        <p>114 Endpoints · 530 Agents · 50+ Services</p>
+        <p><a href="/" style="color:#8b6eeb;">Home</a> | <a href="/docs" style="color:#8b6eeb;">API Docs</a></p>
+    </body>
+    </html>
+    """)
 
 
 # ─── BRAIN DASHBOARD ───────────────────────────────────────────────
@@ -288,10 +326,10 @@ async def brain_dashboard():
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Brain Dashboard</title>
+        <title>🧠 Brain Dashboard</title>
         <style>
             *{margin:0;padding:0;box-sizing:border-box}
-            body{background:#0a0a1a;color:#e2e8f0;font-family:sans-serif}
+            body{background:#0a0a1a;color:#e2e8f0;font-family:system-ui,sans-serif}
             .header{text-align:center;padding:30px}
             .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:600px;margin:20px auto}
             .stat{background:#1f2937;border:1px solid #374151;border-radius:8px;padding:16px;text-align:center}
@@ -301,12 +339,14 @@ async def brain_dashboard():
             .activity h3{color:#60a5fa;margin-bottom:12px}
             .activity-log{max-height:200px;overflow-y:auto}
             .activity-log div{padding:6px 0;border-bottom:1px solid #374151;font-size:13px;color:#9ca3af}
+            .eye{font-size:40px;animation:blink 4s infinite}
+            @keyframes blink{0%,45%,55%,100%{opacity:1}48%,52%{opacity:0}}
         </style>
     </head>
     <body>
         <div class="header">
-            <h1>👁️ Unknown Verdict · Brain Dashboard</h1>
-            <p style="color:#10b981">● 114 Endpoints Live</p>
+            <h1><span class="eye">👁️</span> Unknown Verdict · Brain Dashboard</h1>
+            <p style="color:#10b981">● 114 Endpoints Live · 530 Agents Ready</p>
         </div>
         <div class="stats">
             <div class="stat"><div class="stat-num">114</div><div class="stat-label">Endpoints</div></div>
@@ -320,6 +360,7 @@ async def brain_dashboard():
                 <div>[System] Brain 114 endpoints initialized</div>
                 <div>[System] Brain 530 agents ready</div>
                 <div>[System] Brain Zero data retention active</div>
+                <div>[System] Third Eye 👁️ Open</div>
             </div>
         </div>
     </body>
@@ -331,7 +372,13 @@ async def brain_dashboard():
 
 @app.get("/test")
 async def test_route():
-    return {"status": "new_routes_loaded", "endpoints": 114}
+    return {
+        "status": "new_routes_loaded",
+        "endpoints": 114,
+        "agents": 530,
+        "zero_data_retention": settings.ZERO_DATA_RETENTION,
+        "timestamp": datetime.now().isoformat()
+    }
 
 
 # ─── 404 HANDLER ──────────────────────────────────────────────────
@@ -348,7 +395,7 @@ async def not_found_handler(request: Request, exc):
         content={
             "error": "Not Found",
             "path": request.url.path,
-            "available_endpoints": sorted(set(routes))[:30]
+            "available_endpoints": sorted(set(routes))[:35]
         }
     )
 
