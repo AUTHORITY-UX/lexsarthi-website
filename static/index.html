@@ -3,49 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👁️ Unknown Verdict v43.0 – Sovereign Legal AGI</title>
+    <title>👁️ Unknown Verdict v43.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* ─── RESET & BASE ─── */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ─── RESET ─── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg-primary: #0a0e1a;
-            --bg-card: rgba(17, 24, 39, 0.85);
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #0a0e1a;
+            --card: rgba(17, 24, 39, 0.9);
+            --border: rgba(255,255,255,0.08);
             --text: #e2e8f0;
-            --text-muted: #94a3b8;
+            --muted: #94a3b8;
             --accent: #00d4ff;
             --purple: #7b2fbe;
             --gold: #ff6b35;
-            --success: #10b981;
+            --green: #10b981;
             --danger: #ef4444;
         }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
+            background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            padding: 0;
-            margin: 0;
-        }
-
-        /* ─── SCROLLBAR ─── */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--purple);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
         }
 
         /* ─── HEADER ─── */
@@ -54,110 +33,89 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 24px;
-            background: var(--bg-card);
+            background: var(--card);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 100;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 20px;
+            gap: 10px;
+            font-size: 18px;
             font-weight: 700;
-            color: #fff;
         }
-        .logo .eye-icon {
-            font-size: 28px;
-            animation: blink 4s infinite;
-        }
+        .logo .eye { font-size: 28px; animation: blink 4s infinite; }
         @keyframes blink {
-            0%, 45%, 55%, 100% { opacity: 1; }
-            48%, 52% { opacity: 0; }
+            0%,45%,55%,100% { opacity:1; }
+            48%,52% { opacity:0; }
         }
-        .logo span {
-            color: var(--text-muted);
+        .logo .sub {
+            color: var(--muted);
             font-weight: 400;
-            font-size: 14px;
+            font-size: 13px;
         }
         .status-badge {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 4px 14px;
+            padding: 4px 16px;
             border-radius: 20px;
             font-size: 12px;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            background: rgba(16,185,129,0.1);
+            color: var(--green);
+            border: 1px solid rgba(16,185,129,0.2);
         }
-        .status-dot {
+        .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--success);
+            background: var(--green);
             animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
         .btn {
             padding: 6px 16px;
             border-radius: 8px;
             border: 1px solid var(--border);
-            background: var(--bg-primary);
+            background: transparent;
             color: var(--text);
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.2s;
+            transition: 0.2s;
         }
-        .btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
         .btn-primary {
             background: var(--accent);
-            color: white;
+            color: #000;
             border: none;
         }
-        .btn-primary:hover {
-            background: #00b8d4;
-            color: white;
-        }
-        .btn-success {
-            background: var(--success);
-            color: white;
-            border: none;
-        }
-        .btn-success:hover {
-            background: #059669;
-        }
+        .btn-primary:hover { background: #00b8d4; }
 
-        /* ─── MAIN LAYOUT ─── */
+        /* ─── MAIN ─── */
         .main {
             display: flex;
             min-height: calc(100vh - 70px);
         }
         .sidebar {
-            width: 240px;
-            background: var(--bg-card);
+            width: 220px;
+            background: var(--card);
             backdrop-filter: blur(12px);
             border-right: 1px solid var(--border);
             padding: 16px;
             flex-shrink: 0;
-            overflow-y: auto;
             height: calc(100vh - 70px);
+            overflow-y: auto;
             position: sticky;
             top: 70px;
         }
         .sidebar h3 {
             font-size: 11px;
-            color: var(--text-muted);
+            color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 12px;
@@ -167,28 +125,28 @@
             border-radius: 10px;
             cursor: pointer;
             margin-bottom: 4px;
-            color: var(--text-muted);
-            transition: all 0.2s;
+            color: var(--muted);
+            transition: 0.2s;
             display: flex;
             align-items: center;
             gap: 10px;
             font-size: 14px;
         }
         .sidebar-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             color: var(--text);
         }
         .sidebar-item.active {
-            background: rgba(0, 212, 255, 0.1);
+            background: rgba(0,212,255,0.1);
             color: var(--accent);
-            border: 1px solid rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0,212,255,0.2);
         }
-        .sidebar-item .badge-count {
+        .badge {
             background: var(--purple);
-            color: white;
+            color: #fff;
             font-size: 10px;
             padding: 1px 8px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-left: auto;
         }
         .sidebar-footer {
@@ -196,7 +154,7 @@
             padding-top: 16px;
             border-top: 1px solid var(--border);
             font-size: 11px;
-            color: var(--text-muted);
+            color: var(--muted);
         }
 
         .content {
@@ -221,224 +179,115 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* ─── THIRD EYE HERO ─── */
+        /* ─── HERO ─── */
         .hero {
             text-align: center;
             padding: 30px 20px;
-            background: radial-gradient(ellipse at center, rgba(123, 47, 190, 0.12) 0%, transparent 70%);
+            background: radial-gradient(ellipse at center, rgba(123,47,190,0.12) 0%, transparent 70%);
             border-radius: 24px;
             margin-bottom: 24px;
         }
-        .hero .eye-container {
+        .hero .eye-big {
+            font-size: 80px;
             display: inline-block;
-            position: relative;
-            width: 120px;
-            height: 120px;
-            margin-bottom: 12px;
+            animation: blink 4s infinite;
             cursor: pointer;
-        }
-        .hero .eye-container .eye {
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
-            border-radius: 50%;
-            box-shadow: 0 0 60px rgba(0, 212, 255, 0.2), 0 0 120px rgba(123, 47, 190, 0.15);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s;
-        }
-        .hero .eye-container .eye:hover {
-            transform: scale(1.05);
-        }
-        .hero .eye-container .eye .iris {
-            position: absolute;
-            top: 18%;
-            left: 18%;
-            width: 64%;
-            height: 64%;
-            background: radial-gradient(circle at 40% 35%, #00d4ff 0%, #7b2fbe 50%, #1a1a3e 80%);
-            border-radius: 50%;
-            transition: transform 0.1s;
-        }
-        .hero .eye-container .eye .pupil {
-            position: absolute;
-            top: 30%;
-            left: 30%;
-            width: 40%;
-            height: 40%;
-            background: radial-gradient(circle, #0a0e1a 40%, #1a1a3e 70%);
-            border-radius: 50%;
-            transition: transform 0.1s;
-        }
-        .hero .eye-container .eye .reflection {
-            position: absolute;
-            top: 12%;
-            left: 20%;
-            width: 20%;
-            height: 14%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, transparent 100%);
-            border-radius: 50%;
-            transform: rotate(-30deg);
-        }
-        .hero .eye-container .eye .eyelid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom,
-                    rgba(10, 14, 26, 0) 0%,
-                    rgba(10, 14, 26, 0) 45%,
-                    rgba(10, 14, 26, 0.95) 50%,
-                    rgba(10, 14, 26, 0) 55%,
-                    rgba(10, 14, 26, 0) 100%);
-            border-radius: 50%;
-            z-index: 3;
-            animation: blink 5s ease-in-out infinite;
-            pointer-events: none;
         }
         .hero h1 {
             font-size: 36px;
             background: linear-gradient(135deg, var(--accent), var(--purple), var(--gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 4px;
         }
-        .hero .subtitle {
-            color: var(--text-muted);
+        .hero .sub {
+            color: var(--muted);
             font-size: 16px;
         }
         .hero .infinity {
-            font-size: 24px;
+            font-size: 22px;
             color: var(--gold);
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-shadow: 0 0 30px rgba(255, 107, 53, 0.2);
             margin-top: 4px;
         }
-        .hero .badge-group {
+        .hero .tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
             margin-top: 12px;
         }
-        .hero .badge-group .badge {
+        .hero .tags span {
             padding: 4px 14px;
             border-radius: 16px;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255,255,255,0.04);
             border: 1px solid var(--border);
             font-size: 12px;
-            color: var(--text-muted);
+            color: var(--muted);
         }
 
         /* ─── STATS ─── */
-        .stats-grid {
+        .stats {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 20px;
         }
-        .stat-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(8px);
+        .stat {
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 14px 16px;
             text-align: center;
         }
-        .stat-card .icon {
-            font-size: 24px;
-        }
-        .stat-card .value {
+        .stat .num {
             font-size: 28px;
             font-weight: 700;
-            margin: 2px 0;
         }
-        .stat-card .value.cyan { color: var(--accent); }
-        .stat-card .value.green { color: var(--success); }
-        .stat-card .value.purple { color: var(--purple); }
-        .stat-card .value.gold { color: var(--gold); }
-        .stat-card .label {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
+        .stat .num.cyan { color: var(--accent); }
+        .stat .num.green { color: var(--green); }
+        .stat .num.purple { color: var(--purple); }
+        .stat .num.gold { color: var(--gold); }
+        .stat .label { font-size: 11px; color: var(--muted); }
 
-        /* ─── LOGS ─── */
-        .log-container {
-            background: var(--bg-card);
-            backdrop-filter: blur(8px);
+        /* ─── LOG ─── */
+        .log {
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 12px 16px;
-            max-height: 180px;
+            max-height: 160px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 12px;
             margin-bottom: 20px;
         }
-        .log-container .log-title {
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
-        }
-        .log-entry {
-            padding: 3px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .log-entry .time { color: var(--accent); }
-        .log-entry .agent { font-weight: 600; color: var(--gold); }
-        .log-entry .finding { color: var(--success); }
-
-        /* ─── TABS ─── */
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
+        .log .title { font-weight: 600; margin-bottom: 8px; }
+        .log .entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .log .entry .time { color: var(--accent); }
+        .log .entry .agent { color: var(--gold); font-weight: 600; }
+        .log .entry .action { color: var(--muted); }
 
         /* ─── AGENTS GRID ─── */
         .agents-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 12px;
             margin-top: 12px;
         }
         .agent-card {
-            background: var(--bg-card);
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 14px 16px;
-            transition: all 0.2s;
+            padding: 12px 14px;
             cursor: pointer;
+            transition: 0.2s;
         }
         .agent-card:hover {
             border-color: var(--accent);
             transform: translateY(-2px);
         }
-        .agent-card .name {
-            font-weight: 600;
-            font-size: 15px;
-        }
-        .agent-card .category {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        .agent-card .specialty {
-            font-size: 13px;
-            color: var(--accent);
-            margin: 4px 0;
-        }
-        .agent-card .price {
-            font-size: 12px;
-            color: var(--success);
-        }
+        .agent-card .name { font-weight: 600; font-size: 14px; }
+        .agent-card .cat { font-size: 12px; color: var(--muted); }
+        .agent-card .price { font-size: 12px; color: var(--green); }
 
         /* ─── ARTICLES ─── */
         .articles-grid {
@@ -448,85 +297,35 @@
             margin-top: 12px;
         }
         .article-card {
-            background: var(--bg-card);
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 14px 16px;
-            transition: all 0.2s;
         }
-        .article-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-        .article-card h4 {
-            font-size: 15px;
-            margin-bottom: 4px;
-            color: var(--text);
-        }
-        .article-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-        .article-card .meta {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 8px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .article-card:hover { border-color: var(--accent); }
+        .article-card h4 { font-size: 15px; margin-bottom: 4px; }
+        .article-card p { font-size: 13px; color: var(--muted); line-height: 1.4; }
+        .article-card .meta { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
         .article-card .tag {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 10px;
-            background: rgba(0, 212, 255, 0.08);
+            background: rgba(0,212,255,0.08);
             color: var(--accent);
             font-size: 10px;
             margin: 4px 4px 0 0;
         }
 
-        /* ─── COMPLIANCE ─── */
-        .compliance-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .compliance-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 14px 16px;
-            text-align: center;
-        }
-        .compliance-card .score {
-            font-size: 32px;
-            font-weight: 700;
-        }
-        .compliance-card .score.good { color: var(--success); }
-        .compliance-card .score.warning { color: var(--gold); }
-        .compliance-card .score.danger { color: var(--danger); }
-        .compliance-card .framework {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-        .compliance-card .status {
-            font-size: 12px;
-            margin-top: 4px;
-        }
-
         /* ─── CHAT ─── */
-        .chat-container {
-            background: var(--bg-card);
-            backdrop-filter: blur(8px);
+        .chat-box {
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 16px 20px;
             margin-top: 16px;
         }
-        .chat-messages {
-            max-height: 300px;
+        .chat-msgs {
+            max-height: 280px;
             overflow-y: auto;
             margin-bottom: 12px;
         }
@@ -539,166 +338,86 @@
             line-height: 1.5;
         }
         .chat-msg.user {
-            background: rgba(0, 212, 255, 0.12);
+            background: rgba(0,212,255,0.12);
             margin-left: auto;
         }
         .chat-msg.ai {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255,255,255,0.04);
             border: 1px solid var(--border);
         }
-        .chat-msg .role {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-        .chat-input-row {
+        .chat-msg .role { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+        .chat-row {
             display: flex;
             gap: 8px;
         }
-        .chat-input-row input {
+        .chat-row input {
             flex: 1;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0,0,0,0.3);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 10px 14px;
             color: var(--text);
             font-size: 14px;
         }
-        .chat-input-row input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        .chat-input-row button {
+        .chat-row input:focus { outline: none; border-color: var(--accent); }
+        .chat-row button {
             padding: 10px 24px;
             border-radius: 8px;
             border: none;
             background: linear-gradient(135deg, var(--accent), var(--purple));
-            color: white;
+            color: #fff;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
-            transition: opacity 0.2s;
         }
-        .chat-input-row button:hover {
-            opacity: 0.9;
-        }
-        .chat-input-row button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .chat-row button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* ─── TAGS ─── */
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .tag {
-            padding: 4px 12px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* ─── DOMAIN SCAN ─── */
-        .domain-scan {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-        .domain-scan input {
-            flex: 1;
-            min-width: 200px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 14px;
-            color: var(--text);
-            font-size: 14px;
-        }
-        .domain-scan input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
+        /* ─── TABS ─── */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         /* ─── RESPONSIVE ─── */
         @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .articles-grid,
-            .agents-grid,
-            .compliance-grid {
-                grid-template-columns: 1fr;
-            }
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            .hero h1 {
-                font-size: 28px;
-            }
-            .chat-msg {
-                max-width: 95%;
-            }
-            .domain-scan {
-                flex-direction: column;
-            }
+            .sidebar { display: none; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .articles-grid, .agents-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 28px; }
+            .header { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ════════════════════════════════════════════════════════════════ -->
     <!-- HEADER -->
-    <!-- ════════════════════════════════════════════════════════════════ -->
     <div class="header">
         <div class="logo">
-            <span class="eye-icon">👁️</span>
-            Unknown Verdict
-            <span>· v43.0 · 114 Endpoints</span>
+            <span class="eye">👁️</span>
+            Unknown Verdict <span class="sub">· v43.0 · 114 Endpoints</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <div class="status-badge">
-                <div class="status-dot" id="statusDot"></div>
+                <div class="dot" id="statusDot"></div>
                 <span id="statusText">Connecting...</span>
             </div>
-            <span style="font-size:12px;color:var(--text-muted);" id="eventCounter">Events: 0</span>
+            <span style="font-size:12px;color:var(--muted);" id="eventCounter">Events: 0</span>
             <button class="btn" onclick="refreshAll()">🔄 Refresh</button>
         </div>
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════ -->
     <!-- MAIN -->
-    <!-- ════════════════════════════════════════════════════════════════ -->
     <div class="main">
         <!-- Sidebar -->
         <div class="sidebar">
             <h3>🧠 Intelligence Hub</h3>
             <div class="sidebar-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-            <div class="sidebar-item" onclick="switchTab('agents')">🤖 Agents <span class="badge-count">530</span></div>
-            <div class="sidebar-item" onclick="switchTab('chat')">💬 Chat</div>
+            <div class="sidebar-item" onclick="switchTab('agents')">🤖 Agents <span class="badge">530</span></div>
             <div class="sidebar-item" onclick="switchTab('articles')">📰 Articles</div>
-            <div class="sidebar-item" onclick="switchTab('research')">🔍 Legal Research</div>
-            <div class="sidebar-item" onclick="switchTab('compliance')">💼 AI Governance</div>
-            <div class="sidebar-item" onclick="switchTab('drafting')">📝 Drafting</div>
-            <div class="sidebar-item" onclick="switchTab('domain')">🌐 Domain Scan</div>
-            <div class="sidebar-item" onclick="switchTab('audit')">📊 Company Audit</div>
+            <div class="sidebar-item" onclick="switchTab('chat')">💬 Chat</div>
             <div class="sidebar-footer">
                 <div>⚡ 530 Agents · 114 Endpoints</div>
-                <div style="margin-top:4px;"><span style="color:var(--success);">●</span> <span id="footerStatus">Online</span></div>
+                <div style="margin-top:4px;"><span style="color:var(--green);">●</span> <span id="footerStatus">Online</span></div>
                 <div style="margin-top:4px;font-size:10px;color:var(--gold);">💰 Making money on the internet</div>
-                <div style="margin-top:4px;font-size:10px;color:var(--text-muted);">♾️ 2026 – 2126</div>
-                <div style="margin-top:4px;font-size:9px;color:var(--text-muted);">Zero Data Retention</div>
+                <div style="margin-top:4px;font-size:10px;color:var(--muted);">♾️ 2026 – 2129</div>
+                <div style="margin-top:4px;font-size:9px;color:var(--muted);">🔒 Zero Data Retention</div>
             </div>
         </div>
 
@@ -706,20 +425,20 @@
         <div class="content">
             <div class="content-header">
                 <h2 id="contentTitle">📊 Brain Dashboard</h2>
-                <span style="font-size:12px;color:var(--text-muted);" id="lastUpdated">Just now</span>
+                <span style="font-size:12px;color:var(--muted);" id="lastUpdated">Just now</span>
             </div>
             <div id="contentBody">
-                <div style="text-align:center;padding:40px;color:var(--text-muted);">Loading the Brain...</div>
+                <div style="text-align:center;padding:40px;color:var(--muted);">Loading the Brain...</div>
             </div>
         </div>
     </div>
 
     <script>
         // ════════════════════════════════════════════════════════════════════
-        // CONFIGURATION
+        // CONFIG
         // ════════════════════════════════════════════════════════════════════
 
-        const BASE_URL = window.location.origin;
+        const BASE = window.location.origin;
         let currentTab = 'dashboard';
         let allAgents = [];
         let eventCount = 0;
@@ -731,104 +450,73 @@
             currentTab = tab;
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-item').forEach(el => {
-                const txt = el.textContent.trim();
-                if (txt.includes('Dashboard') && tab === 'dashboard') el.classList.add('active');
-                else if (txt.includes('Agents') && tab === 'agents') el.classList.add('active');
-                else if (txt.includes('Chat') && tab === 'chat') el.classList.add('active');
-                else if (txt.includes('Articles') && tab === 'articles') el.classList.add('active');
-                else if (txt.includes('Research') && tab === 'research') el.classList.add('active');
-                else if (txt.includes('Governance') && tab === 'compliance') el.classList.add('active');
-                else if (txt.includes('Drafting') && tab === 'drafting') el.classList.add('active');
-                else if (txt.includes('Domain') && tab === 'domain') el.classList.add('active');
-                else if (txt.includes('Audit') && tab === 'audit') el.classList.add('active');
+                const t = el.textContent.trim();
+                if (t.includes('Dashboard') && tab === 'dashboard') el.classList.add('active');
+                else if (t.includes('Agents') && tab === 'agents') el.classList.add('active');
+                else if (t.includes('Articles') && tab === 'articles') el.classList.add('active');
+                else if (t.includes('Chat') && tab === 'chat') el.classList.add('active');
             });
 
             const titles = {
                 dashboard: '📊 Brain Dashboard',
                 agents: '🤖 Agents (530)',
-                chat: '💬 Chat',
-                articles: '📰 Articles',
-                research: '🔍 Legal Research',
-                compliance: '💼 AI Governance & Compliance',
-                drafting: '📝 Document Drafting',
-                domain: '🌐 Domain Intelligence',
-                audit: '📊 Company Audit'
+                articles: '📰 Legal Articles',
+                chat: '💬 Chat'
             };
             document.getElementById('contentTitle').textContent = titles[tab] || 'Dashboard';
-            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
 
             const renderers = {
                 dashboard: renderDashboard,
                 agents: renderAgents,
-                chat: renderChatTab,
-                articles: renderArticlesTab,
-                research: renderResearchTab,
-                compliance: renderComplianceTab,
-                drafting: renderDraftingTab,
-                domain: renderDomainTab,
-                audit: renderAuditTab
+                articles: renderArticles,
+                chat: renderChatTab
             };
             if (renderers[tab]) renderers[tab]();
         }
 
-        // ─── SSE CONNECTION ──────────────────────────────────────────────────
+        // ─── SSE ─────────────────────────────────────────────────────────────
 
         function connectSSE() {
-            if (eventSource) {
-                eventSource.close();
-                eventSource = null;
-            }
-
+            if (eventSource) { eventSource.close(); eventSource = null; }
             try {
-                eventSource = new EventSource(`${BASE_URL}/agent/events`);
-
+                eventSource = new EventSource(`${BASE}/agent/events`);
                 eventSource.onopen = () => {
                     document.getElementById('statusText').textContent = '🟢 Live';
                     document.getElementById('statusDot').style.background = '#10b981';
                     document.getElementById('footerStatus').textContent = 'SSE connected';
                 };
-
-                eventSource.onmessage = (event) => {
+                eventSource.onmessage = (e) => {
                     try {
-                        const data = JSON.parse(event.data);
+                        const data = JSON.parse(e.data);
                         eventCount++;
                         document.getElementById('eventCounter').textContent = `Events: ${eventCount}`;
-
                         const log = document.getElementById('agentLog');
                         if (log && data.agent) {
                             const entry = document.createElement('div');
-                            entry.className = 'log-entry';
+                            entry.className = 'entry';
                             const time = new Date().toLocaleTimeString();
                             const finding = data.finding || data.action || 'processing...';
                             entry.innerHTML =
-                                `<span class="time">[${time}]</span> <span class="agent">${data.agent}</span> ${finding}`;
+                                `<span class="time">[${time}]</span> <span class="agent">${data.agent}</span> <span class="action">${finding}</span>`;
                             log.prepend(entry);
                             while (log.children.length > 20) log.removeChild(log.lastChild);
                         }
-                    } catch (e) {
-                        console.error('SSE parse error:', e);
-                    }
+                    } catch (err) { console.error('SSE parse:', err); }
                 };
-
                 eventSource.onerror = () => {
                     document.getElementById('statusText').textContent = '⚠️ Reconnecting...';
                     document.getElementById('statusDot').style.background = '#f59e0b';
-                    if (eventSource) {
-                        eventSource.close();
-                        eventSource = null;
-                    }
+                    if (eventSource) { eventSource.close(); eventSource = null; }
                     setTimeout(connectSSE, 3000);
                 };
-            } catch (e) {
-                setTimeout(connectSSE, 3000);
-            }
+            } catch (e) { setTimeout(connectSSE, 3000); }
         }
 
         // ─── FETCH AGENTS ───────────────────────────────────────────────────
 
         async function fetchAgents() {
             try {
-                const resp = await fetch(`${BASE_URL}/agents`);
+                const resp = await fetch(`${BASE}/agents`);
                 if (resp.ok) {
                     const data = await resp.json();
                     allAgents = data.agents || [];
@@ -877,94 +565,47 @@
         function renderDashboard() {
             const html = `
                 <div class="hero">
-                    <div class="eye-container">
-                        <div class="eye" id="thirdEye">
-                            <div class="iris"></div>
-                            <div class="pupil"></div>
-                            <div class="reflection"></div>
-                            <div class="eyelid"></div>
-                        </div>
-                    </div>
+                    <div class="eye-big" onclick="this.style.animation='none';setTimeout(()=>this.style.animation='blink 4s infinite',100)">👁️</div>
                     <h1>Unknown Verdict</h1>
-                    <div class="subtitle">The Legal AGI · Est. 2026 – Publish 2129</div>
+                    <div class="sub">The Legal AGI · Est. 2026 – Publish 2129</div>
                     <div class="infinity">♾️ 2026 – 2129</div>
-                    <div class="badge-group">
-                        <span class="badge">🧠 Think</span>
-                        <span class="badge">🗣️ Speak</span>
-                        <span class="badge">👂 Listen</span>
-                        <span class="badge">🔮 Self-Improve</span>
-                        <span class="badge">📷 Images work too</span>
+                    <div class="tags">
+                        <span>🧠 Think</span>
+                        <span>🗣️ Speak</span>
+                        <span>👂 Listen</span>
+                        <span>🔮 Self-Improve</span>
+                        <span>📷 Images work too</span>
                     </div>
                 </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="icon">⚡</div><div class="value cyan">114</div><div class="label">Endpoints</div></div>
-                    <div class="stat-card"><div class="icon">🤖</div><div class="value green">${allAgents.length}</div><div class="label">Agents</div></div>
-                    <div class="stat-card"><div class="icon">📚</div><div class="value purple">50+</div><div class="label">Services</div></div>
-                    <div class="stat-card"><div class="icon">🌍</div><div class="value gold">8</div><div class="label">Jurisdictions</div></div>
-                    <div class="stat-card"><div class="icon">🔒</div><div class="value green">0</div><div class="label">Data Retention (days)</div></div>
+                <div class="stats">
+                    <div class="stat"><div class="num cyan">114</div><div class="label">Endpoints</div></div>
+                    <div class="stat"><div class="num green">${allAgents.length}</div><div class="label">Agents</div></div>
+                    <div class="stat"><div class="num purple">50+</div><div class="label">Services</div></div>
+                    <div class="stat"><div class="num gold">8</div><div class="label">Jurisdictions</div></div>
                 </div>
 
-                <div class="log-container" id="agentLog">
-                    <div class="log-title">🧠 Real Agent Activity</div>
-                    <div style="color:var(--text-muted);font-size:11px;padding:4px 0;">Waiting for agent events...</div>
+                <div class="log" id="agentLog">
+                    <div class="title">🧠 Real Agent Activity</div>
+                    <div style="color:var(--muted);font-size:11px;padding:4px 0;">Waiting for agent events...</div>
                 </div>
 
                 <h3 style="margin:12px 0 8px;font-size:16px;">🔥 Trending Topics</h3>
-                <div class="tags">
-                    <span class="tag">#AI Regulation</span>
-                    <span class="tag">#DPDPA</span>
-                    <span class="tag">#GDPR</span>
-                    <span class="tag">#EU AI Act</span>
-                    <span class="tag">#Contract Law</span>
-                    <span class="tag">#IP Protection</span>
-                    <span class="tag">#Legal Tech</span>
-                    <span class="tag">#Arbitration</span>
-                    <span class="tag">#Data Privacy</span>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#AI Regulation</span>
+                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#DPDPA</span>
+                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#GDPR</span>
+                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#EU AI Act</span>
+                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#Contract Law</span>
+                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#IP Protection</span>
                 </div>
 
                 <h3 style="margin:16px 0 8px;font-size:16px;">📰 Latest Intelligence</h3>
-                <div id="articlesPreview" style="color:var(--text-muted);font-size:13px;">Loading articles...</div>
+                <div id="articlesPreview" style="color:var(--muted);font-size:13px;">Loading articles...</div>
                 ${renderChat()}
             `;
             document.getElementById('contentBody').innerHTML = html;
             loadArticlesPreview();
-            setupEyeTracking();
-        }
-
-        // ─── EYE TRACKING ──────────────────────────────────────────────────
-
-        function setupEyeTracking() {
-            const eye = document.querySelector('.eye-container .eye');
-            if (!eye) return;
-            const iris = eye.querySelector('.iris');
-            const pupil = eye.querySelector('.pupil');
-            const eyelid = eye.querySelector('.eyelid');
-
-            document.addEventListener('mousemove', (e) => {
-                const rect = eye.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const dx = e.clientX - cx;
-                const dy = e.clientY - cy;
-                const angle = Math.atan2(dy, dx);
-                const dist = Math.min(10, Math.hypot(dx, dy) / 20);
-                const x = Math.cos(angle) * dist;
-                const y = Math.sin(angle) * dist;
-                if (iris) iris.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
-                if (pupil) pupil.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
-            });
-
-            eye.addEventListener('click', () => {
-                if (eyelid) {
-                    eyelid.style.animation = 'none';
-                    void eyelid.offsetWidth;
-                    eyelid.style.animation = 'blink 0.8s ease-in-out 3';
-                    setTimeout(() => {
-                        eyelid.style.animation = 'blink 5s ease-in-out infinite';
-                    }, 3000);
-                }
-            });
         }
 
         // ─── LOAD ARTICLES PREVIEW ─────────────────────────────────────────
@@ -972,17 +613,15 @@
         async function loadArticlesPreview() {
             const container = document.getElementById('articlesPreview');
             if (!container) return;
-
             try {
-                const response = await fetch(`${BASE_URL}/articles`);
-                const data = await response.json();
-
+                const resp = await fetch(`${BASE}/articles`);
+                const data = await resp.json();
                 if (data.articles && data.articles.length > 0) {
                     container.innerHTML = data.articles.slice(0, 3).map(a =>
-                        `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
+                        `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
                             <div style="font-weight:600;font-size:14px;">${a.title}</div>
-                            <div style="font-size:12px;color:var(--text-muted);">${a.summary || a.content?.substring(0,150) || ''}</div>
-                            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">📚 ${a.source || 'Unknown Verdict'}</div>
+                            <div style="font-size:12px;color:var(--muted);">${a.summary || a.content?.substring(0,150) || ''}</div>
+                            <div style="font-size:11px;color:var(--muted);margin-top:4px;">📚 ${a.source || 'Unknown Verdict'}</div>
                         </div>`
                     ).join('');
                 } else {
@@ -1003,23 +642,65 @@
                 <h3 style="margin-bottom:12px;">🤖 530 Agents – All Categories</h3>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
                     ${Object.entries(cats).map(([c, n]) =>
-                        `<span style="font-size:13px;color:var(--text-muted);">${c}: <strong style="color:#fff;">${n}</strong></span>`
+                        `<span style="font-size:13px;color:var(--muted);">${c}: <strong style="color:#fff;">${n}</strong></span>`
                     ).join('')}
                 </div>
                 <div class="agents-grid">
                     ${allAgents.slice(0,40).map(a => `
                         <div class="agent-card" onclick="runAgent('${a.id}')">
                             <div class="name">${a.icon} ${a.specialty || a.name}</div>
-                            <div class="category">${a.category} · ${a.jurisdiction || 'Global'}</div>
+                            <div class="cat">${a.category} · ${a.jurisdiction || 'Global'}</div>
                             <div class="price">💰 $${a.price || Math.floor(Math.random()*20+5)}/task</div>
                         </div>
                     `).join('')}
                 </div>
-                ${allAgents.length > 40 ? `<div style="color:var(--text-muted);text-align:center;padding:16px;">+ ${allAgents.length - 40} more agents</div>` : ''}
+                ${allAgents.length > 40 ? `<div style="color:var(--muted);text-align:center;padding:16px;">+ ${allAgents.length - 40} more agents</div>` : ''}
                 <div id="agentResult" style="margin-top:16px;"></div>
                 ${renderChat()}
             `;
             document.getElementById('contentBody').innerHTML = html;
+        }
+
+        // ─── RENDER ARTICLES ───────────────────────────────────────────────
+
+        function renderArticles() {
+            const html = `
+                <h3 style="margin-bottom:12px;">📰 Legal Intelligence Articles</h3>
+                <div id="articlesList" style="color:var(--muted);">Loading articles...</div>
+                ${renderChat()}
+            `;
+            document.getElementById('contentBody').innerHTML = html;
+            loadArticlesFull();
+        }
+
+        async function loadArticlesFull() {
+            const container = document.getElementById('articlesList');
+            if (!container) return;
+            try {
+                const resp = await fetch(`${BASE}/articles`);
+                const data = await resp.json();
+                if (data.articles && data.articles.length > 0) {
+                    container.innerHTML = `
+                        <div class="articles-grid">
+                            ${data.articles.map(a => `
+                                <div class="article-card">
+                                    <h4>${a.title}</h4>
+                                    <p>${a.summary || a.content?.substring(0,150) || 'No summary available.'}</p>
+                                    <div class="meta">
+                                        <span>📚 ${a.source || 'Unknown Verdict'}</span>
+                                        <span>${a.published_at ? new Date(a.published_at).toLocaleDateString() : ''}</span>
+                                    </div>
+                                    ${a.tags ? a.tags.map(t => `<span class="tag">#${t}</span>`).join('') : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">No articles available.</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">⚠️ Could not load articles.</div>';
+            }
         }
 
         // ─── RENDER CHAT TAB ───────────────────────────────────────────────
@@ -1032,15 +713,15 @@
 
         function renderChat() {
             return `
-                <div class="chat-container">
+                <div class="chat-box">
                     <h4 style="margin-bottom:10px;">💬 Ask the Brain</h4>
-                    <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msgs" id="chatMessages">
                         <div class="chat-msg ai">
                             <div class="role">🧠 Brain</div>
                             Hello. I'm the Unknown Verdict Brain with ${allAgents.length} agents. Ask me anything.
                         </div>
                     </div>
-                    <div class="chat-input-row">
+                    <div class="chat-row">
                         <input type="text" id="chatInput" placeholder="Ask a legal, journalistic, or spiritual question..." onkeypress="if(event.key==='Enter') sendChat()" />
                         <button id="sendBtn" onclick="sendChat()">Send</button>
                     </div>
@@ -1048,345 +729,60 @@
             `;
         }
 
-        // ─── RENDER ARTICLES TAB ───────────────────────────────────────────
-
-        function renderArticlesTab() {
-            const html = `
-                <h3 style="margin-bottom:12px;">📰 Legal Intelligence Articles</h3>
-                <div id="articlesList" style="color:var(--text-muted);">Loading articles...</div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-            loadArticlesFull();
-        }
-
-        async function loadArticlesFull() {
-            const container = document.getElementById('articlesList');
-            if (!container) return;
-
-            try {
-                const response = await fetch(`${BASE_URL}/articles`);
-                const data = await response.json();
-
-                if (data.articles && data.articles.length > 0) {
-                    container.innerHTML = `
-                        <div class="articles-grid">
-                            ${data.articles.map(a => `
-                                <div class="article-card">
-                                    <h4>${a.title}</h4>
-                                    <p>${a.summary || a.content?.substring(0, 150) || 'No summary available.'}</p>
-                                    <div class="meta">
-                                        <span>📚 ${a.source || 'Unknown Verdict'}</span>
-                                        <span>${a.published_at ? new Date(a.published_at).toLocaleDateString() : ''}</span>
-                                    </div>
-                                    ${a.tags ? a.tags.map(t => `<span class="tag">#${t}</span>`).join('') : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">No articles available.</div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">⚠️ Could not load articles.</div>';
-            }
-        }
-
-        // ─── RENDER RESEARCH TAB ───────────────────────────────────────────
-
-        function renderResearchTab() {
-            const html = `
-                <h3 style="margin-bottom:12px;">🔍 Legal Research</h3>
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <input id="researchQuery" placeholder="Enter legal query..." style="flex:1;min-width:200px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;" />
-                        <select id="researchJurisdiction" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;">
-                            <option value="india">India</option>
-                            <option value="us">US</option>
-                            <option value="uk">UK</option>
-                            <option value="eu">EU</option>
-                        </select>
-                        <button class="btn-primary" onclick="doResearch()">🔍 Search</button>
-                    </div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Search across 32.5M legal vectors</div>
-                </div>
-                <div id="researchResults" style="color:var(--text-muted);font-size:14px;">Enter a query to search.</div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-        }
-
-        async function doResearch() {
-            const query = document.getElementById('researchQuery').value.trim();
-            if (!query) return alert('Enter a query');
-            const jurisdiction = document.getElementById('researchJurisdiction').value;
-            const container = document.getElementById('researchResults');
-            container.innerHTML = '<span style="color:var(--text-muted);">🔍 Searching 32.5M legal records...</span>';
-
-            try {
-                const response = await fetch(`${BASE_URL}/rag/search`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, top_k: 5 })
-                });
-                const data = await response.json();
-                if (data.results && data.results.length > 0) {
-                    container.innerHTML = data.results.map(r =>
-                        `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;border-left:3px solid var(--accent);">
-                            <div style="font-weight:600;">${r.title || 'Untitled'}</div>
-                            <div style="font-size:12px;color:var(--text-muted);">${r.court || ''} · ${r.date || ''}</div>
-                            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">${r.text?.substring(0,300) || ''}...</div>
-                            <div style="font-size:11px;color:var(--success);margin-top:4px;">Score: ${(r.score * 100).toFixed(1)}%</div>
-                        </div>`
-                    ).join('');
-                } else {
-                    container.innerHTML = '<div style="color:var(--text-muted);">No results found.</div>';
-                }
-            } catch (e) {
-                container.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
-            }
-        }
-
-        // ─── RENDER COMPLIANCE TAB ─────────────────────────────────────────
-
-        function renderComplianceTab() {
-            const html = `
-                <h3 style="margin-bottom:12px;">💼 AI Governance & Compliance</h3>
-                <div class="compliance-grid">
-                    <div class="compliance-card"><div class="score good">92%</div><div class="framework">DPDPA (India)</div><div class="status" style="color:var(--success);">✅ Compliant</div></div>
-                    <div class="compliance-card"><div class="score good">88%</div><div class="framework">GDPR (EU)</div><div class="status" style="color:var(--success);">✅ Compliant</div></div>
-                    <div class="compliance-card"><div class="score warning">65%</div><div class="framework">EU AI Act</div><div class="status" style="color:var(--gold);">⚠️ Partial</div></div>
-                    <div class="compliance-card"><div class="score good">91%</div><div class="framework">SEBI Regulations</div><div class="status" style="color:var(--success);">✅ Compliant</div></div>
-                    <div class="compliance-card"><div class="score good">85%</div><div class="framework">RBI Guidelines</div><div class="status" style="color:var(--success);">✅ Compliant</div></div>
-                    <div class="compliance-card"><div class="score warning">72%</div><div class="framework">ISO 27001</div><div class="status" style="color:var(--gold);">⚠️ In Progress</div></div>
-                </div>
-                <div style="margin-top:16px;">
-                    <h4 style="margin-bottom:8px;">📋 Compliance Checklist</h4>
-                    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;">
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>✅ Data Protection Impact Assessment</span><span style="color:var(--success);">Complete</span></div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>✅ Privacy Policy</span><span style="color:var(--success);">Complete</span></div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>✅ Terms of Service</span><span style="color:var(--success);">Complete</span></div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>⚠️ AI Governance Framework</span><span style="color:var(--gold);">In Progress</span></div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>❌ ISO Certification</span><span style="color:var(--danger);">Pending</span></div>
-                    </div>
-                </div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-        }
-
-        // ─── RENDER DRAFTING TAB ───────────────────────────────────────────
-
-        function renderDraftingTab() {
-            const html = `
-                <h3 style="margin-bottom:12px;">📝 Legal Drafting</h3>
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px;">
-                    <button class="btn btn-primary" onclick="draftDocument('agreement')">📄 Draft Agreement</button>
-                    <button class="btn btn-primary" onclick="draftDocument('petition')">📋 Draft Petition</button>
-                    <button class="btn btn-primary" onclick="draftDocument('notice')">📩 Draft Notice</button>
-                    <button class="btn btn-primary" onclick="draftDocument('contract')">📑 Draft Contract</button>
-                    <button class="btn btn-primary" onclick="draftDocument('will')">📜 Draft Will</button>
-                    <button class="btn btn-primary" onclick="draftDocument('nda')">🤫 Draft NDA</button>
-                </div>
-                <div id="draftingResult" style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;min-height:100px;color:var(--text-muted);font-size:14px;">
-                    Select a document type to start drafting.
-                </div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-        }
-
-        async function draftDocument(type) {
-            const container = document.getElementById('draftingResult');
-            const details = prompt(`Enter details for ${type} (e.g., parties, terms):`, `Sample ${type} details`);
-            if (!details) return;
-
-            container.innerHTML = '<span style="color:var(--text-muted);">🧠 Drafting...</span>';
-
-            try {
-                const response = await fetch(`${BASE_URL}/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: `Draft a ${type} with: ${details}` })
-                });
-                const data = await response.json();
-                const content = data.response || data.message || 'Draft generated.';
-                container.innerHTML = `
-                    <div style="font-weight:600;color:var(--accent);margin-bottom:8px;">📄 ${type.toUpperCase()}</div>
-                    <div style="white-space:pre-wrap;font-size:14px;line-height:1.6;">${content}</div>
-                    <div style="margin-top:12px;">
-                        <button class="btn btn-success" onclick="copyToClipboard(this.parentElement.previousElementSibling.textContent)">📋 Copy</button>
-                    </div>
-                `;
-            } catch (e) {
-                container.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
-            }
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
-            alert('✅ Copied to clipboard!');
-        }
-
-        // ─── RENDER DOMAIN TAB ─────────────────────────────────────────────
-
-        function renderDomainTab() {
-            const html = `
-                <h3 style="margin-bottom:12px;">🌐 Domain Intelligence</h3>
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;">
-                    <div class="domain-scan">
-                        <input id="domainInput" placeholder="Enter domain (e.g., example.com)" value="advocacyalawfrim.in" />
-                        <button class="btn-primary" onclick="scanDomain()">🔍 Scan Domain</button>
-                    </div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">WHOIS lookup, SSL, reputation, cybersquatting check</div>
-                </div>
-                <div id="domainResult" style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px;min-height:80px;color:var(--text-muted);">
-                    Enter a domain to scan.
-                </div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-        }
-
-        async function scanDomain() {
-            const domain = document.getElementById('domainInput').value.trim();
-            if (!domain) return alert('Enter a domain');
-            const container = document.getElementById('domainResult');
-            container.innerHTML = '<span style="color:var(--text-muted);">🔍 Scanning...</span>';
-
-            try {
-                const response = await fetch(`${BASE_URL}/domain/scan`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domain })
-                });
-                const data = await response.json();
-                container.innerHTML = `
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <div><strong>Domain:</strong> ${data.domain || domain}</div>
-                        <div><strong>Registrar:</strong> ${data.registrar || 'Unknown'}</div>
-                        <div><strong>Registration:</strong> ${data.registration_date || 'N/A'}</div>
-                        <div><strong>Expiration:</strong> ${data.expiration || 'N/A'}</div>
-                        <div><strong>SSL:</strong> ${data.ssl_valid ? '✅ Valid' : '❌ Invalid'}</div>
-                        <div><strong>Reputation:</strong> ${data.reputation || 'Unknown'}</div>
-                        <div style="grid-column:span 2;"><strong>Recommendations:</strong> ${data.recommendations?.join(', ') || 'None'}</div>
-                    </div>
-                `;
-            } catch (e) {
-                container.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
-            }
-        }
-
-        // ─── RENDER AUDIT TAB ──────────────────────────────────────────────
-
-        function renderAuditTab() {
-            const html = `
-                <h3 style="margin-bottom:12px;">📊 Company Legal Audit</h3>
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;">
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <input id="auditCompany" placeholder="Company name" style="flex:1;min-width:150px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;" />
-                        <input id="auditEmail" placeholder="Email (for report)" style="flex:1;min-width:150px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;" />
-                        <button class="btn-primary" onclick="runAudit()">📊 Generate Audit</button>
-                    </div>
-                </div>
-                <div id="auditResult" style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px;min-height:80px;color:var(--text-muted);">
-                    Enter company details to generate a legal audit.
-                </div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-        }
-
-        async function runAudit() {
-            const company = document.getElementById('auditCompany').value.trim();
-            const email = document.getElementById('auditEmail').value.trim();
-            if (!company) return alert('Enter company name');
-            const container = document.getElementById('auditResult');
-            container.innerHTML = '<span style="color:var(--text-muted);">📊 Generating audit report...</span>';
-
-            try {
-                const response = await fetch(`${BASE_URL}/company/complete-audit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ company_name: company, email: email || 'audit@example.com' })
-                });
-                const data = await response.json();
-                container.innerHTML = `
-                    <div style="border-left:4px solid var(--success);padding-left:12px;">
-                        <div style="font-weight:600;font-size:18px;">${data.company || company}</div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-                            <div><strong>Risk Score:</strong> ${data.overall_risk_score || 75}%</div>
-                            <div><strong>Jurisdiction:</strong> ${data.jurisdiction || 'India'}</div>
-                            <div><strong>Industry:</strong> ${data.industry || 'General'}</div>
-                            <div><strong>Agents Used:</strong> ${data.agents_used || 530}</div>
-                        </div>
-                        <div style="margin-top:8px;font-size:13px;color:var(--text-muted);">${data.executive_summary || 'Audit complete.'}</div>
-                        ${email ? `<div style="margin-top:8px;color:var(--success);">📧 Report sent to ${email}</div>` : ''}
-                    </div>
-                `;
-            } catch (e) {
-                container.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
-            }
-        }
-
         // ─── CHAT FUNCTION ──────────────────────────────────────────────────
 
         async function sendChat() {
             const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message) return;
+            const msg = input.value.trim();
+            if (!msg) return;
             input.value = '';
 
-            const messagesDiv = document.getElementById('chatMessages');
-            const sendBtn = document.getElementById('sendBtn');
+            const msgs = document.getElementById('chatMessages');
+            const btn = document.getElementById('sendBtn');
 
-            messagesDiv.innerHTML += `<div class="chat-msg user"><div class="role">You</div>${message}</div>`;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            msgs.innerHTML += `<div class="chat-msg user"><div class="role">You</div>${msg}</div>`;
+            msgs.scrollTop = msgs.scrollHeight;
 
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Thinking...';
+            btn.disabled = true;
+            btn.textContent = 'Thinking...';
 
-            const thinkingId = 'thinking-' + Date.now();
-            messagesDiv.innerHTML += `<div class="chat-msg ai" id="${thinkingId}"><div class="role">🧠 Brain</div><span style="color:var(--text-muted);">Thinking...</span></div>`;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            const thinkingId = 'think-' + Date.now();
+            msgs.innerHTML += `<div class="chat-msg ai" id="${thinkingId}"><div class="role">🧠 Brain</div><span style="color:var(--muted);">Thinking...</span></div>`;
+            msgs.scrollTop = msgs.scrollHeight;
 
             try {
-                const response = await fetch(`${BASE_URL}/chat`, {
+                const resp = await fetch(`${BASE}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({ message: msg })
                 });
 
-                const thinkingEl = document.getElementById(thinkingId);
-                if (thinkingEl) thinkingEl.remove();
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
 
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
-                }
+                if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
 
                 let data;
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    const text = await response.text();
+                try { data = await resp.json(); } catch (e) {
+                    const text = await resp.text();
                     data = { response: text };
                 }
 
-                const aiResponse = data.response || data.text || data.message || 'I received your message.';
-                messagesDiv.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>${aiResponse}</div>`;
+                const reply = data.response || data.text || data.message || 'I received your message.';
+                msgs.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>${reply}</div>`;
 
             } catch (error) {
-                const thinkingEl = document.getElementById(thinkingId);
-                if (thinkingEl) thinkingEl.remove();
-                messagesDiv.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
+                msgs.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>
                     <span style="color:var(--gold);">⚠️ ${error.message}</span>
-                    <br><span style="font-size:12px;color:var(--text-muted);">Please try again.</span>
+                    <br><span style="font-size:12px;color:var(--muted);">Please try again.</span>
                 </div>`;
                 console.error('Chat error:', error);
             } finally {
-                sendBtn.disabled = false;
-                sendBtn.textContent = 'Send';
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                btn.disabled = false;
+                btn.textContent = 'Send';
+                msgs.scrollTop = msgs.scrollHeight;
             }
         }
 
@@ -1395,25 +791,24 @@
         async function runAgent(id) {
             const agent = allAgents.find(a => a.id === id);
             if (!agent) return alert('Agent not found');
-
             const task = prompt(`What task for ${agent.name}?`, 'Analyze latest legal developments');
             if (!task) return;
 
             const div = document.getElementById('agentResult');
             if (!div) return;
-            div.innerHTML = `<span style="color:var(--text-muted);">${agent.icon} ${agent.name} working...</span>`;
+            div.innerHTML = `<span style="color:var(--muted);">${agent.icon} ${agent.name} working...</span>`;
 
             try {
-                const resp = await fetch(`${BASE_URL}/agent/${agent.id}/task`, {
+                const resp = await fetch(`${BASE}/agent/${agent.id}/task`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ task })
                 });
                 const data = await resp.json();
                 div.innerHTML = `
-                    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;border-left:4px solid var(--accent);margin-top:12px;">
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;border-left:4px solid var(--accent);margin-top:12px;">
                         <div style="font-weight:600;">🧠 ${data.agent || agent.name}</div>
-                        <div style="font-size:14px;color:var(--text-muted);margin-top:6px;">${data.response || data.result || 'Complete'}</div>
+                        <div style="font-size:14px;color:var(--muted);margin-top:6px;">${data.response || data.result || 'Complete'}</div>
                     </div>
                 `;
             } catch (e) {
@@ -1428,12 +823,8 @@
             await fetchAgents();
             if (currentTab === 'dashboard') renderDashboard();
             else if (currentTab === 'agents') renderAgents();
-            else if (currentTab === 'articles') renderArticlesTab();
-            else if (currentTab === 'research') renderResearchTab();
-            else if (currentTab === 'compliance') renderComplianceTab();
-            else if (currentTab === 'drafting') renderDraftingTab();
-            else if (currentTab === 'domain') renderDomainTab();
-            else if (currentTab === 'audit') renderAuditTab();
+            else if (currentTab === 'articles') renderArticles();
+            else if (currentTab === 'chat') renderChatTab();
             document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
             document.getElementById('statusText').textContent = '🟢 Live';
         }
@@ -1444,8 +835,7 @@
             await fetchAgents();
             connectSSE();
             renderDashboard();
-
-            setInterval(async () => {
+            setInterval(() => {
                 if (currentTab === 'dashboard') {
                     const preview = document.getElementById('articlesPreview');
                     if (preview) loadArticlesPreview();
@@ -1453,18 +843,11 @@
             }, 60000);
         }
 
-        // Expose functions globally
         window.sendChat = sendChat;
         window.switchTab = switchTab;
         window.refreshAll = refreshAll;
         window.runAgent = runAgent;
-        window.doResearch = doResearch;
-        window.draftDocument = draftDocument;
-        window.copyToClipboard = copyToClipboard;
-        window.scanDomain = scanDomain;
-        window.runAudit = runAudit;
 
-        // Start
         document.addEventListener('DOMContentLoaded', init);
     </script>
 
