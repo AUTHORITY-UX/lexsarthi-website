@@ -17,7 +17,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field  # Removed EmailStr
 
-from core.config import Config
+from core.config import settings
 from core.db import db
 from core.llm.router import get_router
 from core.llm.ollama_provider import LLMMessage, LLMResponse
