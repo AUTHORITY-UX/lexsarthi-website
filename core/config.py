@@ -1,74 +1,67 @@
-# core/config.py
-
 import os
+from pathlib import Path
 from typing import List, Optional
-from dotenv import load_dotenv
 
-load_dotenv()
+class Config:
+    # Paths
+    BASE_DIR = Path(__file__).parent.parent
+    DATA_DIR = BASE_DIR / "data"
+    MODELS_DIR = BASE_DIR / "models"
+    STATIC_DIR = BASE_DIR / "static"
 
-class Settings:
-    APP_NAME = os.getenv("APP_NAME", "Unknown Verdict")
-    APP_VERSION = os.getenv("APP_VERSION", "43.0")
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
-    
-    # Debug mode (ADD THIS)
-    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-    
-    # Database
-    DATABASE_URL = os.getenv("DATABASE_URL", "")
-    REDIS_URL = os.getenv("REDIS_URL", "")
-    
-    # LLM Providers
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    DATA_DIR.mkdir(exist_ok=True)
+    MODELS_DIR.mkdir(exist_ok=True)
+
+    # LLM Configuration
+    LLM_MODE = os.getenv("LLM_MODE", "hybrid")  # "offline", "online", "hybrid"
+    LLM_MODEL_NAME = os.getenv("LLM_MODEL", "LiquidAI/LFM2.5-2.6B")
+    EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "law-ai/InCaseLawBERT")
+    DEVICE = os.getenv("DEVICE", "cpu")  # "cpu" or "cuda"
+
+    # RAG Configuration
+    ZVEC_PATH = DATA_DIR / "legal_vectors.zvec"
+    METADATA_PATH = DATA_DIR / "metadata.json"
+    GRAPH_PATH = DATA_DIR / "citation_graph.pkl"
+    RAG_BACKEND = os.getenv("RAG_BACKEND", "zvec")  # "zvec", "faiss", "hybrid"
+
+    # Online Providers (fallback)
+    ONLINE_PROVIDERS: List[str] = ["groq", "openai", "gemini", "deepseek", "openrouter"]
+    PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "groq")
+
+    # API Keys
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-    
-    # Ollama (local)
-    OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-    OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "true").lower() == "true"
-    
-    # Document Intelligence
-    DOCUCHAT_ENABLED = os.getenv("DOCUCHAT_ENABLED", "true").lower() == "true"
-    DOCUCHAT_MODEL = os.getenv("DOCUCHAT_MODEL", "qwen2.5:3b")
-    
-    # LQ.AI Citation Engine
-    LQAI_ENABLED = os.getenv("LQAI_ENABLED", "true").lower() == "true"
-    LQAI_HOST = os.getenv("LQAI_HOST", "http://localhost:8000")
-    
+
+    # Database
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/unknown_verdict")
+
+    # Zero Data Retention
+    ZERO_DATA_RETENTION = True
+    RETENTION_DAYS = 0  # Delete immediately
+
     # Security
-    JWT_SECRET = os.getenv("JWT_SECRET", "change-this-in-production")
-    jwt_signing_key = JWT_SECRET
-    
-    ZERO_DATA_RETENTION = os.getenv("ZERO_DATA_RETENTION", "true").lower() == "true"
-    
-    # Features
-    USE_VERDICT_ENGINE = os.getenv("USE_VERDICT_ENGINE", "true").lower() == "true"
-    VERDICT_ENGINE_MODE = os.getenv("VERDICT_ENGINE_MODE", "balanced")
-    ENABLE_WEB_SEARCH = os.getenv("ENABLE_WEB_SEARCH", "true").lower() == "true"
-    ENABLE_TARGETED_SEARCH = os.getenv("ENABLE_TARGETED_SEARCH", "true").lower() == "true"
-    
-    # Rate Limiting
-    RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
-    RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
-    
-    # Cache
-    CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "300"))
-    
+    JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+    JWT_ALGORITHM = "HS256"
+    JWT_EXPIRATION_MINUTES = 60 * 24 * 7
+
+    # CORS
+    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
+    # Feature Flags
+    ENABLE_AUDIO_AGENT = os.getenv("ENABLE_AUDIO_AGENT", "true").lower() == "true"
+    ENABLE_GRAPH_RAG = os.getenv("ENABLE_GRAPH_RAG", "true").lower() == "true"
+    ENABLE_AGENTIC_RAG = os.getenv("ENABLE_AGENTIC_RAG", "true").lower() == "true"
+    ENABLE_THIRD_EYE = os.getenv("ENABLE_THIRD_EYE", "true").lower() == "true"
+    ENABLE_MCP = os.getenv("ENABLE_MCP", "true").lower() == "true"
+    ENABLE_MOAT = os.getenv("ENABLE_MOAT", "true").lower() == "true"
+
     # Logging
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-    
-    @property
-    def available_llm_providers(self) -> List[str]:
-        providers = []
-        if self.GROQ_API_KEY: providers.append("groq")
-        if self.OPENAI_API_KEY: providers.append("openai")
-        if self.GEMINI_API_KEY: providers.append("gemini")
-        if self.DEEPSEEK_API_KEY: providers.append("deepseek")
-        if self.OPENROUTER_API_KEY: providers.append("openrouter")
-        if self.OLLAMA_ENABLED: providers.append("ollama")
-        return providers
 
-settings = Settings()
+    @classmethod
+    def is_offline_ready(cls) -> bool:
+        """Check if offline components are available."""
+        return cls.ZVEC_PATH.exists() and cls.METADATA_PATH.exists()
