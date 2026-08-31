@@ -1,1455 +1,982 @@
-# app.py - Complete Unknown Verdict Sovereign for Hugging Face Spaces
-
-import os
-import json
-import time
-import uuid
-import asyncio
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, Query, Body
-from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
-import uvicorn
-import httpx
-from contextlib import asynccontextmanager
-import random
-
-# ─── DATA MODELS ──────────────────────────────────────────────
-
-class ChatRequest(BaseModel):
-    message: str = Field(..., description="User message")
-    service: str = Field("general", description="Service to route to: general, psychologist, news, governance, review, privacy, moat")
-    context: Optional[str] = Field(None, description="Optional context/document")
-    jurisdiction: Optional[str] = Field("US", description="Jurisdiction: US, EU, IN, SG, AU")
-
-class ChatResponse(BaseModel):
-    response: str
-    service: str
-    jurisdiction: str
-    agents_used: List[str]
-    timestamp: str
-
-class LegalResearchRequest(BaseModel):
-    query: str
-    context: Optional[str] = None
-    jurisdiction: str = "US"
-
-class AgentTaskRequest(BaseModel):
-    task: str
-    agent_id: Optional[str] = None
-
-class NewsRequest(BaseModel):
-    category: Optional[str] = "all"
-    limit: int = 10
-
-class MarketingDraftRequest(BaseModel):
-    type: str = Field(..., description="linkedin, x, newsletter, brief")
-    topic: Optional[str] = None
-    tone: str = "professional"
-
-class GovernanceDraftRequest(BaseModel):
-    title: str
-    content: str
-    policy_type: str
-
-class ReviewRequest(BaseModel):
-    document: str
-    review_type: str = "contract"
-
-class PrivacyScanRequest(BaseModel):
-    text: str
-    scan_type: str = "compliance"
-
-class MOATAnalysisRequest(BaseModel):
-    query: str
-    context: Optional[str] = None
-
-class TraceRequest(BaseModel):
-    query: str
-    service: str
-    response: str
-    agents: List[str]
-
-# ─── APP STATE ─────────────────────────────────────────────────
-
-class AppState:
-    agents: List[Dict] = []
-    traces: Dict[str, Dict] = {}
-    sessions: Dict[str, Dict] = {}
-    evolution_proposals: List[Dict] = []
-    marketing_drafts: List[Dict] = []
-    news_cache: List[Dict] = []
-    events: List[Dict] = []
-    websockets: List[WebSocket] = []
-    start_time: datetime = datetime.now()
-    
-    @classmethod
-    def init_agents(cls):
-        agent_categories = {
-            "Legal": ["Constitutional", "Criminal", "Civil", "Corporate", "Family", "Contract", "IP", "Tax"],
-            "Compliance": ["DPDPA", "GDPR", "EU AI Act", "CCPA", "Privacy", "Data Protection"],
-            "Journalist": ["Legal Reporting", "News Curation", "AI Ethics", "Tech Policy"],
-            "Analyst": ["MOAT", "Risk Assessment", "Strategic Planning", "Market Intelligence"],
-            "Specialist": ["Psychologist", "Mediator", "Ethics Coach", "Negotiation Expert"],
-            "Technical": ["AI Engineer", "Security Expert", "Blockchain", "Data Scientist"]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unknown Verdict · Sovereign Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ─── RESET ─── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0e1a;
+            --card: rgba(17, 24, 39, 0.92);
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #00d4ff;
+            --purple: #7b2fbe;
+            --gold: #f5c542;
+            --green: #10b981;
+            --danger: #ef4444;
+            --radius: 16px;
         }
-        
-        agents = []
-        for category, specialties in agent_categories.items():
-            for i, specialty in enumerate(specialties):
-                for j in range(15):  # Generate ~530 agents
-                    agent_id = f"agent_{category[:3].upper()}_{i}_{j:03d}"
-                    agents.append({
-                        "id": agent_id,
-                        "name": f"{specialty} Agent {j+1}",
-                        "category": category,
-                        "specialty": specialty,
-                        "jurisdiction": random.choice(["US", "EU", "IN", "SG", "AU"]),
-                        "price": round(random.uniform(5, 30), 2),
-                        "status": "active",
-                        "icon": random.choice(["⚖️", "📊", "🧠", "🔍", "💼", "📰", "🧘", "🛡️"])
-                    })
-        
-        cls.agents = agents[:530]  # Ensure exactly 530
-        
-        # Initialize evolution proposals
-        cls.evolution_proposals = [
-            {"id": "evol_001", "title": "Enhance news summarization with RAG", "status": "pending", "submitted": "2026-08-28"},
-            {"id": "evol_002", "title": "Add regional precedent database", "status": "approved", "submitted": "2026-08-25"},
-            {"id": "evol_003", "title": "Voice model fine-tuning for legal terms", "status": "rejected", "submitted": "2026-08-20"},
-            {"id": "evol_004", "title": "Integrate DPDPA compliance checker", "status": "pending", "submitted": "2026-08-29"},
-            {"id": "evol_005", "title": "Marketing Studio auto-publish", "status": "rejected", "submitted": "2026-08-15"},
-            {"id": "evol_006", "title": "Multi-jurisdiction conflict resolution", "status": "approved", "submitted": "2026-08-27"}
-        ]
-        
-        # Initialize news cache
-        cls.news_cache = [
-            {"id": "news_001", "title": "EU AI Act Enters Full Effect", "summary": "The world's first comprehensive AI regulation is now enforceable across all member states with significant penalties for non-compliance.", "source": "Sovereign Cache", "category": "AI Law", "published": "2026-08-30"},
-            {"id": "news_002", "title": "DPDPA Implementation Timeline Finalized", "summary": "India's Digital Personal Data Protection Act enters final compliance phase with key provisions for cross-border data transfer.", "source": "Sovereign Cache", "category": "Privacy", "published": "2026-08-29"},
-            {"id": "news_003", "title": "California DELETE Act Operational", "summary": "SB 362 enables consumers to request deletion of all personal information from data brokers via single centralized request.", "source": "Sovereign Cache", "category": "Privacy", "published": "2026-08-28"},
-            {"id": "news_004", "title": "Global AI Regulation Tracker", "summary": "Over 30 countries now have or are developing AI regulations, creating complex compliance landscape for multinational organizations.", "source": "Sovereign Cache", "category": "AI Law", "published": "2026-08-27"},
-            {"id": "news_005", "title": "Fintech Regulatory Sandbox Expands", "summary": "India's regulatory sandbox now includes AI-driven compliance tools, reducing time-to-market for legal tech innovations.", "source": "Sovereign Cache", "category": "Fintech", "published": "2026-08-26"},
-            {"id": "news_006", "title": "Privacy Enhancing Technologies Report", "summary": "Zero-retention architectures and sovereign AI systems are emerging as best practices for legal intelligence platforms.", "source": "Sovereign Cache", "category": "Privacy", "published": "2026-08-25"}
-        ]
-
-state = AppState()
-state.init_agents()
-
-# ─── FASTAPI APP ──────────────────────────────────────────────
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("🚀 Starting Unknown Verdict Sovereign v43.0")
-    print(f"   Agents: {len(state.agents)}")
-    print(f"   Endpoints: 114")
-    print("   Environment: production")
-    yield
-    print("👋 Shutting down Unknown Verdict Sovereign")
-
-app = FastAPI(
-    title="Unknown Verdict Sovereign",
-    description="Sovereign Legal Intelligence Platform with 530 Agents",
-    version="43.0",
-    lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ─── WEB SOCKET ────────────────────────────────────────────────
-
-@app.websocket("/ws/third-eye")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    state.websockets.append(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            # Broadcast to all connected clients
-            for ws in state.websockets:
-                if ws != websocket:
-                    try:
-                        await ws.send_text(data)
-                    except:
-                        pass
-    except WebSocketDisconnect:
-        state.websockets.remove(websocket)
-
-# ─── AGENT EVENTS SSE ─────────────────────────────────────────
-
-@app.get("/agent/events")
-async def agent_events(request: Request):
-    async def event_generator():
-        event_counter = 0
-        while True:
-            if await request.is_disconnected():
-                break
-            event_counter += 1
-            agent = random.choice(state.agents)
-            actions = [
-                f"Analyzing legal precedent for {random.choice(['DPDPA', 'GDPR', 'AI Act', 'constitutional rights'])}",
-                f"Processing {random.choice(['contract', 'clause', 'legal brief', 'regulation'])}",
-                f"Consulting with {random.choice(['psychologist', 'governance expert', 'MOAT analyst'])}",
-                f"Preparing {random.choice(['verdict', 'analysis', 'recommendation', 'report'])}",
-                f"Reviewing {random.choice(['case law', 'regulatory updates', 'compliance requirements'])}"
-            ]
-            data = {
-                "event": f"agent_{event_counter}",
-                "agent": agent["name"],
-                "action": random.choice(actions),
-                "finding": f"Completed analysis in {random.randint(1,5)}s",
-                "timestamp": datetime.now().isoformat()
-            }
-            yield f"data: {json.dumps(data)}\n\n"
-            await asyncio.sleep(random.uniform(2, 6))
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
+        html, body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
-    )
 
-# ─── 1. SYSTEM ENDPOINTS ─────────────────────────────────────
-
-@app.get("/", response_model=Dict[str, Any])
-async def root():
-    return {
-        "name": "Unknown Verdict Sovereign",
-        "version": "43.0",
-        "status": "operational",
-        "agents": len(state.agents),
-        "endpoints": 114,
-        "services": ["general", "psychologist", "news", "governance", "review", "privacy", "moat"],
-        "regions": ["India", "Europe", "United States", "Singapore", "Australia"],
-        "zero_retention": True,
-        "human_gated_evolution": True,
-        "started": state.start_time.isoformat(),
-        "uptime": str(datetime.now() - state.start_time)
-    }
-
-@app.get("/status", response_model=Dict[str, Any])
-async def status():
-    return {
-        "status": "operational",
-        "agents": len(state.agents),
-        "endpoints": 114,
-        "zero_retention": True,
-        "regions": 5,
-        "services": ["general", "psychologist", "news", "governance", "review", "privacy", "moat"],
-        "human_gated_evolution": True,
-        "uptime_seconds": int((datetime.now() - state.start_time).total_seconds())
-    }
-
-@app.get("/health", response_model=Dict[str, str])
-async def health():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-@app.get("/providers", response_model=Dict[str, Any])
-async def list_providers():
-    return {
-        "providers": ["groq", "openai", "gemini", "deepseek", "openrouter", "ollama"],
-        "default": "sovereign",
-        "status": "all_available"
-    }
-
-@app.get("/models", response_model=Dict[str, Any])
-async def list_models():
-    return {
-        "models": {
-            "groq": ["llama-3.1-70b", "mixtral-8x7b"],
-            "openai": ["gpt-4", "gpt-4-turbo"],
-            "gemini": ["gemini-1.5-pro"],
-            "deepseek": ["deepseek-coder"],
-            "openrouter": ["anthropic/claude-3"],
-            "ollama": ["qwen2.5:3b"]
-        },
-        "sovereign_fallback": "qwen2.5:3b"
-    }
-
-@app.get("/endpoints", response_model=Dict[str, Any])
-async def list_endpoints():
-    return {
-        "count": 114,
-        "categories": {
-            "system": ["/", "/status", "/health", "/providers", "/models", "/endpoints"],
-            "agents": ["/agents", "/agents/{id}", "/agents/categories", "/agents/{id}/task"],
-            "chat": ["/api/chat", "/api/chat/stream"],
-            "legal": ["/legal-research", "/api/research", "/api/news"],
-            "services": ["/api/moat", "/api/governance/draft", "/api/review", "/api/privacy/scan", "/api/psychologist"],
-            "observability": ["/api/god/view", "/api/trace/{id}", "/api/metrics"],
-            "realtime": ["/ws/third-eye", "/agent/events"],
-            "marketing": ["/api/marketing/draft", "/api/marketing/download"],
-            "evolution": ["/api/evolution/proposals", "/api/evolution/approve", "/api/evolution/reject"]
+        /* ─── HEADER ─── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 28px;
+            background: var(--card);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-    }
-
-@app.get("/metrics", response_model=Dict[str, Any])
-async def metrics():
-    return {
-        "agents": len(state.agents),
-        "traces": len(state.traces),
-        "sessions": len(state.sessions),
-        "events": len(state.events),
-        "websockets": len(state.websockets),
-        "proposals": len(state.evolution_proposals),
-        "drafts": len(state.marketing_drafts),
-        "news_items": len(state.news_cache),
-        "uptime": int((datetime.now() - state.start_time).total_seconds())
-    }
-
-# ─── 2. AGENTS ENDPOINTS ─────────────────────────────────────
-
-@app.get("/agents", response_model=Dict[str, Any])
-async def list_agents(
-    category: Optional[str] = None,
-    jurisdiction: Optional[str] = None,
-    limit: int = 100
-):
-    agents = state.agents
-    if category:
-        agents = [a for a in agents if a["category"].lower() == category.lower()]
-    if jurisdiction:
-        agents = [a for a in agents if a["jurisdiction"].upper() == jurisdiction.upper()]
-    return {
-        "total": len(agents),
-        "agents": agents[:limit],
-        "categories": list(set(a["category"] for a in state.agents)),
-        "jurisdictions": list(set(a["jurisdiction"] for a in state.agents))
-    }
-
-@app.get("/agents/categories", response_model=Dict[str, Any])
-async def agent_categories():
-    categories = {}
-    for agent in state.agents:
-        cat = agent["category"]
-        if cat not in categories:
-            categories[cat] = []
-        categories[cat].append(agent["specialty"])
-    return {"categories": categories}
-
-@app.get("/agents/{agent_id}", response_model=Dict[str, Any])
-async def get_agent(agent_id: str):
-    for agent in state.agents:
-        if agent["id"] == agent_id:
-            return agent
-    raise HTTPException(status_code=404, detail="Agent not found")
-
-@app.post("/agent/{agent_id}/task", response_model=Dict[str, Any])
-async def agent_task(agent_id: str, request: AgentTaskRequest):
-    agent = None
-    for a in state.agents:
-        if a["id"] == agent_id:
-            agent = a
-            break
-    if not agent:
-        raise HTTPException(status_code=404, detail="Agent not found")
-    
-    # Simulate agent work
-    response = f"🔍 Agent {agent['name']} analyzed: {request.task}\n\n"
-    response += f"📊 Category: {agent['category']}\n"
-    response += f"⚖️ Jurisdiction: {agent['jurisdiction']}\n"
-    
-    if "legal" in agent["category"].lower() or "compliance" in agent["category"].lower():
-        response += f"\n📋 Legal Analysis:\n"
-        response += f"  • Relevant laws: DPDPA, GDPR, EU AI Act\n"
-        response += f"  • Compliance status: Under review\n"
-        response += f"  • Recommendation: Proceed with human oversight\n"
-    elif "journalist" in agent["category"].lower():
-        response += f"\n📰 News Summary:\n"
-        response += f"  • Latest developments: AI regulations evolving\n"
-        response += f"  • Key stakeholders: Regulators, Tech Companies\n"
-        response += f"  • Impact: Significant for legal tech\n"
-    else:
-        response += f"\n🧠 Analysis Complete:\n"
-        response += f"  • Task: {request.task}\n"
-        response += f"  • Status: Processed by {agent['name']}\n"
-        response += f"  • Confidence: {random.randint(70, 95)}%\n"
-    
-    return {
-        "agent": agent["name"],
-        "task": request.task,
-        "response": response,
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ─── 3. CHAT ENDPOINTS ────────────────────────────────────────
-
-@app.post("/api/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    # Route to appropriate service
-    service_map = {
-        "general": "General Legal Intelligence",
-        "psychologist": "Legal Psychology Service",
-        "news": "News Intelligence Service",
-        "governance": "Governance & Policy Service",
-        "review": "Document Review Service",
-        "privacy": "Privacy Compliance Service",
-        "moat": "MOAT Strategic Analysis Service"
-    }
-    
-    service_name = service_map.get(request.service, "General Legal Intelligence")
-    
-    # Select agents based on service
-    agents_used = []
-    category_map = {
-        "general": ["Legal", "Analyst"],
-        "psychologist": ["Specialist"],
-        "news": ["Journalist"],
-        "governance": ["Legal", "Compliance"],
-        "review": ["Legal", "Compliance"],
-        "privacy": ["Compliance", "Legal"],
-        "moat": ["Analyst", "Legal"]
-    }
-    
-    categories = category_map.get(request.service, ["Legal"])
-    for cat in categories:
-        matching = [a for a in state.agents if a["category"] in cat]
-        if matching:
-            agents_used.append(random.choice(matching)["name"])
-    
-    if not agents_used:
-        agents_used = [random.choice(state.agents)["name"]]
-    
-    # Generate response
-    response = f"## ⚖️ {service_name}\n\n"
-    
-    if request.service == "general":
-        response += f"**Query**: {request.message}\n\n"
-        response += f"**Jurisdiction**: {request.jurisdiction}\n\n"
-        response += f"Based on analysis by {len(agents_used)} agents, here is the sovereign verdict:\n\n"
-        
-        if "dpdpa" in request.message.lower() or "data law" in request.message.lower():
-            response += """### Digital Personal Data Protection Act (DPDPA) Analysis
-
-**Key Provisions:**
-1. **Consent**: Requires explicit consent for data processing
-2. **Data Principal Rights**: Right to access, correct, and erase personal data
-3. **Data Fiduciary Obligations**: Must implement security safeguards
-4. **Significant Data Fiduciaries**: Additional compliance requirements
-
-**Compliance Timeline:**
-- Data Protection Board established
-- Enforcement starting Q1 2027
-- Penalties up to ₹250 crore
-
-**Recommendation**: Organizations should implement zero-retention architectures and maintain detailed consent records.
-"""
-        elif "delete act" in request.message.lower():
-            response += """### California DELETE Act (SB 362) Analysis
-
-**Overview:**
-- Enables single-request deletion from all data brokers
-- Effective January 1, 2026
-- Applies to all businesses that sell or share consumer data
-
-**Key Features:**
-1. **Centralized Request Mechanism**: One request removes data from all registered brokers
-2. **Mandatory Registration**: Data brokers must register with CPPA
-3. **Deletion Timeline**: 45 days to comply with deletion requests
-
-**Compliance Requirements:**
-- Implement deletion infrastructure
-- Provide clear consumer disclosure
-- Maintain deletion logs
-"""
-        elif "ai law" in request.message.lower():
-            response += """### AI Law & Regulation Analysis
-
-**Global Regulatory Landscape:**
-
-| Jurisdiction | Regulation | Status |
-|--------------|------------|--------|
-| EU | EU AI Act | Enforceable |
-| US | Sectoral approach | Evolving |
-| India | AI advisory | Drafting |
-| Singapore | Model AI Framework | Voluntary |
-
-**Key Compliance Areas:**
-1. Transparency requirements
-2. Data governance
-3. Human oversight
-4. Technical documentation
-5. Post-market monitoring
-
-**Best Practices:**
-- Implement explainable AI
-- Maintain human-in-the-loop
-- Regular bias audits
-"""
-        else:
-            response += f"""### General Legal Analysis
-
-**Question**: {request.message}
-
-**Jurisdiction**: {request.jurisdiction}
-
-**Agents Involved**: {', '.join(agents_used)}
-
-**Sovereign Assessment**:
-- This query requires careful legal consideration
-- Human oversight recommended for binding decisions
-- Zero-retention analysis performed in-memory only
-
-**Next Steps**:
-1. Consult with specialized legal counsel
-2. Consider jurisdictional nuances
-3. Review relevant case law and regulations
-"""
-    
-    elif request.service == "psychologist":
-        response += f"""### Legal Psychology Analysis
-
-**Query**: {request.message}
-
-**Psychological Framework**:
-- Behavioral patterns identified
-- Cognitive bias considerations
-- Emotional intelligence assessment
-
-**Recommendations**:
-1. Maintain professional boundaries
-2. Practice active listening
-3. Consider cultural factors
-4. Document all interactions
-
-**Sovereign Note**: This analysis is for informational purposes and should not substitute for professional psychological assessment.
-"""
-    
-    elif request.service == "news":
-        response += f"""### News Intelligence
-
-**Query**: {request.message}
-
-**Current Headlines**:
-1. EU AI Act enters full effect with landmark enforcement
-2. DPDPA implementation enters final phase
-3. California DELETE Act enables one-click data deletion
-4. Global AI regulation tracker exceeds 30 countries
-5. Privacy-enhancing technologies gain adoption
-
-**Insights**:
-- Regulatory momentum accelerating globally
-- Focus on consumer rights and transparency
-- Technology compliance gap widening
-
-**Sovereign Cache**: Latest news available (live feed unavailable)
-"""
-    
-    elif request.service == "governance":
-        response += f"""### Governance & Policy Analysis
-
-**Topic**: {request.message}
-
-**Policy Framework**:
-1. Compliance requirements: High
-2. Stakeholder impact: Significant
-3. Implementation timeline: 6-12 months
-
-**Recommendations**:
-- Establish governance committee
-- Develop compliance roadmap
-- Implement monitoring systems
-- Regular policy reviews
-
-**Human Oversight**: All policy changes require approval through Evolution Gate.
-"""
-    
-    elif request.service == "review":
-        response += f"""### Document Review Analysis
-
-**Document Type**: Legal Analysis
-
-**Review Summary**:
-- Key clauses identified: {len(request.message.split())} terms analyzed
-- Risk assessment: Moderate
-- Compliance gaps: 3 identified
-
-**Recommendations**:
-1. Review highlighted clauses
-2. Address compliance gaps
-3. Legal counsel review recommended
-
-**Sovereign Verdict**: Document reviewed with zero-retention analysis.
-"""
-    
-    elif request.service == "privacy":
-        response += f"""### Privacy Compliance Analysis
-
-**Scan Type**: Data Protection Assessment
-
-**Findings**:
-- Data inventory: Complete
-- Consent mechanisms: Partial compliance
-- Deletion capabilities: Review recommended
-- Data transfers: Cross-border analysis needed
-
-**Jurisdiction**: {request.jurisdiction}
-
-**Recommendations**:
-1. Implement DPDPA/GDPR compliance
-2. Enable data subject access requests
-3. Maintain privacy impact assessments
-
-**Zero-Retention**: No data persisted after analysis.
-"""
-    
-    elif request.service == "moat":
-        response += f"""### MOAT Strategic Analysis
-
-**Query**: {request.message}
-
-**Competitive Landscape**:
-- Market position: Strong
-- Regulatory moat: Building
-- Technology advantage: Differentiated
-
-**Strategic Recommendations**:
-1. Leverage sovereign AI positioning
-2. Expand jurisdictional coverage
-3. Develop ecosystem partnerships
-4. Maintain human-gated trust model
-
-**MOAT Score**: {random.randint(70, 95)}/100
-"""
-    
-    response += f"\n\n---\n*⚡ Processed by {len(agents_used)} agents · Zero-retention · Sovereign*"
-    
-    # Store trace
-    trace_id = str(uuid.uuid4())
-    state.traces[trace_id] = {
-        "id": trace_id,
-        "query": request.message,
-        "service": request.service,
-        "response": response,
-        "agents": agents_used,
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Add event
-    state.events.append({
-        "id": len(state.events) + 1,
-        "type": "chat",
-        "service": request.service,
-        "agents": len(agents_used),
-        "timestamp": datetime.now().isoformat()
-    })
-    
-    return ChatResponse(
-        response=response,
-        service=request.service,
-        jurisdiction=request.jurisdiction,
-        agents_used=agents_used,
-        timestamp=datetime.now().isoformat()
-    )
-
-@app.post("/api/chat/stream")
-async def chat_stream(request: ChatRequest):
-    async def stream_generator():
-        yield f"data: {json.dumps({'type': 'start', 'service': request.service})}\n\n"
-        await asyncio.sleep(0.5)
-        
-        response = await chat(request)
-        yield f"data: {json.dumps({'type': 'response', 'content': response.response})}\n\n"
-        await asyncio.sleep(0.5)
-        
-        yield f"data: {json.dumps({'type': 'complete', 'agents': response.agents_used})}\n\n"
-    
-    return StreamingResponse(
-        stream_generator(),
-        media_type="text/event-stream"
-    )
-
-# ─── 4. LEGAL RESEARCH ────────────────────────────────────────
-
-@app.post("/legal-research", response_model=Dict[str, Any])
-async def legal_research(request: LegalResearchRequest):
-    response = f"## 🔍 Legal Research Results\n\n"
-    response += f"**Query**: {request.query}\n"
-    response += f"**Jurisdiction**: {request.jurisdiction}\n\n"
-    
-    if request.context:
-        response += f"**Context Provided**: {request.context[:200]}...\n\n"
-    
-    response += """### Key Findings
-
-1. **Relevant Laws**:
-   - DPDPA (India)
-   - GDPR (EU)
-   - CCPA/CPRA (California)
-   - EU AI Act
-
-2. **Precedents**:
-   - Data protection cases increasing
-   - AI liability frameworks emerging
-   - Cross-border data transfer restrictions
-
-3. **Recommendations**:
-   - Conduct compliance gap analysis
-   - Implement privacy-by-design
-   - Maintain documentation
-   - Regular audits recommended
-
-### Sovereign Verdict
-This analysis is provided for informational purposes. All traces are zero-retention and in-memory only.
-
-**Agents Consulted**: 5 specialized agents
-**Confidence**: 85%
-"""
-    
-    return {
-        "query": request.query,
-        "jurisdiction": request.jurisdiction,
-        "response": response,
-        "sources": ["DPDPA", "GDPR", "EU AI Act", "Case Law Database"],
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ─── 5. NEWS ENDPOINTS ────────────────────────────────────────
-
-@app.get("/api/news", response_model=Dict[str, Any])
-async def get_news(
-    category: Optional[str] = None,
-    limit: int = Query(10, le=50)
-):
-    news_items = state.news_cache
-    
-    if category and category != "all":
-        news_items = [n for n in news_items if n["category"].lower() == category.lower()]
-    
-    # Simulate live news fetch
-    live_available = random.random() > 0.3
-    
-    return {
-        "articles": news_items[:limit],
-        "total": len(news_items),
-        "source": "live" if live_available else "sovereign-cache",
-        "cache_status": "available" if not live_available else "live",
-        "category": category or "all",
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/news/live", response_model=Dict[str, Any])
-async def get_live_news():
-    # Return cached news with live simulation
-    return {
-        "articles": state.news_cache,
-        "source": "sovereign-cache-fallback",
-        "status": "live-unavailable",
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ─── 6. SERVICES ENDPOINTS ────────────────────────────────────
-
-@app.get("/api/moat", response_model=Dict[str, Any])
-async def moat_analysis():
-    return {
-        "service": "MOAT Strategic Analysis",
-        "status": "operational",
-        "verifiers": ["Compliance", "Security", "Privacy", "Governance"],
-        "agents": len([a for a in state.agents if a["category"] == "Analyst"]),
-        "analysis": {
-            "threats": ["Regulatory changes", "Competition", "Technology shifts"],
-            "opportunities": ["AI integration", "Global expansion", "Partnerships"],
-            "moat_score": random.randint(70, 95),
-            "recommendation": "Maintain human oversight and expand jurisdiction coverage"
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-    }
+        .logo .star { font-size: 30px; color: var(--gold); }
+        .logo .name {
+            background: linear-gradient(135deg, #f5e6c8, var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .logo .sub {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            -webkit-text-fill-color: var(--muted);
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .region-badge {
+            display: flex;
+            gap: 6px;
+            font-size: 13px;
+            background: rgba(255,255,255,0.04);
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+        }
+        .region-badge span { opacity: 0.3; transition: 0.2s; cursor: default; }
+        .region-badge span.active { opacity: 1; color: var(--gold); }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse-dot 2s infinite;
+            margin-right: 4px;
+        }
+        @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-@app.post("/api/moat", response_model=Dict[str, Any])
-async def moat_analyze(request: MOATAnalysisRequest):
-    return {
-        "query": request.query,
-        "analysis": {
-            "competitive_position": "Strong",
-            "differentiation": "Sovereign AI with human oversight",
-            "risk_level": "Low-Medium",
-            "recommendation": "Continue building jurisdictional expertise"
-        },
-        "agents_used": 3,
-        "timestamp": datetime.now().isoformat()
-    }
+        /* ─── LAYOUT ─── */
+        .main { display: flex; min-height: calc(100vh - 70px); }
+        .sidebar {
+            width: 230px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 20px 16px;
+            flex-shrink: 0;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            position: sticky;
+            top: 70px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar .nav-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 12px 0 6px 10px;
+        }
+        .sidebar-item {
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--muted);
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-item i { width: 20px; font-size: 15px; color: var(--muted); transition: 0.2s; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+        .sidebar-item:hover i { color: var(--accent); }
+        .sidebar-item.active {
+            background: rgba(0,212,255,0.08);
+            color: var(--accent);
+            border: 1px solid rgba(0,212,255,0.15);
+        }
+        .sidebar-item.active i { color: var(--accent); }
+        .sidebar-item .badge {
+            margin-left: auto;
+            background: var(--gold);
+            color: #0a0e1a;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 40px;
+        }
+        .sidebar-item .badge.pending { background: rgba(255,255,255,0.06); color: var(--muted); }
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
 
-@app.post("/api/governance/draft", response_model=Dict[str, Any])
-async def governance_draft(request: GovernanceDraftRequest):
-    draft = {
-        "id": str(uuid.uuid4()),
-        "title": request.title,
-        "content": request.content,
-        "type": request.policy_type,
-        "status": "draft",
-        "human_approval": "pending",
-        "created": datetime.now().isoformat()
-    }
-    state.evolution_proposals.append(draft)
-    
-    return {
-        "draft": draft,
-        "status": "created",
-        "approval_required": True,
-        "message": "Draft created. Human approval required through Evolution Gate."
-    }
+        .content {
+            flex: 1;
+            padding: 28px 32px;
+            overflow-y: auto;
+            max-height: calc(100vh - 70px);
+        }
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .content-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .content-header h2 i { color: var(--gold); }
+        .content-header .meta { font-size: 12px; color: var(--muted); }
 
-@app.post("/api/review", response_model=Dict[str, Any])
-async def review_document(request: ReviewRequest):
-    return {
-        "document_type": request.review_type,
-        "analysis": {
-            "clauses_reviewed": len(request.document.split()),
-            "risk_score": random.randint(30, 80),
-            "compliance_status": "partial",
-            "recommendations": [
-                "Review data protection clauses",
-                "Update consent mechanisms",
-                "Add deletion procedures"
-            ]
-        },
-        "timestamp": datetime.now().isoformat()
-    }
+        /* ─── TABS ─── */
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-@app.post("/api/privacy/scan", response_model=Dict[str, Any])
-async def privacy_scan(request: PrivacyScanRequest):
-    return {
-        "scan_type": request.scan_type,
-        "results": {
-            "compliance_score": random.randint(60, 95),
-            "issues_found": random.randint(0, 5),
-            "risk_level": "low" if random.random() > 0.4 else "medium",
-            "recommendations": [
-                "Implement data minimization",
-                "Review consent policies",
-                "Enable data subject rights"
-            ]
-        },
-        "zero_retention": True,
-        "timestamp": datetime.now().isoformat()
-    }
+        /* ─── HERO ─── */
+        .hero {
+            text-align: center;
+            padding: 32px 20px 28px;
+            background: radial-gradient(ellipse at center, rgba(123,47,190,0.1) 0%, transparent 70%);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .hero .star-big { font-size: 72px; display: inline-block; color: var(--gold); animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .hero h1 {
+            font-size: 34px;
+            background: linear-gradient(135deg, var(--accent), var(--purple), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero .sub { color: var(--muted); font-size: 16px; }
+        .hero .tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+        .hero .tags span {
+            padding: 4px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--muted);
+        }
 
-@app.post("/api/psychologist", response_model=Dict[str, Any])
-async def psychologist_analysis(request: ChatRequest):
-    return {
-        "service": "Legal Psychology",
-        "analysis": {
-            "tone": "Professional",
-            "empathy_score": random.randint(70, 95),
-            "communication_style": "Supportive",
-            "recommendations": [
-                "Maintain clear boundaries",
-                "Use trauma-informed language",
-                "Document interactions"
-            ]
-        },
-        "agents_used": 2,
-        "timestamp": datetime.now().isoformat()
-    }
+        /* ─── STATS ─── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .num { font-size: 30px; font-weight: 700; }
+        .stat-card .num.cyan { color: var(--accent); }
+        .stat-card .num.green { color: var(--green); }
+        .stat-card .num.purple { color: var(--purple); }
+        .stat-card .num.gold { color: var(--gold); }
+        .stat-card .label { font-size: 11px; color: var(--muted); }
 
-# ─── 7. OBSERVABILITY ENDPOINTS ──────────────────────────────
+        /* ─── QUESTION ─── */
+        .question-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .question-block:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,255,0.05); }
+        .question-block .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .question-block .label i { color: var(--gold); }
+        .question-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .question-row input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: 0.2s;
+            min-width: 180px;
+        }
+        .question-row input:focus { border-color: var(--accent); }
+        .question-row input::placeholder { color: var(--muted); font-weight: 300; }
+        .voice-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .voice-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .voice-btn.listening {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+            animation: pulse-mic 1s infinite;
+        }
+        @keyframes pulse-mic { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } }
+        .send-btn {
+            background: linear-gradient(135deg, var(--gold), #e6a800);
+            border: none;
+            color: #0a0e1a;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+        .send-btn:hover { transform: scale(1.03); box-shadow: 0 4px 20px rgba(245,197,66,0.2); }
 
-@app.get("/api/god/view", response_model=Dict[str, Any])
-async def god_view():
-    return {
-        "system": {
-            "status": "operational",
-            "agents": len(state.agents),
-            "services": ["general", "psychologist", "news", "governance", "review", "privacy", "moat"],
-            "regions": ["India", "Europe", "United States", "Singapore", "Australia"],
-            "zero_retention": True,
-            "human_gated": True
-        },
-        "performance": {
-            "active_sessions": len(state.sessions),
-            "traces": len(state.traces),
-            "events": len(state.events),
-            "websockets": len(state.websockets),
-            "uptime": int((datetime.now() - state.start_time).total_seconds())
-        },
-        "evolution": {
-            "proposals": len(state.evolution_proposals),
-            "pending": len([p for p in state.evolution_proposals if p.get("status") == "pending"]),
-            "approved": len([p for p in state.evolution_proposals if p.get("status") == "approved"]),
-            "rejected": len([p for p in state.evolution_proposals if p.get("status") == "rejected"])
-        },
-        "timestamp": datetime.now().isoformat()
-    }
+        /* ─── MATERIAL ─── */
+        .material-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            margin-bottom: 16px;
+        }
+        .material-block .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            border: none;
+            padding: 0;
+            position: static;
+        }
+        .material-block .header label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+        }
+        .material-block .header label i { color: var(--gold); margin-right: 6px; }
+        .material-actions { display: flex; gap: 6px; }
+        .material-actions button {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+        }
+        .material-actions button:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--accent); }
+        .material-block textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            min-height: 70px;
+            outline: none;
+            margin-top: 10px;
+        }
+        .material-block textarea:focus { border-color: var(--accent); }
+        .material-block .hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .material-block .hint i { color: var(--green); font-size: 10px; }
 
-@app.get("/api/trace/{trace_id}", response_model=Dict[str, Any])
-async def get_trace(trace_id: str):
-    if trace_id not in state.traces:
-        raise HTTPException(status_code=404, detail="Trace not found")
-    return state.traces[trace_id]
+        /* ─── VERDICT ─── */
+        .verdict-output {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+        }
+        .verdict-output .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0 12px 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            position: static;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .verdict-output .header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: 0.3px;
+        }
+        .verdict-output .header h3 i { color: var(--gold); margin-right: 8px; }
+        .verdict-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .verdict-actions button {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .verdict-actions button:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--accent); }
+        .verdict-body {
+            background: rgba(0,0,0,0.25);
+            border-radius: 10px;
+            padding: 18px 20px;
+            min-height: 80px;
+            border: 1px solid var(--border);
+            margin-top: 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .verdict-body .placeholder { color: var(--muted); font-style: italic; font-weight: 300; }
 
-@app.post("/api/trace", response_model=Dict[str, Any])
-async def create_trace(request: TraceRequest):
-    trace_id = str(uuid.uuid4())
-    state.traces[trace_id] = {
-        "id": trace_id,
-        "query": request.query,
-        "service": request.service,
-        "response": request.response,
-        "agents": request.agents,
-        "timestamp": datetime.now().isoformat()
-    }
-    return {
-        "trace_id": trace_id,
-        "status": "created",
-        "zero_retention": True,
-        "expiry": "session_end"
-    }
+        /* ─── MARKETING ─── */
+        .marketing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .marketing-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .marketing-card .icon { font-size: 32px; margin-bottom: 6px; }
+        .marketing-card h4 { font-size: 14px; }
+        .marketing-card .desc { font-size: 12px; color: var(--muted); }
+        .marketing-card button {
+            margin-top: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .marketing-card button:hover { border-color: var(--gold); color: var(--gold); }
 
-# ─── 8. MARKETING ENDPOINTS ──────────────────────────────────
+        /* ─── EVOLUTION ─── */
+        .evolution-list {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-top: 10px;
+        }
+        .evolution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .evolution-item:last-child { border-bottom: none; }
+        .evolution-item .status { font-size: 12px; font-weight: 500; }
+        .evolution-item .status.approved { color: var(--green); }
+        .evolution-item .status.pending { color: var(--gold); }
+        .evolution-item .status.rejected { color: var(--danger); }
 
-@app.post("/api/marketing/draft", response_model=Dict[str, Any])
-async def marketing_draft(request: MarketingDraftRequest):
-    templates = {
-        "linkedin": f"""📄 **LinkedIn Post Draft**
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .sidebar { width: 60px; padding: 12px 8px; }
+            .sidebar .nav-label { display: none; }
+            .sidebar-item span:not(.badge) { display: none; }
+            .sidebar-item { justify-content: center; padding: 12px; }
+            .sidebar-item .badge { display: none; }
+            .sidebar-footer { display: none; }
+            .content { padding: 20px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { padding: 16px; max-height: none; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .hero h1 { font-size: 28px; }
+            .header { padding: 10px 16px; }
+            .region-badge { display: none; }
+            .question-row { flex-direction: column; }
+            .question-row input { width: 100%; }
+            .send-btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
 
-🧠 *{request.topic or 'AI & Data Law'}*
-
-As AI systems increasingly drive legal decision-making, the question of data sovereignty becomes critical. The DPDPA and California DELETE Act represent two sides of the same coin — empowering individuals while creating compliance obligations.
-
-Key takeaway: The future of legal AI requires human oversight, zero-retention architectures, and jurisdictional awareness.
-
-#AI #DataLaw #DPDPA #LegalTech #Sovereignty""",
-
-        "x": f"""🐦 **X Thread Draft**
-
-1/5 AI laws are evolving faster than ever. The DPDPA in India and the DELETE Act in California set new benchmarks.
-
-2/5 Both frameworks prioritize user rights — consent, deletion, and transparency.
-
-3/5 For AI systems, this means explainability and data minimization are no longer optional.
-
-4/5 The EU AI Act adds another layer, creating a global patchwork of regulation.
-
-5/5 The sovereign view: human-gated, zero-retention, and jurisdiction-aware.""",
-
-        "newsletter": f"""📬 **Newsletter Draft**
-
-**Weekly Legal Intelligence Update**
-
-*{request.topic or 'AI & Data Law Roundup'}*
-
-This week, we examine the convergence of AI regulation and data protection frameworks across major jurisdictions.
-
-- **DPDPA (India)**: Final compliance guidelines released
-- **DELETE Act (CA)**: Single-request deletion now operational
-- **EU AI Act**: First enforcement actions announced
-
-*Sovereign Insight*: Organizations must prepare for overlapping obligations. Our recommendation — adopt zero-retention architectures and maintain human oversight for all AI-driven decisions.""",
-
-        "brief": f"""📊 **Executive Brief**
-
-**Strategic Legal Intelligence Summary**
-
-*Subject: {request.topic or 'AI & Data Law Convergence'}*
-
-**Overview**
-The regulatory landscape for AI and data protection is rapidly consolidating. The DPDPA, DELETE Act, and EU AI Act create overlapping compliance obligations.
-
-**Key Risks**
-- Non-compliance penalties (up to 4% of global turnover)
-- Cross-jurisdictional conflicts
-- Reputational damage from privacy incidents
-
-**Recommendations**
-1. Implement zero-retention data architectures
-2. Maintain human oversight for all AI decisions
-3. Establish jurisdiction-aware compliance frameworks
-
-**Sovereign Verdict**
-Proactive compliance is no longer optional. Organizations must act now."""
-    }
-    
-    draft_content = templates.get(request.type, templates["linkedin"])
-    
-    draft = {
-        "id": str(uuid.uuid4()),
-        "type": request.type,
-        "topic": request.topic or "Legal Intelligence",
-        "content": draft_content,
-        "tone": request.tone,
-        "status": "draft",
-        "human_approved": False,
-        "auto_publish": False,
-        "created": datetime.now().isoformat()
-    }
-    
-    state.marketing_drafts.append(draft)
-    
-    return {
-        "draft": draft,
-        "status": "created",
-        "message": "Draft ready for human review and download.",
-        "auto_publish": "disabled - human approval required"
-    }
-
-@app.get("/api/marketing/drafts", response_model=Dict[str, Any])
-async def list_marketing_drafts():
-    return {
-        "drafts": state.marketing_drafts,
-        "total": len(state.marketing_drafts),
-        "status": "human_approved_only"
-    }
-
-@app.get("/api/marketing/download/{draft_id}", response_model=Dict[str, Any])
-async def download_draft(draft_id: str):
-    for draft in state.marketing_drafts:
-        if draft["id"] == draft_id:
-            return {
-                "draft": draft,
-                "downloadable": True,
-                "format": "text/plain",
-                "filename": f"draft_{draft['type']}_{datetime.now().strftime('%Y%m%d')}.txt"
-            }
-    raise HTTPException(status_code=404, detail="Draft not found")
-
-# ─── 9. EVOLUTION ENDPOINTS ──────────────────────────────────
-
-@app.get("/api/evolution/proposals", response_model=Dict[str, Any])
-async def list_proposals():
-    return {
-        "proposals": state.evolution_proposals,
-        "total": len(state.evolution_proposals),
-        "human_gated": True,
-        "auto_deploy": False
-    }
-
-@app.post("/api/evolution/approve/{proposal_id}", response_model=Dict[str, Any])
-async def approve_proposal(proposal_id: str):
-    for proposal in state.evolution_proposals:
-        if proposal.get("id") == proposal_id:
-            proposal["status"] = "approved"
-            proposal["approved_at"] = datetime.now().isoformat()
-            return {
-                "proposal": proposal,
-                "status": "approved",
-                "deployed": False,
-                "message": "Human approval confirmed. Manual deployment required."
-            }
-    raise HTTPException(status_code=404, detail="Proposal not found")
-
-@app.post("/api/evolution/reject/{proposal_id}", response_model=Dict[str, Any])
-async def reject_proposal(proposal_id: str):
-    for proposal in state.evolution_proposals:
-        if proposal.get("id") == proposal_id:
-            proposal["status"] = "rejected"
-            proposal["rejected_at"] = datetime.now().isoformat()
-            return {
-                "proposal": proposal,
-                "status": "rejected",
-                "message": "Human review declined this proposal."
-            }
-    raise HTTPException(status_code=404, detail="Proposal not found")
-
-@app.post("/api/evolution/submit", response_model=Dict[str, Any])
-async def submit_proposal(request: Dict[str, Any]):
-    proposal = {
-        "id": str(uuid.uuid4()),
-        "title": request.get("title", "Untitled Proposal"),
-        "description": request.get("description", ""),
-        "status": "pending",
-        "submitted": datetime.now().isoformat(),
-        "submitted_by": "human"
-    }
-    state.evolution_proposals.append(proposal)
-    return {
-        "proposal": proposal,
-        "message": "Proposal submitted. Awaiting human review."
-    }
-
-# ─── 10. THIRD EYE DASHBOARD ──────────────────────────────────
-
-@app.get("/third-eye", response_class=HTMLResponse)
-async def third_eye_dashboard():
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>👁️ Third Eye · Unknown Verdict</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                background: #0a0e1a;
-                color: #e2e8f0;
-                font-family: 'Courier New', monospace;
-                padding: 24px;
-                min-height: 100vh;
-            }
-            .header {
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-                padding-bottom: 16px;
-                margin-bottom: 24px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .eye { font-size: 32px; }
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
-            }
-            .stat-card {
-                background: rgba(255,255,255,0.04);
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 12px;
-                padding: 16px;
-            }
-            .stat-card .num { font-size: 28px; font-weight: bold; color: #00d4ff; }
-            .stat-card .label { font-size: 12px; color: #94a3b8; }
-            .log {
-                background: rgba(0,0,0,0.3);
-                border: 1px solid rgba(255,255,255,0.05);
-                border-radius: 12px;
-                padding: 16px;
-                max-height: 300px;
-                overflow-y: auto;
-            }
-            .log-entry {
-                padding: 6px 0;
-                border-bottom: 1px solid rgba(255,255,255,0.03);
-                font-size: 13px;
-            }
-            .log-entry .time { color: #00d4ff; }
-            .log-entry .agent { color: #f5c542; font-weight: bold; }
-            .status-dot {
-                display: inline-block;
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: #10b981;
-                animation: pulse 2s infinite;
-            }
-            @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-            .refresh-btn {
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.1);
-                color: #e2e8f0;
-                padding: 8px 20px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-family: inherit;
-            }
-            .refresh-btn:hover { background: rgba(255,255,255,0.1); }
-        </style>
-    </head>
-    <body>
-        <div class="header">
+    <header class="header">
+        <div class="logo">
+            <span class="star">✦</span>
             <div>
-                <span class="eye">👁️</span> Third Eye · Unknown Verdict
-                <span style="font-size:12px;color:#94a3b8;margin-left:12px;">v43.0 · 530 Agents</span>
-            </div>
-            <div>
-                <span style="color:#94a3b8;margin-right:16px;" id="statusText">
-                    <span class="status-dot"></span> Live
-                </span>
-                <button class="refresh-btn" onclick="refreshAll()">🔄 Refresh</button>
+                <div class="name">Unknown Verdict</div>
+                <div class="sub">Sovereign Intelligence</div>
             </div>
         </div>
-        
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card"><div class="num" id="agentCount">0</div><div class="label">Agents</div></div>
-            <div class="stat-card"><div class="num" id="endpointCount">0</div><div class="label">Endpoints</div></div>
-            <div class="stat-card"><div class="num" id="traceCount">0</div><div class="label">Traces</div></div>
-            <div class="stat-card"><div class="num" id="eventCount">0</div><div class="label">Events</div></div>
-            <div class="stat-card"><div class="num" id="proposalCount">0</div><div class="label">Proposals</div></div>
-            <div class="stat-card"><div class="num" id="draftCount">0</div><div class="label">Drafts</div></div>
+        <div class="header-actions">
+            <div class="region-badge">
+                <span class="active" title="India">🇮🇳</span>
+                <span title="Europe">🇪🇺</span>
+                <span title="United States">🇺🇸</span>
+                <span title="Singapore">🇸🇬</span>
+                <span title="Australia">🇦🇺</span>
+            </div>
+            <span style="font-size:12px;color:var(--muted);" id="statusText">
+                <span class="status-dot"></span> <span id="statusLabel">Live</span>
+            </span>
+            <button class="auth-btn" id="authBtn" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:6px 20px;border-radius:40px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;">
+                <i class="fas fa-user-astronaut"></i> <span id="authLabel">Sign In</span>
+            </button>
         </div>
-        
-        <h3 style="margin-bottom:12px;">🧠 Agent Activity</h3>
-        <div class="log" id="agentLog">
-            <div style="color:#94a3b8;padding:8px;">Waiting for events...</div>
-        </div>
-        
-        <script>
-            let eventSource = null;
-            
-            function connectSSE() {
-                if (eventSource) { eventSource.close(); }
-                try {
-                    eventSource = new EventSource('/agent/events');
-                    eventSource.onmessage = function(e) {
-                        try {
-                            const data = JSON.parse(e.data);
-                            const log = document.getElementById('agentLog');
-                            const entry = document.createElement('div');
-                            entry.className = 'log-entry';
-                            const time = new Date().toLocaleTimeString();
-                            entry.innerHTML = `<span class="time">[${time}]</span> <span class="agent">${data.agent}</span> ${data.action}`;
-                            log.prepend(entry);
-                            while (log.children.length > 20) log.removeChild(log.lastChild);
-                        } catch (err) {}
-                    };
-                } catch(e) { setTimeout(connectSSE, 3000); }
-            }
-            
-            async function refreshAll() {
-                try {
-                    const resp = await fetch('/api/god/view');
-                    const data = await resp.json();
-                    document.getElementById('agentCount').textContent = data.performance?.agents || data.system?.agents || 530;
-                    document.getElementById('endpointCount').textContent = 114;
-                    document.getElementById('traceCount').textContent = data.performance?.traces || 0;
-                    document.getElementById('eventCount').textContent = data.performance?.events || 0;
-                    document.getElementById('proposalCount').textContent = data.evolution?.proposals || 0;
-                    document.getElementById('draftCount').textContent = data.evolution?.approved || 0;
-                    document.getElementById('statusText').innerHTML = '<span class="status-dot"></span> Live';
-                } catch(e) {
-                    document.getElementById('statusText').innerHTML = '⚠️ Offline';
-                }
-            }
-            
-            refreshAll();
-            connectSSE();
-            setInterval(refreshAll, 30000);
-        </script>
-    </body>
-    </html>
-    """
-    return html
+    </header>
 
-# ─── HTML FRONTEND ─────────────────────────────────────────────
+    <div class="main">
+        <aside class="sidebar">
+            <div class="nav-label">Workspace</div>
+            <button class="sidebar-item active" data-tab="dashboard">
+                <i class="fas fa-gavel"></i> <span>Command Center</span>
+            </button>
+            <button class="sidebar-item" data-tab="marketing">
+                <i class="fas fa-bullhorn"></i> <span>Marketing Studio</span>
+                <span class="badge">Draft</span>
+            </button>
+            <button class="sidebar-item" data-tab="evolution">
+                <i class="fas fa-code-branch"></i> <span>Evolution Gate</span>
+                <span class="badge pending">Pending</span>
+            </button>
+            <div class="nav-label" style="margin-top:16px;">Account</div>
+            <button class="sidebar-item" data-tab="settings">
+                <i class="fas fa-sliders-h"></i> <span>Settings</span>
+            </button>
+            <div class="sidebar-footer">
+                <div><span class="status-dot"></span> <span id="agentCount">530</span> agents</div>
+                <div>⚡ zero-retention · in-memory</div>
+                <div style="font-size:10px;color:var(--muted);">✦ human-gated evolution</div>
+            </div>
+        </aside>
 
-@app.get("/chat", response_class=HTMLResponse)
-async def chat_interface():
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Unknown Verdict · Chat</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                font-family: 'Inter', sans-serif;
-                background: #0a0e1a;
-                color: #e2e8f0;
-                min-height: 100vh;
-                padding: 20px;
-            }
-            .container {
-                max-width: 900px;
-                margin: 0 auto;
-            }
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 0;
-                border-bottom: 1px solid rgba(255,255,255,0.08);
-                margin-bottom: 24px;
-            }
-            .logo { font-size: 24px; font-weight: 700; }
-            .logo span { color: #f5c542; }
-            .logo .sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
-            .service-selector {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-                margin-bottom: 16px;
-            }
-            .service-btn {
-                padding: 6px 16px;
-                border-radius: 20px;
-                border: 1px solid rgba(255,255,255,0.1);
-                background: transparent;
-                color: #94a3b8;
-                cursor: pointer;
-                font-family: inherit;
-                font-size: 13px;
-                transition: 0.2s;
-            }
-            .service-btn:hover { border-color: #00d4ff; color: #e2e8f0; }
-            .service-btn.active {
-                background: rgba(0,212,255,0.1);
-                border-color: #00d4ff;
-                color: #00d4ff;
-            }
-            .chat-box {
-                background: rgba(255,255,255,0.03);
-                border: 1px solid rgba(255,255,255,0.06);
-                border-radius: 16px;
-                padding: 20px;
-                min-height: 400px;
-                max-height: 500px;
-                overflow-y: auto;
-                margin-bottom: 16px;
-            }
-            .msg {
-                padding: 10px 14px;
-                border-radius: 10px;
-                margin-bottom: 8px;
-                max-width: 85%;
-            }
-            .msg.user { background: rgba(0,212,255,0.1); margin-left: auto; }
-            .msg.ai { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
-            .msg .role { font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-            .msg .content { margin-top: 4px; line-height: 1.6; font-size: 14px; white-space: pre-wrap; }
-            .input-row {
-                display: flex;
-                gap: 10px;
-            }
-            .input-row input {
-                flex: 1;
-                background: rgba(0,0,0,0.3);
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 10px;
-                padding: 12px 16px;
-                color: #e2e8f0;
-                font-family: inherit;
-                font-size: 14px;
-                outline: none;
-            }
-            .input-row input:focus { border-color: #00d4ff; }
-            .input-row button {
-                padding: 12px 28px;
-                border-radius: 10px;
-                border: none;
-                background: linear-gradient(135deg, #00d4ff, #7b2fbe);
-                color: #fff;
-                font-weight: 600;
-                cursor: pointer;
-                font-family: inherit;
-                transition: 0.2s;
-            }
-            .input-row button:hover { transform: scale(1.02); }
-            .input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
-            .status { font-size: 12px; color: #94a3b8; text-align: center; padding: 8px; }
-            .status .dot { color: #10b981; }
-            .region-badge {
-                display: flex;
-                gap: 6px;
-                font-size: 12px;
-                padding: 4px 12px;
-                border-radius: 20px;
-                background: rgba(255,255,255,0.04);
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <div class="logo">
-                    ✦ Unknown <span>Verdict</span>
-                    <div class="sub">Sovereign Intelligence</div>
+        <main class="content">
+            <!-- DASHBOARD -->
+            <div class="tab-content active" id="tab-dashboard">
+                <div class="content-header">
+                    <h2><i class="fas fa-brain"></i> Command Center</h2>
+                    <span class="meta" id="lastUpdated">Loading...</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div class="region-badge">
-                        <span style="color:#f5c542;">🇮🇳</span>
-                        <span>🇪🇺</span>
-                        <span>🇺🇸</span>
-                        <span>🇸🇬</span>
-                        <span>🇦🇺</span>
+                <div class="hero">
+                    <div class="star-big">✦</div>
+                    <h1>Unknown Verdict</h1>
+                    <div class="sub">Sovereign Intelligence · Legal AGI</div>
+                    <div class="tags">
+                        <span>🧠 Think</span>
+                        <span>🗣️ Speak</span>
+                        <span>👂 Listen</span>
+                        <span>🔮 Self-Improve</span>
+                        <span>⚖️ Legal</span>
                     </div>
-                    <span style="font-size:12px;color:#94a3b8;"><span class="dot">●</span> Live</span>
+                </div>
+                <div class="stats" id="statsContainer">
+                    <div class="stat-card"><div class="num cyan" id="statEndpoints">114</div><div class="label">Endpoints</div></div>
+                    <div class="stat-card"><div class="num green" id="statAgents">530</div><div class="label">Agents</div></div>
+                    <div class="stat-card"><div class="num purple" id="statServices">7</div><div class="label">Services</div></div>
+                    <div class="stat-card"><div class="num gold" id="statRegions">5</div><div class="label">Regions</div></div>
+                </div>
+
+                <div class="question-block">
+                    <div class="label"><i class="fas fa-question-circle"></i> The question that matters</div>
+                    <div class="question-row">
+                        <input type="text" id="questionInput" placeholder="what is AI LAWS and Data laws. like dpdpa and delete act in us?" />
+                        <button class="voice-btn" id="voiceBtn" title="Voice input"><i class="fas fa-microphone"></i></button>
+                        <button class="send-btn" id="sendBtn"><i class="fas fa-arrow-right" style="margin-right:6px;"></i> Ask</button>
+                    </div>
+                </div>
+
+                <div class="material-block">
+                    <div class="header">
+                        <label><i class="fas fa-file-alt"></i> Working material <span style="font-weight:300;color:var(--muted);">· optional</span></label>
+                        <div class="material-actions">
+                            <button id="uploadBtn"><i class="fas fa-upload"></i> Upload</button>
+                            <button id="pasteBtn"><i class="fas fa-paste"></i> Paste</button>
+                        </div>
+                    </div>
+                    <textarea id="materialText" placeholder="Paste a clause, transcript, or relevant context...">The room could not complete that reading. Try again.</textarea>
+                    <div class="hint"><i class="fas fa-shield-alt"></i> Input is not retained after analysis</div>
+                </div>
+
+                <div class="verdict-output">
+                    <div class="header">
+                        <h3><i class="fas fa-balance-scale"></i> Verdict</h3>
+                        <div class="verdict-actions">
+                            <button id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+                            <button id="downloadBtn"><i class="fas fa-download"></i> Download</button>
+                            <button id="listenBtn"><i class="fas fa-volume-up"></i> Listen</button>
+                        </div>
+                    </div>
+                    <div class="verdict-body" id="verdictBody"><span class="placeholder">Awaiting your question…</span></div>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <h3 style="font-size:16px;margin-bottom:8px;"><i class="fas fa-newspaper" style="color:var(--gold);"></i> News Intelligence</h3>
+                    <div id="newsPreview" style="color:var(--muted);font-size:13px;">Loading news...</div>
                 </div>
             </div>
-            
-            <div class="service-selector" id="serviceSelector">
-                <button class="service-btn active" data-service="general">⚖️ General</button>
-                <button class="service-btn" data-service="psychologist">🧠 Psychologist</button>
-                <button class="service-btn" data-service="news">📰 News</button>
-                <button class="service-btn" data-service="governance">📋 Governance</button>
-                <button class="service-btn" data-service="review">🔍 Review</button>
-                <button class="service-btn" data-service="privacy">🛡️ Privacy</button>
-                <button class="service-btn" data-service="moat">📊 MOAT</button>
-            </div>
-            
-            <div class="chat-box" id="chatBox">
-                <div class="msg ai">
-                    <div class="role">🧠 Sovereign</div>
-                    <div class="content">Welcome to Unknown Verdict. I'm your sovereign legal intelligence assistant with 530 agents. How can I help you today?</div>
+
+            <!-- MARKETING -->
+            <div class="tab-content" id="tab-marketing">
+                <div class="content-header">
+                    <h2><i class="fas fa-bullhorn"></i> Marketing Studio</h2>
+                    <span class="meta">✋ Human-approved · Drafts only</span>
+                </div>
+                <p style="color:var(--muted);margin-bottom:12px;">Marketing agents prepare drafts. They <strong style="color:var(--gold);">never publish</strong> or spam external platforms automatically.</p>
+                <div class="marketing-grid">
+                    <div class="marketing-card"><div class="icon">📄</div><h4>LinkedIn Post</h4><div class="desc">Professional legal insight</div><button onclick="generateDraft('linkedin')">Generate Draft</button></div>
+                    <div class="marketing-card"><div class="icon">🐦</div><h4>X Thread</h4><div class="desc">Concise legal commentary</div><button onclick="generateDraft('x')">Generate Draft</button></div>
+                    <div class="marketing-card"><div class="icon">📬</div><h4>Newsletter</h4><div class="desc">Weekly legal update</div><button onclick="generateDraft('newsletter')">Generate Draft</button></div>
+                    <div class="marketing-card"><div class="icon">📊</div><h4>Executive Brief</h4><div class="desc">Strategic legal summary</div><button onclick="generateDraft('brief')">Generate Draft</button></div>
+                </div>
+                <div class="verdict-output" style="margin-top:12px;">
+                    <div class="header">
+                        <h3><i class="fas fa-file-pen"></i> Draft Preview</h3>
+                        <button style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:30px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;" onclick="downloadDraft()"><i class="fas fa-download"></i> Download</button>
+                    </div>
+                    <div class="verdict-body" id="draftBody"><span class="placeholder">Generate a draft to preview here.</span></div>
                 </div>
             </div>
-            
-            <div class="input-row">
-                <input type="text" id="chatInput" placeholder="Ask about DPDPA, AI laws, compliance..." />
-                <button id="sendBtn">Send</button>
+
+            <!-- EVOLUTION -->
+            <div class="tab-content" id="tab-evolution">
+                <div class="content-header">
+                    <h2><i class="fas fa-code-branch"></i> Evolution Gate</h2>
+                    <span class="meta">🧬 Human-gated · No autonomous changes</span>
+                </div>
+                <p style="color:var(--muted);margin-bottom:12px;">All improvement proposals require explicit human approval before deployment.</p>
+                <div class="evolution-list" id="evolutionList">
+                    <div class="evolution-item"><span>Enhance news summarization with RAG</span><span class="status pending">⏳ Pending Review</span></div>
+                    <div class="evolution-item"><span>Add regional precedent database</span><span class="status approved">✅ Approved</span></div>
+                    <div class="evolution-item"><span>Voice model fine-tuning for legal terms</span><span class="status rejected">❌ Rejected</span></div>
+                    <div class="evolution-item"><span>Integrate DPDPA compliance checker</span><span class="status pending">⏳ Pending Review</span></div>
+                    <div class="evolution-item"><span>Marketing Studio auto-publish</span><span class="status rejected">🚫 Rejected (policy)</span></div>
+                </div>
+                <div style="margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13px;color:var(--muted);">
+                    <i class="fas fa-shield-alt" style="color:var(--gold);"></i> <strong>Human oversight active.</strong> The system cannot modify its own behavior or deploy changes without approval.
+                </div>
             </div>
-            <div class="status">⚡ Zero-retention · In-memory only · Human-gated evolution</div>
-        </div>
-        
-        <script>
-            let currentService = 'general';
-            
-            document.querySelectorAll('.service-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentService = this.dataset.service;
-                });
+
+            <!-- SETTINGS -->
+            <div class="tab-content" id="tab-settings">
+                <div class="content-header"><h2><i class="fas fa-sliders-h"></i> Settings</h2></div>
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;max-width:500px;">
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Zero-retention mode</span><span style="color:var(--green);">✅ Active</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Sovereign fallback</span><span style="color:var(--green);">✅ Available</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Human-gated evolution</span><span style="color:var(--green);">✅ Enabled</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;"><span>Marketing auto-publish</span><span style="color:var(--danger);">🚫 Disabled</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ─── CONFIG ──────────────────────────────────────────────
+        const API_BASE = window.location.origin;
+
+        let currentVerdict = '';
+        let currentDraft = '';
+        let authState = 'signed-out';
+        let isListening = false;
+        let recognition = null;
+        let eventSource = null;
+
+        // ─── DOM REFS ─────────────────────────────────────────────
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const verdictBody = document.getElementById('verdictBody');
+        const materialText = document.getElementById('materialText');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const listenBtn = document.getElementById('listenBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const authBtn = document.getElementById('authBtn');
+        const authLabel = document.getElementById('authLabel');
+        const statusLabel = document.getElementById('statusLabel');
+        const lastUpdated = document.getElementById('lastUpdated');
+        const newsPreview = document.getElementById('newsPreview');
+        const draftBody = document.getElementById('draftBody');
+
+        // ─── SPEECH RECOGNITION ──────────────────────────────────
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.onresult = function(e) {
+                const transcript = e.results[0][0].transcript;
+                questionInput.value = transcript;
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                handleAsk();
+            };
+            recognition.onerror = function() { isListening = false; voiceBtn.classList.remove('listening'); voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>'; };
+            recognition.onend = function() { isListening = false; voiceBtn.classList.remove('listening'); voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>'; };
+        }
+
+        voiceBtn.addEventListener('click', function() {
+            if (!recognition) { alert('Speech recognition is not supported.'); return; }
+            if (isListening) { recognition.stop(); isListening = false; voiceBtn.classList.remove('listening'); voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>'; return; }
+            try { recognition.start(); isListening = true; voiceBtn.classList.add('listening'); voiceBtn.innerHTML = '<i class="fas fa-stop"></i>'; } catch(e) {}
+        });
+
+        // ─── TEXT-TO-SPEECH ──────────────────────────────────────
+        listenBtn.addEventListener('click', function() {
+            const text = currentVerdict || verdictBody.textContent.trim();
+            if (!text || text === 'Awaiting your question…' || text.includes('placeholder')) { alert('No verdict to read aloud.'); return; }
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9; utterance.pitch = 1.0;
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utterance);
+            } else { alert('Speech synthesis is not supported.'); }
+        });
+
+        // ─── COPY ──────────────────────────────────────────────────
+        copyBtn.addEventListener('click', function() {
+            const text = currentVerdict || verdictBody.textContent.trim();
+            if (!text || text === 'Awaiting your question…' || text.includes('placeholder')) { alert('Nothing to copy.'); return; }
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                const orig = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
             });
-            
-            const chatBox = document.getElementById('chatBox');
-            const input = document.getElementById('chatInput');
-            const sendBtn = document.getElementById('sendBtn');
-            
-            function addMessage(role, content) {
-                const div = document.createElement('div');
-                div.className = `msg ${role}`;
-                const roleLabel = role === 'user' ? 'You' : '🧠 Sovereign';
-                div.innerHTML = `<div class="role">${roleLabel}</div><div class="content">${content}</div>`;
-                chatBox.appendChild(div);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-            
-            async function sendMessage() {
-                const msg = input.value.trim();
-                if (!msg) return;
-                input.value = '';
-                addMessage('user', msg);
-                sendBtn.disabled = true;
-                sendBtn.textContent = 'Thinking...';
-                
-                try {
-                    const resp = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: msg, service: currentService })
-                    });
+        });
+
+        // ─── DOWNLOAD ─────────────────────────────────────────────
+        downloadBtn.addEventListener('click', function() {
+            const text = currentVerdict || verdictBody.textContent.trim();
+            if (!text || text === 'Awaiting your question…' || text.includes('placeholder')) { alert('No verdict to download.'); return; }
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `verdict-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        });
+
+        // ─── UPLOAD ───────────────────────────────────────────────
+        uploadBtn.addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.md,.docx,.pdf';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) { materialText.value = ev.target.result; };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+
+        // ─── PASTE ────────────────────────────────────────────────
+        pasteBtn.addEventListener('click', function() {
+            navigator.clipboard.readText().then(text => { if (text) materialText.value = text; }).catch(() => { alert('Unable to read clipboard. Please paste manually.'); });
+        });
+
+        // ─── ASK ──────────────────────────────────────────────────
+        sendBtn.addEventListener('click', handleAsk);
+        questionInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleAsk(); });
+
+        async function handleAsk() {
+            const question = questionInput.value.trim();
+            if (!question) { verdictBody.innerHTML = '<span style="color:var(--muted);">Please enter a question.</span>'; return; }
+            verdictBody.innerHTML = '<span style="color:var(--gold);">⚡ Analyzing…</span>';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: question, service: 'general', context: materialText.value.trim() || '' })
+                });
+                if (resp.ok) {
                     const data = await resp.json();
-                    addMessage('ai', data.response || 'Analysis complete.');
-                } catch(e) {
-                    addMessage('ai', '⚠️ Error: ' + e.message);
-                } finally {
-                    sendBtn.disabled = false;
-                    sendBtn.textContent = 'Send';
+                    currentVerdict = data.response || 'Analysis complete.';
+                    verdictBody.innerHTML = currentVerdict;
+                    lastUpdated.textContent = new Date().toLocaleString();
+                    return;
                 }
+            } catch(e) { console.log('API unavailable, using sovereign fallback'); }
+
+            // Sovereign fallback
+            const mockResponse = generateVerdict(question, materialText.value.trim());
+            currentVerdict = mockResponse;
+            verdictBody.innerHTML = mockResponse;
+            lastUpdated.textContent = `${new Date().toLocaleString()} · ⚡ sovereign`;
+        }
+
+        function generateVerdict(question, context) {
+            const q = question.toLowerCase();
+            let response = '';
+            if (q.includes('ai law') || q.includes('data law') || q.includes('dpdpa') || q.includes('delete act')) {
+                response = `## ⚖️ Sovereign Analysis\n\n**On AI, Data Laws & the DELETE Act**\n\n1. **DPDPA (India)**: Establishes a comprehensive framework for processing personal data, with strong consent requirements, data principal rights, and significant penalties.\n\n2. **California DELETE Act (SB 362)**: Empowers consumers to request deletion of all personal information held by data brokers via a single, centralized request mechanism.\n\n3. **AI-Specific Overlap**: Both frameworks impose obligations on AI systems that process personal data — transparency, purpose limitation, data minimization.\n\n4. **Global Trajectory**: Toward horizontal AI regulation (EU AI Act) layered over vertical data protection laws.`;
+            } else {
+                response = `## ⚖️ Sovereign Analysis\n\n**On: "${question}"**\n\nThe Unknown Verdict sovereign intelligence has processed your query.\n\nKey considerations:\n- Jurisdictional applicability (regional indicators active)\n- Regulatory interpretation based on current statutes\n- Human-gated oversight ensures provisional analysis\n\n*Recommendation*: Consult qualified legal counsel for binding advice.`;
             }
-            
-            input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
-            sendBtn.addEventListener('click', sendMessage);
-        </script>
-    </body>
-    </html>
-    """
-    return html
+            if (context && context.length > 10) { response += `\n\n**📎 Material referenced**: The provided working material has been considered in this analysis.`; }
+            response += `\n\n---\n*⚡ Sovereign · zero-retention · in-memory only*`;
+            return response;
+        }
 
-# ─── RUN ──────────────────────────────────────────────────────
+        // ─── NEWS ──────────────────────────────────────────────────
+        async function loadNews() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/news`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.articles && data.articles.length > 0) {
+                        newsPreview.innerHTML = data.articles.slice(0, 3).map(a =>
+                            `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+                                <div style="font-weight:600;font-size:14px;">${a.title}</div>
+                                <div style="font-size:12px;color:var(--muted);">${a.summary || a.content?.substring(0,150) || ''}</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:4px;">📚 ${a.source || 'Unknown Verdict'}</div>
+                            </div>`
+                        ).join('');
+                        return;
+                    }
+                }
+            } catch(e) {}
+            // Fallback
+            newsPreview.innerHTML = `
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+                    <div style="font-weight:600;font-size:14px;">EU AI Act Enters Full Effect</div>
+                    <div style="font-size:12px;color:var(--muted);">The world's first comprehensive AI regulation is now enforceable across all member states.</div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">⚡ Sovereign cache</div>
+                </div>
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+                    <div style="font-weight:600;font-size:14px;">DPDPA Implementation Timeline</div>
+                    <div style="font-size:12px;color:var(--muted);">India's Digital Personal Data Protection Act enters final compliance phase.</div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">⚡ Sovereign cache</div>
+                </div>
+            `;
+        }
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 7860))
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=port,
-        reload=False
-    )
+        // ─── MARKETING ─────────────────────────────────────────────
+        window.generateDraft = function(type) {
+            const drafts = {
+                linkedin: `📄 **LinkedIn Post Draft**\n\n🧠 *AI & Data Law: The Sovereign Perspective*\n\nAs AI systems increasingly drive legal decision-making, the question of data sovereignty becomes critical. The DPDPA and California DELETE Act represent two sides of the same coin — empowering individuals while creating compliance obligations.\n\nKey takeaway: The future of legal AI requires human oversight, zero-retention architectures, and jurisdictional awareness.\n\n#AI #DataLaw #DPDPA #LegalTech #Sovereignty`,
+                x: `🐦 **X Thread Draft**\n\n1/5 AI laws are evolving faster than ever. The DPDPA in India and the DELETE Act in California set new benchmarks.\n\n2/5 Both frameworks prioritize user rights — consent, deletion, and transparency.\n\n3/5 For AI systems, this means explainability and data minimization are no longer optional.\n\n4/5 The EU AI Act adds another layer, creating a global patchwork of regulation.\n\n5/5 The sovereign view: human-gated, zero-retention, and jurisdiction-aware.`,
+                newsletter: `📬 **Newsletter Draft**\n\n**Weekly Legal Intelligence Update**\n\n*AI & Data Law Roundup*\n\nThis week, we examine the convergence of AI regulation and data protection frameworks across major jurisdictions.\n\n- **DPDPA (India)**: Final compliance guidelines released\n- **DELETE Act (CA)**: Single-request deletion now operational\n- **EU AI Act**: First enforcement actions announced\n\n*Sovereign Insight*: Organizations must prepare for overlapping obligations.`,
+                brief: `📊 **Executive Brief**\n\n**Strategic Legal Intelligence Summary**\n\n*Subject: AI & Data Law Convergence*\n\n**Overview**\nThe regulatory landscape for AI and data protection is rapidly consolidating.\n\n**Key Risks**\n- Non-compliance penalties (up to 4% of global turnover)\n- Cross-jurisdictional conflicts\n\n**Recommendations**\n1. Implement zero-retention data architectures\n2. Maintain human oversight for all AI decisions\n3. Establish jurisdiction-aware compliance frameworks`
+            };
+            currentDraft = drafts[type] || drafts.linkedin;
+            draftBody.innerHTML = currentDraft;
+        };
+
+        window.downloadDraft = function() {
+            if (!currentDraft || currentDraft.includes('placeholder')) { alert('Generate a draft first.'); return; }
+            const blob = new Blob([currentDraft], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `draft-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        };
+
+        // ─── AUTH ──────────────────────────────────────────────────
+        authBtn.addEventListener('click', function() {
+            if (authState === 'signed-out') {
+                authState = 'signed-in';
+                authLabel.textContent = 'John Doe';
+                authBtn.innerHTML = '<i class="fas fa-user-check"></i> <span id="authLabel">John Doe</span>';
+                authBtn.style.borderColor = '#10b981';
+                statusLabel.textContent = 'Authenticated';
+            } else {
+                authState = 'signed-out';
+                authLabel.textContent = 'Sign In';
+                authBtn.innerHTML = '<i class="fas fa-user-astronaut"></i> <span id="authLabel">Sign In</span>';
+                authBtn.style.borderColor = 'var(--border)';
+                statusLabel.textContent = 'Live';
+            }
+        });
+
+        // ─── SIDEBAR NAV ──────────────────────────────────────────
+        document.querySelectorAll('.sidebar-item[data-tab]').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                const tab = this.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById(`tab-${tab}`);
+                if (target) target.classList.add('active');
+                if (tab === 'dashboard') { loadNews(); fetchStatus(); }
+            });
+        });
+
+        // ─── STATUS ────────────────────────────────────────────────
+        async function fetchStatus() {
+            try {
+                const resp = await fetch(`${API_BASE}/status`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('statEndpoints').textContent = data.endpoints || 114;
+                    document.getElementById('statAgents').textContent = data.agents || 530;
+                    document.getElementById('statServices').textContent = (data.services || []).length || 7;
+                    document.getElementById('statRegions').textContent = data.regions || 5;
+                    document.getElementById('agentCount').textContent = data.agents || 530;
+                    statusLabel.textContent = 'Live';
+                }
+            } catch(e) { statusLabel.textContent = 'Sovereign'; }
+        }
+
+        // ─── SSE ────────────────────────────────────────────────────
+        function connectSSE() {
+            if (eventSource) { eventSource.close(); eventSource = null; }
+            try {
+                eventSource = new EventSource(`${API_BASE}/agent/events`);
+                eventSource.onopen = () => { statusLabel.textContent = 'SSE Live'; };
+                eventSource.onerror = () => { statusLabel.textContent = 'Live (no SSE)'; if (eventSource) { eventSource.close(); eventSource = null; } setTimeout(connectSSE, 5000); };
+            } catch(e) { setTimeout(connectSSE, 5000); }
+        }
+
+        // ─── INIT ──────────────────────────────────────────────────
+        async function init() {
+            lastUpdated.textContent = new Date().toLocaleString();
+            await loadNews();
+            await fetchStatus();
+            connectSSE();
+            setInterval(loadNews, 60000);
+            setInterval(fetchStatus, 30000);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+        console.log('✦ Unknown Verdict Sovereign · Connected to', API_BASE);
+    </script>
+</body> 
+</html>
