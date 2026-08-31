@@ -1082,7 +1082,20 @@ async def evolve_agent(request: AgentEvolveRequest):
             }
     
     raise HTTPException(status_code=404, detail="Agent not found")
+from fastapi.responses import FileResponse, HTMLResponse
 
+# ─── SERVE INDEX.HTML AT ROOT ──────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    """Serve the main HTML interface at root"""
+    with open("index.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read(), status_code=200)
+
+# Or use FileResponse:
+# @app.get("/")
+# async def serve_index():
+#     return FileResponse("index.html")
 # ─── 6. CHAT ENDPOINTS ──────────────────────────────────────
 
 @app.post("/api/chat", response_model=ChatResponse)
