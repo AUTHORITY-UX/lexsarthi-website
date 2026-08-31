@@ -434,6 +434,56 @@
         }
         .verdict-body .placeholder { color: var(--muted); font-style: italic; font-weight: 300; }
 
+        .marketing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .marketing-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .marketing-card .icon { font-size: 32px; margin-bottom: 6px; }
+        .marketing-card h4 { font-size: 14px; }
+        .marketing-card .desc { font-size: 12px; color: var(--muted); }
+        .marketing-card button {
+            margin-top: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .marketing-card button:hover { border-color: var(--gold); color: var(--gold); }
+
+        .evolution-list {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-top: 10px;
+        }
+        .evolution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .evolution-item:last-child { border-bottom: none; }
+        .evolution-item .status { font-size: 12px; font-weight: 500; }
+        .evolution-item .status.approved { color: var(--green); }
+        .evolution-item .status.pending { color: var(--gold); }
+        .evolution-item .status.rejected { color: var(--danger); }
+
         @media (max-width: 1024px) {
             .sidebar { width: 60px; padding: 12px 8px; }
             .sidebar .nav-label { display: none; }
@@ -509,6 +559,7 @@
         </aside>
 
         <main class="content">
+            <!-- DASHBOARD -->
             <div class="tab-content active" id="tab-dashboard">
                 <div class="content-header">
                     <h2><i class="fas fa-brain"></i> Command Center</h2>
@@ -574,37 +625,18 @@
                 </div>
             </div>
 
+            <!-- MARKETING -->
             <div class="tab-content" id="tab-marketing">
                 <div class="content-header">
                     <h2><i class="fas fa-bullhorn"></i> Marketing Studio</h2>
                     <span class="meta">✋ Human-approved · Drafts only</span>
                 </div>
                 <p style="color:var(--muted);margin-bottom:12px;">Marketing agents prepare drafts. They <strong style="color:var(--gold);">never publish</strong> or spam external platforms automatically.</p>
-                <div class="marketing-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:12px 0;">
-                    <div class="marketing-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-                        <div class="icon" style="font-size:32px;margin-bottom:6px;">📄</div>
-                        <h4 style="font-size:14px;">LinkedIn Post</h4>
-                        <div class="desc" style="font-size:12px;color:var(--muted);">Professional legal insight</div>
-                        <button onclick="generateDraft('linkedin')" style="margin-top:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;transition:0.2s;">Generate Draft</button>
-                    </div>
-                    <div class="marketing-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-                        <div class="icon" style="font-size:32px;margin-bottom:6px;">🐦</div>
-                        <h4 style="font-size:14px;">X Thread</h4>
-                        <div class="desc" style="font-size:12px;color:var(--muted);">Concise legal commentary</div>
-                        <button onclick="generateDraft('x')" style="margin-top:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;transition:0.2s;">Generate Draft</button>
-                    </div>
-                    <div class="marketing-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-                        <div class="icon" style="font-size:32px;margin-bottom:6px;">📬</div>
-                        <h4 style="font-size:14px;">Newsletter</h4>
-                        <div class="desc" style="font-size:12px;color:var(--muted);">Weekly legal update</div>
-                        <button onclick="generateDraft('newsletter')" style="margin-top:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;transition:0.2s;">Generate Draft</button>
-                    </div>
-                    <div class="marketing-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-                        <div class="icon" style="font-size:32px;margin-bottom:6px;">📊</div>
-                        <h4 style="font-size:14px;">Executive Brief</h4>
-                        <div class="desc" style="font-size:12px;color:var(--muted);">Strategic legal summary</div>
-                        <button onclick="generateDraft('brief')" style="margin-top:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;transition:0.2s;">Generate Draft</button>
-                    </div>
+                <div class="marketing-grid">
+                    <div class="marketing-card"><div class="icon">📄</div><h4>LinkedIn Post</h4><div class="desc">Professional legal insight</div><button onclick="generateDraft('linkedin')">Generate Draft</button></div>
+                    <div class="marketing-card"><div class="icon">🐦</div><h4>X Thread</h4><div class="desc">Concise legal commentary</div><button onclick="generateDraft('x')">Generate Draft</button></div>
+                    <div class="marketing-card"><div class="icon">📬</div><h4>Newsletter</h4><div class="desc">Weekly legal update</div><button onclick="generateDraft('newsletter')">Generate Draft</button></div>
+                    <div class="marketing-card"><div class="icon">📊</div><h4>Executive Brief</h4><div class="desc">Strategic legal summary</div><button onclick="generateDraft('brief')">Generate Draft</button></div>
                 </div>
                 <div class="verdict-output" style="margin-top:12px;">
                     <div class="header">
@@ -615,34 +647,26 @@
                 </div>
             </div>
 
+            <!-- EVOLUTION -->
             <div class="tab-content" id="tab-evolution">
                 <div class="content-header">
                     <h2><i class="fas fa-code-branch"></i> Evolution Gate</h2>
                     <span class="meta">🧬 Human-gated · No autonomous changes</span>
                 </div>
                 <p style="color:var(--muted);margin-bottom:12px;">All improvement proposals require explicit human approval before deployment.</p>
-                <div class="evolution-list" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
-                    <div class="evolution-item" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">
-                        <span>Enhance news summarization with RAG</span><span class="status pending" style="color:var(--gold);font-size:12px;font-weight:500;">⏳ Pending Review</span>
-                    </div>
-                    <div class="evolution-item" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">
-                        <span>Add regional precedent database</span><span class="status approved" style="color:var(--green);font-size:12px;font-weight:500;">✅ Approved</span>
-                    </div>
-                    <div class="evolution-item" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">
-                        <span>Voice model fine-tuning for legal terms</span><span class="status rejected" style="color:var(--danger);font-size:12px;font-weight:500;">❌ Rejected</span>
-                    </div>
-                    <div class="evolution-item" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">
-                        <span>Integrate DPDPA compliance checker</span><span class="status pending" style="color:var(--gold);font-size:12px;font-weight:500;">⏳ Pending Review</span>
-                    </div>
-                    <div class="evolution-item" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
-                        <span>Marketing Studio auto-publish</span><span class="status rejected" style="color:var(--danger);font-size:12px;font-weight:500;">🚫 Rejected (policy)</span>
-                    </div>
+                <div class="evolution-list">
+                    <div class="evolution-item"><span>Enhance news summarization with RAG</span><span class="status pending">⏳ Pending Review</span></div>
+                    <div class="evolution-item"><span>Add regional precedent database</span><span class="status approved">✅ Approved</span></div>
+                    <div class="evolution-item"><span>Voice model fine-tuning for legal terms</span><span class="status rejected">❌ Rejected</span></div>
+                    <div class="evolution-item"><span>Integrate DPDPA compliance checker</span><span class="status pending">⏳ Pending Review</span></div>
+                    <div class="evolution-item"><span>Marketing Studio auto-publish</span><span class="status rejected">🚫 Rejected (policy)</span></div>
                 </div>
                 <div style="margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13px;color:var(--muted);">
                     <i class="fas fa-shield-alt" style="color:var(--gold);"></i> <strong>Human oversight active.</strong> The system cannot modify its own behavior or deploy changes without approval.
                 </div>
             </div>
 
+            <!-- SETTINGS -->
             <div class="tab-content" id="tab-settings">
                 <div class="content-header"><h2><i class="fas fa-sliders-h"></i> Settings</h2></div>
                 <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;max-width:500px;">
@@ -657,7 +681,9 @@
     </div>
 
     <script>
+        // ─── CONFIG ──────────────────────────────────────────────
         const API_BASE = window.location.origin;
+
         let currentVerdict = '';
         let currentDraft = '';
         let authState = 'signed-out';
@@ -665,6 +691,7 @@
         let recognition = null;
         let eventSource = null;
 
+        // ─── DOM REFS ─────────────────────────────────────────────
         const questionInput = document.getElementById('questionInput');
         const sendBtn = document.getElementById('sendBtn');
         const verdictBody = document.getElementById('verdictBody');
@@ -799,6 +826,7 @@
                 }
             } catch(e) { console.log('API unavailable, using sovereign fallback'); }
 
+            // Sovereign fallback
             const mockResponse = generateVerdict(question, materialText.value.trim());
             currentVerdict = mockResponse;
             verdictBody.innerHTML = mockResponse;
