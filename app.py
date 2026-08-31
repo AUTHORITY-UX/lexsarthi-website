@@ -1,6 +1,7 @@
 # app.py - Complete Unknown Verdict Sovereign v43.0
 # Full Production Implementation with 164+ Endpoints
 # Includes: Neon DB, Redis Cache, 7 LLM Providers, Web Search, LinkedIn, Payments, Self-Evolution
+# Total: 2761 Lines
 
 import os
 import json
@@ -18,11 +19,11 @@ import logging
 
 # ─── FASTAPI & DEPENDENCIES ──────────────────────────────────
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, Query, Body, Depends, Header, status
-from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, EmailStr, validator
+from pydantic import BaseModel, Field, validator
 import uvicorn
 import httpx
 from contextlib import asynccontextmanager
@@ -100,13 +101,13 @@ VERDICT_ENGINE_MODE = os.getenv("VERDICT_ENGINE_MODE", "balanced")
 
 # Auth Models
 class UserRegister(BaseModel):
-    email: EmailStr
+    email: str = Field(..., pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     password: str = Field(..., min_length=8)
     name: str = Field(..., min_length=2)
     organization: Optional[str] = None
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 class TokenResponse(BaseModel):
@@ -161,7 +162,7 @@ class ContractAnalysis(BaseModel):
 
 class ComplianceCheck(BaseModel):
     document: str
-    regulation: str = "dpdpa"  # dpdpa, gdpr, cpra, eu-ai-act
+    regulation: str = "dpdpa"
     jurisdiction: str = "US"
 
 # Agent Models
@@ -172,7 +173,7 @@ class AgentTaskRequest(BaseModel):
 
 class AgentEvolveRequest(BaseModel):
     agent_id: str
-    evolution_type: str = "skill"  # skill, knowledge, speed, accuracy
+    evolution_type: str = "skill"
 
 # Marketing Models
 class MarketingDraftRequest(BaseModel):
@@ -184,7 +185,7 @@ class MarketingDraftRequest(BaseModel):
 
 class MarketingPublishRequest(BaseModel):
     draft_id: str
-    platform: str  # linkedin, x, newsletter
+    platform: str
     schedule_at: Optional[str] = None
     human_approved: bool = False
 
@@ -192,7 +193,7 @@ class MarketingPublishRequest(BaseModel):
 class GovernanceDraftRequest(BaseModel):
     title: str
     content: str
-    policy_type: str  # compliance, security, privacy, ethics
+    policy_type: str
     stakeholders: Optional[List[str]] = None
 
 # Review Models
@@ -200,7 +201,7 @@ class ReviewRequest(BaseModel):
     document: str
     review_type: str = "contract"
     jurisdiction: str = "US"
-    depth: str = "standard"  # quick, standard, deep
+    depth: str = "standard"
 
 # Privacy Models
 class PrivacyScanRequest(BaseModel):
@@ -231,11 +232,11 @@ class WebSearchRequest(BaseModel):
 
 # Payment Models
 class PaymentOrderRequest(BaseModel):
-    amount: int  # in paise (INR) or cents
+    amount: int
     currency: str = "INR"
     receipt: Optional[str] = None
     customer_name: str
-    customer_email: EmailStr
+    customer_email: str
     customer_phone: Optional[str] = None
 
 class PaymentVerification(BaseModel):
@@ -244,15 +245,15 @@ class PaymentVerification(BaseModel):
     razorpay_signature: str
 
 class SubscriptionRequest(BaseModel):
-    plan: str  # free, pro, enterprise
-    duration: str = "monthly"  # monthly, yearly
+    plan: str
+    duration: str = "monthly"
 
 # Evolution Models
 class EvolutionProposal(BaseModel):
     title: str
     description: str
-    category: str = "feature"  # feature, improvement, bug-fix, performance
-    priority: str = "medium"  # low, medium, high, critical
+    category: str = "feature"
+    priority: str = "medium"
     implementation_details: Optional[str] = None
 
 # ─── APP STATE ─────────────────────────────────────────────────
@@ -274,11 +275,9 @@ class AppState:
     learning_data: List[Dict] = []
     start_time: datetime = datetime.now()
     
-    # Database connections
     db_pool: Optional[asyncpg.Pool] = None
     redis_client: Optional[redis.Redis] = None
     
-    # LLM clients
     openai_client: Optional[AsyncOpenAI] = None
     groq_client: Optional[AsyncGroq] = None
     
@@ -315,7 +314,6 @@ class AppState:
         
         cls.agents = agents[:530]
         
-        # Evolution proposals
         cls.evolution_proposals = [
             {"id": "evol_001", "title": "Enhance news summarization with RAG", "status": "pending", "category": "feature", "priority": "high", "submitted": "2026-08-28"},
             {"id": "evol_002", "title": "Add regional precedent database", "status": "approved", "category": "feature", "priority": "medium", "submitted": "2026-08-25"},
@@ -325,7 +323,6 @@ class AppState:
             {"id": "evol_006", "title": "Multi-jurisdiction conflict resolution", "status": "approved", "category": "improvement", "priority": "high", "submitted": "2026-08-27"}
         ]
         
-        # News cache
         cls.news_cache = [
             {"id": "news_001", "title": "EU AI Act Enters Full Effect", "summary": "The world's first comprehensive AI regulation is now enforceable across all member states with significant penalties for non-compliance.", "source": "Sovereign Cache", "category": "AI Law", "published": "2026-08-30"},
             {"id": "news_002", "title": "DPDPA Implementation Timeline Finalized", "summary": "India's Digital Personal Data Protection Act enters final compliance phase with key provisions for cross-border data transfer.", "source": "Sovereign Cache", "category": "Privacy", "published": "2026-08-29"},
@@ -386,13 +383,11 @@ async def init_db():
         state.db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)
         
         async with state.db_pool.acquire() as conn:
-            # Enable pgvector
             try:
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             except:
                 pass
             
-            # Create tables
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -408,7 +403,7 @@ async def init_db():
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS sessions (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    user_id UUID REFERENCES users(id),
+                    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
                     token TEXT NOT NULL,
                     expires_at TIMESTAMP NOT NULL,
                     created_at TIMESTAMP DEFAULT NOW()
@@ -418,7 +413,7 @@ async def init_db():
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS traces (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    user_id UUID REFERENCES users(id),
+                    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
                     query TEXT NOT NULL,
                     service TEXT NOT NULL,
                     response TEXT NOT NULL,
@@ -441,7 +436,7 @@ async def init_db():
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS feedback (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    user_id UUID REFERENCES users(id),
+                    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
                     query TEXT NOT NULL,
                     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
                     feedback TEXT,
@@ -496,16 +491,28 @@ async def lifespan(app: FastAPI):
     logger.info(f"   Endpoints: 164+")
     logger.info("   Environment: production")
     
-    # Initialize services
-    await init_db()
-    await init_redis()
+    try:
+        await init_db()
+    except Exception as e:
+        logger.warning(f"⚠️ Database init failed (continuing): {e}")
+    
+    try:
+        await init_redis()
+    except Exception as e:
+        logger.warning(f"⚠️ Redis init failed (continuing): {e}")
+    
     init_llm_clients()
     
     yield
     
-    # Cleanup
-    await close_db()
-    await close_redis()
+    try:
+        await close_db()
+    except:
+        pass
+    try:
+        await close_redis()
+    except:
+        pass
     logger.info("👋 Shutting down Unknown Verdict Sovereign")
 
 app = FastAPI(
@@ -525,6 +532,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─── SERVE HTML AT ROOT ──────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    """Serve the main HTML interface at root"""
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        # Fallback: Redirect to /chat if index.html not found
+        return RedirectResponse(url="/chat")
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_index_alt():
+    """Serve the main HTML interface at root (alternative path)"""
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        # Fallback: Redirect to /chat if index.html not found
+        return RedirectResponse(url="/chat")
 
 # ─── WEB SOCKET ────────────────────────────────────────────────
 
@@ -550,7 +579,6 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            # Echo with processing simulation
             await asyncio.sleep(0.5)
             await websocket.send_text(f"Echo: {data}")
     except WebSocketDisconnect:
@@ -595,26 +623,7 @@ async def agent_events(request: Request):
 
 # ─── 1. SYSTEM ENDPOINTS ─────────────────────────────────────
 
-@app.get("/", response_model=Dict[str, Any])
-async def root():
-    return {
-        "name": "Unknown Verdict Sovereign",
-        "version": "43.0",
-        "status": "operational",
-        "agents": len(state.agents),
-        "endpoints": 164,
-        "services": ["general", "psychologist", "news", "governance", "review", "privacy", "moat"],
-        "regions": ["India", "Europe", "United States", "Singapore", "Australia"],
-        "zero_retention": True,
-        "human_gated_evolution": True,
-        "started": state.start_time.isoformat(),
-        "uptime": str(datetime.now() - state.start_time),
-        "db_connected": state.db_pool is not None,
-        "redis_connected": state.redis_client is not None,
-        "llm_providers": ["openai" if OPENAI_API_KEY else None, "groq" if GROQ_API_KEY else None, "gemini" if GEMINI_API_KEY else None]
-    }
-
-@app.get("/status", response_model=Dict[str, Any])
+@app.get("/api/status", response_model=Dict[str, Any])
 async def status():
     return {
         "status": "operational",
@@ -674,7 +683,7 @@ async def list_endpoints():
     return {
         "count": 164,
         "categories": {
-            "system": ["/", "/status", "/health", "/providers", "/models", "/endpoints", "/metrics", "/version"],
+            "system": ["/", "/api/status", "/health", "/providers", "/models", "/endpoints", "/metrics", "/version"],
             "auth": ["/auth/register", "/auth/login", "/auth/logout", "/auth/refresh", "/auth/verify", "/auth/reset-password", "/auth/confirm-reset", "/auth/me", "/auth/update", "/auth/delete"],
             "db": ["/db/status", "/db/migrate", "/db/backup", "/db/restore", "/db/sessions", "/db/sessions/{id}", "/db/traces", "/db/traces/{id}", "/db/vectors/search", "/db/vectors/insert", "/db/analytics", "/db/query"],
             "cache": ["/cache/status", "/cache/get/{key}", "/cache/set", "/cache/delete/{key}", "/cache/flush", "/cache/stats", "/cache/keys", "/cache/ttl/{key}"],
@@ -1004,7 +1013,6 @@ async def agent_task(agent_id: str, request: AgentTaskRequest):
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
     
-    # Simulate agent work
     response = f"🔍 Agent {agent['name']} analyzed: {request.task}\n\n"
     response += f"📊 Category: {agent['category']}\n"
     response += f"⚖️ Jurisdiction: {agent['jurisdiction']}\n"
@@ -1026,7 +1034,6 @@ async def agent_task(agent_id: str, request: AgentTaskRequest):
         response += f"  • Status: Processed by {agent['name']}\n"
         response += f"  • Confidence: {random.randint(70, 95)}%\n"
     
-    # Track task completion
     agent["tasks_completed"] = agent.get("tasks_completed", 0) + 1
     
     return {
@@ -1055,7 +1062,6 @@ async def agent_history(agent_id: str):
 async def evolve_agent(request: AgentEvolveRequest):
     for agent in state.agents:
         if agent["id"] == request.agent_id:
-            # Simulate evolution
             if request.evolution_type == "skill":
                 agent["accuracy"] = min(agent.get("accuracy", 90) + random.randint(1, 5), 99)
             elif request.evolution_type == "speed":
@@ -1063,7 +1069,6 @@ async def evolve_agent(request: AgentEvolveRequest):
             else:
                 agent["rating"] = min(agent.get("rating", 4.5) + 0.1, 5.0)
             
-            # Record evolution proposal
             proposal = {
                 "id": str(uuid.uuid4()),
                 "title": f"Evolve {agent['name']} - {request.evolution_type}",
@@ -1082,20 +1087,7 @@ async def evolve_agent(request: AgentEvolveRequest):
             }
     
     raise HTTPException(status_code=404, detail="Agent not found")
-from fastapi.responses import FileResponse, HTMLResponse
 
-# ─── SERVE INDEX.HTML AT ROOT ──────────────────────────────
-
-@app.get("/", response_class=HTMLResponse)
-async def serve_index():
-    """Serve the main HTML interface at root"""
-    with open("index.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read(), status_code=200)
-
-# Or use FileResponse:
-# @app.get("/")
-# async def serve_index():
-#     return FileResponse("index.html")
 # ─── 6. CHAT ENDPOINTS ──────────────────────────────────────
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -1112,7 +1104,6 @@ async def chat(request: ChatRequest):
     
     service_name = service_map.get(request.service, "General Legal Intelligence")
     
-    # Select agents based on service
     agents_used = []
     category_map = {
         "general": ["Legal", "Analyst"],
@@ -1133,7 +1124,6 @@ async def chat(request: ChatRequest):
     if not agents_used:
         agents_used = [random.choice(state.agents)["name"]]
     
-    # Generate response
     response = f"## ⚖️ {service_name}\n\n"
     
     if request.service == "general":
@@ -1219,125 +1209,8 @@ async def chat(request: ChatRequest):
 3. Review relevant case law and regulations
 """
     
-    elif request.service == "psychologist":
-        response += f"""### Legal Psychology Analysis
-
-**Query**: {request.message}
-
-**Psychological Framework**:
-- Behavioral patterns identified
-- Cognitive bias considerations
-- Emotional intelligence assessment
-
-**Recommendations**:
-1. Maintain professional boundaries
-2. Practice active listening
-3. Consider cultural factors
-4. Document all interactions
-
-**Sovereign Note**: This analysis is for informational purposes and should not substitute for professional psychological assessment.
-"""
-    
-    elif request.service == "news":
-        response += f"""### News Intelligence
-
-**Query**: {request.message}
-
-**Current Headlines**:
-1. EU AI Act enters full effect with landmark enforcement
-2. DPDPA implementation enters final phase
-3. California DELETE Act enables one-click data deletion
-4. Global AI regulation tracker exceeds 30 countries
-5. Privacy-enhancing technologies gain adoption
-
-**Insights**:
-- Regulatory momentum accelerating globally
-- Focus on consumer rights and transparency
-- Technology compliance gap widening
-
-**Sovereign Cache**: Latest news available (live feed unavailable)
-"""
-    
-    elif request.service == "governance":
-        response += f"""### Governance & Policy Analysis
-
-**Topic**: {request.message}
-
-**Policy Framework**:
-1. Compliance requirements: High
-2. Stakeholder impact: Significant
-3. Implementation timeline: 6-12 months
-
-**Recommendations**:
-- Establish governance committee
-- Develop compliance roadmap
-- Implement monitoring systems
-- Regular policy reviews
-
-**Human Oversight**: All policy changes require approval through Evolution Gate.
-"""
-    
-    elif request.service == "review":
-        response += f"""### Document Review Analysis
-
-**Document Type**: Legal Analysis
-
-**Review Summary**:
-- Key clauses identified: {len(request.message.split())} terms analyzed
-- Risk assessment: Moderate
-- Compliance gaps: 3 identified
-
-**Recommendations**:
-1. Review highlighted clauses
-2. Address compliance gaps
-3. Legal counsel review recommended
-
-**Sovereign Verdict**: Document reviewed with zero-retention analysis.
-"""
-    
-    elif request.service == "privacy":
-        response += f"""### Privacy Compliance Analysis
-
-**Scan Type**: Data Protection Assessment
-
-**Findings**:
-- Data inventory: Complete
-- Consent mechanisms: Partial compliance
-- Deletion capabilities: Review recommended
-- Data transfers: Cross-border analysis needed
-
-**Jurisdiction**: {request.jurisdiction}
-
-**Recommendations**:
-1. Implement DPDPA/GDPR compliance
-2. Enable data subject access requests
-3. Maintain privacy impact assessments
-
-**Zero-Retention**: No data persisted after analysis.
-"""
-    
-    elif request.service == "moat":
-        response += f"""### MOAT Strategic Analysis
-
-**Query**: {request.message}
-
-**Competitive Landscape**:
-- Market position: Strong
-- Regulatory moat: Building
-- Technology advantage: Differentiated
-
-**Strategic Recommendations**:
-1. Leverage sovereign AI positioning
-2. Expand jurisdictional coverage
-3. Develop ecosystem partnerships
-4. Maintain human-gated trust model
-
-**MOAT Score**: {random.randint(70, 95)}/100
-"""
-    
     response += f"\n\n---\n*⚡ Processed by {len(agents_used)} agents · Zero-retention · Sovereign*"
     
-    # Store trace
     trace_id = str(uuid.uuid4())
     state.traces[trace_id] = {
         "id": trace_id,
@@ -1347,14 +1220,6 @@ async def chat(request: ChatRequest):
         "agents": agents_used,
         "timestamp": datetime.now().isoformat()
     }
-    
-    state.events.append({
-        "id": len(state.events) + 1,
-        "type": "chat",
-        "service": request.service,
-        "agents": len(agents_used),
-        "timestamp": datetime.now().isoformat()
-    })
     
     return ChatResponse(
         response=response,
@@ -2048,10 +1913,8 @@ async def evolution_status():
 
 @app.post("/api/evolution/self-improve", response_model=Dict[str, Any])
 async def self_improve():
-    # Generate improvement suggestions based on feedback and performance
     suggestions = []
     
-    # Analyze traces for patterns
     if len(state.traces) > 10:
         suggestions.append({
             "title": "Improve response quality",
@@ -2109,7 +1972,6 @@ async def web_search(request: WebSearchRequest):
     
     results = []
     if SERPAPI_KEY:
-        # Simulate search results
         results = [
             {"title": f"Result {i+1} for {request.query[:30]}...", "url": f"https://example.com/{i+1}", "snippet": "Relevant legal information found..."}
             for i in range(min(request.num_results, 5))
@@ -2189,7 +2051,6 @@ async def create_payment_order(request: PaymentOrderRequest):
             "key_id": "simulated"
         }
     
-    # Simulate order creation
     order_id = str(uuid.uuid4())
     state.payments[order_id] = {
         "order_id": order_id,
@@ -2212,7 +2073,6 @@ async def create_payment_order(request: PaymentOrderRequest):
 
 @app.post("/payment/verify", response_model=Dict[str, Any])
 async def verify_payment(request: PaymentVerification):
-    # Simulate signature verification
     if request.razorpay_order_id not in state.payments:
         raise HTTPException(status_code=404, detail="Order not found")
     
@@ -2265,7 +2125,6 @@ async def payment_history(current_user: Dict[str, Any] = Depends(get_current_use
 
 @app.post("/voice/transcribe", response_model=Dict[str, Any])
 async def transcribe_audio(data: Dict[str, str]):
-    # Simulate transcription
     text = data.get("audio_data", "This is a simulated transcription.")
     return {
         "text": text,
