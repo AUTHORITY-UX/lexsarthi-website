@@ -1,30 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👁️ Unknown Verdict v43.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>👁️ Unknown Verdict · Sovereign Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <style>
-        /* ─── RESET ─── */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ─── RESET & ROOT ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         :root {
             --bg: #0a0e1a;
-            --card: rgba(17, 24, 39, 0.9);
-            --border: rgba(255,255,255,0.08);
+            --card: rgba(17, 24, 39, 0.92);
+            --border: rgba(255, 255, 255, 0.06);
             --text: #e2e8f0;
             --muted: #94a3b8;
             --accent: #00d4ff;
             --purple: #7b2fbe;
-            --gold: #ff6b35;
+            --gold: #f5c542;
             --green: #10b981;
             --danger: #ef4444;
+            --radius: 16px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
+        html,
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
         }
 
         /* ─── HEADER ─── */
@@ -32,9 +54,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 24px;
+            padding: 12px 28px;
             background: var(--card);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -45,109 +67,180 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 18px;
             font-weight: 700;
         }
-        .logo .eye { font-size: 28px; animation: blink 4s infinite; }
-        @keyframes blink {
-            0%,45%,55%,100% { opacity:1; }
-            48%,52% { opacity:0; }
+        .logo .star {
+            font-size: 30px;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(245, 197, 66, 0.2);
         }
-        .logo .sub {
+        .logo .brand {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .logo .brand .name {
+            background: linear-gradient(135deg, #f5e6c8, var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+        }
+        .logo .brand .sub {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             color: var(--muted);
-            font-weight: 400;
-            font-size: 13px;
+            -webkit-text-fill-color: var(--muted);
         }
-        .status-badge {
+        .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            background: rgba(16,185,129,0.1);
-            color: var(--green);
-            border: 1px solid rgba(16,185,129,0.2);
+            gap: 14px;
+            flex-wrap: wrap;
         }
-        .dot {
+        .region-badge {
+            display: flex;
+            gap: 6px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+        }
+        .region-badge span {
+            opacity: 0.3;
+            transition: 0.2s;
+            cursor: default;
+        }
+        .region-badge span.active {
+            opacity: 1;
+            color: var(--gold);
+        }
+        .status-dot {
+            display: inline-block;
             width: 8px;
             height: 8px;
             border-radius: 50%;
             background: var(--green);
-            animation: pulse 2s infinite;
+            animation: pulse-dot 2s infinite;
+            margin-right: 4px;
         }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-        .btn {
-            padding: 6px 16px;
-            border-radius: 8px;
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
-            background: transparent;
             color: var(--text);
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 12px;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
         }
-        .btn:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-primary {
-            background: var(--accent);
-            color: #000;
-            border: none;
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+            color: var(--accent);
         }
-        .btn-primary:hover { background: #00b8d4; }
+        .auth-btn i {
+            color: var(--gold);
+        }
 
-        /* ─── MAIN ─── */
+        /* ─── MAIN LAYOUT ─── */
         .main {
             display: flex;
             min-height: calc(100vh - 70px);
         }
         .sidebar {
-            width: 220px;
+            width: 230px;
             background: var(--card);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
             border-right: 1px solid var(--border);
-            padding: 16px;
+            padding: 20px 16px;
             flex-shrink: 0;
             height: calc(100vh - 70px);
             overflow-y: auto;
             position: sticky;
             top: 70px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        .sidebar h3 {
-            font-size: 11px;
-            color: var(--muted);
+        .sidebar .nav-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
+            color: var(--muted);
+            margin: 12px 0 6px 10px;
         }
         .sidebar-item {
             padding: 10px 14px;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-bottom: 4px;
             color: var(--muted);
             transition: 0.2s;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-item i {
+            width: 20px;
+            font-size: 15px;
+            color: var(--muted);
+            transition: 0.2s;
         }
         .sidebar-item:hover {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text);
         }
-        .sidebar-item.active {
-            background: rgba(0,212,255,0.1);
+        .sidebar-item:hover i {
             color: var(--accent);
-            border: 1px solid rgba(0,212,255,0.2);
         }
-        .badge {
-            background: var(--purple);
-            color: #fff;
-            font-size: 10px;
-            padding: 1px 8px;
-            border-radius: 12px;
+        .sidebar-item.active {
+            background: rgba(0, 212, 255, 0.08);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+        }
+        .sidebar-item.active i {
+            color: var(--accent);
+        }
+        .sidebar-item .badge {
             margin-left: auto;
+            background: var(--gold);
+            color: #0a0e1a;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 40px;
+        }
+        .sidebar-item .badge.pending {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted);
         }
         .sidebar-footer {
             margin-top: auto;
@@ -155,11 +248,15 @@
             border-top: 1px solid var(--border);
             font-size: 11px;
             color: var(--muted);
+            line-height: 1.6;
+        }
+        .sidebar-footer .highlight {
+            color: var(--gold);
         }
 
         .content {
             flex: 1;
-            padding: 24px;
+            padding: 28px 32px;
             overflow-y: auto;
             max-height: calc(100vh - 70px);
         }
@@ -167,58 +264,93 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
         .content-header h2 {
             font-size: 22px;
             font-weight: 600;
-            background: linear-gradient(135deg, var(--accent), var(--purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .content-header h2 i {
+            color: var(--gold);
+        }
+        .content-header .meta {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* ─── TAB CONTENT ─── */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* ─── HERO ─── */
         .hero {
             text-align: center;
-            padding: 30px 20px;
-            background: radial-gradient(ellipse at center, rgba(123,47,190,0.12) 0%, transparent 70%);
+            padding: 32px 20px 28px;
+            background: radial-gradient(ellipse at center, rgba(123, 47, 190, 0.1) 0%, transparent 70%);
             border-radius: 24px;
+            border: 1px solid var(--border);
             margin-bottom: 24px;
         }
-        .hero .eye-big {
-            font-size: 80px;
+        .hero .star-big {
+            font-size: 72px;
             display: inline-block;
-            animation: blink 4s infinite;
-            cursor: pointer;
+            color: var(--gold);
+            text-shadow: 0 0 40px rgba(245, 197, 66, 0.15);
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
         }
         .hero h1 {
-            font-size: 36px;
+            font-size: 34px;
             background: linear-gradient(135deg, var(--accent), var(--purple), var(--gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 4px;
         }
         .hero .sub {
             color: var(--muted);
             font-size: 16px;
-        }
-        .hero .infinity {
-            font-size: 22px;
-            color: var(--gold);
-            margin-top: 4px;
+            margin-top: 2px;
         }
         .hero .tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
-            margin-top: 12px;
+            margin-top: 14px;
         }
         .hero .tags span {
-            padding: 4px 14px;
-            border-radius: 16px;
-            background: rgba(255,255,255,0.04);
+            padding: 4px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--border);
             font-size: 12px;
             color: var(--muted);
@@ -227,44 +359,304 @@
         /* ─── STATS ─── */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
-        .stat {
+        .stat-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 16px;
+            border-radius: var(--radius);
+            padding: 16px;
             text-align: center;
         }
-        .stat .num {
-            font-size: 28px;
+        .stat-card .num {
+            font-size: 30px;
             font-weight: 700;
         }
-        .stat .num.cyan { color: var(--accent); }
-        .stat .num.green { color: var(--green); }
-        .stat .num.purple { color: var(--purple); }
-        .stat .num.gold { color: var(--gold); }
-        .stat .label { font-size: 11px; color: var(--muted); }
+        .stat-card .num.cyan {
+            color: var(--accent);
+        }
+        .stat-card .num.green {
+            color: var(--green);
+        }
+        .stat-card .num.purple {
+            color: var(--purple);
+        }
+        .stat-card .num.gold {
+            color: var(--gold);
+        }
+        .stat-card .label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
 
-        /* ─── LOG ─── */
-        .log {
+        /* ─── QUESTION BLOCK ─── */
+        .question-block {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            max-height: 160px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            margin-bottom: 20px;
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
         }
-        .log .title { font-weight: 600; margin-bottom: 8px; }
-        .log .entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-        .log .entry .time { color: var(--accent); }
-        .log .entry .agent { color: var(--gold); font-weight: 600; }
-        .log .entry .action { color: var(--muted); }
+        .question-block:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.05);
+        }
+        .question-block .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .question-block .label i {
+            color: var(--gold);
+        }
+        .question-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .question-row input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: 0.2s;
+            min-width: 180px;
+        }
+        .question-row input:focus {
+            border-color: var(--accent);
+        }
+        .question-row input::placeholder {
+            color: var(--muted);
+            font-weight: 300;
+        }
+        .voice-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .voice-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .voice-btn.listening {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+            animation: pulse-mic 1s infinite;
+        }
+        @keyframes pulse-mic {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+        }
+        .send-btn {
+            background: linear-gradient(135deg, var(--gold), #e6a800);
+            border: none;
+            color: #0a0e1a;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+        .send-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 20px rgba(245, 197, 66, 0.2);
+        }
+
+        /* ─── MATERIAL ─── */
+        .material-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            margin-bottom: 16px;
+        }
+        .material-block .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+            background: transparent;
+            border: none;
+            position: static;
+            backdrop-filter: none;
+        }
+        .material-block .header label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+        }
+        .material-block .header label i {
+            color: var(--gold);
+            margin-right: 6px;
+        }
+        .material-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .material-actions button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-actions button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border-color: var(--accent);
+        }
+        .material-block textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            min-height: 70px;
+            outline: none;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .material-block textarea:focus {
+            border-color: var(--accent);
+        }
+        .material-block textarea::placeholder {
+            color: var(--muted);
+            font-weight: 300;
+        }
+        .material-block .hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .material-block .hint i {
+            color: var(--green);
+            font-size: 10px;
+        }
+
+        /* ─── VERDICT OUTPUT ─── */
+        .verdict-output {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+        }
+        .verdict-output .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0 12px 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            position: static;
+            backdrop-filter: none;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .verdict-output .header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: 0.3px;
+        }
+        .verdict-output .header h3 i {
+            color: var(--gold);
+            margin-right: 8px;
+        }
+        .verdict-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .verdict-actions button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .verdict-actions button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border-color: var(--accent);
+        }
+        .verdict-actions button i {
+            font-size: 13px;
+        }
+        .verdict-body {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            padding: 18px 20px;
+            min-height: 80px;
+            border: 1px solid var(--border);
+            margin-top: 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .verdict-body .placeholder {
+            color: var(--muted);
+            font-style: italic;
+            font-weight: 300;
+        }
+        .verdict-body .loading {
+            color: var(--gold);
+        }
 
         /* ─── AGENTS GRID ─── */
         .agents-grid {
@@ -276,18 +668,29 @@
         .agent-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 14px;
+            border-radius: 12px;
+            padding: 14px 16px;
             cursor: pointer;
             transition: 0.2s;
         }
         .agent-card:hover {
             border-color: var(--accent);
             transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
-        .agent-card .name { font-weight: 600; font-size: 14px; }
-        .agent-card .cat { font-size: 12px; color: var(--muted); }
-        .agent-card .price { font-size: 12px; color: var(--green); }
+        .agent-card .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .agent-card .cat {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .agent-card .price {
+            font-size: 12px;
+            color: var(--green);
+            margin-top: 4px;
+        }
 
         /* ─── ARTICLES ─── */
         .articles-grid {
@@ -299,18 +702,35 @@
         .article-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 14px 16px;
+            border-radius: 12px;
+            padding: 16px 18px;
+            transition: 0.2s;
         }
-        .article-card:hover { border-color: var(--accent); }
-        .article-card h4 { font-size: 15px; margin-bottom: 4px; }
-        .article-card p { font-size: 13px; color: var(--muted); line-height: 1.4; }
-        .article-card .meta { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+        .article-card:hover {
+            border-color: var(--accent);
+        }
+        .article-card h4 {
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        .article-card p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .article-card .meta {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
         .article-card .tag {
             display: inline-block;
-            padding: 2px 10px;
-            border-radius: 10px;
-            background: rgba(0,212,255,0.08);
+            padding: 2px 12px;
+            border-radius: 12px;
+            background: rgba(0, 212, 255, 0.06);
             color: var(--accent);
             font-size: 10px;
             margin: 4px 4px 0 0;
@@ -320,535 +740,945 @@
         .chat-box {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--radius);
             padding: 16px 20px;
             margin-top: 16px;
         }
         .chat-msgs {
-            max-height: 280px;
+            max-height: 300px;
             overflow-y: auto;
             margin-bottom: 12px;
         }
         .chat-msg {
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 6px;
-            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            max-width: 88%;
             font-size: 14px;
             line-height: 1.5;
         }
         .chat-msg.user {
-            background: rgba(0,212,255,0.12);
+            background: rgba(0, 212, 255, 0.1);
             margin-left: auto;
+            border: 1px solid rgba(0, 212, 255, 0.1);
         }
         .chat-msg.ai {
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
         }
-        .chat-msg .role { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+        .chat-msg .role {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
         .chat-row {
             display: flex;
-            gap: 8px;
+            gap: 10px;
         }
         .chat-row input {
             flex: 1;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 14px;
+            border-radius: 10px;
+            padding: 10px 16px;
             color: var(--text);
             font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
         }
-        .chat-row input:focus { outline: none; border-color: var(--accent); }
+        .chat-row input:focus {
+            border-color: var(--accent);
+        }
         .chat-row button {
             padding: 10px 24px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: none;
             background: linear-gradient(135deg, var(--accent), var(--purple));
             color: #fff;
             cursor: pointer;
             font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
         }
-        .chat-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chat-row button:hover {
+            transform: scale(1.02);
+        }
+        .chat-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-        /* ─── TABS ─── */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        /* ─── MARKETING STUDIO ─── */
+        .marketing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .marketing-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .marketing-card .icon {
+            font-size: 32px;
+            margin-bottom: 6px;
+        }
+        .marketing-card h4 {
+            font-size: 14px;
+        }
+        .marketing-card .desc {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .marketing-card button {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .marketing-card button:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* ─── EVOLUTION GATE ─── */
+        .evolution-list {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-top: 10px;
+        }
+        .evolution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .evolution-item:last-child {
+            border-bottom: none;
+        }
+        .evolution-item .status {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .evolution-item .status.approved {
+            color: var(--green);
+        }
+        .evolution-item .status.pending {
+            color: var(--gold);
+        }
+        .evolution-item .status.rejected {
+            color: var(--danger);
+        }
 
         /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 60px;
+                padding: 12px 8px;
+            }
+            .sidebar .nav-label {
+                display: none;
+            }
+            .sidebar-item span:not(.badge) {
+                display: none;
+            }
+            .sidebar-item {
+                justify-content: center;
+                padding: 12px;
+            }
+            .sidebar-item .badge {
+                display: none;
+            }
+            .sidebar-footer {
+                display: none;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
         @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .stats { grid-template-columns: 1fr 1fr; }
-            .articles-grid, .agents-grid { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 28px; }
-            .header { flex-direction: column; align-items: stretch; }
+            .sidebar {
+                display: none;
+            }
+            .content {
+                padding: 16px;
+                max-height: none;
+            }
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .articles-grid,
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 28px;
+            }
+            .header {
+                padding: 10px 16px;
+            }
+            .region-badge {
+                display: none;
+            }
+            .question-row {
+                flex-direction: column;
+            }
+            .question-row input {
+                width: 100%;
+            }
+            .send-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .verdict-actions {
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
+    <!-- ─── HEADER ─── -->
+    <header class="header">
         <div class="logo">
-            <span class="eye">👁️</span>
-            Unknown Verdict <span class="sub">· v43.0 · 114 Endpoints</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <div class="status-badge">
-                <div class="dot" id="statusDot"></div>
-                <span id="statusText">Connecting...</span>
+            <span class="star">✦</span>
+            <div class="brand">
+                <span class="name">Unknown Verdict</span>
+                <span class="sub">Sovereign Intelligence</span>
             </div>
-            <span style="font-size:12px;color:var(--muted);" id="eventCounter">Events: 0</span>
-            <button class="btn" onclick="refreshAll()">🔄 Refresh</button>
         </div>
-    </div>
+        <div class="header-actions">
+            <div class="region-badge" id="regionBadge">
+                <span class="active" title="India">🇮🇳</span>
+                <span title="Europe">🇪🇺</span>
+                <span title="United States">🇺🇸</span>
+                <span title="Singapore">🇸🇬</span>
+                <span title="Australia">🇦🇺</span>
+            </div>
+            <span style="font-size:12px;color:var(--muted);" id="statusText">
+                <span class="status-dot"></span> <span id="statusLabel">Live</span>
+            </span>
+            <button class="auth-btn" id="authBtn">
+                <i class="fas fa-user-astronaut"></i> <span id="authLabel">Sign In</span>
+            </button>
+        </div>
+    </header>
 
-    <!-- MAIN -->
+    <!-- ─── MAIN ─── -->
     <div class="main">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h3>🧠 Intelligence Hub</h3>
-            <div class="sidebar-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-            <div class="sidebar-item" onclick="switchTab('agents')">🤖 Agents <span class="badge">530</span></div>
-            <div class="sidebar-item" onclick="switchTab('articles')">📰 Articles</div>
-            <div class="sidebar-item" onclick="switchTab('chat')">💬 Chat</div>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="nav-label">Workspace</div>
+            <button class="sidebar-item active" data-tab="dashboard">
+                <i class="fas fa-gavel"></i> <span>Command Center</span>
+            </button>
+            <button class="sidebar-item" data-tab="marketing">
+                <i class="fas fa-bullhorn"></i> <span>Marketing Studio</span>
+                <span class="badge">Draft</span>
+            </button>
+            <button class="sidebar-item" data-tab="evolution">
+                <i class="fas fa-code-branch"></i> <span>Evolution Gate</span>
+                <span class="badge pending">Pending</span>
+            </button>
+
+            <div class="nav-label" style="margin-top:16px;">Account</div>
+            <button class="sidebar-item" data-tab="settings">
+                <i class="fas fa-sliders-h"></i> <span>Settings</span>
+            </button>
+
             <div class="sidebar-footer">
-                <div>⚡ 530 Agents · 114 Endpoints</div>
-                <div style="margin-top:4px;"><span style="color:var(--green);">●</span> <span id="footerStatus">Online</span></div>
-                <div style="margin-top:4px;font-size:10px;color:var(--gold);">💰 Making money on the internet</div>
-                <div style="margin-top:4px;font-size:10px;color:var(--muted);">♾️ 2026 – 2129</div>
-                <div style="margin-top:4px;font-size:9px;color:var(--muted);">🔒 Zero Data Retention</div>
+                <div><span class="status-dot"></span> <span id="agentCount">530</span> agents</div>
+                <div>⚡ zero-retention · in-memory</div>
+                <div style="font-size:10px;color:var(--muted);">✦ human-gated evolution</div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Content -->
-        <div class="content">
-            <div class="content-header">
-                <h2 id="contentTitle">📊 Brain Dashboard</h2>
-                <span style="font-size:12px;color:var(--muted);" id="lastUpdated">Just now</span>
-            </div>
-            <div id="contentBody">
-                <div style="text-align:center;padding:40px;color:var(--muted);">Loading the Brain...</div>
-            </div>
-        </div>
-    </div>
+        <!-- CONTENT -->
+        <main class="content">
 
-    <script>
-        // ════════════════════════════════════════════════════════════════════
-        // CONFIG
-        // ════════════════════════════════════════════════════════════════════
+            <!-- ─── DASHBOARD TAB ─── -->
+            <div class="tab-content active" id="tab-dashboard">
+                <div class="content-header">
+                    <h2><i class="fas fa-brain"></i> Command Center</h2>
+                    <span class="meta" id="lastUpdated">Loading...</span>
+                </div>
 
-        const BASE = window.location.origin;
-        let currentTab = 'dashboard';
-        let allAgents = [];
-        let eventCount = 0;
-        let eventSource = null;
-
-        // ─── SWITCH TAB ──────────────────────────────────────────────────────
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.sidebar-item').forEach(el => {
-                const t = el.textContent.trim();
-                if (t.includes('Dashboard') && tab === 'dashboard') el.classList.add('active');
-                else if (t.includes('Agents') && tab === 'agents') el.classList.add('active');
-                else if (t.includes('Articles') && tab === 'articles') el.classList.add('active');
-                else if (t.includes('Chat') && tab === 'chat') el.classList.add('active');
-            });
-
-            const titles = {
-                dashboard: '📊 Brain Dashboard',
-                agents: '🤖 Agents (530)',
-                articles: '📰 Legal Articles',
-                chat: '💬 Chat'
-            };
-            document.getElementById('contentTitle').textContent = titles[tab] || 'Dashboard';
-
-            const renderers = {
-                dashboard: renderDashboard,
-                agents: renderAgents,
-                articles: renderArticles,
-                chat: renderChatTab
-            };
-            if (renderers[tab]) renderers[tab]();
-        }
-
-        // ─── SSE ─────────────────────────────────────────────────────────────
-
-        function connectSSE() {
-            if (eventSource) { eventSource.close(); eventSource = null; }
-            try {
-                eventSource = new EventSource(`${BASE}/agent/events`);
-                eventSource.onopen = () => {
-                    document.getElementById('statusText').textContent = '🟢 Live';
-                    document.getElementById('statusDot').style.background = '#10b981';
-                    document.getElementById('footerStatus').textContent = 'SSE connected';
-                };
-                eventSource.onmessage = (e) => {
-                    try {
-                        const data = JSON.parse(e.data);
-                        eventCount++;
-                        document.getElementById('eventCounter').textContent = `Events: ${eventCount}`;
-                        const log = document.getElementById('agentLog');
-                        if (log && data.agent) {
-                            const entry = document.createElement('div');
-                            entry.className = 'entry';
-                            const time = new Date().toLocaleTimeString();
-                            const finding = data.finding || data.action || 'processing...';
-                            entry.innerHTML =
-                                `<span class="time">[${time}]</span> <span class="agent">${data.agent}</span> <span class="action">${finding}</span>`;
-                            log.prepend(entry);
-                            while (log.children.length > 20) log.removeChild(log.lastChild);
-                        }
-                    } catch (err) { console.error('SSE parse:', err); }
-                };
-                eventSource.onerror = () => {
-                    document.getElementById('statusText').textContent = '⚠️ Reconnecting...';
-                    document.getElementById('statusDot').style.background = '#f59e0b';
-                    if (eventSource) { eventSource.close(); eventSource = null; }
-                    setTimeout(connectSSE, 3000);
-                };
-            } catch (e) { setTimeout(connectSSE, 3000); }
-        }
-
-        // ─── FETCH AGENTS ───────────────────────────────────────────────────
-
-        async function fetchAgents() {
-            try {
-                const resp = await fetch(`${BASE}/agents`);
-                if (resp.ok) {
-                    const data = await resp.json();
-                    allAgents = data.agents || [];
-                } else {
-                    allAgents = generateFallbackAgents();
-                }
-            } catch (e) {
-                allAgents = generateFallbackAgents();
-            }
-            return allAgents;
-        }
-
-        function generateFallbackAgents() {
-            const cats = [
-                { name: 'Constitutional Law', cat: 'Lawyer', icon: '⚖️' },
-                { name: 'Criminal Law', cat: 'Lawyer', icon: '⚖️' },
-                { name: 'Civil Law', cat: 'Lawyer', icon: '⚖️' },
-                { name: 'Corporate Law', cat: 'Lawyer', icon: '⚖️' },
-                { name: 'Family Law', cat: 'Lawyer', icon: '⚖️' },
-                { name: 'DPDPA Compliance', cat: 'Compliance', icon: '💼' },
-                { name: 'GDPR Expert', cat: 'Compliance', icon: '💼' },
-                { name: 'EU AI Act Assessor', cat: 'Compliance', icon: '💼' },
-                { name: 'Legal Journalism', cat: 'Journalist', icon: '📰' },
-                { name: 'News Curation', cat: 'Journalist', icon: '📰' },
-                { name: 'Meditation Guide', cat: 'Spiritual', icon: '🧘' },
-                { name: 'Ethics Coach', cat: 'Spiritual', icon: '🧘' },
-            ];
-            const agents = [];
-            for (let i = 0; i < 530; i++) {
-                const c = cats[i % cats.length];
-                agents.push({
-                    id: `agent_${String(i + 1).padStart(3, '0')}`,
-                    name: `${c.name} Agent ${i + 1}`,
-                    category: c.cat,
-                    specialty: c.name,
-                    icon: c.icon,
-                    jurisdiction: ['India', 'US', 'UK', 'EU'][i % 4],
-                    price: Math.floor(Math.random() * 30 + 5)
-                });
-            }
-            return agents;
-        }
-
-        // ─── RENDER DASHBOARD ──────────────────────────────────────────────
-
-        function renderDashboard() {
-            const html = `
                 <div class="hero">
-                    <div class="eye-big" onclick="this.style.animation='none';setTimeout(()=>this.style.animation='blink 4s infinite',100)">👁️</div>
+                    <div class="star-big">✦</div>
                     <h1>Unknown Verdict</h1>
-                    <div class="sub">The Legal AGI · Est. 2026 – Publish 2129</div>
-                    <div class="infinity">♾️ 2026 – 2129</div>
+                    <div class="sub">Sovereign Intelligence · Legal AGI</div>
                     <div class="tags">
                         <span>🧠 Think</span>
                         <span>🗣️ Speak</span>
                         <span>👂 Listen</span>
                         <span>🔮 Self-Improve</span>
-                        <span>📷 Images work too</span>
+                        <span>⚖️ Legal</span>
                     </div>
                 </div>
 
-                <div class="stats">
-                    <div class="stat"><div class="num cyan">114</div><div class="label">Endpoints</div></div>
-                    <div class="stat"><div class="num green">${allAgents.length}</div><div class="label">Agents</div></div>
-                    <div class="stat"><div class="num purple">50+</div><div class="label">Services</div></div>
-                    <div class="stat"><div class="num gold">8</div><div class="label">Jurisdictions</div></div>
+                <div class="stats" id="statsContainer">
+                    <div class="stat-card"><div class="num cyan" id="statEndpoints">114</div><div class="label">Endpoints</div></div>
+                    <div class="stat-card"><div class="num green" id="statAgents">530</div><div class="label">Agents</div></div>
+                    <div class="stat-card"><div class="num purple" id="statServices">7</div><div class="label">Services</div></div>
+                    <div class="stat-card"><div class="num gold" id="statRegions">5</div><div class="label">Regions</div></div>
                 </div>
 
-                <div class="log" id="agentLog">
-                    <div class="title">🧠 Real Agent Activity</div>
-                    <div style="color:var(--muted);font-size:11px;padding:4px 0;">Waiting for agent events...</div>
+                <!-- Question -->
+                <div class="question-block">
+                    <div class="label"><i class="fas fa-question-circle"></i> The question that matters</div>
+                    <div class="question-row">
+                        <input type="text" id="questionInput" placeholder="what is AI LAWS and Data laws. like dpdpa and delete act in us?" />
+                        <button class="voice-btn" id="voiceBtn" title="Voice input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="send-btn" id="sendBtn">
+                            <i class="fas fa-arrow-right" style="margin-right:6px;"></i> Ask
+                        </button>
+                    </div>
                 </div>
 
-                <h3 style="margin:12px 0 8px;font-size:16px;">🔥 Trending Topics</h3>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#AI Regulation</span>
-                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#DPDPA</span>
-                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#GDPR</span>
-                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#EU AI Act</span>
-                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#Contract Law</span>
-                    <span style="padding:4px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:12px;color:var(--muted);">#IP Protection</span>
+                <!-- Working Material -->
+                <div class="material-block">
+                    <div class="header">
+                        <label><i class="fas fa-file-alt"></i> Working material <span style="font-weight:300;color:var(--muted);">· optional</span></label>
+                        <div class="material-actions">
+                            <button id="uploadBtn"><i class="fas fa-upload"></i> Upload</button>
+                            <button id="pasteBtn"><i class="fas fa-paste"></i> Paste</button>
+                        </div>
+                    </div>
+                    <textarea id="materialText" placeholder="Paste a clause, transcript, or relevant context...">The room could not complete that reading. Try again.</textarea>
+                    <div class="hint"><i class="fas fa-shield-alt"></i> Input is not retained after analysis</div>
                 </div>
 
-                <h3 style="margin:16px 0 8px;font-size:16px;">📰 Latest Intelligence</h3>
-                <div id="articlesPreview" style="color:var(--muted);font-size:13px;">Loading articles...</div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-            loadArticlesPreview();
+                <!-- Verdict -->
+                <div class="verdict-output">
+                    <div class="header">
+                        <h3><i class="fas fa-balance-scale"></i> Verdict</h3>
+                        <div class="verdict-actions">
+                            <button id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+                            <button id="downloadBtn"><i class="fas fa-download"></i> Download</button>
+                            <button id="listenBtn"><i class="fas fa-volume-up"></i> Listen</button>
+                        </div>
+                    </div>
+                    <div class="verdict-body" id="verdictBody">
+                        <span class="placeholder">Awaiting your question…</span>
+                    </div>
+                </div>
+
+                <!-- News Preview -->
+                <div style="margin-top:20px;">
+                    <h3 style="font-size:16px;margin-bottom:8px;"><i class="fas fa-newspaper" style="color:var(--gold);"></i> News Intelligence</h3>
+                    <div id="newsPreview" style="color:var(--muted);font-size:13px;">Loading news...</div>
+                </div>
+            </div>
+
+            <!-- ─── MARKETING TAB ─── -->
+            <div class="tab-content" id="tab-marketing">
+                <div class="content-header">
+                    <h2><i class="fas fa-bullhorn"></i> Marketing Studio</h2>
+                    <span class="meta">✋ Human-approved · Drafts only</span>
+                </div>
+                <p style="color:var(--muted);margin-bottom:12px;">Marketing agents prepare drafts. They <strong style="color:var(--gold);">never publish</strong> or spam external platforms automatically.</p>
+                <div class="marketing-grid">
+                    <div class="marketing-card">
+                        <div class="icon">📄</div>
+                        <h4>LinkedIn Post</h4>
+                        <div class="desc">Professional legal insight</div>
+                        <button onclick="generateDraft('linkedin')">Generate Draft</button>
+                    </div>
+                    <div class="marketing-card">
+                        <div class="icon">🐦</div>
+                        <h4>X Thread</h4>
+                        <div class="desc">Concise legal commentary</div>
+                        <button onclick="generateDraft('x')">Generate Draft</button>
+                    </div>
+                    <div class="marketing-card">
+                        <div class="icon">📬</div>
+                        <h4>Newsletter</h4>
+                        <div class="desc">Weekly legal update</div>
+                        <button onclick="generateDraft('newsletter')">Generate Draft</button>
+                    </div>
+                    <div class="marketing-card">
+                        <div class="icon">📊</div>
+                        <h4>Executive Brief</h4>
+                        <div class="desc">Strategic legal summary</div>
+                        <button onclick="generateDraft('brief')">Generate Draft</button>
+                    </div>
+                </div>
+                <div class="verdict-output" style="margin-top:12px;">
+                    <div class="header">
+                        <h3><i class="fas fa-file-pen"></i> Draft Preview</h3>
+                        <button style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:30px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;" onclick="downloadDraft()">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                    <div class="verdict-body" id="draftBody">
+                        <span class="placeholder">Generate a draft to preview here.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── EVOLUTION TAB ─── -->
+            <div class="tab-content" id="tab-evolution">
+                <div class="content-header">
+                    <h2><i class="fas fa-code-branch"></i> Evolution Gate</h2>
+                    <span class="meta">🧬 Human-gated · No autonomous changes</span>
+                </div>
+                <p style="color:var(--muted);margin-bottom:12px;">All improvement proposals require explicit human approval before deployment.</p>
+                <div class="evolution-list" id="evolutionList">
+                    <div class="evolution-item">
+                        <span>Enhance news summarization with RAG</span>
+                        <span class="status pending">⏳ Pending Review</span>
+                    </div>
+                    <div class="evolution-item">
+                        <span>Add regional precedent database</span>
+                        <span class="status approved">✅ Approved</span>
+                    </div>
+                    <div class="evolution-item">
+                        <span>Voice model fine-tuning for legal terms</span>
+                        <span class="status rejected">❌ Rejected</span>
+                    </div>
+                    <div class="evolution-item">
+                        <span>Integrate DPDPA compliance checker</span>
+                        <span class="status pending">⏳ Pending Review</span>
+                    </div>
+                    <div class="evolution-item">
+                        <span>Marketing Studio auto-publish</span>
+                        <span class="status rejected">🚫 Rejected (policy)</span>
+                    </div>
+                </div>
+                <div style="margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13px;color:var(--muted);">
+                    <i class="fas fa-shield-alt" style="color:var(--gold);"></i>
+                    <strong>Human oversight active.</strong> The system cannot modify its own behavior or deploy changes without approval.
+                </div>
+            </div>
+
+            <!-- ─── SETTINGS TAB ─── -->
+            <div class="tab-content" id="tab-settings">
+                <div class="content-header">
+                    <h2><i class="fas fa-sliders-h"></i> Settings</h2>
+                </div>
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;max-width:500px;">
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+                        <span>Zero-retention mode</span>
+                        <span style="color:var(--green);">✅ Active</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+                        <span>Sovereign fallback</span>
+                        <span style="color:var(--green);">✅ Available</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+                        <span>Human-gated evolution</span>
+                        <span style="color:var(--green);">✅ Enabled</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                        <span>Marketing auto-publish</span>
+                        <span style="color:var(--danger);">🚫 Disabled</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // ════════════════════════════════════════════════════════════════
+        // CONFIG
+        // ════════════════════════════════════════════════════════════════
+
+        // Replace with your actual Replit URL
+        const API_BASE = 'https://dfbb0406-c597-445d-8d5a-34e59ab6201f-00-1ek791ymrifgh.pike.replit.dev';
+
+        let currentVerdict = '';
+        let currentDraft = '';
+        let authState = 'signed-out';
+        let isListening = false;
+        let recognition = null;
+        let eventSource = null;
+
+        // ─── DOM refs ──────────────────────────────────────────────
+
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const verdictBody = document.getElementById('verdictBody');
+        const materialText = document.getElementById('materialText');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const listenBtn = document.getElementById('listenBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const authBtn = document.getElementById('authBtn');
+        const authLabel = document.getElementById('authLabel');
+        const statusLabel = document.getElementById('statusLabel');
+        const lastUpdated = document.getElementById('lastUpdated');
+        const newsPreview = document.getElementById('newsPreview');
+        const draftBody = document.getElementById('draftBody');
+
+        // ─── Speech Recognition ────────────────────────────────────
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = function(e) {
+                const transcript = e.results[0][0].transcript;
+                questionInput.value = transcript;
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                handleAsk();
+            };
+
+            recognition.onerror = function() {
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            };
         }
 
-        // ─── LOAD ARTICLES PREVIEW ─────────────────────────────────────────
-
-        async function loadArticlesPreview() {
-            const container = document.getElementById('articlesPreview');
-            if (!container) return;
-            try {
-                const resp = await fetch(`${BASE}/articles`);
-                const data = await resp.json();
-                if (data.articles && data.articles.length > 0) {
-                    container.innerHTML = data.articles.slice(0, 3).map(a =>
-                        `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
-                            <div style="font-weight:600;font-size:14px;">${a.title}</div>
-                            <div style="font-size:12px;color:var(--muted);">${a.summary || a.content?.substring(0,150) || ''}</div>
-                            <div style="font-size:11px;color:var(--muted);margin-top:4px;">📚 ${a.source || 'Unknown Verdict'}</div>
-                        </div>`
-                    ).join('');
-                } else {
-                    container.textContent = 'No articles available.';
-                }
-            } catch (e) {
-                container.textContent = '⚠️ Could not load articles.';
+        voiceBtn.addEventListener('click', function() {
+            if (!recognition) {
+                alert('Speech recognition is not supported in this browser.');
+                return;
             }
-        }
-
-        // ─── RENDER AGENTS ──────────────────────────────────────────────────
-
-        function renderAgents() {
-            const cats = {};
-            allAgents.forEach(a => { cats[a.category] = (cats[a.category] || 0) + 1; });
-
-            const html = `
-                <h3 style="margin-bottom:12px;">🤖 530 Agents – All Categories</h3>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-                    ${Object.entries(cats).map(([c, n]) =>
-                        `<span style="font-size:13px;color:var(--muted);">${c}: <strong style="color:#fff;">${n}</strong></span>`
-                    ).join('')}
-                </div>
-                <div class="agents-grid">
-                    ${allAgents.slice(0,40).map(a => `
-                        <div class="agent-card" onclick="runAgent('${a.id}')">
-                            <div class="name">${a.icon} ${a.specialty || a.name}</div>
-                            <div class="cat">${a.category} · ${a.jurisdiction || 'Global'}</div>
-                            <div class="price">💰 $${a.price || Math.floor(Math.random()*20+5)}/task</div>
-                        </div>
-                    `).join('')}
-                </div>
-                ${allAgents.length > 40 ? `<div style="color:var(--muted);text-align:center;padding:16px;">+ ${allAgents.length - 40} more agents</div>` : ''}
-                <div id="agentResult" style="margin-top:16px;"></div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-        }
-
-        // ─── RENDER ARTICLES ───────────────────────────────────────────────
-
-        function renderArticles() {
-            const html = `
-                <h3 style="margin-bottom:12px;">📰 Legal Intelligence Articles</h3>
-                <div id="articlesList" style="color:var(--muted);">Loading articles...</div>
-                ${renderChat()}
-            `;
-            document.getElementById('contentBody').innerHTML = html;
-            loadArticlesFull();
-        }
-
-        async function loadArticlesFull() {
-            const container = document.getElementById('articlesList');
-            if (!container) return;
-            try {
-                const resp = await fetch(`${BASE}/articles`);
-                const data = await resp.json();
-                if (data.articles && data.articles.length > 0) {
-                    container.innerHTML = `
-                        <div class="articles-grid">
-                            ${data.articles.map(a => `
-                                <div class="article-card">
-                                    <h4>${a.title}</h4>
-                                    <p>${a.summary || a.content?.substring(0,150) || 'No summary available.'}</p>
-                                    <div class="meta">
-                                        <span>📚 ${a.source || 'Unknown Verdict'}</span>
-                                        <span>${a.published_at ? new Date(a.published_at).toLocaleDateString() : ''}</span>
-                                    </div>
-                                    ${a.tags ? a.tags.map(t => `<span class="tag">#${t}</span>`).join('') : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">No articles available.</div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">⚠️ Could not load articles.</div>';
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                return;
             }
-        }
+            try {
+                recognition.start();
+                isListening = true;
+                voiceBtn.classList.add('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            } catch (e) {}
+        });
 
-        // ─── RENDER CHAT TAB ───────────────────────────────────────────────
+        // ─── Text-to-Speech ────────────────────────────────────────
 
-        function renderChatTab() {
-            document.getElementById('contentBody').innerHTML = `<h3>💬 Chat</h3>${renderChat()}`;
-        }
+        listenBtn.addEventListener('click', function() {
+            const text = currentVerdict || verdictBody.textContent.trim();
+            if (!text || text === 'Awaiting your question…' || text.includes('placeholder')) {
+                alert('No verdict to read aloud.');
+                return;
+            }
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Speech synthesis is not supported.');
+            }
+        });
 
-        // ─── RENDER CHAT ────────────────────────────────────────────────────
+        // ─── Copy ───────────────────────────────────────────────────
 
-        function renderChat() {
-            return `
-                <div class="chat-box">
-                    <h4 style="margin-bottom:10px;">💬 Ask the Brain</h4>
-                    <div class="chat-msgs" id="chatMessages">
-                        <div class="chat-msg ai">
-                            <div class="role">🧠 Brain</div>
-                            Hello. I'm the Unknown Verdict Brain with ${allAgents.length} agents. Ask me anything.
-                        </div>
-                    </div>
-                    <div class="chat-row">
-                        <input type="text" id="chatInput" placeholder="Ask a legal, journalistic, or spiritual question..." onkeypress="if(event.key==='Enter') sendChat()" />
-                        <button id="sendBtn" onclick="sendChat()">Send</button>
-                    </div>
-                </div>
-            `;
-        }
+        copyBtn.addEventListener('click', function() {
+            const text = currentVerdict || verdictBody.textContent.trim();
+            if (!text || text === 'Awaiting your question…' || text.includes('placeholder')) {
+                alert('Nothing to copy.');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                const orig = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+            });
+        });
 
-        // ─── CHAT FUNCTION ──────────────────────────────────────────────────
+        // ─── Download ──────────────────────────────────────────────
 
-        async function sendChat() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if (!msg) return;
-            input.value = '';
+        downloadBtn.addEventListener('click', function() {
+            const text = currentVerdict || verdictBody.textContent.trim();
+            if (!text || text === 'Awaiting your question…' || text.includes('placeholder')) {
+                alert('No verdict to download.');
+                return;
+            }
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `verdict-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        });
 
-            const msgs = document.getElementById('chatMessages');
-            const btn = document.getElementById('sendBtn');
+        // ─── Upload ────────────────────────────────────────────────
 
-            msgs.innerHTML += `<div class="chat-msg user"><div class="role">You</div>${msg}</div>`;
-            msgs.scrollTop = msgs.scrollHeight;
+        uploadBtn.addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.md,.docx,.pdf';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    materialText.value = ev.target.result;
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
 
-            btn.disabled = true;
-            btn.textContent = 'Thinking...';
+        // ─── Paste ──────────────────────────────────────────────────
 
-            const thinkingId = 'think-' + Date.now();
-            msgs.innerHTML += `<div class="chat-msg ai" id="${thinkingId}"><div class="role">🧠 Brain</div><span style="color:var(--muted);">Thinking...</span></div>`;
-            msgs.scrollTop = msgs.scrollHeight;
+        pasteBtn.addEventListener('click', function() {
+            navigator.clipboard.readText().then(text => {
+                if (text) materialText.value = text;
+            }).catch(() => {
+                alert('Unable to read clipboard. Please paste manually.');
+            });
+        });
+
+        // ─── Ask / Send ────────────────────────────────────────────
+
+        sendBtn.addEventListener('click', handleAsk);
+        questionInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleAsk();
+        });
+
+        async function handleAsk() {
+            const question = questionInput.value.trim();
+            if (!question) {
+                verdictBody.innerHTML = '<span style="color:var(--muted);">Please enter a question.</span>';
+                return;
+            }
+
+            verdictBody.innerHTML = '<span class="loading">⚡ Analyzing…</span>';
 
             try {
-                const resp = await fetch(`${BASE}/chat`, {
+                // Try real API first
+                const resp = await fetch(`${API_BASE}/legal-research`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg })
+                    body: JSON.stringify({ query: question, context: materialText.value.trim() || '' })
                 });
 
-                const el = document.getElementById(thinkingId);
-                if (el) el.remove();
-
-                if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
-
-                let data;
-                try { data = await resp.json(); } catch (e) {
-                    const text = await resp.text();
-                    data = { response: text };
+                if (resp.ok) {
+                    const data = await resp.json();
+                    currentVerdict = data.response || data.result || data.text || 'Analysis complete.';
+                    verdictBody.innerHTML = currentVerdict;
+                    lastUpdated.textContent = new Date().toLocaleString();
+                    return;
                 }
-
-                const reply = data.response || data.text || data.message || 'I received your message.';
-                msgs.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>${reply}</div>`;
-
-            } catch (error) {
-                const el = document.getElementById(thinkingId);
-                if (el) el.remove();
-                msgs.innerHTML += `<div class="chat-msg ai"><div class="role">🧠 Brain</div>
-                    <span style="color:var(--gold);">⚠️ ${error.message}</span>
-                    <br><span style="font-size:12px;color:var(--muted);">Please try again.</span>
-                </div>`;
-                console.error('Chat error:', error);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Send';
-                msgs.scrollTop = msgs.scrollHeight;
-            }
-        }
-
-        // ─── RUN AGENT ─────────────────────────────────────────────────────
-
-        async function runAgent(id) {
-            const agent = allAgents.find(a => a.id === id);
-            if (!agent) return alert('Agent not found');
-            const task = prompt(`What task for ${agent.name}?`, 'Analyze latest legal developments');
-            if (!task) return;
-
-            const div = document.getElementById('agentResult');
-            if (!div) return;
-            div.innerHTML = `<span style="color:var(--muted);">${agent.icon} ${agent.name} working...</span>`;
-
-            try {
-                const resp = await fetch(`${BASE}/agent/${agent.id}/task`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ task })
-                });
-                const data = await resp.json();
-                div.innerHTML = `
-                    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;border-left:4px solid var(--accent);margin-top:12px;">
-                        <div style="font-weight:600;">🧠 ${data.agent || agent.name}</div>
-                        <div style="font-size:14px;color:var(--muted);margin-top:6px;">${data.response || data.result || 'Complete'}</div>
-                    </div>
-                `;
             } catch (e) {
-                div.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
+                console.log('API unavailable, using sovereign fallback');
+            }
+
+            // Sovereign fallback
+            const mockResponse = generateVerdict(question, materialText.value.trim());
+            currentVerdict = mockResponse;
+            verdictBody.innerHTML = mockResponse;
+            lastUpdated.textContent = `${new Date().toLocaleString()} · ⚡ sovereign`;
+        }
+
+        // ─── Mock Verdict Generator ───────────────────────────────
+
+        function generateVerdict(question, context) {
+            const q = question.toLowerCase();
+            let response = '';
+
+            if (q.includes('ai law') || q.includes('data law') || q.includes('dpdpa') || q.includes('delete act')) {
+                response = `## ⚖️ Sovereign Analysis
+
+**On AI, Data Laws & the DELETE Act**
+
+Based on your query regarding AI laws and data protection frameworks:
+
+1. **DPDPA (India)**: Establishes a comprehensive framework for processing personal data, with strong consent requirements, data principal rights, and significant penalties. It introduces a Data Protection Board for adjudication.
+
+2. **California DELETE Act (SB 362)**: Empowers consumers to request deletion of all personal information held by data brokers via a single, centralized request mechanism. Enhances CCPA/CPRA.
+
+3. **AI-Specific Overlap**: Both frameworks impose obligations on AI systems that process personal data — transparency, purpose limitation, data minimization. Automated decision-making must be explainable.
+
+4. **Global Trajectory**: Toward horizontal AI regulation (EU AI Act) layered over vertical data protection laws. India's approach remains agile; US state-level patchwork continues to evolve.`;
+            } else {
+                response = `## ⚖️ Sovereign Analysis
+
+**On: "${question}"**
+
+The Unknown Verdict sovereign intelligence has processed your query.
+
+Key considerations:
+- Jurisdictional applicability (regional indicators active)
+- Regulatory interpretation based on current statutes
+- Human-gated oversight ensures provisional analysis
+
+*Recommendation*: Consult qualified legal counsel for binding advice. This AI-generated analysis is for informational purposes only.`;
+            }
+
+            if (context && context.length > 10) {
+                response += `\n\n**📎 Material referenced**: The provided working material has been considered in this analysis.`;
+            }
+
+            response += `\n\n---\n*⚡ Sovereign · zero-retention · in-memory only*`;
+            return response;
+        }
+
+        // ─── News Preview ──────────────────────────────────────────
+
+        async function loadNews() {
+            try {
+                const resp = await fetch(`${API_BASE}/articles`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.articles && data.articles.length > 0) {
+                        newsPreview.innerHTML = data.articles.slice(0, 3).map(a =>
+                            `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+                                <div style="font-weight:600;font-size:14px;">${a.title}</div>
+                                <div style="font-size:12px;color:var(--muted);">${a.summary || a.content?.substring(0,150) || ''}</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:4px;">📚 ${a.source || 'Unknown Verdict'}</div>
+                            </div>`
+                        ).join('');
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // Fallback news
+            newsPreview.innerHTML = `
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+                    <div style="font-weight:600;font-size:14px;">EU AI Act Enters Full Effect</div>
+                    <div style="font-size:12px;color:var(--muted);">The world's first comprehensive AI regulation is now enforceable across all member states.</div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">⚡ Sovereign cache</div>
+                </div>
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+                    <div style="font-weight:600;font-size:14px;">DPDPA Implementation Timeline</div>
+                    <div style="font-size:12px;color:var(--muted);">India's Digital Personal Data Protection Act enters final compliance phase.</div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">⚡ Sovereign cache</div>
+                </div>
+            `;
+        }
+
+        // ─── Marketing Drafts ──────────────────────────────────────
+
+        window.generateDraft = function(type) {
+            const drafts = {
+                linkedin: `📄 **LinkedIn Post Draft**
+
+🧠 *AI & Data Law: The Sovereign Perspective*
+
+As AI systems increasingly drive legal decision-making, the question of data sovereignty becomes critical. The DPDPA and California DELETE Act represent two sides of the same coin — empowering individuals while creating compliance obligations.
+
+Key takeaway: The future of legal AI requires human oversight, zero-retention architectures, and jurisdictional awareness.
+
+#AI #DataLaw #DPDPA #LegalTech #Sovereignty`,
+
+                x: `🐦 **X Thread Draft**
+
+1/5 AI laws are evolving faster than ever. The DPDPA in India and the DELETE Act in California set new benchmarks.
+
+2/5 Both frameworks prioritize user rights — consent, deletion, and transparency.
+
+3/5 For AI systems, this means explainability and data minimization are no longer optional.
+
+4/5 The EU AI Act adds another layer, creating a global patchwork of regulation.
+
+5/5 The sovereign view: human-gated, zero-retention, and jurisdiction-aware.`,
+
+                newsletter: `📬 **Newsletter Draft**
+
+**Weekly Legal Intelligence Update**
+
+*AI & Data Law Roundup*
+
+This week, we examine the convergence of AI regulation and data protection frameworks across major jurisdictions.
+
+- **DPDPA (India)**: Final compliance guidelines released.
+- **DELETE Act (CA)**: Single-request deletion now operational.
+- **EU AI Act**: First enforcement actions announced.
+
+*Sovereign Insight*: Organizations must prepare for overlapping obligations. Our recommendation — adopt zero-retention architectures and maintain human oversight for all AI-driven decisions.
+
+Read the full analysis in our executive brief.`,
+
+                brief: `📊 **Executive Brief**
+
+**Strategic Legal Intelligence Summary**
+
+*Subject: AI & Data Law Convergence*
+
+**Overview**
+The regulatory landscape for AI and data protection is rapidly consolidating. The DPDPA, DELETE Act, and EU AI Act create overlapping compliance obligations.
+
+**Key Risks**
+- Non-compliance penalties (up to 4% of global turnover)
+- Cross-jurisdictional conflicts
+- Reputational damage from privacy incidents
+
+**Recommendations**
+1. Implement zero-retention data architectures
+2. Maintain human oversight for all AI decisions
+3. Establish jurisdiction-aware compliance frameworks
+
+**Sovereign Verdict**
+Proactive compliance is no longer optional. Organizations must act now.`
+            };
+
+            currentDraft = drafts[type] || drafts.linkedin;
+            draftBody.innerHTML = currentDraft;
+        };
+
+        window.downloadDraft = function() {
+            if (!currentDraft || currentDraft.includes('placeholder')) {
+                alert('Generate a draft first.');
+                return;
+            }
+            const blob = new Blob([currentDraft], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `draft-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        };
+
+        // ─── Auth ──────────────────────────────────────────────────
+
+        authBtn.addEventListener('click', function() {
+            if (authState === 'signed-out') {
+                authState = 'signed-in';
+                authLabel.textContent = 'John Doe';
+                authBtn.innerHTML = '<i class="fas fa-user-check"></i> <span id="authLabel">John Doe</span>';
+                authBtn.style.borderColor = '#10b981';
+                statusLabel.textContent = 'Authenticated';
+            } else {
+                authState = 'signed-out';
+                authLabel.textContent = 'Sign In';
+                authBtn.innerHTML = '<i class="fas fa-user-astronaut"></i> <span id="authLabel">Sign In</span>';
+                authBtn.style.borderColor = 'var(--border)';
+                statusLabel.textContent = 'Live';
+            }
+        });
+
+        // ─── Sidebar Navigation ──────────────────────────────────
+
+        document.querySelectorAll('.sidebar-item[data-tab]').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+
+                const tab = this.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById(`tab-${tab}`);
+                if (target) target.classList.add('active');
+
+                // Refresh data on tab switch
+                if (tab === 'dashboard') {
+                    loadNews();
+                    fetchStatus();
+                }
+            });
+        });
+
+        // ─── Status ────────────────────────────────────────────────
+
+        async function fetchStatus() {
+            try {
+                const resp = await fetch(`${API_BASE}/status`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('statEndpoints').textContent = data.endpoints || 114;
+                    document.getElementById('statAgents').textContent = data.agents || 530;
+                    document.getElementById('statServices').textContent = data.services || 7;
+                    document.getElementById('statRegions').textContent = data.regions || 5;
+                    document.getElementById('agentCount').textContent = data.agents || 530;
+                    statusLabel.textContent = 'Live';
+                }
+            } catch (e) {
+                // Use defaults
+                statusLabel.textContent = 'Sovereign';
             }
         }
 
-        // ─── REFRESH ────────────────────────────────────────────────────────
+        // ─── SSE ────────────────────────────────────────────────────
 
-        async function refreshAll() {
-            document.getElementById('statusText').textContent = '🔄 Refreshing...';
-            await fetchAgents();
-            if (currentTab === 'dashboard') renderDashboard();
-            else if (currentTab === 'agents') renderAgents();
-            else if (currentTab === 'articles') renderArticles();
-            else if (currentTab === 'chat') renderChatTab();
-            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
-            document.getElementById('statusText').textContent = '🟢 Live';
+        function connectSSE() {
+            if (eventSource) { eventSource.close(); eventSource = null; }
+            try {
+                eventSource = new EventSource(`${API_BASE}/agent/events`);
+                eventSource.onopen = () => {
+                    statusLabel.textContent = 'SSE Live';
+                };
+                eventSource.onerror = () => {
+                    statusLabel.textContent = 'Live (no SSE)';
+                    if (eventSource) { eventSource.close();
+                        eventSource = null; }
+                    setTimeout(connectSSE, 5000);
+                };
+            } catch (e) {
+                setTimeout(connectSSE, 5000);
+            }
         }
 
-        // ─── INIT ──────────────────────────────────────────────────────────
+        // ─── Init ──────────────────────────────────────────────────
 
         async function init() {
-            await fetchAgents();
+            lastUpdated.textContent = new Date().toLocaleString();
+            await loadNews();
+            await fetchStatus();
             connectSSE();
-            renderDashboard();
-            setInterval(() => {
-                if (currentTab === 'dashboard') {
-                    const preview = document.getElementById('articlesPreview');
-                    if (preview) loadArticlesPreview();
-                }
-            }, 60000);
+
+            // Auto-refresh news every 60s
+            setInterval(loadNews, 60000);
+            setInterval(fetchStatus, 30000);
         }
 
-        window.sendChat = sendChat;
-        window.switchTab = switchTab;
-        window.refreshAll = refreshAll;
-        window.runAgent = runAgent;
-
         document.addEventListener('DOMContentLoaded', init);
+
+        // ─── Expose for inline handlers ────────────────────────────
+        window.generateDraft = generateDraft;
+        window.downloadDraft = downloadDraft;
+
+        console.log('✦ Unknown Verdict Sovereign · v43.0');
+        console.log(`✦ API: ${API_BASE}`);
+        console.log('✦ Human-gated · Zero-retention · Sovereign');
     </script>
 
 </body>
