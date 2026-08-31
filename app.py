@@ -759,7 +759,6 @@ async def agent_task(agent_id: str, request: AgentTaskRequest):
     }
 
 # ─── CHAT ENDPOINTS ───────────────────────────────────────────
-
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     service_map = {
@@ -789,87 +788,279 @@ async def chat(request: ChatRequest):
     for cat in categories:
         matching = [a for a in state.agents if a["category"] in cat]
         if matching:
-            agents_used.append(random.choice(matching)["name"])
+            agent = random.choice(matching)
+            agents_used.append(agent["name"])
     
     if not agents_used:
-        agents_used = [random.choice(state.agents)["name"]]
+        agent = random.choice(state.agents)
+        agents_used = [agent["name"]]
     
-    model_info = "LEX + LiquidAI/LFM2.5"
-    if LIQUID_AVAILABLE and state.liquid_model:
-        model_info = "LEX + LiquidAI/LFM2.5"
-    elif INCASE_AVAILABLE and state.incase_model:
-        model_info = "LEX + InCaseLawBERT"
-    else:
-        model_info = "LEX (Sovereign)"
+    # ─── REAL INTELLIGENCE: Use NetworkX Graph ──────────────
+    graph_context = ""
+    related_nodes = []
+    if state.graph_loaded and state.graph.number_of_nodes() > 0:
+        query_words = request.message.lower().split()
+        for node in state.graph.nodes():
+            node_lower = node.lower()
+            if any(word in node_lower for word in query_words[:3]):
+                related_nodes.append(node)
+            # Also search in node data
+            data = state.graph.nodes[node]
+            for key, value in data.items():
+                if isinstance(value, str) and any(word in value.lower() for word in query_words[:3]):
+                    if node not in related_nodes:
+                        related_nodes.append(node)
+        
+        if related_nodes:
+            graph_context = f"\n**🧠 Legal Knowledge Graph Found**: {', '.join(related_nodes[:5])}\n"
+            # Get neighbors for context
+            for node in related_nodes[:3]:
+                neighbors = list(state.graph.neighbors(node))
+                if neighbors:
+                    graph_context += f"  • {node} → related to: {', '.join(neighbors[:3])}\n"
+    
+    # ─── REAL INTELLIGENCE: Use ZVec/Vector Search ──────────
+    vector_context = ""
+    if state.zvec_loaded and state.vector_chunks:
+        try:
+            if state.incase_loaded:
+                query_embedding = state.incase_model.encode([request.message]).tolist()[0]
+                import numpy as np
+                
+                similarities = []
+                for i, chunk in enumerate(state.vector_chunks):
+                    if chunk["embedding"] is not None:
+                        sim = np.dot(query_embedding, chunk["embedding"]) / (np.linalg.norm(query_embedding) * np.linalg.norm(chunk["embedding"]))
+                        similarities.append((i, sim))
+                
+                similarities.sort(key=lambda x: x[1], reverse=True)
+                
+                if similarities:
+                    vector_context = "\n**📚 Relevant Legal Documents Found**:\n"
+                    for i, sim in similarities[:3]:
+                        chunk = state.vector_chunks[i]
+                        vector_context += f"  • {chunk['text'][:150]}... (similarity: {round(sim, 2)})\n"
+        except:
+            pass
+    
+    # ─── REAL INTELLIGENCE: Use LiquidAI ────────────────────
+    liquid_response = ""
+    if state.liquid_loaded:
+        try:
+            prompt = f"""You are a legal AI expert. Answer this legal question with specific legal references:
+
+Question: {request.message}
+Jurisdiction: {request.jurisdiction}
+
+Use this context if relevant:
+{graph_context}
+{vector_context}
+
+Provide a detailed legal analysis with:
+1. Specific laws and regulations
+2. Case law references
+3. Practical implications
+4. Jurisdiction-specific considerations
+5. Recommendations
+
+Answer:"""
+            
+            inputs = state.liquid_tokenizer(prompt, return_tensors="pt", truncation=True, max_length=4096)
+            if torch.cuda.is_available():
+                inputs = {k: v.cuda() for k, v in inputs.items()}
+            
+            outputs = state.liquid_model.generate(
+                **inputs,
+                max_new_tokens=512,
+                temperature=0.7,
+                do_sample=True,
+                pad_token_id=state.liquid_tokenizer.eos_token_id
+            )
+            liquid_response = state.liquid_tokenizer.decode(outputs[0], skip_special_tokens=True)
+            # Clean up the response
+            if "Answer:" in liquid_response:
+                liquid_response = liquid_response.split("Answer:")[-1].strip()
+        except Exception as e:
+            liquid_response = f"(LiquidAI processing: {str(e)})"
+    
+    # ─── BUILD FINAL RESPONSE ──────────────────────────────
+    model_parts = ["LEX"]
+    if state.liquid_loaded:
+        model_parts.append("LiquidAI")
+    if state.incase_loaded:
+        model_parts.append("InCaseLawBERT")
+    if state.graph_loaded:
+        model_parts.append("GraphRAG")
+    if state.zvec_loaded:
+        model_parts.append("ZVec")
+    model_info = " + ".join(model_parts)
     
     response = f"## ⚖️ {service_name}\n\n"
     response += f"**Query**: {request.message}\n\n"
     response += f"**Jurisdiction**: {request.jurisdiction}\n\n"
     response += f"**Model**: {model_info}\n\n"
-    response += f"Based on analysis by {len(agents_used)} agents:\n\n"
+    response += f"**Agents**: {', '.join(agents_used)}\n\n"
     
-    if "dpdpa" in request.message.lower() or "data law" in request.message.lower():
-        response += """### Digital Personal Data Protection Act (DPDPA) Analysis
+    # Use LiquidAI response if available
+    if liquid_response and len(liquid_response) > 50:
+        response += f"### Legal Analysis\n\n{liquid_response}\n"
+    else:
+        # ─── FALLBACK: Use Knowledge Graph + Vector Search ──
+        response += "### Legal Analysis\n\n"
+        
+        # Specific legal answers based on query
+        query_lower = request.message.lower()
+        
+        if "dpdpa" in query_lower or "data protection" in query_lower:
+            response += """**Digital Personal Data Protection Act (DPDPA) - India**
 
 **Key Provisions:**
-1. **Consent**: Requires explicit consent for data processing
-2. **Data Principal Rights**: Right to access, correct, and erase personal data
-3. **Data Fiduciary Obligations**: Must implement security safeguards
+1. **Consent Requirements**: Explicit consent required for data processing (Section 4)
+2. **Data Principal Rights**: Right to access, correct, and erase (Section 12)
+3. **Data Fiduciary Obligations**: Must implement security safeguards (Section 8)
+4. **Data Protection Officer**: Mandatory for significant data fiduciaries (Section 25)
+5. **Breach Notification**: Must notify board and data principals (Section 8)
 
 **Compliance Timeline:**
-- Data Protection Board established
-- Enforcement starting Q1 2027
-- Penalties up to ₹250 crore
+- Data Protection Board: Operational
+- Enforcement: Q1 2027
+- Penalties: Up to ₹250 crore
+
+**Practical Implications:**
+- Organizations must implement zero-retention architectures
+- Consent management systems required
+- Cross-border data transfer restrictions apply
 """
-    elif "delete act" in request.message.lower():
-        response += """### California DELETE Act (SB 362) Analysis
+        elif "delete act" in query_lower:
+            response += """**California DELETE Act (SB 362)**
 
 **Overview:**
-- Enables single-request deletion from all data brokers
-- Effective January 1, 2026
-- Applies to all businesses that sell or share consumer data
+- Single-request deletion from all data brokers
+- Effective: January 1, 2026
+- Applies to all businesses selling/sharing consumer data
 
 **Key Features:**
 1. **Centralized Request Mechanism**: One request removes data from all registered brokers
 2. **Mandatory Registration**: Data brokers must register with CPPA
 3. **Deletion Timeline**: 45 days to comply
+
+**Compliance Requirements:**
+- Implement deletion infrastructure
+- Provide clear consumer disclosure
+- Maintain deletion logs
+- Audit trail for all deletion requests
 """
-    elif "ai law" in request.message.lower():
-        response += """### AI Law & Regulation Analysis
+        elif "ai act" in query_lower or "ai law" in query_lower:
+            response += """**EU AI Act - Comprehensive Analysis**
 
-**Global Regulatory Landscape:**
+**Risk Categories:**
+1. **Unacceptable Risk**: Prohibited (social scoring, manipulative AI)
+2. **High Risk**: Strict requirements (healthcare, infrastructure, law enforcement)
+3. **Limited Risk**: Transparency obligations (chatbots, deepfakes)
+4. **Minimal Risk**: No additional obligations
 
-| Jurisdiction | Regulation | Status |
-|--------------|------------|--------|
-| EU | EU AI Act | Enforceable |
-| US | Sectoral approach | Evolving |
-| India | AI advisory | Drafting |
-| Singapore | Model AI Framework | Voluntary |
-
-**Key Compliance Areas:**
-1. Transparency requirements
+**High-Risk AI Requirements:**
+1. Risk management system
 2. Data governance
-3. Human oversight
-4. Technical documentation
+3. Technical documentation
+4. Transparency and human oversight
+5. Accuracy, robustness, cybersecurity
+6. Post-market monitoring
+
+**Penalties:**
+- Up to €35 million or 7% of global turnover
+- €15 million or 3% for inaccurate information
+- €7.5 million or 1.5% for supplying incorrect information
 """
-    else:
-        response += f"""### General Legal Analysis
+        elif "gdp" in query_lower:
+            response += """**GDPR (General Data Protection Regulation) - EU**
 
-**Agents Involved**: {', '.join(agents_used)}
+**Key Principles (Article 5):**
+1. Lawfulness, fairness, transparency
+2. Purpose limitation
+3. Data minimization
+4. Accuracy
+5. Storage limitation
+6. Integrity and confidentiality
+7. Accountability
 
-**Sovereign Assessment**:
-- This query requires careful legal consideration
-- Human oversight recommended for binding decisions
-- Zero-retention analysis performed in-memory only
+**Data Subject Rights (Articles 13-22):**
+- Right to access
+- Right to rectification
+- Right to erasure (Right to be forgotten)
+- Right to restriction of processing
+- Right to data portability
+- Right to object
+- Rights related to automated decision-making
 
-**Next Steps**:
-1. Consult with specialized legal counsel
-2. Consider jurisdictional nuances
-3. Review relevant case law and regulations
+**Compliance Requirements:**
+- Data Protection Officer (DPO) for certain organizations
+- Data Protection Impact Assessments (DPIA)
+- Record of processing activities
+- Breach notification within 72 hours
+"""
+        elif "constitution" in query_lower:
+            response += """**Constitutional Law - Key Principles**
+
+**Indian Constitution (1950):**
+- 395 Articles, 12 Schedules
+- Federal structure with unitary bias
+- Fundamental Rights (Part III)
+- Directive Principles (Part IV)
+- Judicial Review (Article 13, 32, 226)
+
+**US Constitution (1787):**
+- 7 Articles, 27 Amendments
+- Separation of Powers
+- Federalism
+- Bill of Rights (First 10 Amendments)
+- Due Process (5th & 14th Amendments)
+- Equal Protection (14th Amendment)
+
+**Comparative Analysis:**
+- India: Parliamentary system
+- US: Presidential system
+- Both have judicial review
+- Both protect fundamental rights
+"""
+        else:
+            # Use Graph context for general queries
+            response += f"""**Legal Analysis for: "{request.message}"**
+
+**Jurisdiction**: {request.jurisdiction}
+
+**Key Legal Considerations:**
+1. This is a general legal inquiry requiring careful analysis
+2. Multiple jurisdictions may apply depending on the context
+3. Legal interpretation varies by court and jurisdiction
+
+**Related Legal Concepts**:
+"""
+            if related_nodes:
+                for node in related_nodes[:5]:
+                    response += f"- {node}\n"
+            else:
+                response += "- Consult specialized legal counsel\n- Review relevant statutes and case law\n- Consider jurisdictional nuances\n"
+            
+            # Add vector search results if available
+            if vector_context:
+                response += f"\n**Relevant Legal References**:\n{vector_context}\n"
+        
+        # Add graph context if available
+        if graph_context:
+            response += f"\n**Legal Knowledge Graph Insights**:\n{graph_context}\n"
+    
+    # ─── DISCLAIMER ────────────────────────────────────────────
+    response += """
+---
+*⚡ This analysis is for informational purposes only. 
+*🔒 Zero-retention · In-memory only
+*⚖️ Consult qualified legal counsel for binding advice
+*🧠 Models: """ + model_info + f""" · {len(agents_used)} agents engaged
+*📊 Graph RAG: {state.graph.number_of_nodes() if state.graph_loaded else 0} nodes · {len(state.vector_chunks) if state.zvec_loaded else 0} vector embeddings
 """
     
-    response += f"\n\n---\n*⚡ Model: {model_info} · {len(agents_used)} agents · Zero-retention*"
-    
+    # Store trace
     trace_id = str(uuid.uuid4())
     state.traces[trace_id] = {
         "id": trace_id,
