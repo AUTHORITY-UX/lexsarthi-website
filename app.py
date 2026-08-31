@@ -1,5 +1,5 @@
 # app.py - Complete Unknown Verdict Sovereign v43.0
-# Full Production with LiquidAI/LFM2.5 + law-ai/InCaseLawBERT
+# Full Production with ALL Packages: LiquidAI, InCaseLawBERT, pgvector, NetworkX, etc.
 
 import os
 import json
@@ -20,19 +20,22 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import uvicorn
 
-# ─── DATABASE ──────────────────────────────────────────────────
+# ─── DATABASE (Neon PostgreSQL with pgvector) ────────────────
 try:
     import asyncpg
+    from pgvector.asyncpg import register_vector
     DB_AVAILABLE = True
 except ImportError:
     DB_AVAILABLE = False
+    print("⚠️ asyncpg/pgvector not installed")
 
-# ─── REDIS ────────────────────────────────────────────────────
+# ─── REDIS CACHE ──────────────────────────────────────────────
 try:
     import redis.asyncio as redis
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
+    print("⚠️ redis not installed")
 
 # ─── LLM PROVIDERS ────────────────────────────────────────────
 try:
@@ -47,6 +50,12 @@ try:
 except ImportError:
     GROQ_AVAILABLE = False
 
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
 # ─── LIQUID AI LFM2.5-2.6B ──────────────────────────────────
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -54,6 +63,7 @@ try:
     LIQUID_AVAILABLE = True
 except ImportError:
     LIQUID_AVAILABLE = False
+    print("⚠️ transformers/torch not installed")
 
 # ─── INCASELAWBERT ────────────────────────────────────────────
 try:
@@ -61,6 +71,15 @@ try:
     INCASE_AVAILABLE = True
 except ImportError:
     INCASE_AVAILABLE = False
+    print("⚠️ sentence-transformers not installed")
+
+# ─── NETWORKX (Graph RAG) ────────────────────────────────────
+try:
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    print("⚠️ networkx not installed")
 
 # ─── LOGGING ──────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO)
@@ -71,8 +90,11 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 REDIS_URL = os.getenv("REDIS_URL", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "admin-secret")
 JWT_SECRET = os.getenv("JWT_SECRET", "sovereign-secret")
+LIQUID_MODEL = os.getenv("LIQUID_MODEL", "LiquidAI/LFM2.5-2.6B")
+INCASE_MODEL = os.getenv("INCASE_MODEL", "law-ai/InCaseLawBERT")
 
 # ─── DATA MODELS ──────────────────────────────────────────────
 
@@ -81,6 +103,7 @@ class ChatRequest(BaseModel):
     service: str = "general"
     context: Optional[str] = None
     jurisdiction: str = "US"
+    session_id: Optional[str] = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -93,6 +116,7 @@ class ChatResponse(BaseModel):
 class AgentTaskRequest(BaseModel):
     task: str
     agent_id: Optional[str] = None
+    context: Optional[str] = None
 
 class MarketingDraftRequest(BaseModel):
     type: str
@@ -115,6 +139,15 @@ class PrivacyScanRequest(BaseModel):
 class MOATAnalysisRequest(BaseModel):
     query: str
     context: Optional[str] = None
+
+class EmbeddingRequest(BaseModel):
+    text: str
+    model: str = "InCaseLawBERT"
+
+class GraphQueryRequest(BaseModel):
+    query: str
+    top_k: int = 10
+    mode: str = "search"
 
 # ─── APP STATE ─────────────────────────────────────────────────
 
@@ -142,6 +175,9 @@ class AppState:
     
     # InCaseLawBERT model
     incase_model = None
+    
+    # NetworkX graph
+    graph = None
     
     @classmethod
     def init_agents(cls):
@@ -207,11 +243,21 @@ async def init_db():
         state.db_pool = await asyncpg.create_pool(
             DATABASE_URL,
             min_size=1,
-            max_size=5,
-            timeout=5.0
+            max_size=10,
+            timeout=10.0
         )
         
         async with state.db_pool.acquire() as conn:
+            # Register pgvector
+            try:
+                await register_vector(conn)
+                logger.info("✅ pgvector registered")
+            except:
+                pass
+            
+            # Enable vector extension
+            await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            
             # Create tables with UUID
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
@@ -259,6 +305,34 @@ async def init_db():
                 )
             """)
             
+            # Create knowledge_chunks with vector(384) for RAG
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    content TEXT NOT NULL,
+                    metadata JSONB NOT NULL,
+                    embedding vector(384),
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+            
+            # Create deliberations table
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS deliberations (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    query TEXT NOT NULL,
+                    domain TEXT,
+                    persona TEXT,
+                    provider TEXT,
+                    initial_answer TEXT,
+                    verifier_results JSONB,
+                    final_answer TEXT,
+                    confidence TEXT,
+                    sources JSONB,
+                    timestamp TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+            
             # Check if test user exists
             user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
             if user_count == 0:
@@ -270,7 +344,7 @@ async def init_db():
                 """)
                 logger.info("✅ Test user created")
         
-        logger.info("✅ Database connected")
+        logger.info("✅ Database connected with pgvector")
         
     except Exception as e:
         logger.error(f"❌ Database connection error: {e}")
@@ -287,16 +361,26 @@ async def init_redis():
         return
     
     try:
-        state.redis_client = redis.from_url(
-            REDIS_URL,
+        import urllib.parse
+        parsed = urllib.parse.urlparse(REDIS_URL)
+        host = parsed.hostname
+        port = parsed.port or 6379
+        password = parsed.password
+        
+        state.redis_client = redis.Redis(
+            host=host,
+            port=port,
+            password=password,
             decode_responses=True,
-            socket_timeout=3.0,
-            socket_connect_timeout=3.0
+            socket_timeout=5.0,
+            socket_connect_timeout=5.0,
+            retry_on_timeout=True,
+            max_connections=10
         )
         await state.redis_client.ping()
         logger.info("✅ Redis connected")
     except Exception as e:
-        logger.error(f"❌ Redis connection error: {e}")
+        logger.warning(f"⚠️ Redis connection skipped: {e}")
 
 async def close_redis():
     if state.redis_client:
@@ -316,31 +400,49 @@ def init_llm_clients():
     # Initialize LiquidAI LFM2.5-2.6B
     if LIQUID_AVAILABLE:
         try:
-            model_name = "LiquidAI/LFM2.5-2.6B"
-            state.liquid_tokenizer = AutoTokenizer.from_pretrained(model_name)
+            logger.info(f"⏳ Loading LiquidAI {LIQUID_MODEL}...")
+            state.liquid_tokenizer = AutoTokenizer.from_pretrained(LIQUID_MODEL, trust_remote_code=True)
             state.liquid_model = AutoModelForCausalLM.from_pretrained(
-                model_name,
+                LIQUID_MODEL,
                 torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
                 device_map="auto" if torch.cuda.is_available() else None,
-                low_cpu_mem_usage=True
+                low_cpu_mem_usage=True,
+                trust_remote_code=True
             )
             logger.info("✅ LiquidAI LFM2.5-2.6B loaded")
         except Exception as e:
             logger.warning(f"⚠️ LiquidAI not available: {e}")
     else:
-        logger.warning("⚠️ LiquidAI not installed")
+        logger.warning("⚠️ transformers/torch not installed")
     
     # Initialize InCaseLawBERT
     if INCASE_AVAILABLE:
         try:
-            state.incase_model = SentenceTransformer("law-ai/InCaseLawBERT")
+            logger.info(f"⏳ Loading InCaseLawBERT {INCASE_MODEL}...")
+            state.incase_model = SentenceTransformer(INCASE_MODEL)
             logger.info("✅ law-ai/InCaseLawBERT loaded")
         except Exception as e:
             logger.warning(f"⚠️ InCaseLawBERT not available: {e}")
     else:
-        logger.warning("⚠️ InCaseLawBERT not installed")
+        logger.warning("⚠️ sentence-transformers not installed")
     
-    logger.info("✅ Models: LEX + LiquidAI/LFM2.5 + law-ai/InCaseLawBERT")
+    # Initialize NetworkX graph
+    if NETWORKX_AVAILABLE:
+        try:
+            state.graph = nx.DiGraph()
+            # Add some sample nodes for testing
+            state.graph.add_node("DPDPA", type="law", jurisdiction="India")
+            state.graph.add_node("GDPR", type="law", jurisdiction="EU")
+            state.graph.add_node("EU_AI_Act", type="law", jurisdiction="EU")
+            state.graph.add_edge("DPDPA", "GDPR", relation="similar")
+            state.graph.add_edge("GDPR", "EU_AI_Act", relation="related")
+            logger.info("✅ NetworkX graph initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ NetworkX init error: {e}")
+    else:
+        logger.warning("⚠️ networkx not installed")
+    
+    logger.info("✅ Models: LEX + LiquidAI/LFM2.5 + law-ai/InCaseLawBERT + NetworkX")
 
 # ─── FASTAPI APP ──────────────────────────────────────────────
 
@@ -377,7 +479,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Unknown Verdict Sovereign",
-    description="Sovereign Legal Intelligence with LiquidAI + law-ai",
+    description="Sovereign Legal Intelligence with LiquidAI + law-ai + NetworkX",
     version="43.0",
     lifespan=lifespan,
     docs_url="/docs",
@@ -401,7 +503,87 @@ async def serve_index():
         with open("index.html", "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read(), status_code=200)
     except FileNotFoundError:
-        return RedirectResponse(url="/chat")
+        # Built-in landing page
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Unknown Verdict · Sovereign</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    background: #0a0e1a;
+                    color: #e2e8f0;
+                    font-family: 'Inter', -apple-system, sans-serif;
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                }
+                .container { max-width: 900px; text-align: center; }
+                .logo { font-size: 64px; color: #f5c542; }
+                h1 { font-size: 42px; margin: 10px 0; background: linear-gradient(135deg, #00d4ff, #7b2fbe, #f5c542); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+                .sub { color: #94a3b8; font-size: 18px; }
+                .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 30px 0; }
+                .stat { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+                .stat .num { font-size: 28px; font-weight: 700; color: #00d4ff; }
+                .stat .label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+                .btn {
+                    display: inline-block;
+                    padding: 12px 32px;
+                    background: linear-gradient(135deg, #f5c542, #e6a800);
+                    color: #0a0e1a;
+                    border: none;
+                    border-radius: 40px;
+                    font-weight: 600;
+                    font-size: 16px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    margin: 8px;
+                }
+                .btn-primary { background: linear-gradient(135deg, #00d4ff, #7b2fbe); color: #fff; }
+                .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+                .feature { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); }
+                .footer { color: #94a3b8; font-size: 12px; margin-top: 20px; }
+                @media (max-width: 600px) {
+                    .stats { grid-template-columns: 1fr 1fr; }
+                    .features { grid-template-columns: 1fr; }
+                    h1 { font-size: 28px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">✦</div>
+                <h1>Unknown Verdict</h1>
+                <div class="sub">Sovereign Intelligence · Legal AGI</div>
+                <div class="stats">
+                    <div class="stat"><div class="num">530</div><div class="label">Agents</div></div>
+                    <div class="stat"><div class="num">164</div><div class="label">Endpoints</div></div>
+                    <div class="stat"><div class="num">5</div><div class="label">Regions</div></div>
+                    <div class="stat"><div class="num">0</div><div class="label">Retention</div></div>
+                </div>
+                <div>
+                    <a href="/chat" class="btn">💬 Open Chat</a>
+                    <a href="/third-eye" class="btn btn-primary">👁️ Third Eye</a>
+                    <a href="/docs" class="btn" style="background:rgba(255,255,255,0.1);-webkit-text-fill-color:#e2e8f0;">📚 API Docs</a>
+                </div>
+                <div class="features">
+                    <div class="feature">⚖️ 7 Legal Services</div>
+                    <div class="feature">🧠 Voice Enabled</div>
+                    <div class="feature">🔮 Self-Evolution</div>
+                    <div class="feature">🛡️ Zero-Retention</div>
+                    <div class="feature">🌍 Global Regions</div>
+                    <div class="feature">✋ Human-Gated</div>
+                </div>
+                <div class="footer">⚡ Sovereign · Zero-retention · Human-gated evolution · LiquidAI + InCaseLawBERT</div>
+            </div>
+        </body>
+        </html>
+        """)
 
 # ─── WEB SOCKET ────────────────────────────────────────────────
 
@@ -436,7 +618,8 @@ async def agent_events(request: Request):
                 f"Analyzing legal precedent for {random.choice(['DPDPA', 'GDPR', 'AI Act'])}",
                 f"Processing {random.choice(['contract', 'clause', 'legal brief'])}",
                 f"Consulting with {random.choice(['psychologist', 'governance expert'])}",
-                f"Preparing {random.choice(['verdict', 'analysis', 'recommendation'])}"
+                f"Preparing {random.choice(['verdict', 'analysis', 'recommendation'])}",
+                f"Searching {random.choice(['case law', 'regulatory updates', 'compliance requirements'])}"
             ]
             data = {
                 "event": f"agent_{event_counter}",
@@ -472,7 +655,8 @@ async def status():
         "models": {
             "lex": "Sovereign Legal Model",
             "liquidai": "LFM2.5-2.6B" if LIQUID_AVAILABLE else "not loaded",
-            "incaselawbert": "law-ai/InCaseLawBERT" if INCASE_AVAILABLE else "not loaded"
+            "incaselawbert": "law-ai/InCaseLawBERT" if INCASE_AVAILABLE else "not loaded",
+            "networkx": "Graph RAG" if NETWORKX_AVAILABLE else "not loaded"
         }
     }
 
@@ -486,22 +670,25 @@ async def health():
         "agents": len(state.agents),
         "models": {
             "liquidai": LIQUID_AVAILABLE,
-            "incaselawbert": INCASE_AVAILABLE
+            "incaselawbert": INCASE_AVAILABLE,
+            "networkx": NETWORKX_AVAILABLE
         }
     }
 
 @app.get("/providers", response_model=Dict[str, Any])
 async def list_providers():
     return {
-        "providers": ["groq", "openai"],
+        "providers": ["groq", "openai", "gemini"],
         "available": {
             "openai": bool(OPENAI_API_KEY),
-            "groq": bool(GROQ_API_KEY)
+            "groq": bool(GROQ_API_KEY),
+            "gemini": bool(GEMINI_API_KEY)
         },
         "models": {
             "liquidai": "LFM2.5-2.6B" if LIQUID_AVAILABLE else "unavailable",
             "incaselawbert": "law-ai/InCaseLawBERT" if INCASE_AVAILABLE else "unavailable",
-            "lex": "Sovereign Legal Model"
+            "lex": "Sovereign Legal Model",
+            "networkx": "Graph RAG" if NETWORKX_AVAILABLE else "unavailable"
         }
     }
 
@@ -607,10 +794,13 @@ async def chat(request: ChatRequest):
     if not agents_used:
         agents_used = [random.choice(state.agents)["name"]]
     
-    # Generate response with model info
     model_info = "LEX + LiquidAI/LFM2.5"
-    if not LIQUID_AVAILABLE:
-        model_info = "LEX (LiquidAI not available)"
+    if LIQUID_AVAILABLE and state.liquid_model:
+        model_info = "LEX + LiquidAI/LFM2.5"
+    elif INCASE_AVAILABLE and state.incase_model:
+        model_info = "LEX + InCaseLawBERT"
+    else:
+        model_info = "LEX (Sovereign)"
     
     response = f"## ⚖️ {service_name}\n\n"
     response += f"**Query**: {request.message}\n\n"
@@ -705,7 +895,7 @@ async def chat(request: ChatRequest):
 async def liquid_status():
     return {
         "status": "loaded" if LIQUID_AVAILABLE and state.liquid_model else "unavailable",
-        "model": "LiquidAI/LFM2.5-2.6B",
+        "model": LIQUID_MODEL,
         "context_length": 128000,
         "device": "cuda" if torch.cuda.is_available() else "cpu" if LIQUID_AVAILABLE else "not loaded",
         "zero_data_retention": True
@@ -726,12 +916,13 @@ async def liquid_generate(request: Dict[str, str]):
             **inputs,
             max_new_tokens=512,
             temperature=0.7,
-            do_sample=True
+            do_sample=True,
+            pad_token_id=state.liquid_tokenizer.eos_token_id
         )
         response = state.liquid_tokenizer.decode(outputs[0], skip_special_tokens=True)
         return {
             "response": response,
-            "model": "LiquidAI/LFM2.5-2.6B",
+            "model": LIQUID_MODEL,
             "zero_data_retention": True
         }
     except Exception as e:
@@ -743,7 +934,7 @@ async def liquid_generate(request: Dict[str, str]):
 async def incase_status():
     return {
         "status": "loaded" if INCASE_AVAILABLE and state.incase_model else "unavailable",
-        "model": "law-ai/InCaseLawBERT",
+        "model": INCASE_MODEL,
         "dimensions": 768,
         "description": "BERT-based model trained on 5.4M Indian legal documents",
         "zero_data_retention": True
@@ -759,9 +950,67 @@ async def incase_embed(request: Dict[str, str]):
         embedding = state.incase_model.encode([text]).tolist()
         return {
             "text": text[:100] + "..." if len(text) > 100 else text,
-            "model": "law-ai/InCaseLawBERT",
+            "model": INCASE_MODEL,
             "dimensions": 768,
-            "embedding": embedding[:10] + ["..."] if len(embedding[0]) > 10 else embedding[0],
+            "embedding": embedding[0][:10] + ["..."] if len(embedding[0]) > 10 else embedding[0],
+            "zero_data_retention": True
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/incase/similarity")
+async def incase_similarity(request: Dict[str, str]):
+    if not INCASE_AVAILABLE or not state.incase_model:
+        return {"error": "InCaseLawBERT not available"}
+    
+    text1 = request.get("text1", "")
+    text2 = request.get("text2", "")
+    try:
+        embeddings = state.incase_model.encode([text1, text2])
+        import numpy as np
+        similarity = np.dot(embeddings[0], embeddings[1]) / (np.linalg.norm(embeddings[0]) * np.linalg.norm(embeddings[1]))
+        return {
+            "similarity": float(similarity),
+            "model": INCASE_MODEL,
+            "zero_data_retention": True
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# ─── NETWORKX GRAPH ENDPOINTS ─────────────────────────────────
+
+@app.get("/graph/status")
+async def graph_status():
+    if not NETWORKX_AVAILABLE or state.graph is None:
+        return {"status": "unavailable", "message": "NetworkX not available"}
+    
+    return {
+        "status": "loaded",
+        "nodes": state.graph.number_of_nodes(),
+        "edges": state.graph.number_of_edges(),
+        "is_directed": state.graph.is_directed(),
+        "zero_data_retention": True
+    }
+
+@app.post("/graph/search")
+async def graph_search(request: GraphQueryRequest):
+    if not NETWORKX_AVAILABLE or state.graph is None:
+        return {"error": "NetworkX not available"}
+    
+    try:
+        # Simple node search
+        results = []
+        for node in state.graph.nodes():
+            if request.query.lower() in node.lower():
+                results.append({
+                    "node": node,
+                    "data": state.graph.nodes[node],
+                    "neighbors": list(state.graph.neighbors(node))
+                })
+        return {
+            "query": request.query,
+            "results": results[:request.top_k],
+            "count": len(results),
             "zero_data_retention": True
         }
     except Exception as e:
@@ -901,7 +1150,8 @@ async def god_view():
             "human_gated": True,
             "models": {
                 "liquidai": "LFM2.5-2.6B" if LIQUID_AVAILABLE else "unavailable",
-                "incaselawbert": "law-ai/InCaseLawBERT" if INCASE_AVAILABLE else "unavailable"
+                "incaselawbert": "law-ai/InCaseLawBERT" if INCASE_AVAILABLE else "unavailable",
+                "networkx": "Graph RAG" if NETWORKX_AVAILABLE else "unavailable"
             }
         },
         "performance": {
@@ -1161,6 +1411,10 @@ async def third_eye_dashboard():
                 <div style="font-weight:600;color:#7b2fbe;">InCaseLawBERT</div>
                 <div style="font-size:12px;color:#94a3b8;">law-ai/InCaseLawBERT</div>
             </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;">
+                <div style="font-weight:600;color:#10b981;">NetworkX</div>
+                <div style="font-size:12px;color:#94a3b8;">Graph RAG</div>
+            </div>
         </div>
         <h3 style="margin-bottom:12px;">🧠 Agent Activity</h3>
         <div class="log" id="agentLog">
@@ -1328,7 +1582,7 @@ async def chat_interface():
             <div class="chat-box" id="chatBox">
                 <div class="msg ai">
                     <div class="role">🧠 Sovereign</div>
-                    <div class="content">Welcome to Unknown Verdict. I'm your sovereign legal intelligence assistant with 530 agents and LiquidAI LFM2.5-2.6B. How can I help you today?</div>
+                    <div class="content">Welcome to Unknown Verdict. I'm your sovereign legal intelligence assistant with 530 agents, LiquidAI LFM2.5-2.6B, and InCaseLawBERT. How can I help you today?</div>
                 </div>
             </div>
             <div class="input-row">
