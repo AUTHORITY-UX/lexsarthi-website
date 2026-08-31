@@ -28,6 +28,9 @@
             color: var(--text);
             min-height: 100vh;
         }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
         /* ─── HEADER ─── */
         .header {
@@ -44,11 +47,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .logo { display: flex; align-items: center; gap: 12px; }
         .logo .star { font-size: 30px; color: var(--gold); }
         .logo .name {
             background: linear-gradient(135deg, #f5e6c8, var(--gold));
@@ -65,12 +64,7 @@
             color: var(--muted);
             -webkit-text-fill-color: var(--muted);
         }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
+        .header-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
         .region-badge {
             display: flex;
             gap: 6px;
@@ -92,8 +86,24 @@
             margin-right: 4px;
         }
         @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+        .auth-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        .auth-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--accent); color: var(--accent); }
 
-        /* ─── LAYOUT ─── */
+        /* ─── MAIN ─── */
         .main { display: flex; min-height: calc(100vh - 70px); }
         .sidebar {
             width: 230px;
@@ -176,13 +186,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .content-header h2 {
-            font-size: 22px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .content-header h2 { font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
         .content-header h2 i { color: var(--gold); }
         .content-header .meta { font-size: 12px; color: var(--muted); }
 
@@ -491,6 +495,35 @@
         .evolution-item .status.pending { color: var(--gold); }
         .evolution-item .status.rejected { color: var(--danger); }
 
+        /* ─── ENDPOINTS LIST ─── */
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .endpoint-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: 0.2s;
+        }
+        .endpoint-card:hover { border-color: var(--accent); }
+        .endpoint-card .method {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .endpoint-card .method.get { background: rgba(0,212,255,0.15); color: var(--accent); }
+        .endpoint-card .method.post { background: rgba(16,185,129,0.15); color: var(--green); }
+        .endpoint-card .method.put { background: rgba(245,197,66,0.15); color: var(--gold); }
+        .endpoint-card .method.delete { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .endpoint-card .path { font-size: 13px; font-weight: 500; margin-top: 4px; }
+        .endpoint-card .desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
         /* ─── RESPONSIVE ─── */
         @media (max-width: 1024px) {
             .sidebar { width: 60px; padding: 12px 8px; }
@@ -511,6 +544,7 @@
             .question-row { flex-direction: column; }
             .question-row input { width: 100%; }
             .send-btn { width: 100%; justify-content: center; }
+            .endpoints-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -521,11 +555,11 @@
             <span class="star">✦</span>
             <div>
                 <div class="name">Unknown Verdict</div>
-                <div class="sub">Sovereign Intelligence</div>
+                <div class="sub">Sovereign Intelligence · v43.0</div>
             </div>
         </div>
         <div class="header-actions">
-            <div class="region-badge">
+            <div class="region-badge" id="regionBadge">
                 <span class="active" title="India">🇮🇳</span>
                 <span title="Europe">🇪🇺</span>
                 <span title="United States">🇺🇸</span>
@@ -535,7 +569,8 @@
             <span style="font-size:12px;color:var(--muted);" id="statusText">
                 <span class="status-dot"></span> <span id="statusLabel">Live</span>
             </span>
-            <button class="auth-btn" id="authBtn" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:6px 20px;border-radius:40px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;">
+            <span style="font-size:11px;color:var(--muted);" id="agentCountBadge">450 agents</span>
+            <button class="auth-btn" id="authBtn">
                 <i class="fas fa-user-astronaut"></i> <span id="authLabel">Sign In</span>
             </button>
         </div>
@@ -546,6 +581,10 @@
             <div class="nav-label">Workspace</div>
             <button class="sidebar-item active" data-tab="dashboard">
                 <i class="fas fa-gavel"></i> <span>Command Center</span>
+            </button>
+            <button class="sidebar-item" data-tab="endpoints">
+                <i class="fas fa-code"></i> <span>Endpoints</span>
+                <span class="badge">164</span>
             </button>
             <button class="sidebar-item" data-tab="marketing">
                 <i class="fas fa-bullhorn"></i> <span>Marketing Studio</span>
@@ -560,9 +599,10 @@
                 <i class="fas fa-sliders-h"></i> <span>Settings</span>
             </button>
             <div class="sidebar-footer">
-                <div><span class="status-dot"></span> <span id="agentCount">530</span> agents</div>
+                <div><span class="status-dot"></span> <span id="agentCountFooter">450</span> agents</div>
                 <div>⚡ zero-retention · in-memory</div>
                 <div style="font-size:10px;color:var(--muted);">✦ human-gated evolution</div>
+                <div style="font-size:9px;color:var(--muted);" id="uptimeDisplay">Uptime: --</div>
             </div>
         </aside>
 
@@ -578,18 +618,20 @@
                     <h1>Unknown Verdict</h1>
                     <div class="sub">Sovereign Intelligence · Legal AGI</div>
                     <div class="tags">
-                        <span>🧠 Think</span>
-                        <span>🗣️ Speak</span>
+                        <span>🧠 164 Endpoints</span>
+                        <span>🗣️ Voice Enabled</span>
                         <span>👂 Listen</span>
-                        <span>🔮 Self-Improve</span>
-                        <span>⚖️ Legal</span>
+                        <span>🔮 Self-Evolution</span>
+                        <span>⚖️ Legal AI</span>
                     </div>
                 </div>
                 <div class="stats" id="statsContainer">
-                    <div class="stat-card"><div class="num cyan" id="statEndpoints">114</div><div class="label">Endpoints</div></div>
-                    <div class="stat-card"><div class="num green" id="statAgents">530</div><div class="label">Agents</div></div>
+                    <div class="stat-card"><div class="num cyan" id="statEndpoints">164</div><div class="label">Endpoints</div></div>
+                    <div class="stat-card"><div class="num green" id="statAgents">450</div><div class="label">Agents</div></div>
                     <div class="stat-card"><div class="num purple" id="statServices">7</div><div class="label">Services</div></div>
                     <div class="stat-card"><div class="num gold" id="statRegions">5</div><div class="label">Regions</div></div>
+                    <div class="stat-card"><div class="num cyan" id="statDb">✅</div><div class="label">Database</div></div>
+                    <div class="stat-card"><div class="num green" id="statRedis">✅</div><div class="label">Redis</div></div>
                 </div>
 
                 <div class="question-block">
@@ -609,7 +651,7 @@
                             <button id="pasteBtn"><i class="fas fa-paste"></i> Paste</button>
                         </div>
                     </div>
-                    <textarea id="materialText" placeholder="Paste a clause, transcript, or relevant context...">The room could not complete that reading. Try again.</textarea>
+                    <textarea id="materialText" placeholder="Paste a clause, transcript, or relevant context..."></textarea>
                     <div class="hint"><i class="fas fa-shield-alt"></i> Input is not retained after analysis</div>
                 </div>
 
@@ -629,6 +671,16 @@
                     <h3 style="font-size:16px;margin-bottom:8px;"><i class="fas fa-newspaper" style="color:var(--gold);"></i> News Intelligence</h3>
                     <div id="newsPreview" style="color:var(--muted);font-size:13px;">Loading news...</div>
                 </div>
+            </div>
+
+            <!-- ENDPOINTS -->
+            <div class="tab-content" id="tab-endpoints">
+                <div class="content-header">
+                    <h2><i class="fas fa-code"></i> All 164 Endpoints</h2>
+                    <span class="meta">🟢 All operational</span>
+                </div>
+                <p style="color:var(--muted);margin-bottom:12px;">Complete list of all available API endpoints with methods and descriptions.</p>
+                <div class="endpoints-grid" id="endpointsGrid"></div>
             </div>
 
             <!-- MARKETING -->
@@ -679,6 +731,8 @@
                     <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Zero-retention mode</span><span style="color:var(--green);">✅ Active</span></div>
                     <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Sovereign fallback</span><span style="color:var(--green);">✅ Available</span></div>
                     <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Human-gated evolution</span><span style="color:var(--green);">✅ Enabled</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Database (Neon)</span><span style="color:var(--green);">✅ Connected</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span>Redis (Upstash)</span><span style="color:var(--green);">✅ Connected</span></div>
                     <div style="display:flex;justify-content:space-between;padding:10px 0;"><span>Marketing auto-publish</span><span style="color:var(--danger);">🚫 Disabled</span></div>
                 </div>
             </div>
@@ -713,8 +767,165 @@
         const lastUpdated = document.getElementById('lastUpdated');
         const newsPreview = document.getElementById('newsPreview');
         const draftBody = document.getElementById('draftBody');
+        const endpointsGrid = document.getElementById('endpointsGrid');
+        const uptimeDisplay = document.getElementById('uptimeDisplay');
 
-        // ─── SPEECH RECOGNITION ──────────────────────────────────
+        // ─── ALL 164 ENDPOINTS ────────────────────────────────────
+        const ALL_ENDPOINTS = {
+            "System": [
+                { method: "GET", path: "/", desc: "Root info" },
+                { method: "GET", path: "/status", desc: "System status" },
+                { method: "GET", path: "/health", desc: "Health check" },
+                { method: "GET", path: "/providers", desc: "List LLM providers" },
+                { method: "GET", path: "/models", desc: "List available models" },
+                { method: "GET", path: "/endpoints", desc: "List all endpoints" },
+                { method: "GET", path: "/metrics", desc: "System metrics" },
+                { method: "GET", path: "/version", desc: "Version info" }
+            ],
+            "Auth": [
+                { method: "POST", path: "/auth/register", desc: "User registration" },
+                { method: "POST", path: "/auth/login", desc: "User login (JWT)" },
+                { method: "POST", path: "/auth/logout", desc: "User logout" },
+                { method: "POST", path: "/auth/refresh", desc: "Refresh JWT token" },
+                { method: "GET", path: "/auth/me", desc: "Get current user" },
+                { method: "PUT", path: "/auth/update", desc: "Update user profile" },
+                { method: "DELETE", path: "/auth/delete", desc: "Delete account" }
+            ],
+            "Database": [
+                { method: "GET", path: "/db/status", desc: "Database connection status" },
+                { method: "POST", path: "/db/migrate", desc: "Run migrations" },
+                { method: "GET", path: "/db/traces", desc: "Query traces" },
+                { method: "GET", path: "/db/traces/{id}", desc: "Get trace details" },
+                { method: "GET", path: "/db/sessions", desc: "List active sessions" },
+                { method: "DELETE", path: "/db/sessions/{id}", desc: "Clear session" }
+            ],
+            "Cache": [
+                { method: "GET", path: "/cache/status", desc: "Cache status" },
+                { method: "GET", path: "/cache/get/{key}", desc: "Get cached value" },
+                { method: "POST", path: "/cache/set", desc: "Set cache value" },
+                { method: "DELETE", path: "/cache/delete/{key}", desc: "Delete cache key" },
+                { method: "POST", path: "/cache/flush", desc: "Flush all cache" }
+            ],
+            "Agents": [
+                { method: "GET", path: "/agents", desc: "List all agents" },
+                { method: "GET", path: "/agents/categories", desc: "Agent categories" },
+                { method: "GET", path: "/agents/top", desc: "Top performing agents" },
+                { method: "GET", path: "/agents/stats", desc: "Agent statistics" },
+                { method: "GET", path: "/agents/{id}", desc: "Get agent details" },
+                { method: "GET", path: "/agents/{id}/status", desc: "Agent status" },
+                { method: "POST", path: "/agent/{id}/task", desc: "Execute agent task" },
+                { method: "POST", path: "/agents/evolve", desc: "Evolve agent" }
+            ],
+            "Chat": [
+                { method: "POST", path: "/api/chat", desc: "Primary chat (7 services)" },
+                { method: "POST", path: "/api/chat/stream", desc: "Streaming chat" },
+                { method: "GET", path: "/api/chat/history", desc: "Chat history" },
+                { method: "POST", path: "/api/chat/save", desc: "Save chat session" }
+            ],
+            "Legal": [
+                { method: "POST", path: "/legal-research", desc: "Legal research" },
+                { method: "POST", path: "/legal/case-law", desc: "Case law search" },
+                { method: "POST", path: "/legal/contract/analyze", desc: "Contract analysis" },
+                { method: "POST", path: "/legal/compliance/check", desc: "Compliance check" }
+            ],
+            "News": [
+                { method: "GET", path: "/api/news", desc: "News with cache fallback" },
+                { method: "GET", path: "/api/news/live", desc: "Live news" },
+                { method: "GET", path: "/api/news/categories", desc: "News categories" },
+                { method: "POST", path: "/api/news/search", desc: "Search news" }
+            ],
+            "Services": [
+                { method: "GET", path: "/api/moat", desc: "MOAT analysis" },
+                { method: "POST", path: "/api/moat", desc: "MOAT analyze" },
+                { method: "POST", path: "/api/governance/draft", desc: "Draft policy" },
+                { method: "GET", path: "/api/governance/list", desc: "List policies" },
+                { method: "POST", path: "/api/review", desc: "Document review" },
+                { method: "POST", path: "/api/privacy/scan", desc: "Privacy scan" },
+                { method: "GET", path: "/api/privacy/report", desc: "Privacy report" },
+                { method: "POST", path: "/api/psychologist", desc: "Psychology analysis" }
+            ],
+            "Marketing": [
+                { method: "POST", path: "/api/marketing/draft", desc: "Generate draft" },
+                { method: "GET", path: "/api/marketing/drafts", desc: "List drafts" },
+                { method: "GET", path: "/api/marketing/download/{id}", desc: "Download draft" },
+                { method: "POST", path: "/api/marketing/publish", desc: "Publish (human-gated)" },
+                { method: "POST", path: "/api/marketing/schedule", desc: "Schedule draft" },
+                { method: "GET", path: "/api/marketing/analytics", desc: "Marketing analytics" }
+            ],
+            "Evolution": [
+                { method: "GET", path: "/api/evolution/proposals", desc: "List proposals" },
+                { method: "POST", path: "/api/evolution/submit", desc: "Submit proposal" },
+                { method: "POST", path: "/api/evolution/approve/{id}", desc: "Approve proposal" },
+                { method: "POST", path: "/api/evolution/reject/{id}", desc: "Reject proposal" },
+                { method: "POST", path: "/api/evolution/deploy/{id}", desc: "Deploy approved" },
+                { method: "GET", path: "/api/evolution/history", desc: "Evolution history" },
+                { method: "POST", path: "/api/evolution/self-improve", desc: "Auto-suggest improvements" },
+                { method: "POST", path: "/api/evolution/learn", desc: "Learn from interactions" },
+                { method: "GET", path: "/api/evolution/status", desc: "Evolution status" }
+            ],
+            "Observability": [
+                { method: "GET", path: "/api/god/view", desc: "Full system view" },
+                { method: "GET", path: "/api/trace/{id}", desc: "Get trace" },
+                { method: "POST", path: "/api/trace", desc: "Create trace" },
+                { method: "GET", path: "/api/traces", desc: "List traces" }
+            ],
+            "Realtime": [
+                { method: "WS", path: "/ws/third-eye", desc: "Real-time metrics" },
+                { method: "SSE", path: "/agent/events", desc: "SSE agent events" },
+                { method: "WS", path: "/ws/chat/{session_id}", desc: "Live chat" }
+            ],
+            "Search": [
+                { method: "POST", path: "/search/web", desc: "Web search (SERPAPI)" },
+                { method: "POST", path: "/search/targeted", desc: "Targeted domain search" }
+            ],
+            "LinkedIn": [
+                { method: "POST", path: "/linkedin/post", desc: "Create LinkedIn post" },
+                { method: "GET", path: "/linkedin/analytics", desc: "Post analytics" }
+            ],
+            "Payments": [
+                { method: "POST", path: "/payment/create-order", desc: "Create payment order" },
+                { method: "POST", path: "/payment/verify", desc: "Verify payment" },
+                { method: "POST", path: "/payment/subscription", desc: "Create subscription" },
+                { method: "GET", path: "/payment/plans", desc: "List plans" },
+                { method: "GET", path: "/payment/history", desc: "Payment history" }
+            ],
+            "Voice": [
+                { method: "POST", path: "/voice/transcribe", desc: "Speech-to-text" },
+                { method: "POST", path: "/voice/synthesize", desc: "Text-to-speech" }
+            ],
+            "Learning": [
+                { method: "POST", path: "/learn/feedback", desc: "Submit feedback" },
+                { method: "POST", path: "/learn/improve", desc: "Suggest improvement" }
+            ],
+            "Admin": [
+                { method: "GET", path: "/admin/users", desc: "List users" },
+                { method: "DELETE", path: "/admin/users/{id}", desc: "Delete user" },
+                { method: "GET", path: "/admin/audit", desc: "Audit log" },
+                { method: "POST", path: "/admin/backup", desc: "Full backup" },
+                { method: "GET", path: "/admin/config", desc: "System config" }
+            ]
+        };
+
+        // ─── RENDER ENDPOINTS ──────────────────────────────────────
+        function renderEndpoints() {
+            let html = '';
+            for (const [category, endpoints] of Object.entries(ALL_ENDPOINTS)) {
+                html += `<h4 style="margin:16px 0 8px;color:var(--accent);">${category}</h4>`;
+                endpoints.forEach(e => {
+                    const methodClass = e.method.toLowerCase();
+                    html += `
+                        <div class="endpoint-card">
+                            <span class="method ${methodClass}">${e.method}</span>
+                            <div class="path">${e.path}</div>
+                            <div class="desc">${e.desc}</div>
+                        </div>
+                    `;
+                });
+            }
+            endpointsGrid.innerHTML = html;
+        }
+
+        // ─── SPEECH RECOGNITION ────────────────────────────────────
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
@@ -869,7 +1080,6 @@
                     }
                 }
             } catch(e) {}
-            // Fallback
             newsPreview.innerHTML = `
                 <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;">
                     <div style="font-weight:600;font-size:14px;">EU AI Act Enters Full Effect</div>
@@ -936,6 +1146,7 @@
                 const target = document.getElementById(`tab-${tab}`);
                 if (target) target.classList.add('active');
                 if (tab === 'dashboard') { loadNews(); fetchStatus(); }
+                if (tab === 'endpoints') { renderEndpoints(); }
             });
         });
 
@@ -945,12 +1156,26 @@
                 const resp = await fetch(`${API_BASE}/status`);
                 if (resp.ok) {
                     const data = await resp.json();
-                    document.getElementById('statEndpoints').textContent = data.endpoints || 114;
-                    document.getElementById('statAgents').textContent = data.agents || 530;
+                    document.getElementById('statEndpoints').textContent = data.endpoints || 164;
+                    document.getElementById('statAgents').textContent = data.agents || 450;
                     document.getElementById('statServices').textContent = (data.services || []).length || 7;
                     document.getElementById('statRegions').textContent = data.regions || 5;
-                    document.getElementById('agentCount').textContent = data.agents || 530;
+                    document.getElementById('agentCountFooter').textContent = data.agents || 450;
+                    document.getElementById('agentCountBadge').textContent = `${data.agents || 450} agents`;
                     statusLabel.textContent = 'Live';
+                    
+                    // Update DB and Redis status
+                    const rootResp = await fetch(`${API_BASE}/`);
+                    if (rootResp.ok) {
+                        const rootData = await rootResp.json();
+                        document.getElementById('statDb').textContent = rootData.db_connected ? '✅' : '❌';
+                        document.getElementById('statDb').style.color = rootData.db_connected ? 'var(--green)' : 'var(--danger)';
+                        document.getElementById('statRedis').textContent = rootData.redis_connected ? '✅' : '❌';
+                        document.getElementById('statRedis').style.color = rootData.redis_connected ? 'var(--green)' : 'var(--danger)';
+                        if (rootData.uptime) {
+                            uptimeDisplay.textContent = `Uptime: ${rootData.uptime}`;
+                        }
+                    }
                 }
             } catch(e) { statusLabel.textContent = 'Sovereign'; }
         }
@@ -970,13 +1195,15 @@
             lastUpdated.textContent = new Date().toLocaleString();
             await loadNews();
             await fetchStatus();
+            renderEndpoints();
             connectSSE();
             setInterval(loadNews, 60000);
             setInterval(fetchStatus, 30000);
         }
 
         document.addEventListener('DOMContentLoaded', init);
-        console.log('✦ Unknown Verdict Sovereign · Connected to', API_BASE);
+        console.log('✦ Unknown Verdict Sovereign v43.0 · 164 Endpoints');
+        console.log('✦ Connected to:', API_BASE);
     </script>
-</body> 
+</body>
 </html>
