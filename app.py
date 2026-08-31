@@ -554,7 +554,15 @@ async def serve_index_alt():
     except FileNotFoundError:
         # Fallback: Redirect to /chat if index.html not found
         return RedirectResponse(url="/chat")
+from fastapi.responses import HTMLResponse
 
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        return RedirectResponse(url="/chat")
 # ─── WEB SOCKET ────────────────────────────────────────────────
 
 @app.websocket("/ws/third-eye")
