@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Advocacy & Law Firm - AI-Powered Legal Solutions" />
+    <meta name="theme-color" content="#0a0e1a" />
+    <title>Advocacy & Law Firm - Legal Expertise & AI Solutions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #0a0e1a;
+            --bg-secondary: #0f1422;
+            --card: rgba(17, 24, 39, 0.92);
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #e8edf5;
+            --text-secondary: #94a3b8;
+            --muted: #4a5668;
+            --accent: #00d4ff;
+            --accent-dim: rgba(0, 212, 255, 0.08);
+            --gold: #f5c542;
+            --gold-dim: rgba(245, 197, 66, 0.08);
+            --green: #10b981;
+            --green-dim: rgba(16, 185, 129, 0.08);
+            --danger: #ef4444;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+        
+        html, body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        
+        /* ─── HEADER ─── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .logo .icon {
+            font-size: 32px;
+            color: var(--gold);
+        }
+        
+        .logo .text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        
+        .logo .name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        
+        .logo .tagline {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+        
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.3s;
+            position: relative;
+        }
+        
+        .nav a:hover, .nav a.active {
+            color: var(--accent);
+        }
+        
+        .nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
+        .btn {
+            padding: 10px 24px;
+            border-radius: 30px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), #e6a800);
+            color: var(--bg);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(245, 197, 66, 0.2);
+        }
+        
+        .btn-secondary {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(0, 212, 255, 0.15);
+        }
+        
+        /* ─── HERO SECTION ─── */
+        .hero {
+            padding: 80px 40px;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+        
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* ─── SECTION TITLE ─── */
+        .section-title {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .section-title h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .section-title p {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+        
+        /* ─── SERVICES SECTION ─── */
+        .services {
+            padding: 80px 40px;
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.02) 0%, transparent 100%);
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .service-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        
+        .service-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.1);
+        }
+        
+        .service-card .icon {
+            font-size: 40px;
+            color: var(--gold);
+            margin-bottom: 16px;
+        }
+        
+        .service-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .service-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .service-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tag {
+            background: var(--accent-dim);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        /* ─── FEATURES SECTION ─── */
+        .features {
+            padding: 80px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 32px;
+        }
+        
+        .feature {
+            text-align: center;
+        }
+        
+        .feature .number {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        
+        .feature h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .feature p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* ─── CTA SECTION ─── */
+        .cta-section {
+            padding: 60px 40px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            max-width: 800px;
+            margin: 60px auto;
+        }
+        
+        .cta-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .cta-section p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        
+        /* ─── CONTACT FORM ─── */
+        .contact-section {
+            padding: 80px 40px;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.02) 100%);
+        }
+        
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-group button {
+            width: 100%;
+            margin-top: 8px;
+        }
+        
+        /* ─── FOOTER ─── */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 40px;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 40px;
+        }
+        
+        .footer-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-section ul li a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        
+        .footer-section ul li a:hover {
+            color: var(--accent);
+        }
+        
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 20px;
+                gap: 10px;
+            }
+            
+            .nav {
+                display: none;
+            }
+            
+            .hero {
+                padding: 40px 20px;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .section-title h2 {
+                font-size: 28px;
+            }
+            
+            .services, .features, .contact-section {
+                padding: 40px 20px;
+            }
+            
+            .contact-form {
+                padding: 24px;
+            }
+        }
+        
+        /* ─── MODAL ─── */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .modal-close:hover {
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER/NAVIGATION -->
+    <header class="header">
+        <a href="#" class="logo">
+            <div class="icon">⚖️</div>
+            <div class="text">
+                <div class="name">Advocacy & Law</div>
+                <div class="tagline">Legal Solutions</div>
+            </div>
+        </a>
+        
+        <nav class="nav">
+            <a href="#services" class="nav-link active">Services</a>
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#contact" class="nav-link">Contact</a>
+        </nav>
+        
+        <div class="header-actions">
+            <div class="status-badge">
+                <span class="dot"></span>
+                Online Now
+            </div>
+            <button class="btn btn-primary" onclick="openConsultationModal()">
+                <i class="fas fa-phone"></i> Free Consultation
+            </button>
+        </div>
+    </header>
+    
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <h1>Expert Legal Solutions<br><span>Powered by AI</span></h1>
+        <p>Access comprehensive legal expertise across 12 specializations with AI-enhanced analysis. Get verdicts in minutes, not weeks.</p>
+        <div class="cta-buttons">
+            <button class="btn btn-primary" onclick="openConsultationModal()">
+                <i class="fas fa-comment-dots"></i> Ask Legal Question
+            </button>
+            <button class="btn btn-secondary" onclick="scrollToSection('services')">
+                <i class="fas fa-arrow-down"></i> Explore Services
+            </button>
+        </div>
+    </section>
+    
+    <!-- SERVICES SECTION -->
+    <section class="services" id="services">
+        <div class="section-title">
+            <h2>Legal Services</h2>
+            <p>Comprehensive expertise across all major legal domains</p>
+        </div>
+        
+        <div class="services-grid">
+            <!-- Constitutional Law -->
+            <div class="service-card">
+                <div class="icon">🏛️</div>
+                <h3>Constitutional Law</h3>
+                <p>Expert advice on fundamental rights, constitutional amendments, and judicial review.</p>
+                <div class="tags">
+                    <span class="tag">Rights</span>
+                    <span class="tag">Amendments</span>
+                    <span class="tag">Federalism</span>
+                </div>
+            </div>
+            
+            <!-- Contract Law -->
+            <div class="service-card">
+                <div class="icon">📋</div>
+                <h3>Contract Law</h3>
+                <p>Commercial contracts, M&A agreements, employment contracts, and negotiations.</p>
+                <div class="tags">
+                    <span class="tag">Commercial</span>
+                    <span class="tag">M&A</span>
+                    <span class="tag">Employment</span>
+                </div>
+            </div>
+            
+            <!-- Criminal Law -->
+            <div class="service-card">
+                <div class="icon">🛡️</div>
+                <h3>Criminal Law</h3>
+                <p>White collar crime defense, cybercrime, bail, and appeal proceedings.</p>
+                <div class="tags">
+                    <span class="tag">Defense</span>
+                    <span class="tag">Cybercrime</span>
+                    <span class="tag">Bail</span>
+                </div>
+            </div>
+            
+            <!-- Corporate Law -->
+            <div class="service-card">
+                <div class="icon">🏢</div>
+                <h3>Corporate Law</h3>
+                <p>Company formation, mergers & acquisitions, governance, and compliance.</p>
+                <div class="tags">
+                    <span class="tag">M&A</span>
+                    <span class="tag">Governance</span>
+                    <span class="tag">Compliance</span>
+                </div>
+            </div>
+            
+            <!-- IP Law -->
+            <div class="service-card">
+                <div class="icon">💡</div>
+                <h3>Intellectual Property</h3>
+                <p>Patents, trademarks, copyrights, and IP litigation expertise.</p>
+                <div class="tags">
+                    <span class="tag">Patents</span>
+                    <span class="tag">Trademarks</span>
+                    <span class="tag">Copyright</span>
+                </div>
+            </div>
+            
+            <!-- Tax Law -->
+            <div class="service-card">
+                <div class="icon">💰</div>
+                <h3>Tax Law</h3>
+                <p>Direct tax, indirect tax (GST), international taxation, and tax planning.</p>
+                <div class="tags">
+                    <span class="tag">Direct Tax</span>
+                    <span class="tag">GST</span>
+                    <span class="tag">International</span>
+                </div>
+            </div>
+            
+            <!-- Family Law -->
+            <div class="service-card">
+                <div class="icon">👨‍👩‍👧‍👦</div>
+                <h3>Family Law</h3>
+                <p>Divorce, child custody, inheritance, maintenance, and succession planning.</p>
+                <div class="tags">
+                    <span class="tag">Divorce</span>
+                    <span class="tag">Custody</span>
+                    <span class="tag">Inheritance</span>
+                </div>
+            </div>
+            
+            <!-- Labour Law -->
+            <div class="service-card">
+                <div class="icon">⚙️</div>
+                <h3>Labour Law</h3>
+                <p>Employment disputes, industrial relations, workplace harassment, and compliance.</p>
+                <div class="tags">
+                    <span class="tag">Employment</span>
+                    <span class="tag">Disputes</span>
+                    <span class="tag">Compliance</span>
+                </div>
+            </div>
+            
+            <!-- Real Estate Law -->
+            <div class="service-card">
+                <div class="icon">🏠</div>
+                <h3>Real Estate Law</h3>
+                <p>Property transactions, RERA compliance, land acquisition, and tenant rights.</p>
+                <div class="tags">
+                    <span class="tag">RERA</span>
+                    <span class="tag">Property</span>
+                    <span class="tag">Tenant Rights</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- FEATURES SECTION -->
+    <section class="features" id="features">
+        <div class="section-title">
+            <h2>Why Choose Us</h2>
+            <p>Combining traditional legal expertise with cutting-edge AI technology</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature">
+                <div class="number">530+</div>
+                <h3>AI Agents</h3>
+                <p>Specialized legal agents across all domains</p>
+            </div>
+            
+            <div class="feature">
+                <div class="number">32.5M</div>
+                <h3>Legal Documents</h3>
+                <p>Comprehensive legal knowledge base</p>
+            </div>
+            
+            <div class="feature">
+                <div class="number">24/7</div>
+                <h3>Availability</h3>
+                <p>Round-the-clock legal support</p>
+            </div>
+            
+            <div class="feature">
+                <div class="number">99.9%</div>
+                <h3>Accuracy</h3>
+                <p>High-precision legal analysis</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA SECTION -->
+    <section class="cta-section">
+        <h2>Ready to Get Legal Help?</h2>
+        <p>Get AI-powered legal advice or consult with our expert lawyers. Start your journey to legal resolution today.</p>
+        <button class="btn btn-primary" onclick="openConsultationModal()">
+            <i class="fas fa-arrow-right"></i> Start Consultation
+        </button>
+    </section>
+    
+    <!-- CONTACT SECTION -->
+    <section class="contact-section" id="contact">
+        <div class="section-title">
+            <h2>Get in Touch</h2>
+            <p>Send us your inquiry and we'll respond within 24 hours</p>
+        </div>
+        
+        <form class="contact-form" id="contactForm" onsubmit="submitContact(event)">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" required />
+            </div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" required />
+            </div>
+            
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" name="phone" />
+            </div>
+            
+            <div class="form-group">
+                <label>Service Type</label>
+                <input type="text" name="service" placeholder="e.g., Corporate Law, IP Rights" />
+            </div>
+            
+            <div class="form-group">
+                <label>Message</label>
+                <textarea name="message" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+        </form>
+    </section>
+    
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About Us</h4>
+                <ul>
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Team</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Press</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Services</h4>
+                <ul>
+                    <li><a href="#">Constitutional Law</a></li>
+                    <li><a href="#">Corporate Law</a></li>
+                    <li><a href="#">IP Rights</a></li>
+                    <li><a href="#">Tax Law</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Case Studies</a></li>
+                    <li><a href="#">Legal Guides</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="tel:+918800000000">+91 88000-00000</a></li>
+                    <li><a href="mailto:hello@advocacyalawfirm.in">hello@advocacyalawfirm.in</a></li>
+                    <li><a href="#">www.advocacyalawfirm.in</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2024 Advocacy & Law Firm. All rights reserved. | <a href="#" style="color: inherit; cursor: pointer;">Privacy Policy</a> | <a href="#" style="color: inherit; cursor: pointer;">Terms of Service</a></p>
+        </div>
+    </footer>
+    
+    <!-- CONSULTATION MODAL -->
+    <div id="consultationModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeConsultationModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 20px;">
+                Schedule Your Free Consultation
+            </h2>
+            
+            <form id="consultationForm" onsubmit="submitConsultation(event)">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" name="name" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" name="phone" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Legal Issue Type *</label>
+                    <input type="text" name="issueType" placeholder="e.g., Corporate Dispute, IP Protection" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Brief Description</label>
+                    <textarea name="description" placeholder="Describe your legal matter..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-calendar"></i> Book Consultation
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+        
+        // Smooth scrolling
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        // Modal functions
+        function openConsultationModal() {
+            document.getElementById('consultationModal').classList.add('active');
+        }
+        
+        function closeConsultationModal() {
+            document.getElementById('consultationModal').classList.remove('active');
+        }
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('consultationModal');
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+        
+        // Submit consultation form
+        async function submitConsultation(e) {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('consultationForm'));
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/v1/consultation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Consultation request submitted! We\'ll contact you within 24 hours.');
+                    closeConsultationModal();
+                    document.getElementById('consultationForm').reset();
+                } else {
+                    alert('Error submitting request. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting request. Please contact us directly.');
+            }
+        }
+        
+        // Submit contact form
+        async function submitContact(e) {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('contactForm'));
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/v1/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Message sent successfully! We\'ll get back to you soon.');
+                    document.getElementById('contactForm').reset();
+                } else {
+                    alert('Error sending message. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error sending message. Please contact us directly.');
+            }
+        }
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                if (this.getAttribute('href') !== '#') {
+                    e.preventDefault();
+                    scrollToSection(this.getAttribute('href').substring(1));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
