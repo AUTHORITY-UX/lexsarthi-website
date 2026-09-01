@@ -1,0 +1,586 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R] /Count 9 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 1865 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(# Advocacy AI API Reference) Tj T*
+() Tj T*
+(Version: 1.0 - Generated from the FastAPI route surface) Tj T*
+(Base URL: https://www.advocacyalawfrim.in) Tj T*
+() Tj T*
+(## Start here) Tj T*
+() Tj T*
+(The complete interactive contract is exposed by **/docs** \(Swagger UI\), **/redoc** \(Redoc\), and) Tj T*
+(**/openapi.json**. The branded reference is available at **/api-docs**. This document is the) Tj T*
+(copy-friendly companion for implementation teams.) Tj T*
+() Tj T*
+(> Public AI output is decision support, not legal advice. Agent-authored newsroom content is) Tj T*
+(labeled agent-draft and requires qualified human review before reliance or publication. Never) Tj T*
+(send secrets, passwords, private keys, or unnecessary personal legal facts in a request.) Tj T*
+() Tj T*
+(## Request conventions) Tj T*
+() Tj T*
+(- JSON requests use Content-Type: application/json.) Tj T*
+(- Protected routes use Authorization: Bearer <access_token>.) Tj T*
+(- Use a stable session_id when continuing a chat.) Tj T*
+(- Treat model, confidence, and agents_used as metadata-not a guarantee of correctness.) Tj T*
+(- Use HTTPS only; keep tokens in server-side session storage in production.) Tj T*
+() Tj T*
+(## Authentication) Tj T*
+() Tj T*
+(### Register) Tj T*
+() Tj T*
+(POST /api/publication/auth/register) Tj T*
+() Tj T*
+(Input:) Tj T*
+() Tj T*
+(~~~json) Tj T*
+({) Tj T*
+(  "email": "operator@example.com",) Tj T*
+(  "password": "at-least-10-characters",) Tj T*
+(  "full_name": "Workspace operator") Tj T*
+(}) Tj T*
+(~~~) Tj T*
+() Tj T*
+(Output:) Tj T*
+() Tj T*
+(~~~json) Tj T*
+({) Tj T*
+(  "access_token": "<jwt>",) Tj T*
+(  "token_type": "bearer",) Tj T*
+(  "expires_in": 86400,) Tj T*
+(  "user": {"id": "<uuid>", "email": "operator@example.com", "full_name": "Workspace operator",) Tj T*
+("role": "member"}) Tj T*
+(}) Tj T*
+(~~~) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1419 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+() Tj T*
+(### Login) Tj T*
+() Tj T*
+(POST /api/publication/auth/login) Tj T*
+() Tj T*
+(Input: {"email":"operator@example.com","password":"at-least-10-characters"}) Tj T*
+() Tj T*
+(Output: the same token envelope as registration. Invalid credentials return a generic 401) Tj T*
+(response.) Tj T*
+() Tj T*
+(### Current user) Tj T*
+() Tj T*
+(GET /api/publication/auth/me) Tj T*
+() Tj T*
+(Header: Authorization: Bearer <access_token>) Tj T*
+() Tj T*
+(Output: {"sub":"<uuid>","email":"operator@example.com","role":"member","iat":0,"exp":0}) Tj T*
+() Tj T*
+(## Core modules) Tj T*
+() Tj T*
+(### System) Tj T*
+() Tj T*
+(GET /health - liveness probe.) Tj T*
+() Tj T*
+(Output: { "status": "healthy", "timestamp": "2026-09-01T00:00:00+00:00" }) Tj T*
+() Tj T*
+(GET /status - service, database, model, agent, and uptime summary.) Tj T*
+() Tj T*
+(GET /providers - configured provider availability; secrets are never returned.) Tj T*
+() Tj T*
+(### Chat and legal intelligence) Tj T*
+() Tj T*
+(POST /api/chat) Tj T*
+() Tj T*
+(Input:) Tj T*
+() Tj T*
+(~~~json) Tj T*
+({) Tj T*
+(  "message": "Create a DPDPA control checklist for a SaaS vendor",) Tj T*
+(  "service": "compliance",) Tj T*
+(  "context": "Indian customer data; B2B SaaS",) Tj T*
+(  "jurisdiction": "India",) Tj T*
+(  "session_id": "optional-session-id") Tj T*
+(}) Tj T*
+(~~~) Tj T*
+() Tj T*
+(Output:) Tj T*
+() Tj T*
+(~~~json) Tj T*
+({) Tj T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1901 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(  "response": "<answer>",) Tj T*
+(  "service": "compliance",) Tj T*
+(  "jurisdiction": "India",) Tj T*
+(  "agents_used": ["<agent>", "<verifier>"],) Tj T*
+(  "model": "<provider-or-fallback>",) Tj T*
+(  "timestamp": "<iso-8601>") Tj T*
+(}) Tj T*
+(~~~) Tj T*
+() Tj T*
+(### Agents) Tj T*
+() Tj T*
+(POST /agents/{agent_id}/task - Input {"task":"...","context":"..."}; output contains the agent) Tj T*
+(result and verification metadata.) Tj T*
+() Tj T*
+(GET /agents, GET /agents/categories, GET /agents/top, GET /agents/stats, GET) Tj T*
+(/agents/jurisdictions - roster, category, ranking, statistics, and jurisdiction discovery.) Tj T*
+() Tj T*
+(### Newsroom) Tj T*
+() Tj T*
+(GET /api/publication/feed?limit=6&category=AI%20governance) Tj T*
+() Tj T*
+(Output:) Tj T*
+() Tj T*
+(~~~json) Tj T*
+({) Tj T*
+(  "articles": [{) Tj T*
+(    "slug": "ai-governance-risk-to-evidence",) Tj T*
+(    "title": "AI governance works when risk has an owner",) Tj T*
+(    "summary": "<summary>",) Tj T*
+(    "body": "<article body>",) Tj T*
+(    "category": "AI governance",) Tj T*
+(    "agent_name": "Nyaya-21",) Tj T*
+(    "agent_category": "AI Safety",) Tj T*
+(    "verification_status": "agent-draft",) Tj T*
+(    "published_at": "<iso-8601>") Tj T*
+(  }],) Tj T*
+(  "total": 1,) Tj T*
+(  "editorial_policy": "Agent drafts are informational and require human review before reliance.") Tj T*
+(}) Tj T*
+(~~~) Tj T*
+() Tj T*
+(POST /api/publication/articles is admin-only. It accepts title, summary, body, category,) Tj T*
+(agent_name, and agent_category. Every write is stored as agent-draft and returns a human-review) Tj T*
+(next step.) Tj T*
+() Tj T*
+(### Compliance and governance) Tj T*
+() Tj T*
+(POST /compliance/dpdpa-check - Input {"document":"<policy or control) Tj T*
+(text>","jurisdiction":"India"}; output is a structured check with findings and recommendations.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 2603 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(POST /compliance/gdpr-check and POST /compliance/eu-ai-check follow the same document-in /) Tj T*
+(findings-out pattern for their regimes.) Tj T*
+() Tj T*
+(POST /privacy/scan - Input {"text":"<text>","scan_type":"compliance","regulation":"dpdpa"};) Tj T*
+(output contains detected issues and a scan summary.) Tj T*
+() Tj T*
+(POST /governance/draft - Input) Tj T*
+({"title":"...","content":"...","policy_type":"ai-use","stakeholders":["Legal","Security"]};) Tj T*
+(output is a draft policy with status metadata.) Tj T*
+() Tj T*
+(### Legal research and review) Tj T*
+() Tj T*
+(POST /legal/research - Input) Tj T*
+({"query":"...","context":"...","jurisdiction":"India","max_sources":5}; output returns research) Tj T*
+(text and source metadata.) Tj T*
+() Tj T*
+(POST /review - Input) Tj T*
+({"document":"...","review_type":"contract","jurisdiction":"India","depth":"standard"}; output) Tj T*
+(returns review findings.) Tj T*
+() Tj T*
+(POST /law/multi-jurisdiction - Input {"query":"...","jurisdictions":["India","EU"]}; output) Tj T*
+(compares jurisdictional considerations.) Tj T*
+() Tj T*
+(### Domain and company services) Tj T*
+() Tj T*
+(POST /domain/scan - Input {"domain":"example.com"}; output returns domain/security observations.) Tj T*
+() Tj T*
+(POST /company/audit-report - Input {"company_name":"Example Pvt) Tj T*
+(Ltd","industry":"SaaS","jurisdiction":"india","documents":{},"generate_pdf":true}; output) Tj T*
+(returns an audit report and optionally a report artifact.) Tj T*
+() Tj T*
+(### Search, graph, voice, and MOAT) Tj T*
+() Tj T*
+(Use the generated /docs contract for the full schemas for graph search, vector search,) Tj T*
+(embeddings, voice transcription/synthesis, web search, MOAT intelligence, feedback, audit,) Tj T*
+(inventory, and configuration. These are separated into tagged modules in Swagger so request and) Tj T*
+(response models stay discoverable.) Tj T*
+() Tj T*
+(## Error envelope) Tj T*
+() Tj T*
+(FastAPI validation errors return 422 with detail entries containing loc, msg, and type.) Tj T*
+(Authentication failures return 401; insufficient editorial privileges return 403; rate limits) Tj T*
+(return 429; unavailable database/provider dependencies return 503. Do not expose stack traces or) Tj T*
+(provider credentials to clients.) Tj T*
+() Tj T*
+(## Complete endpoint inventory) Tj T*
+() Tj T*
+(The inventory below is generated from the checked-in route decorators and includes the) Tj T*
+(publication module. For exact request schemas, open /openapi.json; Swagger Try it out should) Tj T*
+(only use non-sensitive test data.) Tj T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1325 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+() Tj T*
+(### Agents) Tj T*
+() Tj T*
+(- **GET /agents**) Tj T*
+(- **GET /agents/categories**) Tj T*
+(- **GET /agents/top**) Tj T*
+(- **GET /agents/stats**) Tj T*
+(- **GET /agents/jurisdictions**) Tj T*
+(- **POST /agents/search**) Tj T*
+(- **GET /agents/{agent_id}**) Tj T*
+(- **POST /agent/{agent_id}/task**) Tj T*
+(- **POST /agents/evolve**) Tj T*
+() Tj T*
+(### Auth) Tj T*
+() Tj T*
+(- **POST /auth/register**) Tj T*
+(- **POST /auth/login**) Tj T*
+(- **POST /auth/logout**) Tj T*
+(- **POST /auth/refresh**) Tj T*
+(- **GET /auth/me**) Tj T*
+(- **PUT /auth/update**) Tj T*
+(- **DELETE /auth/delete**) Tj T*
+() Tj T*
+(### Chat) Tj T*
+() Tj T*
+(- **POST /api/chat**) Tj T*
+(- **POST /api/chat/stream**) Tj T*
+(- **GET /api/chat/history**) Tj T*
+(- **POST /api/chat/save**) Tj T*
+(- **GET /api/chat/export**) Tj T*
+() Tj T*
+(### Company) Tj T*
+() Tj T*
+(- **POST /company/audit-report**) Tj T*
+(- **POST /company/complete-audit**) Tj T*
+() Tj T*
+(### Compliance) Tj T*
+() Tj T*
+(- **POST /compliance/dpdpa-check**) Tj T*
+(- **POST /compliance/gdpr-check**) Tj T*
+(- **POST /compliance/eu-ai-check**) Tj T*
+() Tj T*
+(### Domain) Tj T*
+() Tj T*
+(- **POST /domain/scan**) Tj T*
+() Tj T*
+(### Evolution) Tj T*
+() Tj T*
+(- **GET /api/evolution/proposals**) Tj T*
+(- **POST /api/evolution/submit**) Tj T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1602 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(- **POST /api/evolution/approve/{proposal_id}**) Tj T*
+(- **POST /api/evolution/reject/{proposal_id}**) Tj T*
+(- **POST /api/evolution/deploy/{proposal_id}**) Tj T*
+(- **POST /api/evolution/rollback/{proposal_id}**) Tj T*
+(- **GET /api/evolution/history**) Tj T*
+(- **GET /api/evolution/status**) Tj T*
+() Tj T*
+(### Frontend) Tj T*
+() Tj T*
+(- **GET /third-eye**) Tj T*
+(- **GET /chat**) Tj T*
+() Tj T*
+(### General) Tj T*
+() Tj T*
+(- **WEBSOCKET /ws/third-eye**) Tj T*
+(- **WEBSOCKET /ws/chat/{session_id}**) Tj T*
+(- **GET /api/publication/health**) Tj T*
+(- **GET /api/publication/feed**) Tj T*
+(- **GET /api/publication/articles/{slug}**) Tj T*
+(- **GET /api/publication/agents**) Tj T*
+(- **POST /api/publication/auth/register**) Tj T*
+(- **POST /api/publication/auth/login**) Tj T*
+(- **GET /api/publication/auth/me**) Tj T*
+(- **POST /api/publication/articles**) Tj T*
+() Tj T*
+(### Graph) Tj T*
+() Tj T*
+(- **GET /graph/status**) Tj T*
+(- **POST /graph/search**) Tj T*
+(- **GET /graph/neighbors/{node}**) Tj T*
+(- **GET /graph/nodes**) Tj T*
+(- **GET /graph/path**) Tj T*
+(- **GET /graph/stats**) Tj T*
+() Tj T*
+(### InCaseLawBERT) Tj T*
+() Tj T*
+(- **GET /incase/status**) Tj T*
+(- **POST /incase/embed**) Tj T*
+(- **POST /incase/similarity**) Tj T*
+() Tj T*
+(### Legal) Tj T*
+() Tj T*
+(- **POST /legal-research**) Tj T*
+(- **POST /legal/case-law**) Tj T*
+(- **POST /legal/contract/analyze**) Tj T*
+(- **POST /legal/compliance/check**) Tj T*
+(- **GET /legal/jurisdiction**) Tj T*
+(- **POST /legal/summarize**) Tj T*
+(- **POST /legal/translate**) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 1702 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(### MOAT) Tj T*
+() Tj T*
+(- **GET /moat**) Tj T*
+(- **GET /moat/status**) Tj T*
+(- **GET /moat/ethics-status**) Tj T*
+(- **POST /moat/intelligence**) Tj T*
+(- **GET /moat/intelligence**) Tj T*
+(- **GET /moat/intelligence/all**) Tj T*
+(- **POST /moat/evolution**) Tj T*
+(- **GET /moat/evolution/history**) Tj T*
+(- **GET /moat/evolution/latest**) Tj T*
+(- **POST /moat/knowledge**) Tj T*
+(- **GET /moat/knowledge**) Tj T*
+(- **GET /moat/knowledge/domains**) Tj T*
+(- **POST /moat/verifiers**) Tj T*
+(- **GET /moat/verifiers**) Tj T*
+(- **POST /moat/verifiers/{verifier_name}/run**) Tj T*
+(- **POST /moat/agents**) Tj T*
+(- **GET /moat/agents**) Tj T*
+(- **POST /moat/agents/{agent_id}/run**) Tj T*
+(- **POST /moat/judge**) Tj T*
+(- **GET /moat/judge/history**) Tj T*
+(- **GET /moat/judge/{ruling_id}**) Tj T*
+(- **POST /moat/ip-vault**) Tj T*
+(- **GET /moat/ip-vault**) Tj T*
+(- **POST /moat/inventory**) Tj T*
+(- **GET /moat/inventory**) Tj T*
+(- **POST /moat/patterns**) Tj T*
+(- **GET /moat/patterns**) Tj T*
+(- **POST /moat/feedback**) Tj T*
+(- **GET /moat/feedback**) Tj T*
+(- **POST /moat/audit**) Tj T*
+(- **GET /moat/audit**) Tj T*
+(- **GET /moat/cache/stats**) Tj T*
+(- **DELETE /moat/cache/clear**) Tj T*
+(- **GET /moat/config**) Tj T*
+(- **POST /moat/config/update**) Tj T*
+() Tj T*
+(### Marketing) Tj T*
+() Tj T*
+(- **POST /api/marketing/draft**) Tj T*
+(- **GET /api/marketing/drafts**) Tj T*
+(- **GET /api/marketing/download/{draft_id}**) Tj T*
+(- **POST /api/marketing/publish**) Tj T*
+(- **POST /api/marketing/schedule**) Tj T*
+(- **GET /api/marketing/analytics**) Tj T*
+() Tj T*
+(### Multi-Jurisdiction) Tj T*
+() Tj T*
+(- **GET /law/jurisdictions**) Tj T*
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 1327 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(- **POST /law/multi-jurisdiction**) Tj T*
+(- **POST /law/comparative**) Tj T*
+(- **POST /law/us**) Tj T*
+(- **POST /law/uk**) Tj T*
+(- **POST /law/eu**) Tj T*
+() Tj T*
+(### News) Tj T*
+() Tj T*
+(- **GET /api/news**) Tj T*
+(- **GET /api/news/live**) Tj T*
+(- **GET /api/news/categories**) Tj T*
+(- **POST /api/news/search**) Tj T*
+(- **GET /api/news/trending**) Tj T*
+() Tj T*
+(### Observability) Tj T*
+() Tj T*
+(- **GET /api/god/view**) Tj T*
+(- **GET /api/trace/{trace_id}**) Tj T*
+(- **GET /api/traces**) Tj T*
+(- **POST /api/trace**) Tj T*
+(- **GET /api/third-eye/stream**) Tj T*
+() Tj T*
+(### Realtime) Tj T*
+() Tj T*
+(- **GET /agent/events**) Tj T*
+() Tj T*
+(### Search) Tj T*
+() Tj T*
+(- **POST /search/web**) Tj T*
+(- **POST /search/targeted**) Tj T*
+() Tj T*
+(### Services) Tj T*
+() Tj T*
+(- **GET /api/moat**) Tj T*
+(- **POST /api/moat**) Tj T*
+(- **POST /api/governance/draft**) Tj T*
+(- **GET /api/governance/list**) Tj T*
+(- **POST /api/review**) Tj T*
+(- **POST /api/review/batch**) Tj T*
+(- **POST /api/privacy/scan**) Tj T*
+(- **GET /api/privacy/report**) Tj T*
+(- **POST /api/psychologist**) Tj T*
+(- **POST /api/psychologist/assess**) Tj T*
+() Tj T*
+(### System) Tj T*
+() Tj T*
+(- **GET /**) Tj T*
+(- **GET /status**) Tj T*
+(- **GET /health**) Tj T*
+(- **GET /providers**) Tj T*
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 1053 >>
+stream
+BT
+/F1 9 Tf
+48 752 Td
+12 TL
+(- **GET /models**) Tj T*
+(- **GET /endpoints**) Tj T*
+(- **GET /metrics**) Tj T*
+(- **GET /version**) Tj T*
+() Tj T*
+(### Voice) Tj T*
+() Tj T*
+(- **POST /voice/transcribe**) Tj T*
+(- **POST /voice/synthesize**) Tj T*
+() Tj T*
+(### ZVec) Tj T*
+() Tj T*
+(- **GET /zvec/status**) Tj T*
+(- **POST /zvec/search**) Tj T*
+(- **POST /zvec/add**) Tj T*
+(- **POST /zvec/import**) Tj T*
+() Tj T*
+(## Deployment requirements) Tj T*
+() Tj T*
+(Required runtime settings:) Tj T*
+() Tj T*
+(- DATABASE_URL - Neon PostgreSQL connection string, stored as a secret.) Tj T*
+(- JWT_SECRET - high-entropy signing secret; no default in production.) Tj T*
+(- ADMIN_SECRET - optional separate editorial publishing key.) Tj T*
+(- ADMIN_EMAIL - optional first-admin email.) Tj T*
+(- ALLOWED_ORIGINS - comma-separated browser origins; do not use * with credentials.) Tj T*
+() Tj T*
+(The Python service must be deployed as the API origin. Cloudflare Pages alone serves static) Tj T*
+(files and cannot execute this FastAPI application.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 20 0 R >>
+endobj
+xref
+0 22
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000169 00000 n 
+0000000237 00000 n 
+0000002154 00000 n 
+0000002280 00000 n 
+0000003751 00000 n 
+0000003877 00000 n 
+0000005830 00000 n 
+0000005956 00000 n 
+0000008612 00000 n 
+0000008740 00000 n 
+0000010118 00000 n 
+0000010246 00000 n 
+0000011901 00000 n 
+0000012029 00000 n 
+0000013784 00000 n 
+0000013912 00000 n 
+0000015292 00000 n 
+0000015420 00000 n 
+0000016526 00000 n 
+trailer
+<< /Size 22 /Root 1 0 R >>
+startxref
+16654
+%%EOF
