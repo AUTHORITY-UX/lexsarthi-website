@@ -1,4 +1,5 @@
 /docs https://upamnyu12-lex.hf.space/docs 200
 /redoc https://upamnyu12-lex.hf.space/redoc 200
 /openapi.json https://upamnyu12-lex.hf.space/openapi.json 200
+/api-docs/pdf /advocacy_ai_api_reference.pdf 200
 /api/* https://upamnyu12-lex.hf.space/api/:splat 200
