@@ -2046,8 +2046,10 @@ async def chat_interface():
 # 24. RUN
 # ════════════════════════════════════════════════════════════════
 
+from api_docs_routes import router as api_docs_router
 from publication_routes import router as publication_router
 app.include_router(publication_router)
+app.include_router(api_docs_router)
 
 from frontend_routes import router as frontend_router
 app.include_router(frontend_router)
