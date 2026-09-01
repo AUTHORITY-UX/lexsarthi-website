@@ -94,8 +94,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "admin-secret")
-JWT_SECRET = os.getenv("JWT_SECRET", "sovereign-secret")
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
+JWT_SECRET = os.getenv("JWT_SECRET", "")
 LIQUID_MODEL = os.getenv("LIQUID_MODEL", "LiquidAI/LFM2.5-2.6B")
 INCASE_MODEL = os.getenv("INCASE_MODEL", "law-ai/InCaseLawBERT")
 
@@ -649,10 +649,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "https://advocacyalawfrim.in,https://www.advocacyalawfrim.in").split(",") if origin.strip()],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Admin-Key"],
 )
 
 # ════════════════════════════════════════════════════════════════
@@ -661,23 +661,9 @@ app.add_middleware(
 
 @app.get("/", tags=["System"])
 async def root():
-    return HTMLResponse("""
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Unknown Verdict</title>
-    <style>body{background:#0a0e1a;color:#e2e8f0;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center}.container{max-width:900px}.logo{font-size:64px;color:#f5c542}h1{font-size:42px;background:linear-gradient(135deg,#00d4ff,#7b2fbe,#f5c542);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.sub{color:#94a3b8;font-size:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:30px 0}.stat{background:rgba(255,255,255,0.05);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06)}.stat .num{font-size:28px;font-weight:700;color:#00d4ff}.stat .label{font-size:12px;color:#94a3b8}.btn{display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#f5c542,#e6a800);color:#0a0e1a;border:none;border-radius:40px;font-weight:600;font-size:16px;cursor:pointer;text-decoration:none;margin:8px}.btn-primary{background:linear-gradient(135deg,#00d4ff,#7b2fbe);color:#fff}.features{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.feature{background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)}.footer{color:#94a3b8;font-size:12px;margin-top:20px}
-    @media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.features{grid-template-columns:1fr}h1{font-size:28px}}
-    </style>
-    </head>
-    <body>
-    <div class="container"><div class="logo">✦</div><h1>Unknown Verdict</h1><div class="sub">Sovereign Intelligence · Legal AGI</div>
-    <div class="stats"><div class="stat"><div class="num">530</div><div class="label">Agents</div></div><div class="stat"><div class="num">170+</div><div class="label">Endpoints</div></div><div class="stat"><div class="num">9</div><div class="label">Regions</div></div><div class="stat"><div class="num">0</div><div class="label">Retention</div></div></div>
-    <div><a href="/chat" class="btn">💬 Open Chat</a><a href="/third-eye" class="btn btn-primary">👁️ Third Eye</a><a href="/docs" class="btn" style="background:rgba(255,255,255,0.1);color:#e2e8f0;">📚 API Docs</a></div>
-    <div class="features"><div class="feature">⚖️ 7 Legal Services</div><div class="feature">🧠 Voice Enabled</div><div class="feature">🔮 Self-Evolution</div><div class="feature">🛡️ Zero-Retention</div><div class="feature">🌍 Global Regions</div><div class="feature">✋ Human-Gated</div><div class="feature">📊 GraphRAG</div><div class="feature">📈 ZVec</div></div>
-    <div class="footer">⚡ 170+ Endpoints · 530 Agents · Zero-Retention · LiquidAI + InCaseLawBERT</div></div></body></html>
-    """)
+    """Serve the public Advocacy AI practice site."""
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
 
-# ════════════════════════════════════════════════════════════════
 # 2. SYSTEM ENDPOINTS (8)
 # ════════════════════════════════════════════════════════════════
 
@@ -2057,7 +2043,12 @@ async def chat_interface():
 # 24. RUN
 # ════════════════════════════════════════════════════════════════
 
+from publication_routes import router as publication_router
+app.include_router(publication_router)
+
+from frontend_routes import router as frontend_router
+app.include_router(frontend_router)
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 7860))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)from frontend_routes import router as frontend_router
-app.include_router(frontend_router)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
