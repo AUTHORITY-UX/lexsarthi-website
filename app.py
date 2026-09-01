@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, Query, Depends, Header, Body, APIRouter
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
@@ -647,6 +648,8 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "https://advocacyalawfrim.in,https://www.advocacyalawfrim.in").split(",") if origin.strip()],
@@ -662,7 +665,7 @@ app.add_middleware(
 @app.get("/", tags=["System"])
 async def root():
     """Serve the public Advocacy AI practice site."""
-    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "advocacy.html"))
 
 # 2. SYSTEM ENDPOINTS (8)
 # ════════════════════════════════════════════════════════════════
