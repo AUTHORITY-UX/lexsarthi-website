@@ -1,0 +1,108 @@
+# Advocacy & Law Firm - Fly.io Deployment Configuration
+# Deploy command: flyctl deploy
+
+app = "advocacy-law-firm"
+primary_region = "sin"  # Singapore (Asia-Pacific)
+
+# Build configuration
+[build]
+  image = "advocacy-law-firm:latest"
+  builder = "docker"
+
+# Build-time arguments
+[build.args]
+  PORT = "8000"
+  ENVIRONMENT = "production"
+
+# Deployment strategy
+[deploy]
+  release_command = "python -m alembic upgrade head || true"
+  strategy = "canary"
+  wait_timeout = "300s"
+
+# Environment variables
+[env]
+  PORT = "8000"
+  ENVIRONMENT = "production"
+  DEBUG = "false"
+  ZERO_DATA_RETENTION = "true"
+  HUMAN_GATED_EVOLUTION = "true"
+
+# Services configuration
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  processes = ["app"]
+
+  # Concurrency limits
+  [services.concurrency]
+    type = "requests"
+    hard_limit = 1000
+    soft_limit = 800
+
+  # HTTP ports
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  # Health check configuration
+  [services.http_checks]
+    enabled = true
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    restart_limit = 3
+    timeout = 5s
+    tls_skip_verify = false
+
+# Health check for process monitoring
+[[checks]]
+  [checks.status]
+    type = "http"
+    port = 8000
+    method = "GET"
+    path = "/health"
+    interval = "10s"
+    timeout = "5s"
+
+# Metrics configuration
+[metrics]
+  port = 9090
+
+# Volume mounts (for persistent data if needed)
+[[mounts]]
+  source = "advocacy_data"
+  destination = "/data"
+  size_gb = 10
+
+# Scale configuration
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
+
+# Auto-scaling
+[auto_scaling]
+  enabled = true
+  min_machines = 1
+  max_machines = 3
+
+# Monitoring and observability
+[monitoring]
+  enabled = true
+
+# Browser rendering (optional, for advanced features)
+[experimental]
+  auto_rollback = true
+
+# Backup configuration
+[backup]
+  enabled = true
+  backup_region = "sin"
+  frequency_hours = 24

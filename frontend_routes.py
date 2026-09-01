@@ -259,7 +259,7 @@ async def get_info():
     return {
         "name": "Advocacy & Law Firm",
         "version": "1.0",
-        "domain": "www.advocacyalawfirm.in",
+        "domain": "www.advocacyalawfrim.in",
         "features": {
             "agents": 530,
             "legal_documents": "32.5M",
@@ -269,7 +269,7 @@ async def get_info():
         },
         "contact": {
             "phone": "+91 88000-00000",
-            "email": "hello@advocacyalawfirm.in",
-            "website": "https://www.advocacyalawfirm.in"
+            "email": "hello@advocacyalawfrim.in",
+            "website": "https://www.advocacyalawfrim.in/"
         }
     }

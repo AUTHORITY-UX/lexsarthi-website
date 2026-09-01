@@ -2059,4 +2059,5 @@ async def chat_interface():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 7860))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)from frontend_routes import router as frontend_router
+app.include_router(frontend_router)

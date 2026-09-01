@@ -489,11 +489,11 @@ For commercial licensing inquiries, contact: **legal@advocacyalawfrim.in**
 
 ## 🔗 Links
 
-- **Live:** https://upamnyu12-lex.hf.space
-- **Docs:** https://upamnyu12-lex.hf.space/docs
+- **Live:** https://www.advocacyalawfrim.in/
+- **Docs:** https://www.advocacyalawfrim.in/docs
 - **GitHub:** https://github.com/AUTHORITY-UX/lexsarthi-website
 - **Data:** https://huggingface.co/datasets/vaquill/open-india-law
-- **Domain:** https://www.advocacyalawfrim.in
+- **Domain:** https://www.advocacyalawfrim.in/
 
 ---
 
