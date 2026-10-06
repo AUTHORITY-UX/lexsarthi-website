@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Unknown Verdict</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/assets/design.css">
+<style>
+  .doc { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+  .doc h1 { font-size: 30px; font-weight: 600; margin: 0 0 8px; }
+  .doc .meta { font-size: 13px; color: var(--muted); margin-bottom: 40px; font-family: 'JetBrains Mono', monospace; }
+  .doc h2 { font-size: 17px; font-weight: 600; margin: 36px 0 12px; color: var(--accent); }
+  .doc h3 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; }
+  .doc p, .doc li { font-size: 14px; line-height: 1.75; color: var(--text); }
+  .doc p { margin: 0 0 14px; }
+  .doc ul, .doc ol { padding-left: 24px; margin: 0 0 18px; }
+  .doc li { margin-bottom: 6px; }
+  .doc strong { color: var(--text); font-weight: 600; }
+  .doc code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--gold); }
+  .doc table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
+  .doc th { text-align: left; padding: 10px 12px; background: var(--bg-secondary); color: var(--accent); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .doc td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-secondary); }
+  .doc .callout { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 18px 22px; margin: 20px 0; }
+  .doc .callout p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-header__brand" style="text-decoration:none;color:inherit;">
+    <span class="site-header__mark">✦</span>
+    <div>
+      <div class="site-header__name">Unknown Verdict</div>
+      <div class="site-header__tag">Sovereign Legal Intelligence</div>
+    </div>
+  </a>
+  <nav class="site-header__nav">
+    <a href="/search">Search</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+    <a href="/">Home</a>
+  </nav>
+</header>
+
+<main class="doc">
+  <h1>Privacy Policy</h1>
+  <div class="meta">Last updated: 25 September 2026 · Version 1.0</div>
+
+  <div class="callout">
+    <p><strong>Short version:</strong> Unknown Verdict is a retrieval engine. It does not profile you, does not track you across sessions, and does not use your queries to train any model. Query text is PII-redacted before it touches the audit log. The engine never calls an external LLM, so nothing you type leaves the infrastructure running this application.</p>
+  </div>
+
+  <h2>1. Who we are</h2>
+  <p>Unknown Verdict is operated by <strong>The Advocacy — A Law Firm</strong>, a law firm registered with the Bar Council of Delhi (Advocate Registration No. D-180-2017). The firm is the data fiduciary for the purposes of the Digital Personal Data Protection Act, 2023 ("DPDPA") and the data controller for the purposes of the EU General Data Protection Regulation ("GDPR"), where applicable.</p>
+  <p>Contact for privacy matters: <code>upmanyu@advocacyalawfrim.in</code></p>
+
+  <h2>2. What this application does with your data</h2>
+  <p>When you submit a query to the search interface:</p>
+  <ul>
+    <li>The query string is sent to the retrieval engine over HTTPS.</li>
+    <li>The engine searches a local full-text index built from public legal documents.</li>
+    <li>Matching chunks are returned with their source filename, page number, and a content hash.</li>
+    <li>The query string is <strong>redacted of personally identifiable information</strong> (Aadhaar, PAN, phone number, email address, CNR number, GSTIN, IFSC, and bank account number) before being written to the audit ledger.</li>
+  </ul>
+  <p>The engine does not call any external service. There is no OpenAI, no Anthropic, no Google, no third-party LLM. The only outbound network calls are none — the engine is offline by design.</p>
+
+  <h2>3. Data we collect</h2>
+  <table>
+    <tr><th>Category</th><th>What is collected</th><th>Purpose</th><th>Retention</th></tr>
+    <tr><td>Query text</td><td>Your search input, after PII redaction</td><td>Audit ledger for reproducibility</td><td>Retained in the hash-chained ledger until manually purged</td></tr>
+    <tr><td>Request metadata</td><td>Timestamp, request ID, strategy used, chunk count</td><td>Operational debugging, ledger integrity</td><td>Same as above</td></tr>
+    <tr><td>IP address</td><td>Not logged by the application</td><td>—</td><td>—</td></tr>
+    <tr><td>Cookies</td><td>None set by the retrieval interface</td><td>—</td><td>—</td></tr>
+    <tr><td>Analytics</td><td>None</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <h2>4. What we do not do</h2>
+  <ul>
+    <li>We do not sell or rent your data to any third party.</li>
+    <li>We do not share your queries with any external LLM provider.</li>
+    <li>We do not use your queries to train any model.</li>
+    <li>We do not use cookies, fingerprinting, or cross-site tracking.</li>
+    <li>We do not serve advertising.</li>
+    <li>We do not profile you for marketing or automated decision-making.</li>
+  </ul>
+
+  <h2>5. Legal basis for processing</h2>
+  <p>Under the DPDPA, we process query text on the basis of <strong>legitimate use</strong> (Section 7) — the operation of a retrieval tool that returns publicly available legal text. Redacted query strings are retained solely for audit and integrity purposes.</p>
+  <p>Under the GDPR, our legal basis is <strong>legitimate interest</strong> (Article 6(1)(f)) — providing a functional legal research tool with a verifiable audit trail.</p>
+
+  <h2>6. Your rights</h2>
+  <p>Under the DPDPA you have the right to:</p>
+  <ul>
+    <li><strong>Access</strong> the personal data we hold about you.</li>
+    <li><strong>Correct</strong> any inaccurate personal data.</li>
+    <li><strong>Erase</strong> your personal data, subject to any legal retention requirement.</li>
+    <li><strong>Grievance redressal</strong> — see Section 8 below.</li>
+    <li><strong>Nominate</strong> another individual to exercise your rights in the event of death or incapacity.</li>
+  </ul>
+  <p>Under the GDPR you additionally have the right to <strong>data portability</strong>, <strong>restriction of processing</strong>, and <strong>objection</strong>.</p>
+  <p>To exercise any of these rights, email <code>upmanyu@advocacyalawfrim.in</code>. We will respond within 30 days.</p>
+
+  <h2>7. Data security</h2>
+  <ul>
+    <li>All traffic to the retrieval engine uses HTTPS.</li>
+    <li>Query text is PII-redacted before it reaches the audit log.</li>
+    <li>The audit log is hash-chained; any tamper is detectable.</li>
+    <li>The retrieval engine runs on infrastructure controlled by us; no client data is processed outside that infrastructure.</li>
+  </ul>
+
+  <h2>8. Grievance Officer</h2>
+  <p>In accordance with Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, the following officer is designated:</p>
+  <ul>
+    <li><strong>Name:</strong> Upmanyu Kumar, Advocate</li>
+    <li><strong>Designation:</strong> Grievance Officer</li>
+    <li><strong>Email:</strong> <code>upmanyu@advocacyalawfrim.in</code></li>
+    <li><strong>Address:</strong> The Advocacy — A Law Firm, Delhi</li>
+  </ul>
+  <p>The Grievance Officer acknowledges complaints within 24 hours and resolves them within 15 days of receipt.</p>
+
+  <h2>9. Changes to this policy</h2>
+  <p>We will update this page whenever our data practices change. The "last updated" date at the top reflects the most recent revision. We will not change the substance of this policy without prominently notifying users.</p>
+
+  <h2>10. Jurisdiction</h2>
+  <p>This policy is governed by the laws of India. Any dispute arising under it is subject to the exclusive jurisdiction of the courts at Delhi.</p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div>
+      <div class="site-footer__brand">Unknown Verdict</div>
+      <p class="site-footer__blurb">A retrieval-first legal engine for Indian law.</p>
+    </div>
+    <div>
+      <div class="site-footer__h">Product</div>
+      <ul><li><a href="/search">Search</a></li><li><a href="/about">About</a></li></ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Legal</div>
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/data-policy">Data Policy</a></li>
+        <li><a href="/dpdpa">DPDPA Compliance</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Contact</div>
+      <ul><li><a href="/contact">Contact</a></li><li><a href="https://www.advocacyalawfrim.in">advocacyalawfrim.in</a></li>
+        <li><a href="tel:+919718665039">+91 97186 65039</a></li></ul>
+    </div>
+  </div>
+  <div class="site-footer__bottom">© 2026 Unknown Verdict · The Advocacy — A Law Firm (Reg. No. D-180-2017)</div>
+</footer>
+
+</body>
+</html>

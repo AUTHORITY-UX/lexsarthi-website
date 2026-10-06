@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search — Unknown Verdict</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/assets/design.css">
+<style>
+  .workspace { max-width: 1080px; margin: 0 auto; padding: 40px 24px 80px; }
+  .workspace__head { margin-bottom: 32px; }
+  .workspace__title { font-size: 28px; font-weight: 600; margin: 0 0 8px; }
+  .workspace__sub { color: var(--text-secondary); font-size: 14px; }
+
+  .searchbar {
+    display: flex; gap: 8px; margin-bottom: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 6px;
+  }
+  .searchbar:focus-within { border-color: var(--border-active); }
+  .searchbar input {
+    flex: 1; padding: 12px 16px; background: transparent; border: 0;
+    color: var(--text); font-size: 15px; font-family: inherit; outline: none;
+  }
+  .searchbar input::placeholder { color: var(--muted); }
+  .searchbar button {
+    padding: 12px 24px; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-weight: 600; font-size: 14px; border: 0;
+    border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .searchbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .chips button {
+    padding: 6px 12px; background: transparent;
+    border: 1px solid var(--border); border-radius: 999px;
+    color: var(--text-secondary); font-size: 12px;
+    font-family: 'JetBrains Mono', monospace; cursor: pointer;
+  }
+  .chips button:hover { border-color: var(--border-active); color: var(--accent); }
+
+  .status {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: var(--bg-secondary);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--text-secondary); margin-bottom: 24px;
+  }
+  .status__badge {
+    padding: 2px 8px; border-radius: 4px; font-size: 10px;
+    font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .status__badge--verbatim { background: rgba(16,185,129,0.15); color: var(--green); }
+  .status__badge--hybrid { background: rgba(245,197,66,0.15); color: var(--gold); }
+  .status__badge--error { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .status__badge--idle { background: var(--accent-dim); color: var(--accent); }
+
+  .citations { display: flex; flex-direction: column; gap: 16px; }
+  .cite {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px;
+  }
+  .cite__head {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: center; margin-bottom: 14px;
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .cite__tag {
+    padding: 3px 10px; background: var(--accent-dim);
+    border: 1px solid var(--border-active); border-radius: 4px;
+    color: var(--accent); font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500;
+  }
+  .cite__page {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold); font-size: 12px;
+  }
+  .cite__body {
+    white-space: pre-wrap; word-wrap: break-word;
+    font-size: 14px; line-height: 1.7; color: var(--text);
+  }
+
+  .empty {
+    text-align: center; padding: 60px 20px; color: var(--text-secondary);
+    background: var(--card); border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .empty__title { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .empty__hint { font-size: 13px; }
+
+  .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .raw {
+    margin-top: 24px; padding: 12px 16px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--text-secondary); max-height: 400px; overflow-y: auto;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-header__brand" style="text-decoration:none;color:inherit;">
+    <span class="site-header__mark">✦</span>
+    <div>
+      <div class="site-header__name">Unknown Verdict</div>
+      <div class="site-header__tag">Sovereign Legal Intelligence</div>
+    </div>
+  </a>
+  <nav class="site-header__nav">
+    <a href="/search" class="active">Search</a>
+    <a href="/about">About</a>
+    <a href="/api-docs.html">API</a>
+    <a href="/">Home</a>
+  </nav>
+</header>
+
+<main class="workspace">
+  <div class="workspace__head">
+    <h1 class="workspace__title">Retrieve verbatim law</h1>
+    <p class="workspace__sub">Every response is a direct quote from an indexed statute, with the source file and page number.</p>
+  </div>
+
+  <form class="searchbar" id="search-form">
+    <label for="q" class="visually-hidden">Query</label>
+    <input id="q" name="q" type="text" placeholder="Try: Section 8 DPDPA" autocomplete="off" autofocus spellcheck="false">
+    <button type="submit" id="submit-btn">Retrieve</button>
+  </form>
+
+  <div class="chips">
+    <button type="button" data-q="Section 8 DPDPA">Section 8 DPDPA</button>
+    <button type="button" data-q="Article 21 constitution">Article 21 constitution</button>
+    <button type="button" data-q="companies act director liability">companies act director liability</button>
+    <button type="button" data-q="evidence act burden of proof">evidence act burden of proof</button>
+    <button type="button" data-q="data protection board">data protection board</button>
+  </div>
+
+  <div class="status" id="status" hidden>
+    <span class="status__badge status__badge--idle" id="status-badge">Idle</span>
+    <span id="status-text"></span>
+  </div>
+
+  <div id="results">
+    <div class="empty">
+      <div class="empty__title">Ready when you are.</div>
+      <div class="empty__hint">Type a query above, or click one of the examples.</div>
+    </div>
+  </div>
+
+</main>
+
+<script src="/static/assets/api.js"></script>
+<script>
+(function() {
+  var form = document.getElementById('search-form');
+  var input = document.getElementById('q');
+  var btn = document.getElementById('submit-btn');
+  var results = document.getElementById('results');
+  var status = document.getElementById('status');
+  var badge = document.getElementById('status-badge');
+  var statusText = document.getElementById('status-text');
+
+  // Prefill from URL ?q=
+  var urlQ = new URLSearchParams(location.search).get('q');
+  if (urlQ) { input.value = urlQ; runSearch(urlQ); }
+
+  // Chips
+  document.querySelectorAll('.chips button').forEach(function(c) {
+    c.addEventListener('click', function() {
+      input.value = c.dataset.q;
+      runSearch(c.dataset.q);
+    });
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var q = input.value.trim();
+    if (q) runSearch(q);
+  });
+
+  function setStatus(kind, text) {
+    status.hidden = false;
+    badge.className = 'status__badge status__badge--' + kind;
+    badge.textContent = kind === 'verbatim' ? 'Verbatim'
+                      : kind === 'hybrid'   ? 'Hybrid'
+                      : kind === 'error'    ? 'Error'
+                      : 'Idle';
+    statusText.textContent = text;
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function parseSources(responseText) {
+    // Split on "---" separator, then parse "[SOURCE N: file.pdf | Page N]" headers
+    var blocks = responseText.split(/\n\s*---\s*\n/);
+    var sources = [];
+    var citeRe = /^\[SOURCE\s+(\d+):\s*(.+?)\s*\|\s*Page\s+(\d+)\]\s*\n([\s\S]*)$/i;
+    blocks.forEach(function(b) {
+      var m = b.match(citeRe);
+      if (m) {
+        sources.push({
+          n: parseInt(m[1], 10),
+          file: m[2].trim(),
+          page: parseInt(m[3], 10),
+          text: m[4].trim(),
+        });
+      }
+    });
+    return sources;
+  }
+
+  async function runSearch(query) {
+    btn.disabled = true;
+    btn.textContent = 'Searching…';
+    setStatus('idle', 'Contacting retrieval engine…');
+    results.innerHTML = '<div class="empty"><div class="loader"></div><div class="empty__hint" style="margin-top:12px">Retrieving…</div></div>';
+
+    var res = await API.post('/api/chat', { message: query, service: 'general' });
+
+    btn.disabled = false;
+    btn.textContent = 'Retrieve';
+
+    if (!res.ok) {
+      setStatus('error', 'Request failed: ' + (res.error || 'unknown'));
+      results.innerHTML = '<div class="empty"><div class="empty__title">Could not reach the retrieval engine.</div><div class="empty__hint">' + escapeHtml(res.error || '') + '</div></div>';
+      return;
+    }
+
+    var data = res.data;
+    var text = data.response || '';
+    var model = data.model || 'unknown';
+    var isVerbatim = model.indexOf('FTS5') >= 0 && model.indexOf('+') < 0;
+
+    setStatus(isVerbatim ? 'verbatim' : 'hybrid',
+              'Model: ' + model + ' · ' + (data.agents_used ? data.agents_used.length : 0) + ' agents · ' + res.ms + 'ms');
+
+    var sources = parseSources(text);
+    if (!sources.length) {
+      // No parseable sources — show the raw response
+      results.innerHTML = '<div class="cite"><div class="cite__body">' + escapeHtml(text) + '</div></div>';
+      return;
+    }
+
+    var html = '<div class="citations">';
+    sources.forEach(function(s) {
+      html += '<div class="cite">';
+      html += '<div class="cite__head">';
+      html += '<span class="cite__tag">' + escapeHtml(s.file) + '</span>';
+      html += '<span class="cite__page">p.' + s.page + '</span>';
+      html += '<span style="color:var(--muted)">·</span>';
+      html += '<span>source ' + s.n + ' of ' + sources.length + '</span>';
+      html += '</div>';
+      html += '<div class="cite__body">' + escapeHtml(s.text) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    html += '<details style="margin-top:24px"><summary style="cursor:pointer;color:var(--text-secondary);font-size:13px">Raw response JSON</summary><div class="raw">' + escapeHtml(JSON.stringify(data, null, 2)) + '</div></details>';
+
+    results.innerHTML = html;
+
+    // Update URL without reload
+    try { history.replaceState(null, '', '/search?q=' + encodeURIComponent(query)); } catch(e) {}
+  }
+})();
+</script>
+
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div>
+      <div class="site-footer__brand">Unknown Verdict</div>
+      <p class="site-footer__blurb">A retrieval-first legal engine for Indian law.</p>
+    </div>
+    <div>
+      <div class="site-footer__h">Product</div>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/api-docs.html">API Docs</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Legal</div>
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/data-policy">Data Policy</a></li>
+        <li><a href="/dpdpa">DPDPA Compliance</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Contact</div>
+      <ul>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="mailto:upmanyu@advocacyalawfrim.in">upmanyu@advocacyalawfrim.in</a></li>
+        <li><a href="tel:+919718665039">+91 97186 65039</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="site-footer__bottom">
+    © 2026 Unknown Verdict · The Advocacy — A Law Firm (Reg. No. D-180-2017, Bar Council of Delhi)
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DPDPA Compliance Statement — Unknown Verdict</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/assets/design.css">
+<style>
+  .doc { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+  .doc h1 { font-size: 30px; font-weight: 600; margin: 0 0 8px; }
+  .doc .meta { font-size: 13px; color: var(--muted); margin-bottom: 40px; font-family: 'JetBrains Mono', monospace; }
+  .doc h2 { font-size: 17px; font-weight: 600; margin: 36px 0 12px; color: var(--accent); }
+  .doc p, .doc li { font-size: 14px; line-height: 1.75; color: var(--text); }
+  .doc p { margin: 0 0 14px; }
+  .doc ul { padding-left: 24px; margin: 0 0 18px; }
+  .doc li { margin-bottom: 6px; }
+  .doc code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--gold); }
+  .doc table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
+  .doc th { text-align: left; padding: 10px 12px; background: var(--bg-secondary); color: var(--accent); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .doc td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-secondary); }
+  .doc .callout { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: var(--radius-sm); padding: 18px 22px; margin: 20px 0; }
+  .doc .callout p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-header__brand" style="text-decoration:none;color:inherit;">
+    <span class="site-header__mark">✦</span>
+    <div>
+      <div class="site-header__name">Unknown Verdict</div>
+      <div class="site-header__tag">Sovereign Legal Intelligence</div>
+    </div>
+  </a>
+  <nav class="site-header__nav">
+    <a href="/search">Search</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+    <a href="/">Home</a>
+  </nav>
+</header>
+
+<main class="doc">
+  <h1>DPDPA Compliance Statement</h1>
+  <div class="meta">Digital Personal Data Protection Act, 2023 · Last updated: 25 September 2026</div>
+
+  <div class="callout">
+    <p><strong>Summary:</strong> Unknown Verdict is a data fiduciary under the Digital Personal Data Protection Act, 2023. This statement describes how the platform complies with each material obligation of the Act. Where the platform has no exposure (because it collects no personal data), that is stated explicitly.</p>
+  </div>
+
+  <h2>1. Role under the DPDPA</h2>
+  <p>Under the DPDPA, the operator — <strong>The Advocacy — A Law Firm</strong> — is a <strong>Data Fiduciary</strong> in respect of any personal data it determines the purpose and means of processing. In practice, the retrieval interface collects no personal data of users, so the fiduciary obligations largely apply only to the redacted audit ledger.</p>
+
+  <h2>2. Notice (Section 5)</h2>
+  <p>The DPDPA requires a Data Fiduciary to give the Data Principal a notice describing the personal data sought, the purpose of processing, and the manner in which rights may be exercised. This Privacy Policy and the present statement together constitute that notice. They are accessible at all times from every page of the service.</p>
+
+  <h2>3. Consent (Section 6)</h2>
+  <p>The DPDPA requires consent to be free, specific, informed, unconditional, and unambiguous, with a clear affirmative action. Unknown Verdict does <strong>not</strong> seek consent for processing of user personal data, because it does <strong>not</strong> process user personal data. Query text is PII-redacted before any persistence, and the original text is discarded after the response is generated. No consent is required because no personal data is being processed.</p>
+
+  <h2>4. Legitimate uses (Section 7)</h2>
+  <p>To the extent that the redacted audit ledger is treated as containing any residual personal data, the processing falls within the "legitimate use" grounds in Section 7 — specifically, the operation of a legal research tool and the maintenance of an audit trail for integrity and accountability.</p>
+
+  <h2>5. General obligations of a Data Fiduciary (Section 8)</h2>
+  <table>
+    <tr><th>Obligation</th><th>How Unknown Verdict complies</th></tr>
+    <tr><td>Ensure accuracy and completeness of personal data</td><td>The platform stores no user personal data. The audit ledger stores only redacted queries.</td></tr>
+    <tr><td>Implement appropriate technical and organisational measures</td><td>Hash-chained audit ledger; PII redaction at the application layer; HTTPS in transit; no external LLM calls.</td></tr>
+    <tr><td>Take reasonable security safeguards against breach</td><td>Hash-chaining detects any tamper. No user PII is stored to be breached.</td></tr>
+    <tr><td>Notify the Board and affected Data Principals of a personal data breach</td><td>Because no personal data is held, breach of personal data cannot occur on the query path. If the operator becomes aware of a breach of the audit ledger, the operator will notify the Board as required.</td></tr>
+    <tr><td>Erase personal data upon withdrawal of consent</td><td>No consent-based processing occurs. Deletion requests for ledger entries are honoured — see Data Policy §6.</td></tr>
+    <tr><td>Appoint a Data Protection Officer (if Significant Data Fiduciary)</td><td>Unknown Verdict has designated a Grievance Officer and Data Protection contact. Whether the platform qualifies as a Significant Data Fiduciary will be reassessed periodically in light of the Central Government's notification.</td></tr>
+  </table>
+
+  <h2>6. Rights of Data Principals (Sections 11–14)</h2>
+  <ul>
+    <li><strong>Right to access information (S. 11):</strong> Users may request a summary of any personal data held. Because none is held, responses will typically state that no personal data exists. Contact: <code>upmanyu@advocacyalawfrim.in</code>.</li>
+    <li><strong>Right to correction and erasure (S. 12):</strong> Users may request correction or erasure of personal data. Because none is held, the request will be recorded and the absence of data confirmed.</li>
+    <li><strong>Right of grievance redressal (S. 13):</strong> A Grievance Officer has been designated — see §8 below.</li>
+    <li><strong>Right to nominate (S. 14):</strong> Users may nominate another individual to exercise their rights in the event of death or incapacity, by email.</li>
+  </ul>
+
+  <h2>7. Cross-border transfer</h2>
+  <p>The DPDPA permits transfer of personal data outside India subject to restrictions the Central Government may notify. Unknown Verdict does <strong>not</strong> transfer personal data outside India because it does not hold personal data. Where the platform is deployed on infrastructure outside India (e.g. by a client), the client assumes responsibility for that deployment.</p>
+
+  <h2>8. Grievance Officer</h2>
+  <ul>
+    <li><strong>Name:</strong> Upmanyu Kumar, Advocate</li>
+    <li><strong>Designation:</strong> Grievance Officer</li>
+    <li><strong>Email:</strong> <code>upmanyu@advocacyalawfrim.in</code></li>
+    <li><strong>Address:</strong> The Advocacy — A Law Firm, Delhi</li>
+    <li><strong>Response time:</strong> acknowledgement within 24 hours, resolution within 15 days</li>
+  </ul>
+
+  <h2>9. Data Protection Impact Assessment</h2>
+  <p>Because Unknown Verdict does not process user personal data, a full DPIA under Section 10 is not triggered. The operator will conduct a DPIA if the platform's processing operations change in a way that materially affects data protection risk — for example, if user accounts, payment processing, or personal data uploads are introduced.</p>
+
+  <h2>10. Contact</h2>
+  <p>Data Protection contact: <code>upmanyu@advocacyalawfrim.in</code><br>
+  Operator: The Advocacy — A Law Firm, Advocate Registration No. D-180-2017, Bar Council of Delhi</p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div>
+      <div class="site-footer__brand">Unknown Verdict</div>
+      <p class="site-footer__blurb">A retrieval-first legal engine for Indian law.</p>
+    </div>
+    <div>
+      <div class="site-footer__h">Product</div>
+      <ul><li><a href="/search">Search</a></li><li><a href="/about">About</a></li></ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Legal</div>
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/data-policy">Data Policy</a></li>
+        <li><a href="/dpdpa">DPDPA Compliance</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Contact</div>
+      <ul><li><a href="/contact">Contact</a></li><li><a href="https://www.advocacyalawfrim.in">advocacyalawfrim.in</a></li>
+        <li><a href="tel:+919718665039">+91 97186 65039</a></li></ul>
+    </div>
+  </div>
+  <div class="site-footer__bottom">© 2026 Unknown Verdict · The Advocacy — A Law Firm (Reg. No. D-180-2017)</div>
+</footer>
+
+</body>
+</html>

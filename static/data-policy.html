@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data Policy — Unknown Verdict</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/assets/design.css">
+<style>
+  .doc { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+  .doc h1 { font-size: 30px; font-weight: 600; margin: 0 0 8px; }
+  .doc .meta { font-size: 13px; color: var(--muted); margin-bottom: 40px; font-family: 'JetBrains Mono', monospace; }
+  .doc h2 { font-size: 17px; font-weight: 600; margin: 36px 0 12px; color: var(--accent); }
+  .doc p, .doc li { font-size: 14px; line-height: 1.75; color: var(--text); }
+  .doc p { margin: 0 0 14px; }
+  .doc ul { padding-left: 24px; margin: 0 0 18px; }
+  .doc li { margin-bottom: 6px; }
+  .doc code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--gold); }
+  .doc table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
+  .doc th { text-align: left; padding: 10px 12px; background: var(--bg-secondary); color: var(--accent); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .doc td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-secondary); }
+  .doc .callout { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 18px 22px; margin: 20px 0; }
+  .doc .callout p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-header__brand" style="text-decoration:none;color:inherit;">
+    <span class="site-header__mark">✦</span>
+    <div>
+      <div class="site-header__name">Unknown Verdict</div>
+      <div class="site-header__tag">Sovereign Legal Intelligence</div>
+    </div>
+  </a>
+  <nav class="site-header__nav">
+    <a href="/search">Search</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+    <a href="/">Home</a>
+  </nav>
+</header>
+
+<main class="doc">
+  <h1>Data Retention & Processing Policy</h1>
+  <div class="meta">Last updated: 25 September 2026 · Version 1.0</div>
+
+  <div class="callout">
+    <p><strong>Principle:</strong> Unknown Verdict is built on the doctrine of data minimisation. The retrieval engine processes query text in memory and does not persist it beyond the PII-redacted audit entry. There is no user account system. There is no session tracking. There is no query history.</p>
+  </div>
+
+  <h2>1. What data is processed</h2>
+  <table>
+    <tr><th>Data</th><th>Where it lives</th><th>How long</th></tr>
+    <tr><td>Query text (original)</td><td>Process memory only</td><td>Milliseconds — discarded after response</td></tr>
+    <tr><td>Query text (PII-redacted)</td><td>Hash-chained audit ledger (JSONL file)</td><td>Until manually purged</td></tr>
+    <tr><td>Request ID</td><td>Audit ledger + response body</td><td>Same as above</td></tr>
+    <tr><td>Retrieval strategy, chunk count</td><td>Audit ledger</td><td>Same as above</td></tr>
+    <tr><td>Retrieved chunk text</td><td>Not stored</td><td>—</td></tr>
+    <tr><td>Response payload</td><td>Not stored</td><td>—</td></tr>
+    <tr><td>Client IP address</td><td>Not logged by application</td><td>—</td></tr>
+    <tr><td>Cookies, session IDs</td><td>None</td><td>—</td></tr>
+    <tr><td>Analytics, telemetry</td><td>None</td><td>—</td></tr>
+  </table>
+
+  <h2>2. PII redaction</h2>
+  <p>Before any query text is written to the audit ledger, it passes through a redaction module that detects and removes the following Indian personal identifiers:</p>
+  <ul>
+    <li><strong>Aadhaar number</strong> — 12 digits, optionally grouped</li>
+    <li><strong>PAN</strong> — 5 letters, 4 digits, 1 letter</li>
+    <li><strong>GSTIN</strong> — 15-character Goods & Services Tax Identification Number</li>
+    <li><strong>IFSC</strong> — 11-character bank branch code</li>
+    <li><strong>CNR</strong> — Case Number Record, 16-character alphanumeric</li>
+    <li><strong>Email address</strong> — standard format</li>
+    <li><strong>Phone number</strong> — Indian mobile formats with or without country code</li>
+    <li><strong>Bank account number</strong> — 10 to 18 digits when preceded by a context keyword</li>
+  </ul>
+  <p>Redacted fields are replaced with the token <code>[REDACTED:TYPE]</code>. The original value is not retained anywhere.</p>
+
+  <h2>3. Audit ledger</h2>
+  <p>Every retrieval produces one entry in the audit ledger. Each entry contains:</p>
+  <ul>
+    <li>A sequential number</li>
+    <li>A UTC timestamp</li>
+    <li>The event type (<code>retrieve</code>, <code>error</code>, etc.)</li>
+    <li>The redacted query and retrieval metadata</li>
+    <li>The hash of the previous entry (<code>prev_hash</code>)</li>
+    <li>The hash of this entry (<code>hash</code>)</li>
+  </ul>
+  <p>The ledger is <strong>hash-chained</strong>: each entry's <code>prev_hash</code> is the SHA-256 of the previous entry's canonical JSON. Any modification to any historical entry breaks the chain and is detectable by the <code>/admin/audit/verify</code> endpoint.</p>
+
+  <h2>4. Why we retain the redacted ledger</h2>
+  <p>The ledger is retained for two purposes:</p>
+  <ul>
+    <li><strong>Reproducibility.</strong> If a user reports that a specific retrieval returned an unexpected result, the ledger allows the operator to reconstruct what happened without needing to reproduce the query on live data.</li>
+    <li><strong>Compliance.</strong> Regulators may ask whether the platform can demonstrate that it processes queries without retaining PII. The hash-chain is the answer: it proves the log has not been tampered with, and the entries themselves are PII-free.</li>
+  </ul>
+
+  <h2>5. What we do not retain</h2>
+  <ul>
+    <li>The original (un-redacted) query text — discarded after the response is generated.</li>
+    <li>The retrieved chunk text — returned to the user but not written to disk.</li>
+    <li>The full response payload — not stored.</li>
+    <li>Your IP address — not logged at the application layer.</li>
+    <li>Your browser fingerprint, screen size, language preferences — not collected.</li>
+    <li>Cookies — none set by the retrieval interface.</li>
+  </ul>
+
+  <h2>6. Deletion requests</h2>
+  <p>If you wish to have your redacted query entries removed from the audit ledger, email <code>upmanyu@advocacyalawfrim.in</code> with the request ID (visible in the response payload of the query in question). We will remove the entry and re-chain the ledger to preserve integrity. Response time: within 30 days.</p>
+  <p>Note: because the ledger entries do not contain PII, a deletion request will typically not reveal any personal information. The request is honoured as a matter of policy, not as a technical necessity.</p>
+
+  <h2>7. On-premise deployments</h2>
+  <p>Unknown Verdict is designed to be runnable on client-controlled infrastructure. When deployed on-premise, the audit ledger is written to the client's own storage. The operator of Unknown Verdict (The Advocacy — A Law Firm) has no access to that ledger.</p>
+
+  <h2>8. Contact</h2>
+  <p>Data Protection contact: <code>upmanyu@advocacyalawfrim.in</code><br>
+  Grievance Officer: Upmanyu Kumar, Advocate — <code>upmanyu@advocacyalawfrim.in</code></p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div>
+      <div class="site-footer__brand">Unknown Verdict</div>
+      <p class="site-footer__blurb">A retrieval-first legal engine for Indian law.</p>
+    </div>
+    <div>
+      <div class="site-footer__h">Product</div>
+      <ul><li><a href="/search">Search</a></li><li><a href="/about">About</a></li></ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Legal</div>
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/data-policy">Data Policy</a></li>
+        <li><a href="/dpdpa">DPDPA Compliance</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Contact</div>
+      <ul><li><a href="/contact">Contact</a></li><li><a href="https://www.advocacyalawfrim.in">advocacyalawfrim.in</a></li>
+        <li><a href="tel:+919718665039">+91 97186 65039</a></li></ul>
+    </div>
+  </div>
+  <div class="site-footer__bottom">© 2026 Unknown Verdict · The Advocacy — A Law Firm (Reg. No. D-180-2017)</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About — Unknown Verdict</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/assets/design.css">
+<style>
+  .doc { max-width: 720px; margin: 0 auto; padding: 56px 24px 80px; }
+  .doc h1 { font-size: 32px; font-weight: 600; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .doc .lede { font-size: 17px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 40px; }
+  .doc h2 { font-size: 18px; font-weight: 600; margin: 40px 0 12px; color: var(--accent); }
+  .doc h3 { font-size: 15px; font-weight: 600; margin: 24px 0 8px; }
+  .doc p { font-size: 15px; line-height: 1.75; color: var(--text); margin: 0 0 16px; }
+  .doc ul { padding-left: 24px; margin: 0 0 20px; }
+  .doc li { font-size: 15px; line-height: 1.75; color: var(--text); margin-bottom: 6px; }
+  .doc strong { color: var(--accent); font-weight: 500; }
+  .doc code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--gold); }
+  .callout {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm); padding: 20px 24px; margin: 24px 0;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-header__brand" style="text-decoration:none;color:inherit;">
+    <span class="site-header__mark">✦</span>
+    <div>
+      <div class="site-header__name">Unknown Verdict</div>
+      <div class="site-header__tag">Sovereign Legal Intelligence</div>
+    </div>
+  </a>
+  <nav class="site-header__nav">
+    <a href="/search">Search</a>
+    <a href="/about" class="active">About</a>
+    <a href="/api-docs.html">API</a>
+    <a href="/">Home</a>
+  </nav>
+</header>
+
+<main class="doc">
+  <h1>About Unknown Verdict</h1>
+  <p class="lede">A retrieval-first legal engine for Indian law. Verbatim statutory text, cited to the page. No generation. No advice. No hallucination.</p>
+
+  <h2>What it is</h2>
+  <p>Unknown Verdict indexes official Indian legal documents — statutes, rules, and forms — into a full-text search engine. When you ask a question, it returns the <strong>exact text</strong> of the relevant provisions, with the source filename and the page number from the original PDF. Nothing is paraphrased. Nothing is summarised. Nothing is generated.</p>
+  <p>The engine does not use a large language model in the retrieval path. There is no <em>completion</em>. There is no <em>prompt</em>. There is only a search index and a structured match against section labels, source documents, and text tokens.</p>
+
+  <h2>Why retrieval-only</h2>
+  <p>Every legal AI product that generates prose will, eventually, produce a fabricated citation. This has already happened — courts in the United States have sanctioned lawyers for filing briefs containing cases invented by an LLM. Indian courts will follow.</p>
+  <p>The problem is structural: a generative model answers from <em>probability</em>, not from <em>source</em>. Even with retrieval-augmented generation, the model is free to reformulate, paraphrase, or extend. Any of those can become a misquote.</p>
+  <p>Retrieval-only removes that risk at the architecture level. If the text is not in the index, the engine returns nothing. It cannot invent.</p>
+
+  <div class="callout">
+    <p><strong>Design principle:</strong> the engine is a mirror, not an author. What it shows you is what the statute says. Nothing more, nothing less.</p>
+  </div>
+
+  <h2>Design principles</h2>
+  <ul>
+    <li><strong>Verbatim only.</strong> Every response is a direct quote from an indexed source.</li>
+    <li><strong>Cited to the page.</strong> Every chunk carries its source filename and page number.</li>
+    <li><strong>Zero hallucination.</strong> The engine has no capacity to invent a section, a case, or a rule.</li>
+    <li><strong>Offline-capable.</strong> The index runs locally. No external API is called at query time.</li>
+    <li><strong>No data retention.</strong> Query text is redacted of PII before logging. Nothing is stored on the query path.</li>
+    <li><strong>Auditable.</strong> Every retrieval is written to a hash-chained audit ledger. Any tamper breaks the chain.</li>
+  </ul>
+
+  <h2>Corpus</h2>
+  <p>As of the current index, the corpus contains <strong>12 source documents</strong> and <strong>7,358 indexed chunks</strong>, drawn from the official gazette publications of the Government of India:</p>
+  <ul>
+    <li>Digital Personal Data Protection Act, 2023 (DPDPA)</li>
+    <li>Bharatiya Nagarik Suraksha Sanhita, 2023</li>
+    <li>The Indian Contract Act, 1872</li>
+    <li>The Indian Evidence Act, 1872</li>
+    <li>The Companies Act, 2013</li>
+    <li>The Constitution of India</li>
+    <li>Data Act (EU), Data Broker Registration Act</li>
+    <li>Draft AI Bill</li>
+    <li>Registration and settlement agreement forms</li>
+  </ul>
+
+  <h2>Who it is for</h2>
+  <ul>
+    <li><strong>Lawyers</strong> who need the exact text of a provision, cited, without a browser in the way.</li>
+    <li><strong>In-house counsel</strong> who need a private, offline tool for client-sensitive research.</li>
+    <li><strong>Compliance officers</strong> who need to reference statutes to the section level.</li>
+    <li><strong>Journalists and researchers</strong> who need to verify a claim against the primary source.</li>
+  </ul>
+
+  <h2>Who it is not for</h2>
+  <ul>
+    <li>Anyone seeking legal advice. The engine does not give it.</li>
+    <li>Anyone seeking an opinion on what the law <em>should</em> be. The engine only shows what it <em>is</em>.</li>
+    <li>Anyone expecting a chatbot. There is no conversation, only retrieval.</li>
+  </ul>
+
+  <h2>Built under</h2>
+  <p>The Advocacy — A Law Firm<br>Advocate Registration No. <strong>D-180-2017</strong> · Bar Council of Delhi<br><a href="https://www.advocacyalawfrim.in">www.advocacyalawfrim.in</a><br><a href="mailto:upmanyu@advocacyalawfrim.in">upmanyu@advocacyalawfrim.in</a> · <a href="tel:+919718665039">+91 97186 65039</a></p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div>
+      <div class="site-footer__brand">Unknown Verdict</div>
+      <p class="site-footer__blurb">A retrieval-first legal engine for Indian law.</p>
+    </div>
+    <div>
+      <div class="site-footer__h">Product</div>
+      <ul>
+        <li><a href="/search">Search</a></li>
+        <li><a href="/api-docs.html">API Docs</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Legal</div>
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/data-policy">Data Policy</a></li>
+        <li><a href="/dpdpa">DPDPA Compliance</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="site-footer__h">Contact</div>
+      <ul>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="https://www.advocacyalawfrim.in">advocacyalawfrim.in</a></li>
+        <li><a href="tel:+919718665039">+91 97186 65039</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="site-footer__bottom">
+    © 2026 Unknown Verdict · The Advocacy — A Law Firm (Reg. No. D-180-2017, Bar Council of Delhi)
+  </div>
+</footer>
+
+</body>
+</html>
