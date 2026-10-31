@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The AI Graveyard: Vendor Collapse Liability Framework | The Advocacy — A Law Firm</title>
+<style>
+:root{
+  --bg:#faf8f3; --ink:#1d2433; --mute:#5a6275; --line:#d9d5c8; --gold:#b8892b;
+  --tealbg:#e3f3ee; --teal:#1f8a78; --bluebg:#e4eefb; --blue:#2c68c4; --purbg:#eee8f9; --pur:#6b4bb8; --card:#ffffffcc;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px)
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161f; --ink:#eceff6; --mute:#a3abbd; --line:#2d3445; --gold:#e0b45a;
+    --tealbg:#143029; --teal:#58d1b8; --bluebg:#16253d; --blue:#82b0f5; --purbg:#241d3a; --pur:#b79dfa; --card:#1a2030cc
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161f; --ink:#eceff6; --mute:#a3abbd; --line:#2d3445; --gold:#e0b45a;
+  --tealbg:#143029; --teal:#58d1b8; --bluebg:#16253d; --blue:#82b0f5; --purbg:#241d3a; --pur:#b79dfa; --card:#1a2030cc
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 16px 30px}
+.org{text-align:center;font-size:12px;letter-spacing:.14em;color:var(--mute);margin:0}
+.rule{width:64px;height:2px;background:var(--gold);margin:8px auto 14px}
+h1{font:600 clamp(26px,5vw,42px)/1.15 Georgia,"Times New Roman",serif;text-align:center;margin:0 0 8px}
+.sub{text-align:center;color:var(--mute);max-width:640px;margin:0 auto 22px}
+.map{display:grid;grid-template-columns:1fr;gap:12px}
+.hub{display:flex;justify-content:center;order:-1}
+.hub svg{width:min(300px,78vw);height:auto}
+.col{display:grid;gap:12px;align-content:space-between}
+.card{border-radius:14px;padding:13px 14px;border:1px solid var(--line);border-left-width:5px}
+.card h3{margin:0 0 4px;font-size:14px;letter-spacing:.02em}
+.card p{margin:0;font-size:13.5px;color:var(--ink)}
+.card b.big{display:block;font:600 22px/1.1 Georgia,serif;margin-bottom:3px}
+.t{background:var(--tealbg);border-left-color:var(--teal)}.t h3,.t b.big{color:var(--teal)}
+.b{background:var(--bluebg);border-left-color:var(--blue)}.b h3,.b b.big{color:var(--blue)}
+.p{background:var(--purbg);border-left-color:var(--pur)}.p h3,.p b.big{color:var(--pur)}
+@media(min-width:860px){.map{grid-template-columns:1fr 320px 1fr;align-items:stretch}.hub{order:0;align-items:center}}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:24px 0 8px}
+@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{border-top:2px solid var(--gold);padding-top:8px}
+.stat b{display:block;font:600 28px/1.1 Georgia,serif}
+.stat span{font-size:12.5px;color:var(--mute)}
+h2{font:600 20px/1.2 Georgia,serif;margin:28px 0 10px}
+.reg{display:grid;gap:12px}
+@media(min-width:760px){.reg{grid-template-columns:repeat(3,1fr)}}
+.reg section{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card)}
+.reg h4{margin:0 0 6px;font-size:13.5px}
+.reg ul{margin:0;padding-left:16px;font-size:13px;color:var(--mute)}
+.reg li{margin:2px 0}.reg li b{color:var(--ink);font-weight:600}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:104px 1fr 56px;gap:8px;align-items:center;font-size:13px}
+.bar i{display:block;height:12px;border-radius:6px;background:var(--blue)}
+.bar.hot i{background:#c2452f}
+.law{display:grid;gap:10px}
+@media(min-width:760px){.law{grid-template-columns:1fr 1fr}}
+.law div{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card);font-size:13.5px}
+.law h4{margin:0 0 4px;font-size:14px}
+ol.ten{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+@media(min-width:760px){ol.ten{grid-template-columns:1fr 1fr}}
+ol.ten li{border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;background:var(--card)}
+ol.ten li b{display:block;font-size:12.5px;color:var(--gold);letter-spacing:.03em}
+.concl{margin-top:18px;border-radius:14px;padding:14px 16px;background:var(--tealbg);border:1px solid var(--teal)}
+.concl h4{margin:0 0 4px;color:var(--teal)}.concl p{margin:0;font-size:13.5px}
+.firm{margin-top:26px;border-top:2px solid var(--gold);padding-top:16px}
+.firm h2{margin:0 0 2px}
+.firm .tag{color:var(--mute);margin:0 0 10px;font-size:13.5px}
+.fg{display:grid;gap:12px}
+@media(min-width:760px){.fg{grid-template-columns:1.1fr 1fr 1fr}}
+.fg div{font-size:13.5px}
+.fg h5{margin:0 0 4px;font-size:12.5px;color:var(--gold);letter-spacing:.06em}
+.fg p{margin:0 0 3px}
+a{color:var(--blue);word-break:break-all}
+.note{margin-top:16px;font-size:11.5px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="org">THE ADVOCACY — A LAW FIRM · EXECUTIVE LEGAL BRIEFING</p>
+<div class="rule"></div>
+<h1>The AI Graveyard: Vendor Collapse Liability Framework</h1>
+<p class="sub">Fifteen casualties between 2022 and 2026, eight in 2026 alone. When your AI vendor fails, who answers for your data?</p>
+
+<div class="map">
+  <div class="col">
+    <div class="card t"><h3>DIVERSE EXITS, IDENTICAL EXPOSURE</h3><p>Court bankruptcy 33%, private wind-downs 47%, solvent tier-1 discontinuations 20%. Whatever the exit, your data, logic and privilege are exposed.</p></div>
+    <div class="card b"><h3>ABBREVIATED EXTRACTION WINDOWS</h3><p>Median notice about 30 days, as short as 7 (Huxe). Without a pre-tested export protocol, loss is unrecoverable.</p></div>
+    <div class="card p"><h3>DATA ALIENATION VIA ASSET TRANSFER</h3><p>Babylon to eMed, Olive to Waystar, Character.AI via a Section 363 sale: data passes to successors you never vetted.</p></div>
+  </div>
+
+  <div class="hub">
+    <svg viewBox="0 0 300 300" role="img" aria-label="AI vendor collapse liability: who answers when your AI vendor fails?">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f8a78"/><stop offset=".5" stop-color="#2c68c4"/><stop offset="1" stop-color="#6b4bb8"/></linearGradient></defs>
+      <circle cx="150" cy="150" r="142" fill="none" stroke="url(#g)" stroke-width="7" opacity=".85"/>
+      <circle cx="150" cy="150" r="124" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="3 6" opacity=".7"/>
+      <circle cx="150" cy="150" r="108" fill="none" stroke="url(#g)" stroke-width="9" opacity=".55"/>
+      <circle cx="150" cy="150" r="90" fill="var(--bg)" stroke="var(--gold)" stroke-width="1.5"/>
+      <path d="M150 88l4 9 9 4-9 4-4 9-4-9-9-4 9-4z" fill="var(--gold)"/>
+      <text x="150" y="136" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="19" fill="var(--ink)">AI VENDOR</text>
+      <text x="150" y="158" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="19" fill="var(--ink)">COLLAPSE</text>
+      <text x="150" y="182" text-anchor="middle" font-size="11" fill="var(--mute)">Who answers when</text>
+      <text x="150" y="196" text-anchor="middle" font-size="11" fill="var(--mute)">your vendor fails?</text>
+    </svg>
+  </div>
+
+  <div class="col">
+    <div class="card b"><h3>CAPITAL IS NOT TENURE</h3><p>Babylon $4.2B, Olive $4B, Builder.ai $1.5B peak valuations. Prestige and backers can hide brittle balance sheets.</p></div>
+    <div class="card t"><h3>NON-DELEGABLE DPDPA DUTY</h3><p>Section 8(1): the Data Fiduciary stays responsible for processors. Section 8(5) safeguards and Section 15 liability continue through a vendor's liquidation. Fines attach to you.</p></div>
+    <div class="card p"><h3>INSOLVENCY FREEZES YOUR REMEDIES</h3><p>IBC Section 14 moratoria can block termination and asset retrieval. Privileged work product may fall to liquidators without prior segregation.</p></div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>15</b><span>AI entities and products exited, 2022–2026</span></div>
+  <div class="stat"><b>8</b><span>failures and shutdowns in 2026 alone</span></div>
+  <div class="stat"><b>~US$6.1B</b><span>capital raised across ten tracked casualty vendors</span></div>
+  <div class="stat"><b>7–30 days</b><span>median notice before data destruction</span></div>
+</div>
+
+<h2>Casualty register</h2>
+<div class="reg">
+  <section><h4>Court-supervised insolvency</h4><ul>
+    <li><b>Character.AI</b>, Ch. 11, 12 Oct 2026</li>
+    <li><b>Builder.ai</b>, insolvency, May 2025</li>
+    <li><b>Robin AI</b>, winding-up petition, Oct–Dec 2025</li>
+    <li><b>Babylon Health</b>, Ch. 7 and administration, Aug 2023</li>
+    <li><b>DeepBlue Robotics</b>, Shanghai liquidation, 7 May 2026</li></ul></section>
+  <section><h4>Private wind-downs and asset sales</h4><ul>
+    <li><b>Humane</b>, sold to HP for $116M, Feb 2025</li>
+    <li><b>Argo AI</b>, shut down, Oct 2022</li>
+    <li><b>Olive AI</b>, carved up, Oct 2023</li>
+    <li><b>Noogata</b>, May 2025</li>
+    <li><b>Yupp</b>, 31 Mar 2026</li>
+    <li><b>Huxe</b>, 21 May 2026</li>
+    <li><b>Relay.app</b>, 16 Jul 2026</li></ul></section>
+  <section><h4>Discontinuations by solvent vendors</h4><ul>
+    <li><b>OpenAI Sora</b> (standalone), 24 Mar 2026</li>
+    <li><b>ChatGPT Atlas</b>, 9 Jul 2026</li>
+    <li><b>Notion Mail</b>, 25 Jun 2026</li></ul></section>
+</div>
+
+<h2>Notice before termination and data deletion</h2>
+<div class="bars" role="list">
+  <div class="bar" role="listitem"><span>Notion Mail</span><i style="width:100%"></i><b>89 days</b></div>
+  <div class="bar" role="listitem"><span>Sora API</span><i style="width:37%"></i><b>33 days</b></div>
+  <div class="bar" role="listitem"><span>ChatGPT Atlas</span><i style="width:35%"></i><b>31 days</b></div>
+  <div class="bar" role="listitem"><span>Relay.app (free)</span><i style="width:34%"></i><b>30 days</b></div>
+  <div class="bar hot" role="listitem"><span>Huxe</span><i style="width:8%"></i><b>7 days</b></div>
+</div>
+<p class="note" style="margin-top:10px">S&amp;P Global: 42% of companies abandoned most AI initiatives in 2025 (17% in 2024); the average firm scrapped 46% of proofs of concept. Gartner: over 40% of agentic AI deployments will be cancelled by end of 2027.</p>
+
+<h2>The legal position: vendor distress never suspends your duties</h2>
+<div class="law">
+  <div><h4>DPDPA 2023</h4>Accountability follows the Data Fiduciary, whatever the contract says.</div>
+  <div><h4>Change of control</h4>Transfer of data in a distressed sale is an unvetted processing event. Contracts need consent, audit rights and purge duties that survive insolvency.</div>
+  <div><h4>IBC Section 14 moratorium</h4>Ipso facto termination clauses may not hold. Cross-border administrations delay escrow retrieval.</div>
+  <div><h4>Privilege in liquidation</h4>Without documented segregation, privileged material sits within a liquidator's discretion.</div>
+</div>
+
+<h2>Ten diligence inquiries for the board</h2>
+<ol class="ten">
+  <li><b>1. TOTAL COST</b>3-year cost of ownership, including price escalations?</li>
+  <li><b>2. COMMERCIAL VALUE</b>Which metric, which owner, which termination milestone?</li>
+  <li><b>3. SUPPLY CHAIN</b>Which sub-tier models and clouds does the vendor depend on?</li>
+  <li><b>4. PORTABILITY</b>Prompts, weights and embeddings exportable in 14 days?</li>
+  <li><b>5. DPDPA CONSENT</b>Notices cover third-party processing; audit and verified deletion in contract?</li>
+  <li><b>6. DEFENSIBILITY</b>Can you defend your oversight before a regulator or court?</li>
+  <li><b>7. PRIVILEGED ASSETS</b>Where are they processed, and are they shielded from liquidators?</li>
+  <li><b>8. ACCOUNTABILITY</b>Board-designated AI risk officer; shadow AI audited?</li>
+  <li><b>9. FALLBACK</b>What restores operations by Monday if the vendor stops over a weekend?</li>
+  <li><b>10. SOVEREIGN INFRASTRUCTURE</b>Can sensitive workloads run on-premise or in an isolated VPC?</li>
+</ol>
+<div class="concl"><h4>Conclusion: sovereign, local-first architecture</h4><p>Open-weights models inside private infrastructure, with legal databases under direct institutional control, remove counterparty insolvency from your risk register. Local infrastructure needs security and maintenance, but it gives full jurisdictional sovereignty and continuity.</p></div>
+
+<div class="firm">
+  <h2>The Advocacy — A Law Firm</h2>
+  <p class="tag">Independent AI audit firm · Established 2026 · Baghpat</p>
+  <div class="fg">
+    <div><h5>ABOUT</h5>
+      <p>Boutique practice in corporate litigation, insolvency and arbitration, appearing before the Delhi High Court, NCLT and NCLAT.</p>
+      <p>Upmanyu Kumar, Advocate, Bar Council of Delhi. Founder. 10 years at the Bar.</p>
+      <p>AI Governance Counsel. Creator of Unknown Verdict.</p></div>
+    <div><h5>SERVICES</h5>
+      <p>AI Liability Audit (written legal opinions on deterministic chain of custody, data provenance defensibility, and fit with DPDPA, EU AI Act and court evidentiary standards)</p>
+      <p>DPDPA compliance advisory</p>
+      <p>DPO-as-a-Service and Fractional General Counsel</p>
+      <p>AI governance and policy stack review</p>
+      <p>Litigation and ADR</p></div>
+    <div><h5>CONTACT</h5>
+      <p>Web: <a href="https://www.advocacyalawfrim.in">www.advocacyalawfrim.in</a></p>
+      <p>Email: <a href="mailto:upmanyu@advocacyalawfrim.in">upmanyu@advocacyalawfrim.in</a></p>
+      <p>LinkedIn: upmanyu-kumar-376574366</p>
+      <p>Reference: ADV-AI-2026-ED2</p>
+      <p>Published: 30 October 2026</p></div>
+  </div>
+  <p class="note">Educational and awareness advisory: this briefing does not constitute formal legal counsel or create an advocate-client relationship. Facts reflect public proceedings, company notices and commercial disclosures as of 30 October 2026. Review primary registry filings independently before litigation, restructuring or vendor replacement.</p>
+</div>
+</div>
+</body>
+</html>
