@@ -3,152 +3,680 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ADVOCACY — A LAW FIRM | Sovereign Legal Intelligence</title>
-    <meta name="description" content="Boutique Indian law practice specializing in DPDPA compliance, AI governance, and sovereign legal architecture. Creators of Unknown Verdict.">
     
+    <!-- Primary SEO Metadata -->
+    <title>THE ADVOCACY A LAW FIRM | DPDPA Compliance, AI Governance & Sovereign Architecture</title>
+    <meta name="description" content="THE ADVOCACY A LAW FIRM: Expert DPDPA Compliance, AI Governance, and AI Vendor Insolvency Audits. We bridge Indian DPDPA, EU GDPR, and global AI frameworks. Creators of the sovereign Unknown Verdict engine.">
+    <meta name="keywords" content="DPDPA compliance, DPDPA audit, AI governance India, legal AI architecture, vendor insolvency risk, AI liability audit, data sovereignty, Unknown Verdict, Bar Council of Delhi, Indian law firm, IBC moratorium">
+    <meta name="author" content="Upmanyu Kumar, Advocate">
+    <link rel="canonical" href="https://www.advocacyalawfrim.in/">
+
+    <!-- Social Media Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.advocacyalawfrim.in/">
+    <meta property="og:title" content="THE ADVOCACY A LAW FIRM | Sovereign Legal Intelligence">
+    <meta property="og:description" content="We do not rely on opaque clouds. We build defensible legal architecture for the AI era. Read our AI Graveyard report.">
+    <meta property="twitter:card" content="summary_large_image">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Machine-Readable Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "LegalService",
+          "@id": "https://www.advocacyalawfrim.in/#firm",
+          "name": "THE ADVOCACY A LAW FIRM",
+          "url": "https://www.advocacyalawfrim.in",
+          "description": "Boutique Indian law practice specializing in DPDPA compliance, AI governance, and sovereign legal architecture.",
+          "founder": {
+            "@type": "Person",
+            "name": "Upmanyu Kumar",
+            "jobTitle": "Advocate, Bar Council of Delhi",
+            "identifier": "Reg. No. D-180-2017"
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Baghpat",
+            "addressRegion": "Uttar Pradesh",
+            "postalCode": "250611",
+            "addressCountry": "IN"
+          },
+          "areaServed": ["India", "European Union", "United Kingdom", "Global"],
+          "knowsAbout": [
+            "Digital Personal Data Protection Act (DPDPA)",
+            "AI Governance",
+            "Vendor Insolvency Risk",
+            "Data Sovereignty",
+            "Insolvency and Bankruptcy Code (IBC)",
+            "EU AI Act"
+          ]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Unknown Verdict",
+          "applicationCategory": "LegalTech",
+          "operatingSystem": "Local / Air-gapped",
+          "description": "A deterministic legal retrieval engine that returns verbatim statutory text with SHA-256 cryptographic chain of custody. No generation. No hallucination.",
+          "author": {
+            "@id": "https://www.advocacyalawfrim.in/#firm"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [{
+            "@type": "Question",
+            "name": "What is the DPDPA compliance deadline?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The core obligations under the Indian Digital Personal Data Protection Act (DPDPA) take effect on 13 May 2027."
+            }
+          }, {
+            "@type": "Question",
+            "name": "Why is cloud-based AI a liability for law firms?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Cloud AI routes privileged client data through third-party servers, breaching Attorney-Client Privilege. If the vendor goes bankrupt, the data can be trapped under IBC Section 14 moratoriums, leaving the law firm liable for a ₹250 Crore penalty."
+            }
+          }]
+        }
+      ]
+    }
+    </script>
 
     <style>
+        /* =========================================
+           1. CSS VARIABLES & RESET
+           ========================================= */
         :root {
-            --bg: #0a0a0c; 
-            --surface: #121216; 
+            --bg: #0a0a0c;
+            --surface: #121216;
+            --surface-hover: #1a1a20;
             --border: #22222a;
-            --gold: #cfa655; 
-            --text: #e0e0e0; 
-            --muted: #888899;
+            --border-gold: #cfa655;
+            --gold: #cfa655;
+            --gold-hover: #e6c77a;
+            --text: #e0e0e0;
+            --text-muted: #888899;
+            --terminal-green: #4af626;
+            --danger-red: #ff3333;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-mono: 'Fira Code', monospace;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.6; }
-
-        /* NAVIGATION */
-        nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 40px; border-bottom: 1px solid var(--border);
-            background: rgba(10,10,12,0.95); position: fixed; width: 100%; top: 0; z-index: 1000;
-            backdrop-filter: blur(10px);
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
-        .brand { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); letter-spacing: 1px; }
-        .nav-links a { color: var(--text); text-decoration: none; margin-left: 25px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+
+        a { color: var(--gold); text-decoration: none; transition: 0.3s; }
+        a:hover { color: var(--gold-hover); }
+
+        /* =========================================
+           2. NAVIGATION BAR
+           ========================================= */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 12, 0.95);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+        }
+        
+        .brand {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            color: var(--gold);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            margin-left: 25px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
         .nav-links a:hover { color: var(--gold); }
 
-        /* HERO SECTION */
-        .hero {
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            padding: 120px 20px 60px; text-align: center;
-            background: radial-gradient(circle at top, rgba(207, 166, 85, 0.08) 0%, rgba(10, 10, 12, 1) 60%);
+        .nav-btn {
+            background: var(--gold);
+            color: #000 !important;
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: 600 !important;
         }
-        .hero-content { max-width: 900px; }
-        .hero h1 { font-family: 'Playfair Display', serif; font-size: 3.5rem; color: #fff; margin-bottom: 20px; line-height: 1.2; }
-        .hero p { font-size: 1.2rem; color: var(--muted); max-width: 700px; margin: 0 auto 40px; }
-        .btn-gold { display: inline-block; padding: 15px 40px; background: var(--gold); color: #000; text-decoration: none; font-weight: bold; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        .btn-gold:hover { background: #e6c77a; }
 
-        /* CONTENT SECTIONS */
-        .container { max-width: 1000px; margin: 0 auto; padding: 80px 20px; border-top: 1px solid var(--border); }
-        .section-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--gold); margin-bottom: 20px; }
-        .content-text { color: var(--text); font-size: 1.05rem; margin-bottom: 20px; }
+        /* =========================================
+           3. HERO SECTION
+           ========================================= */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+            text-align: center;
+            background: radial-gradient(circle at top center, rgba(207, 166, 85, 0.1) 0%, rgba(10, 10, 12, 1) 60%);
+            position: relative;
+        }
+
+        .hero-content { max-width: 900px; z-index: 2; }
         
-        /* SPECIALTY BLOCKS */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 8px; }
-        .card h3 { font-family: 'Playfair Display', serif; color: #fff; margin-bottom: 15px; font-size: 1.5rem; }
-        .card p { color: var(--muted); font-size: 0.95rem; }
+        .hero h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            color: #fff;
+            margin-bottom: 20px;
+            line-height: 1.15;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+        }
 
-        /* FOOTER */
-        footer { padding: 40px; text-align: center; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
-        .footer-links { margin: 20px 0; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
-        .footer-links a { color: var(--gold); text-decoration: none; }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
 
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
+        .btn-gold {
+            display: inline-block;
+            padding: 16px 40px;
+            background: var(--gold);
+            color: #000;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            border: 1px solid var(--gold);
+            cursor: pointer;
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-hover);
+            box-shadow: 0 0 20px rgba(207, 166, 85, 0.3);
+        }
+
+        /* =========================================
+           4. TRUST BAR
+           ========================================= */
+        .trust-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .trust-bar span { color: var(--gold); font-weight: 600; }
+
+        /* =========================================
+           5. MAIN CONTENT CONTAINERS
+           ========================================= */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 100px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+            max-width: 700px;
+        }
+
+        .content-text {
+            color: var(--text);
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            max-width: 800px;
+        }
+
+        /* =========================================
+           6. SERVICES GRID
+           ========================================= */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--gold);
+            background: var(--surface-hover);
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            font-family: var(--font-serif);
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .card p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* =========================================
+           7. TERMINAL / ENGINE SECTION
+           ========================================= */
+        .terminal {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .terminal-header {
+            background: var(--surface);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        .terminal-body {
+            padding: 20px;
+            font-family: var(--font-mono);
+            color: var(--terminal-green);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            min-height: 200px;
+        }
+
+        .terminal-prompt { color: var(--gold); }
+
+        /* =========================================
+           8. FAQ SECTION
+           ========================================= */
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 25px 0;
+        }
+
+        .faq-item h4 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1.15rem;
+            font-family: var(--font-serif);
+        }
+
+        .faq-item p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 850px;
+        }
+
+        /* =========================================
+           9. CONTACT FORM (FORMSPREE)
+           ========================================= */
+        .contact-form-container {
+            max-width: 650px;
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .form-group { margin-bottom: 25px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(207, 166, 85, 0.1);
+        }
+
+        .consent-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+
+        .consent-group input { margin-top: 4px; }
+
+        .consent-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* =========================================
+           10. FOOTER
+           ========================================= */
+        footer {
+            background: #000;
+            padding: 60px 20px 40px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .footer-logo {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+
+        .footer-links {
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a { color: var(--text); }
+        .footer-links a:hover { color: var(--gold); }
+
+        .footer-legal {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* =========================================
+           11. RESPONSIVE DESIGN
+           ========================================= */
+        @media (max-width: 850px) {
+            nav { padding: 15px 20px; flex-direction: column; gap: 15px; }
+            .nav-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+            .nav-links a { margin-left: 0; }
             .grid-2 { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2.5rem; }
+            .container { padding: 60px 20px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- =========================================
+         NAVIGATION
+         ========================================= -->
     <nav>
-        <div class="brand">⚖️ THE ADVOCACY</div>
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 100 100" fill="var(--gold)"><path d="M50,10 C50,10 40,30 30,30 C20,30 15,20 15,20 C15,20 25,40 40,45 C55,50 60,70 50,80 C40,90 20,80 20,80 C20,80 30,95 50,95 C70,95 80,80 80,80 C80,80 60,90 50,80 C40,70 45,50 60,45 C75,40 85,20 85,20 C85,20 80,30 70,30 C60,30 50,10 50,10 Z"/></svg>
+            THE ADVOCACY
+        </div>
         <div class="nav-links">
             <a href="#about">About</a>
-            <a href="#engine">Retrieval Engine</a>
-            <!-- This links to the graveyard.html file you will upload to GitHub -->
             <a href="/graveyard.html">AI Graveyard</a>
-            <!-- This links to your live Hugging Face Workspace -->
-            <a href="https://upamnyu12-lex.hf.space">Workspace</a>
+            <a href="/search.html">Engine</a>
+            <a href="#contact" class="nav-btn">Engage Counsel</a>
         </div>
     </nav>
 
+    <!-- =========================================
+         HERO SECTION
+         ========================================= -->
     <header class="hero">
         <div class="hero-content">
             <h1>The human is the doer.<br>The machine is the instrument.</h1>
             <p>Bridging Indian DPDPA compliance, EU GDPR, and AI governance frameworks. We do not rely on opaque clouds. We build defensible legal architecture.</p>
-            <a href="#engine" class="btn-gold">Discover Unknown Verdict</a>
+            <a href="#about" class="btn-gold">Discover Sovereign Architecture</a>
         </div>
     </header>
 
-    <!-- ABOUT SECTION -->
+    <!-- =========================================
+         TRUST BAR
+         ========================================= -->
+    <div class="trust-bar">
+        <div>Bar Council of Delhi: <span>Reg. No. D-180-2017</span></div>
+        <div>Headquarters: <span>Baghpat, Uttar Pradesh, India</span></div>
+        <div>Article 39A: <span>Equal Access to Justice</span></div>
+    </div>
+
+    <!-- =========================================
+         ABOUT SECTION
+         ========================================= -->
     <section id="about" class="container">
-        <h2 class="section-title">The Firm</h2>
+        <h2 class="section-title">Sovereign Legal Architecture</h2>
         <p class="content-text">
-            We are a boutique practice registered in Baghpat, Uttar Pradesh, in March 2026. The firm's founder is registered with the Bar Council of Delhi (Reg. No. D-180-2017).
+            We are a boutique practice registered in Baghpat, Uttar Pradesh, in March 2026. The firm's founder is an Advocate registered with the Bar Council of Delhi (Reg. No. D-180-2017).
         </p>
         <p class="content-text">
             Our work covers corporate litigation, insolvency and restructuring, and domestic and international arbitration. We also advise on data protection and AI governance, ahead of the DPDPA compliance deadline on 13 May 2027.
         </p>
-        <div class="grid-2" style="margin-top: 40px;">
+        <p class="content-text">
+            <strong>Our Position:</strong> The company that built, trained, deployed, and profited from an AI system is accountable for what it does. The vocabulary that suggests otherwise — that the AI "decided," that the agent "went rogue," that the model "hallucinated" — is a liability shield. Our advisory work, our tools, and our research exist to remove that shield.
+        </p>
+
+        <div class="grid-2">
             <div class="card">
-                <h3>Our Position</h3>
-                <p>The company that built, trained, deployed, and profited from an AI system is accountable for what it does. The vocabulary that suggests otherwise — that the AI "decided," that the agent "went rogue," that the model "hallucinated" — is a liability shield. Our advisory work, our tools, and our research exist to remove that shield.</p>
+                <h3>Vendor Collapse Liability</h3>
+                <p>When an AI vendor goes bankrupt, the Data Fiduciary remains liable under DPDPA Section 8(1). Under IBC Section 14, a moratorium can freeze your data retrieval. We audit vendor contracts to ensure survivability.</p>
             </div>
             <div class="card">
-                <h3>Article 39A Commitment</h3>
-                <p>Unknown Verdict is published under our Article 39A commitment to equal access to justice. We believe that deterministic legal intelligence should not be locked behind a multi-million dollar enterprise paywall.</p>
+                <h3>Consent Architecture</h3>
+                <p>A generic "I Agree" button is not DPDPA compliance. We build mandatory consent gateways that generate a SHA-256 cryptographic hash for every interaction, proving valid consent under Section 6 of the DPDPA.</p>
             </div>
         </div>
     </section>
 
-    <!-- RETRIEVAL ENGINE SECTION -->
+    <!-- =========================================
+         ENGINE SECTION (Unknown Verdict)
+         ========================================= -->
     <section id="engine" class="container">
-        <h2 class="section-title">Unknown Verdict: Retrieval Engine</h2>
+        <h2 class="section-title">Unknown Verdict: The Deterministic Engine</h2>
         <p class="content-text">
             <strong>Unknown Verdict</strong> is our retrieval-first legal engine for Indian law. It returns the verbatim text of a statute, cited to the source PDF and page number.
         </p>
         <p class="content-text">
-            No generation in the retrieval path. No marginal cost per query. 
+            No generation in the retrieval path. No marginal cost per query. Published under our Article 39A commitment to equal access to justice.
         </p>
-        <div style="margin-top: 30px;">
-            <!-- Link to your Hugging Face Search Interface -->
-            <a href="https://upamnyu12-lex.hf.space/search.html" class="btn-gold">Open the Retrieval Engine</a>
+
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="dot" style="background:#ff5f56"></div>
+                <div class="dot" style="background:#ffbd2e"></div>
+                <div class="dot" style="background:#27c93f"></div>
+            </div>
+            <div class="terminal-body">
+                <div>Unknown Verdict v1.0.0 (Rust/SQLite FTS5)</div>
+                <div>Local execution confirmed. Zero cloud dependency.</div>
+                <br>
+                <div><span class="terminal-prompt">advocate@sovereign:~$</span> query --statute "Section 8 DPDPA"</div>
+                <div>[Retrieving from local cryptographic index...]</div>
+                <div><strong>STATUTE:</strong> DPDPA 2023 | Section 8(10)</div>
+                <div><strong>VERBATIM TEXT:</strong> "The Data Fiduciary shall implement appropriate technical and organisational measures..."</div>
+                <div><span style="color:var(--terminal-green)">[EXACT MATCH FOUND. SHA-256 HASH GENERATED.]</span></div>
+                <br>
+                <div><span class="terminal-prompt">advocate@sovereign:~$</span> <span style="animation: blink 1s infinite;">_</span></div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px;">
+            <a href="/search.html" class="btn-gold">Launch The Live Engine</a>
         </div>
     </section>
 
-    <!-- RESEARCH SECTION -->
-    <section id="research" class="container">
-        <h2 class="section-title">Research & Intelligence</h2>
-        <p class="content-text">
-            We have authored a working paper titled <em>Calculator, Not Mind: Anthropomorphic Language and the Risk of a Liability Shield for AI Developers.</em> The paper argues that mental predicates applied to language models shift responsibility from the company to the tool. It is under review by legal practitioners before publication.
-        </p>
-        <p class="content-text">
-            We also maintain a forensic registry of AI vendor bankruptcies. You can read our full report on the <a href="/graveyard.html" style="color: var(--gold);">AI Graveyard</a>.
-        </p>
+    <!-- =========================================
+         FAQ SECTION
+         ========================================= -->
+    <section id="faq" class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        
+        <div class="faq-item">
+            <h4>What is the DPDPA compliance deadline for Indian companies?</h4>
+            <p>The core obligations under the Digital Personal Data Protection Act (DPDPA) take effect on 13 May 2027. Organizations must ensure their consent architecture and data localization frameworks are operational before this date.</p>
+        </div>
+
+        <div class="faq-item">
+            <h4>Why is cloud-based AI a liability for law firms?</h4>
+            <p>Cloud AI routes privileged client data through third-party servers, breaching Attorney-Client Privilege. If the vendor goes bankrupt, the data can be trapped under IBC Section 14 moratoriums, leaving the law firm liable for a ₹250 Crore penalty.</p>
+        </div>
+
+        <div class="faq-item">
+            <h4>What is the AI Graveyard?</h4>
+            <p>The AI Graveyard is our forensic report tracking 15 AI companies (like Babylon Health, Builder.ai, and Character.AI) that collapsed between 2022 and 2026, incinerating over $6.1 Billion in capital. It serves as a warning on vendor counterparty risk.</p>
+        </div>
     </section>
 
-    <!-- FOOTER -->
+    <!-- =========================================
+         CONTACT SECTION
+         ========================================= -->
+    <section id="contact" class="container">
+        <h2 class="section-title">Engage Counsel</h2>
+        <p class="section-subtitle">
+            We do not use automated bots to respond to inquiries. Every email is reviewed by an Advocate. 
+        </p>
+        
+        <div class="contact-form-container">
+            <!-- Formspree Integration -->
+            <form action="https://formspree.io/f/maeeqrka" method="POST">
+                
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required placeholder="Your Name">
+                </div>
+
+                <div class="form-group">
+                    <label>Corporate Email</label>
+                    <input type="email" name="email" required placeholder="name@company.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Nature of Inquiry</label>
+                    <select name="inquiry_type" required>
+                        <option value="" disabled selected>Select the primary legal issue...</option>
+                        <option value="DPDPA Compliance">DPDPA Compliance Audit</option>
+                        <option value="AI Vendor Risk">AI Vendor Collapse Risk</option>
+                        <option value="Sovereign Audit">Sovereign Defensibility Audit</option>
+                        <option value="Other">Other Legal Advisory</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Brief Summary of the Matter</label>
+                    <textarea name="message" rows="4" required placeholder="Please provide a formal summary..."></textarea>
+                </div>
+
+                <!-- DPDPA Consent Checkbox -->
+                <div class="consent-group">
+                    <input type="checkbox" name="consent" required id="consent-check">
+                    <label for="consent-check">
+                        I consent to THE ADVOCACY processing this data for the purpose of evaluating my inquiry (DPDPA Section 6). I understand that submitting this form does not create an Attorney-Client relationship.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-gold" style="width: 100%;">Submit Inquiry to Advocate</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- =========================================
+         FOOTER
+         ========================================= -->
     <footer>
+        <div class="footer-logo">⚖️ THE ADVOCACY</div>
         <p><strong>THE ADVOCACY — A LAW FIRM</strong></p>
         <p>Bar Council of Delhi, Reg. No. D-180-2017</p>
         <p>Registered in Baghpat, Uttar Pradesh, March 2026</p>
+        
         <div class="footer-links">
             <a href="mailto:upmanyu@advocacyalawfrim.in">upmanyu@advocacyalawfrim.in</a>
             <a href="tel:+919718665039">+91 97186 65039</a>
             <a href="https://www.advocacyalawfrim.in">www.advocacyalawfrim.in</a>
+            <a href="/graveyard.html">AI Graveyard</a>
+            <a href="/search.html">Retrieval Engine</a>
+        </div>
+        
+        <div class="footer-legal">
+            <p>This website is for informational purposes only and does not constitute legal advice or create an attorney-client relationship.</p>
+            <p>&copy; 2026 THE ADVOCACY A LAW FIRM. All rights reserved.</p>
         </div>
     </footer>
+
+    <style>
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
 
 </body>
 </html>
