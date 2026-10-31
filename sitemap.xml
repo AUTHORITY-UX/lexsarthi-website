@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+   <!-- The Firm Homepage -->
+   <url>
+      <loc>https://www.advocacyalawfrim.in/</loc>
+      <lastmod>2026-10-31</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+   </url>
+   
+   <!-- The AI Graveyard Report -->
+   <url>
+      <loc>https://www.advocacyalawfrim.in/graveyard.html</loc>
+      <lastmod>2026-10-31</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+
+   <!-- The Unknown Verdict Search Engine -->
+   <url>
+      <loc>https://www.advocacyalawfrim.in/search.html</loc>
+      <lastmod>2026-10-31</lastmod>
+      <changefreq>daily</changefreq>
+      <priority>0.8</priority>
+   </url>
+
+   <!-- The Drafting Workspace -->
+   <url>
+      <loc>https://www.advocacyalawfrim.in/workspace.html</loc>
+      <lastmod>2026-10-31</lastmod>
+      <changefreq>daily</changefreq>
+      <priority>0.8</priority>
+   </url>
+</urlset>
