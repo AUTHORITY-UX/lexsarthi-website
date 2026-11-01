@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Access Index | THE ADVOCACY A LAW FIRM</title>
+    <meta name="description" content="The Sovereign Index: Accessing the Firm Beyond the Legacy Web. Privacy is an architectural requirement, not a settings menu.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-panel: #141414;
+            --bg-panel-hover: #1a1a1a;
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+            --gold: #d4af37;
+            --gold-hover: #e6c865;
+            --border-color: #262626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 5%;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .btn-domain {
+            border: 1px solid var(--gold);
+            padding: 0.5rem 1rem;
+            color: var(--gold) !important;
+        }
+
+        .btn-domain:hover {
+            background-color: var(--gold);
+            color: var(--bg-base) !important;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 6rem 5% 4rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 5% 6rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            background-color: var(--bg-panel-hover);
+        }
+
+        .card h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .card .link-btn {
+            display: inline-block;
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        .card .link-btn:hover {
+            color: var(--gold-hover);
+        }
+
+        .card .link-btn::after {
+            content: ' →';
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 5%;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .om {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-top: 1rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">⚖️ THE ADVOCACY</a>
+        <div class="nav-links">
+            <a href="index.html">Framework</a>
+            <a href="graveyard.html">AI Graveyard</a>
+            <a href="workspace.html">Workspace</a>
+            <a href="https://www.advocacyalawfrim.in" class="btn-domain">Main Domain</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>The Sovereign Index</h1>
+        <p>Accessing the Firm Beyond the Legacy Web. We do not compromise on privilege. Your communication with the firm must remain air-gapped from centralized surveillance.</p>
+    </header>
+
+    <main class="container">
+        <div class="grid">
+            
+            <div class="card">
+                <h2>1. Tor Browser</h2>
+                <p><strong>The Anonymous Layer.</strong> Route your traffic through a decentralized network to mask your IP and location. Use Tor to access our dark-web node without a single legacy server knowing your identity.</p>
+                <a href="https://www.torproject.org/download/" target="_blank" rel="noopener noreferrer" class="link-btn">Download Tor</a>
+            </div>
+
+            <div class="card">
+                <h2>2. Startpage</h2>
+                <p><strong>The Search Layer.</strong> A search engine that provides Google-level results without the tracking or profiling. Use Startpage to find our domain without your legal queries being harvested.</p>
+                <a href="https://www.startpage.com/" target="_blank" rel="noopener noreferrer" class="link-btn">Access Startpage</a>
+            </div>
+
+            <div class="card">
+                <h2>3. Brave Browser</h2>
+                <p><strong>The Tracker-Blocking Layer.</strong> A browser that blocks ads, trackers, and fingerprinting by default. Recommended for reading our public advisories on the clear web.</p>
+                <a href="https://brave.com/download/" target="_blank" rel="noopener noreferrer" class="link-btn">Download Brave</a>
+            </div>
+
+            <div class="card">
+                <h2>4. Mullvad Browser</h2>
+                <p><strong>The Anti-Fingerprint Layer.</strong> Built with the Tor Project but designed for VPN use. It makes all users look identical to websites to prevent deep surveillance profiling.</p>
+                <a href="https://mullvad.net/en/browser" target="_blank" rel="noopener noreferrer" class="link-btn">Download Mullvad</a>
+            </div>
+
+            <div class="card">
+                <h2>5. Hugging Face (The Engine)</h2>
+                <p><strong>The Sovereign Engine Layer.</strong> Interact directly with our live Rust architecture. The intelligence runs locally on your screen; no third-party AI APIs track your prompts.</p>
+                <a href="https://huggingface.co/spaces/upamnyu12/THE-ADVOCACY-A-LAW-FIRM" target="_blank" rel="noopener noreferrer" class="link-btn">Access Engine</a>
+            </div>
+
+            <div class="card">
+                <h2>6. The Firm's Domain</h2>
+                <p><strong>The Clear-Web Layer.</strong> The primary gateway to the institution. Access our DPDPA compliance frameworks, AI vendor insolvency audits, and legal corpus directly.</p>
+                <a href="https://www.advocacyalawfrim.in" class="link-btn">Visit Domain</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>THE ADVOCACY A LAW FIRM — SOVEREIGN ARCHITECTURE</p>
+        <p>The human is the doer. The machine is the instrument.</p>
+        <p style="margin-top: 10px;">Source:- THE ADVOCACY A LAW FIRM</p>
+        <span class="om">ॐ</span>
+    </footer>
+
+</body>
+</html>
